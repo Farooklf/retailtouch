@@ -1,0 +1,23 @@
+CREATE TABLE POSInvoice (
+    posInvoiceId INTEGER NOT NULL PRIMARY KEY,
+    totalCount INTEGER NOT NULL,
+    rowItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO POSInvoice(posInvoiceId,totalCount,rowItem)
+VALUES(?,?,?);
+
+getRowById:
+SELECT * FROM POSInvoice
+WHERE posInvoiceId = ?;
+
+getAll:
+SELECT * FROM POSInvoice;
+
+delete:
+DELETE  FROM POSInvoice;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM POSInvoice;

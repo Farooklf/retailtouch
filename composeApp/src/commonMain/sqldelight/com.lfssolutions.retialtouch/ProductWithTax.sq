@@ -1,0 +1,30 @@
+import kotlin.Boolean;
+
+CREATE TABLE ProductWithTax (
+    productTaxId INTEGER NOT NULL PRIMARY KEY,
+    isScanned INTEGER AS Boolean DEFAULT 0,
+    rowItem TEXT NOT NULL
+);
+
+insertProductWithTax:
+INSERT OR REPLACE INTO ProductWithTax(productTaxId,isScanned,rowItem)
+VALUES(?,?,?);
+
+updateProductWithTax:
+UPDATE ProductWithTax
+SET isScanned = 1, rowItem = :rowItem
+WHERE productTaxId = :productTaxId;
+
+getCategoryById:
+SELECT * FROM ProductWithTax
+WHERE productTaxId = ?;
+
+getAllProductWithTax:
+SELECT * FROM ProductWithTax;
+
+deleteProductWithTax:
+DELETE  FROM ProductWithTax;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM ProductWithTax;

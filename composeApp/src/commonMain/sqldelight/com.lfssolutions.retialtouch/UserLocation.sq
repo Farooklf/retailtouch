@@ -1,0 +1,30 @@
+import kotlin.Boolean;
+
+CREATE TABLE Location (
+    locationId INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL ,
+    code TEXT NOT NULL ,
+    address1 TEXT NOT NULL ,
+    address2 TEXT NOT NULL ,
+    country TEXT NOT NULL ,
+    isSelected INTEGER AS Boolean DEFAULT 0
+);
+
+insertLocation:
+INSERT OR REPLACE INTO Location(locationId,name,code,address1,address2,country,isSelected)
+VALUES(?,?,?,?,?,?,?);
+
+getAllLocation:
+SELECT * FROM Location;
+
+getSelectedLocationsId:
+SELECT locationId FROM Location
+WHERE isSelected=1;
+
+updateLocationSelected:
+UPDATE Location
+SET isSelected = :isSelected
+WHERE locationId IN :id;
+
+deleteAllLocation:
+DELETE FROM Location;

@@ -1,0 +1,30 @@
+import kotlin.Boolean;
+CREATE TABLE Employees (
+    employeeId INTEGER NOT NULL PRIMARY KEY,
+    employeeCode TEXT NOT NULL ,
+    employeeName TEXT NOT NULL ,
+    employeePassword TEXT NOT NULL ,
+    employeeRoleName TEXT NOT NULL ,
+    employeeDepartmentName TEXT NOT NULL ,
+    employeeCategoryName TEXT NOT NULL ,
+    creationTime TEXT NOT NULL ,
+    isDeleted INTEGER AS Boolean DEFAULT 0,
+    isAdmin INTEGER AS Boolean DEFAULT 0
+);
+
+insertEmployees:
+INSERT OR REPLACE INTO Employees(employeeId,employeeCode,employeeName,employeePassword,employeeRoleName,employeeDepartmentName,employeeCategoryName,creationTime,isDeleted,isAdmin)
+VALUES(?,?,?,?,?,?,?,?,?,?);
+
+getAllEmployees:
+SELECT * FROM Employees;
+
+selectEmployeeByCode:
+SELECT * FROM Employees
+WHERE employeeCode = ?;
+
+deleteEmployees:
+DELETE FROM Employees;
+
+
+

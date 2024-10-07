@@ -1,0 +1,29 @@
+import kotlin.Boolean;
+
+CREATE TABLE UserTenanat (
+    userId INTEGER NOT NULL PRIMARY KEY,
+    tenantId INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    tenantname TEXT NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    isLoggedIn INTEGER AS Boolean DEFAULT 0,
+    isSelected INTEGER AS Boolean DEFAULT 0,
+    loginDao TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO UserTenanat(userId,tenantId, url,tenantname,username,password,isLoggedIn,isSelected,loginDao)
+VALUES(?,?,?,?,?,?,?,?,?);
+
+
+-- Select query to check if the user already exists
+selectUserByUserId:
+SELECT * FROM UserTenanat
+WHERE userId = ?;
+
+getAll:
+SELECT * FROM UserTenanat;
+
+deleteAuth:
+DELETE  FROM UserTenanat;

@@ -1,0 +1,24 @@
+import kotlin.Boolean;
+
+
+CREATE TABLE EmployeeRole (
+    empRoleId INTEGER NOT NULL PRIMARY KEY,
+    empRoleName TEXT NOT NULL,
+    isDeleted INTEGER AS Boolean DEFAULT 0,
+    isAdmin INTEGER AS Boolean DEFAULT 0
+);
+
+insertEmpRole:
+INSERT OR REPLACE INTO EmployeeRole(empRoleId,empRoleName,isDeleted,isAdmin)
+VALUES(?,?,?,?);
+
+
+getAllEmpRole:
+SELECT * FROM EmployeeRole;
+
+selectEmpRoleById:
+SELECT * FROM EmployeeRole
+WHERE empRoleId = ?;
+
+deleteEmpRole:
+DELETE FROM EmployeeRole;

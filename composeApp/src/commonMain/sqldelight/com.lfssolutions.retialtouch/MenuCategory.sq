@@ -1,0 +1,22 @@
+CREATE TABLE MenuCategory (
+    categoryId INTEGER NOT NULL PRIMARY KEY,
+    categoryItem TEXT NOT NULL
+);
+
+insertMenuCategory:
+INSERT OR REPLACE INTO MenuCategory(categoryId,categoryItem)
+VALUES(?,?);
+
+getCategoryById:
+SELECT * FROM MenuCategory
+WHERE categoryId = ?;
+
+getAllMenuCategory:
+SELECT * FROM MenuCategory;
+
+deleteMenuCategory:
+DELETE  FROM MenuCategory;
+
+-- Query to count rows in the table
+countMenuCategory:
+SELECT COUNT(*) FROM MenuCategory;

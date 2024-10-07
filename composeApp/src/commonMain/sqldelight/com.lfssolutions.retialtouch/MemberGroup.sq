@@ -1,0 +1,22 @@
+CREATE TABLE MemberGroup (
+    memberGroupId INTEGER NOT NULL PRIMARY KEY,
+    rowItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO MemberGroup(memberGroupId,rowItem)
+VALUES(?,?);
+
+getRowById:
+SELECT * FROM MemberGroup
+WHERE memberGroupId = ?;
+
+getAll:
+SELECT * FROM MemberGroup;
+
+delete:
+DELETE  FROM MemberGroup;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM MemberGroup;

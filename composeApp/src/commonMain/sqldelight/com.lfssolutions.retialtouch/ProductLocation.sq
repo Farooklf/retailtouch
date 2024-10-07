@@ -1,0 +1,22 @@
+CREATE TABLE ProductLocation (
+    productLocationId INTEGER NOT NULL PRIMARY KEY,
+    rowItem TEXT NOT NULL
+);
+
+insertProductLocation:
+INSERT OR REPLACE INTO ProductLocation(productLocationId,rowItem)
+VALUES(?,?);
+
+getCategoryById:
+SELECT * FROM ProductLocation
+WHERE productLocationId = ?;
+
+getAllProductLocation:
+SELECT * FROM ProductLocation;
+
+deleteProductLocation:
+DELETE  FROM ProductLocation;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM ProductLocation;

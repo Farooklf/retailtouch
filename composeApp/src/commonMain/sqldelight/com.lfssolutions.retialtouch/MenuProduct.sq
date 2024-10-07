@@ -1,0 +1,22 @@
+CREATE TABLE MenuProduct (
+    productId INTEGER NOT NULL PRIMARY KEY,
+    productItem TEXT NOT NULL
+);
+
+insertMenuProduct:
+INSERT OR REPLACE INTO MenuProduct(productId,productItem)
+VALUES(?,?);
+
+getProductById:
+SELECT * FROM MenuProduct
+WHERE productId = ?;
+
+getAllMenuProduct:
+SELECT * FROM MenuProduct;
+
+deleteMenuProduct:
+DELETE  FROM MenuProduct;
+
+-- Query to count rows in the table
+countMenuProducts:
+SELECT COUNT(*) FROM MenuProduct;

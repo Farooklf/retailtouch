@@ -1,0 +1,22 @@
+CREATE TABLE PaymentType (
+    paymentId INTEGER NOT NULL PRIMARY KEY,
+    rowItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO PaymentType(paymentId,rowItem)
+VALUES(?,?);
+
+getRowById:
+SELECT * FROM PaymentType
+WHERE paymentId = ?;
+
+getAll:
+SELECT * FROM PaymentType;
+
+delete:
+DELETE  FROM PaymentType;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM PaymentType;

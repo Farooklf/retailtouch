@@ -1,0 +1,22 @@
+CREATE TABLE Members (
+    memberId INTEGER NOT NULL PRIMARY KEY,
+    rowItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO Members(memberId,rowItem)
+VALUES(?,?);
+
+getRowById:
+SELECT * FROM Members
+WHERE memberId = ?;
+
+getAll:
+SELECT * FROM Members;
+
+delete:
+DELETE  FROM Members;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM Members;
