@@ -19,7 +19,7 @@ import org.koin.core.component.inject
 
 class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
-    private val localRepository: LocalRepository by inject()
+
 
     private val _employeeScreenState = MutableStateFlow(EmployeeUIState())
     val employeeScreenState: StateFlow<EmployeeUIState> = _employeeScreenState.asStateFlow()
@@ -96,7 +96,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
             val employee=employeeDoa.value
             if(employee!=null){
                 if (employee.employeePassword == _employeeScreenState.value.pin) {
-                    localRepository.setEmployeeCode(_employeeScreenState.value.employeeCode)
+                    preferences.setEmployeeCode(_employeeScreenState.value.employeeCode)
                     updateEmployeeLogin(true)
                 } else {
                     updateEmpPinError("PIN is not correct")

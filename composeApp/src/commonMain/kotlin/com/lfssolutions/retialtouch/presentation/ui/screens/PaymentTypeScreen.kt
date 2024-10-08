@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
@@ -121,6 +122,9 @@ fun Payment(
                 },
                 onListIconClick = {selectedItem->
                     viewModel.omPaymentIconClick(selectedItem)
+                },
+                onTenderClick = {
+                    viewModel.onTenderClick()
                 }
             )
 
@@ -147,6 +151,7 @@ fun ScreenTopContent(
     appState: AppState,
     onSelection: (Any) -> Unit,
     onValueChange: (String) -> Unit,
+    onTenderClick: () -> Unit,
     onListItemClick: (PaymentTypeItem) -> Unit,
     onListIconClick: (PaymentTypeItem) -> Unit,
 ) {
@@ -172,7 +177,7 @@ fun ScreenTopContent(
             .fillMaxHeight()
             .weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
-            Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top){
+            /*Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top){
 
                 AppOutlinedDropDown(
                     selectedValue = screenUIState.selectedDeliveryType.name,
@@ -236,7 +241,7 @@ fun ScreenTopContent(
                     onClick = {
                         //open Calender
                     })
-            }
+            }*/
 
             Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp), verticalAlignment = Alignment.Top) {
 
@@ -313,7 +318,7 @@ fun ScreenTopContent(
             .align(Alignment.BottomStart),
             appState=appState,
             onTenderClick = {
-
+                onTenderClick.invoke()
             },
             onCancelClick = {
             },

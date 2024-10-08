@@ -59,6 +59,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
+import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
@@ -73,6 +74,7 @@ import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
@@ -118,11 +120,16 @@ fun Pos(
         posViewModel.loadDataFromDatabases()
     }
 
+    LaunchedEffect(posUIState.isInsertion) {
+        posViewModel.fetchUIProductList()
+    }
+
     LaunchedEffect(posUIState.uiPosList) {
         // This will trigger whenever uiPosList changes
         println("UI Pos List Updated: ${posUIState.uiPosList}")
         posViewModel.calculateBottomValues()
     }
+
 
 
     SearchableTextFieldWithDialog(
@@ -139,32 +146,42 @@ fun Pos(
             DialogList(posUIState.dialogPosList,posUIState.searchQuery,posUIState.currencySymbol, onClick = {selectedItem->
                 posViewModel.updateDialogState(false)
                 println("selectedItem : $selectedItem")
-                posViewModel.updatePosListItem(selectedItem)
+                posViewModel.insertPosListItem(selectedItem)
             })
         }
     )
 
     //Discount Content
-    AppDialog(
+    DiscountDialog(
         isVisible = posUIState.isDiscountDialog,
         onDismissRequest = {
-            posViewModel.updateDiscountDialogState(false)
+            posViewModel.dismissDiscountDialog()
         },
-        content = {
+        dialogBody = {
             DiscountContent(
+                inputValue = posUIState.inputDiscount,
+                inputError = posUIState.inputDiscountError,
+                trailingIcon = posViewModel.getDiscountTypeIcon(),
+                selectedDiscountType = posUIState.selectedDiscountType,
+                onDiscountChange = { discount->
+                    posViewModel.updateDiscountValue(discount)
+                },
+                onNumberPadClick = {symbol->
+                    posViewModel.onNumberPadClick(symbol)
+                },
                 onCancel = {
-                    posViewModel.updateDiscountDialogState(false)
+                    posViewModel.dismissDiscountDialog()
                 },
                 onApply = {
-
                     posViewModel.onApplyDiscountClick()
-
                 },
-                posViewModel=posViewModel,
-                posUIState=posUIState
+                onClick = {discountType->
+                    posViewModel.updateDiscountType(discountType)
+                }
             )
         }
     )
+
 
     MemberListDialog(
         isVisible = posUIState.isMemberDialog,
@@ -390,12 +407,15 @@ fun POSTaxListView(posUIState: PosUIState, posViewModel: PosViewModel) {
                 ){ product ->
                     AppHorizontalDivider(modifier=Modifier.width(widthDp))
                     index+=1
-                    POSTaxItem(index=index,product,posUIState.currencySymbol,
-                        onClick = { selectedItem-> },
-                        onQtyChanged = {selectedItem->
-                            posViewModel.updateProductById(selectedItem)
+                    POSTaxItem(
+                        index =index,product,posUIState.currencySymbol,
+                        onPriceClick = { selectedItem->
+                            posViewModel.onPriceItemClick(selectedItem)
                         },
-                        onRemoveClick = {selectedItem->
+                        onQtyChanged = { selectedItem, isIncrease->
+                            posViewModel.updateQty(selectedItem,isIncrease)
+                        },
+                        onRemoveClick = { selectedItem->
                             posViewModel.removedListItem(selectedItem)
                         }
                     )
@@ -407,18 +427,28 @@ fun POSTaxListView(posUIState: PosUIState, posViewModel: PosViewModel) {
 
 
 @Composable
-fun POSTaxItem(index:Int,product: ProductTaxItem,
-               currencySymbol: String,
-               onClick: (ProductTaxItem) -> Unit,
-               onQtyChanged: (ProductTaxItem) -> Unit,
-               onRemoveClick: (ProductTaxItem) -> Unit,
+fun POSTaxItem(
+    index:Int, product: ProductTaxItem,
+    currencySymbol: String,
+    onPriceClick: (ProductTaxItem) -> Unit,
+    onQtyChanged: (ProductTaxItem,Boolean) -> Unit,
+    onRemoveClick: (ProductTaxItem) -> Unit,
 )
 {
+    val (textColor, textTotalLabel) = when {
+        product.discount > 0.0 -> {
+            AppTheme.colors.textError to "$currencySymbol${product.subtotal?.roundTo()}\n (-${product.discount}$currencySymbol)"
+        }
+        else -> {
+            AppTheme.colors.textColor.copy(alpha = 0.8f) to "$currencySymbol${product.subtotal?.roundTo()}"
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
 
 
         Row(modifier = Modifier
-            .fillMaxWidth().clickable{onClick(product)},
+            .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ){
@@ -446,7 +476,10 @@ fun POSTaxItem(index:Int,product: ProductTaxItem,
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(100.dp),
-                isButton = true
+                isButton = true,
+                onButtonClick = {
+                    onPriceClick.invoke(product)
+                }
             )
 
             //Qty
@@ -456,26 +489,31 @@ fun POSTaxItem(index:Int,product: ProductTaxItem,
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(160.dp),
                 onIncreaseClick = {
-                    val newQty=product.qtyOnHand+1
-                    val updatedProduct = product.copy(qtyOnHand = newQty)
-                    onQtyChanged(updatedProduct)
+                    onQtyChanged.invoke(product,true)
                 },
                 onDecreaseClick = {
-                    product.qtyOnHand.let { quantity->
-                        val newQty = quantity.takeIf { it > 1 }?.minus(1) ?: 1.0
-                        val updatedProduct = product.copy(qtyOnHand = newQty)
-                        onQtyChanged(updatedProduct)
-                    }
+                    onQtyChanged.invoke(product,false)
                 }
             )
 
             //Subtotal
             ListItemText(
-                label = "$currencySymbol${(product.price?.times(product.qtyOnHand)?.roundTo())}",
+                label = textTotalLabel,
                 textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.textColor.copy(alpha = .8f),
-                modifier = Modifier.width(100.dp)
+                color = textColor,
+                modifier = Modifier.width(100.dp).wrapContentHeight()
             )
+            /*Column(modifier = Modifier.width(100.dp).wrapContentHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+
+                if(product.discount>0){
+                    ListItemText(
+                        label = "$currencySymbol${product.subtotal?.roundTo()}",
+                        textStyle = AppTheme.typography.bodyMedium(),
+                        color = AppTheme.colors.textColor.copy(alpha = .8f),
+                        modifier = Modifier.wrapContentWidth()
+                    )
+                }
+            }*/
 
             //modifier icons
             VectorIcons(icons = AppIcons.closeIcon,
@@ -551,8 +589,7 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: PosV
 
                     TexWithClickableBg(onClick = {
                         //open discount pad
-
-                        posViewModel.updateDiscountDialogState(true)
+                        posViewModel.onTotalDiscountItemClick()
 
                     }){
                         BottomTex(label = stringResource(Res.string.discount_value, posViewModel.getDiscountValue()), color = AppTheme.colors.textWhite)
@@ -727,10 +764,15 @@ fun POSItem(product: ProductTaxItem, currencySymbol: String, onClick: (ProductTa
 
 @Composable
 fun DiscountContent(
+    inputValue:String,
+    inputError:String?=null,
+    trailingIcon:DrawableResource?=null,
+    selectedDiscountType:DiscountType,
+    onClick: (DiscountType) -> Unit,
     onApply: () -> Unit,
     onCancel: () -> Unit,
-    posViewModel: PosViewModel,
-    posUIState :PosUIState
+    onDiscountChange: (discount: String) -> Unit,
+    onNumberPadClick: (symbol: String) -> Unit,
 ){
 
     Column(
@@ -755,10 +797,10 @@ fun DiscountContent(
                icons = AppIcons.dollarIcon,
                backgroundColor = AppTheme.colors.appGreen,
                innerPaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-               isEnabled=posUIState.selectedDiscountType!=DiscountType.FIXED_AMOUNT,
+               isEnabled=selectedDiscountType!=DiscountType.FIXED_AMOUNT,
                isColorChange = true,
                onClick = {
-                   posViewModel.updateDiscountType(DiscountType.FIXED_AMOUNT)
+                   onClick.invoke(DiscountType.FIXED_AMOUNT)
                }
            )
 
@@ -768,24 +810,24 @@ fun DiscountContent(
                icons = AppIcons.percentageIcon,
                backgroundColor = AppTheme.colors.appGreen,
                innerPaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-               isEnabled=posUIState.selectedDiscountType!=DiscountType.PERCENTAGE,
+               isEnabled=selectedDiscountType!=DiscountType.PERCENTAGE,
                isColorChange = true,
                onClick = {
-                   posViewModel.updateDiscountType(DiscountType.PERCENTAGE)
+                   onClick.invoke(DiscountType.PERCENTAGE)
                }
            )
 
         }
 
        NumberPad(
-           textValue=posUIState.inputDiscount,
+           textValue=inputValue,
            onValueChange = {discount->
-               posViewModel.updateDiscountValue(discount)
+               onDiscountChange.invoke(discount)
            },
-           trailingIcon = posViewModel.getDiscountTypeIcon(),
-           inputError=posUIState.inputDiscountError,
+           trailingIcon = trailingIcon,
+           inputError=inputError,
            onNumberPadClick = {symbol->
-               posViewModel.onNumberPadClick(symbol)
+               onNumberPadClick.invoke(symbol)
            }, onApplyClick = {
                onApply.invoke()
            }, onCancelClick = {
@@ -795,21 +837,5 @@ fun DiscountContent(
    }
 }
 
-/*Box(modifier = Modifier.fillMaxSize()){
-        PosTopContent(posUIState,posViewModel,onNavigatePayment={
-            navigator.navigateToMenuScreen(screen = AppConstants.POS_SCREEN,memberId=it)
-        })
-        if(posUIState.isHoldSaleDialog){
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = adjustedPadding, start = 0.dp)
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-            ){
-                HoldSaleContent(posUIState,posViewModel)
-            }
-        }
-    }*/
 
 

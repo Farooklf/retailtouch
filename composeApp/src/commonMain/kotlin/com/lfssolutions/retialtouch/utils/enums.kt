@@ -7,6 +7,11 @@ enum class DiscountType {
     FIXED_AMOUNT;
 }
 
+enum class DiscountApplied {
+    TOTAL,
+    ITEMS;
+}
+
 // Enum for Device Type
 enum class DeviceType {
     SMALL_PHONE, LARGE_PHONE, SMALL_TABLET, LARGE_TABLET

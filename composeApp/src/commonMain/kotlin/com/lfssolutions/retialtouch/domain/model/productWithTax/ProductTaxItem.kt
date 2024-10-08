@@ -280,4 +280,7 @@ data class ProductTaxItem(
     val width: Double? = 0.0,
 
     val originalPrice: Double = price?:0.0,
+    val originalSubTotal: Double = 0.0,
+    val subtotal: Double? = 0.0,
+    val discount: Double = 0.0,
 )

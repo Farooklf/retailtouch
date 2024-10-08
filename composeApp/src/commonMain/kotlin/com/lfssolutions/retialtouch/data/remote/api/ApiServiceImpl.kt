@@ -25,6 +25,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
+import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
@@ -47,7 +48,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 
-class ApiServiceImpl(
+ class ApiServiceImpl(
     private val httpClient: HttpClient,
     private val preferences: PreferencesRepository,
     private val databaseRepository: DatabaseRepository
@@ -289,8 +290,16 @@ class ApiServiceImpl(
         }
     }
 
-
-}
+     override fun createUpdatePosInvoice(mBasicApiRequest: CreatePOSInvoiceRequest): Flow<RequestState<SyncAllResponse>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.CREATE_UPDATE_POS_INVOICE,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<SyncAllResponse>(response)
+         }
+     }
+ }
 
 
 

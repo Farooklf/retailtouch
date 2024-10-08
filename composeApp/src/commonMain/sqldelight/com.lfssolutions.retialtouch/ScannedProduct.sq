@@ -1,0 +1,24 @@
+CREATE TABLE ScannedProduct (
+    productTaxId INTEGER NOT NULL PRIMARY KEY,
+    productName TEXT NOT NULL,
+    inventoryCode TEXT NOT NULL,
+    barCode TEXT NOT NULL,
+    qtyOnHand REAL NOT NULL,
+    taxValue REAL NOT NULL,
+    taxPercentage REAL NOT NULL,
+    price REAL NOT NULL,
+    subTotal REAL NOT NULL,
+    discount REAL NOT NULL
+);
+
+insertScannedProduct:
+INSERT OR REPLACE INTO ScannedProduct(productTaxId,productName,inventoryCode,barCode,qtyOnHand,taxValue,taxPercentage,price,subTotal,discount)
+VALUES(?,?,?,?,?,?,?,?,?,?);
+
+fetchAllScannedProduct:
+SELECT * FROM ScannedProduct;
+
+updateScannedProduct:
+UPDATE ScannedProduct
+SET qtyOnHand = :qty ,subTotal =:subTotal,discount =:discount
+WHERE productTaxId = :productTaxId;

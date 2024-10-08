@@ -73,7 +73,7 @@ fun Home(
 
     when(homeUIState.hasEmployeeLoggedIn){
         true -> {
-            homeViewModel.updateSyncRotation(5)
+            //homeViewModel.updateSyncRotation(5)
         }
         false -> {
             homeViewModel.initialiseSplash(isFromSplash)
@@ -82,7 +82,7 @@ fun Home(
 
     LaunchedEffect(homeUIState.isSync){
         if(homeUIState.isSync){
-            homeViewModel.onSyncClick()
+           // homeViewModel.onSyncClick()
         }
     }
 

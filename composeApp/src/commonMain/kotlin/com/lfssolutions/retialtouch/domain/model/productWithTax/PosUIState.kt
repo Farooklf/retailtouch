@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.domain.model.productWithTax
 
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
+import com.lfssolutions.retialtouch.utils.DiscountApplied
 import com.lfssolutions.retialtouch.utils.DiscountType
 
 
@@ -12,17 +13,21 @@ data class PosUIState(
     var searchQuery :String = "",
     var showDialog : Boolean = false,
     var isDiscountDialog : Boolean = false,
-    var isPriceDialog : Boolean = false,
+    var isAppliedDiscountOnTotal : Boolean = false,
     var currencySymbol : String = "$",
     var inputDiscount : String = "",
     var inputDiscountError : String? =null,
-    var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
 
+    var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
+    var selectedDiscountApplied : DiscountApplied = DiscountApplied.TOTAL,
+
+    var itemPriceClickItem : ProductTaxItem = ProductTaxItem(),
     var isRemoveDialog : Boolean = false,
 
     var selectedProduct : ProductTaxItem = ProductTaxItem(),
     val uiPosList: List<ProductTaxItem> = listOf(),
     val dialogPosList : List<ProductTaxItem> = listOf(),
+    var isInsertion : Boolean = false,
 
     var itemsDiscount : Double = 0.0,
     var promoDiscount : Double = 0.0,

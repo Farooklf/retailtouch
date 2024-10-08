@@ -129,7 +129,7 @@ fun AppDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp = 1000.dp,
-    padding: PaddingValues = PaddingValues(horizontal = 30.dp, vertical = 20.dp),
+    padding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
     isFullScreen: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -261,6 +261,29 @@ fun ActionDialog(
 
 @Composable
 fun CreateMemberDialog(
+    isVisible: Boolean,
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = 1000.dp,
+    isFullScreen: Boolean = false,
+    properties: DialogProperties = DialogProperties(),
+    onDismissRequest: () -> Unit,
+    dialogBody: @Composable () -> Unit
+){
+    AppDialog(
+        isVisible = isVisible,
+        properties = properties,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier.padding(10.dp),
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = isFullScreen,
+    ){
+        dialogBody()
+    }
+}
+
+
+@Composable
+fun DiscountDialog(
     isVisible: Boolean,
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp = 1000.dp,

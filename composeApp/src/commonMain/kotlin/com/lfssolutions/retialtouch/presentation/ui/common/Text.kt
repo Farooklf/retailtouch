@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import org.jetbrains.compose.resources.vectorResource
@@ -70,6 +71,7 @@ fun ListItemText(
     verticalPadding:Dp=10.dp,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
+    onButtonClick: () -> Unit={},
 ){
 
     Row(modifier = modifier.padding(vertical = verticalPadding),
@@ -80,7 +82,7 @@ fun ListItemText(
                 label = label,
                 contentColor = color,
                 textStyle = textStyle,
-                onClick = {}
+                onClick = {onButtonClick.invoke()}
             )
         }else{
             Text(

@@ -82,8 +82,8 @@ interface DatabaseRepository {
     suspend fun insertScannedProduct(productTaxDao: ScannedProductDao)
     suspend fun updateScannedProduct(productTaxDao: ScannedProductDao)
     fun fetchAllScannedProduct(): Flow<List<ScannedProductDao>>
-    suspend fun deleteScannedProductById(productId: Long)
-    suspend fun deleteAllScannedProduct()
+    //suspend fun deleteScannedProductById(productId: Long)
+   // suspend fun deleteAllScannedProduct()
 
     //ProductLocation
     suspend fun insertProductLocation(productLocationDao: ProductLocationDao)

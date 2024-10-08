@@ -11,8 +11,8 @@ data class ScannedProductDao(
     val barCode:String="",
     val qty:Double=0.0,
     val price:Double=0.0,
+    val discount:Double=0.0,
     val subtotal:Double=0.0,
     val taxValue:Double=0.0,
-    val taxPercentage:Double=0.0,
-    val rowItem: ProductTaxItem = ProductTaxItem(),
+    val taxPercentage:Double=0.0
 )

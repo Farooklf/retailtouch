@@ -60,8 +60,6 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-
-
     private fun prepareHomeScreenItems() {
         val iconItems = listOf(
             HomeScreenItem(

@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.domain.model.paymentType
 
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
+import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 
 
 data class PaymentTypeUIState(
@@ -24,4 +25,5 @@ data class PaymentTypeUIState(
     val paymentList : List<PaymentTypeItem> = listOf(),
     val selectedPayment: PaymentTypeItem = PaymentTypeItem(),
     var isShowCalculator : Boolean = false,
+    val scannedPosList: List<ProductTaxItem> = listOf(),
 )

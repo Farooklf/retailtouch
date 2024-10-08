@@ -16,6 +16,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
+import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
@@ -42,4 +43,5 @@ interface ApiService {
     fun getPromotions(mBasicApiRequest: PromotionRequest): Flow<RequestState<PromotionResponse>>
     fun getProductBarCode(mBasicApiRequest: BasicApiRequest): Flow<RequestState<ProductBarCodeResponse>>
     fun syncAllApis(mBasicApiRequest: BasicApiRequest): Flow<RequestState<SyncAllResponse>>
+    fun createUpdatePosInvoice(mBasicApiRequest: CreatePOSInvoiceRequest): Flow<RequestState<SyncAllResponse>>
 }

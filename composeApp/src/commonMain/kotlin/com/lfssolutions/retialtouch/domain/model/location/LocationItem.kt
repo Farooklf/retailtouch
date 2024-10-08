@@ -7,59 +7,23 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LocationItem(
     @SerialName("address1")
-    val address1: String = "",
+    val address1: String? = null,
     @SerialName("address2")
-    val address2: String = "",
+    val address2: String? = null,
     @SerialName("address3")
     val address3: String? = null,
+    @SerialName("name")
+    val name: String? = null,
     @SerialName("city")
-    val city: String = "",
+    val city: String? = null,
     @SerialName("code")
-    val code: String = "",
-    @SerialName("companyId")
-    val companyId: Int = 0,
+    val code: String? = null,
     @SerialName("companyName")
     val companyName: String? = null,
     @SerialName("country")
-    val country: String = "",
-    @SerialName("creationTime")
-    val creationTime: String = "",
-    @SerialName("creatorUserId")
-    val creatorUserId: String? = null,
-    @SerialName("deleterUserId")
-    val deleterUserId: String? = null,
-    @SerialName("deletionTime")
-    val deletionTime: String? = null,
-    @SerialName("email")
-    val email: String = "",
-    @SerialName("fax")
-    val fax: String? = null,
+    val country: String? = null,
     @SerialName("id")
-    val id: Long = 0,
-    @SerialName("isDeleted")
-    val isDeleted: Boolean = false,
-    @SerialName("isPurchaseAllowed")
-    val isPurchaseAllowed: Boolean = false,
-    @SerialName("isSalesAllowed")
-    val isSalesAllowed: Boolean = false,
-    @SerialName("iswareHouse")
-    val iswareHouse: Boolean = false,
-    @SerialName("lastModificationTime")
-    val lastModificationTime: String = "",
-    @SerialName("lastModifierUserId")
-    val lastModifierUserId: Int = 0,
-    @SerialName("locationGroupId")
-    val locationGroupId: String? = null,
-    @SerialName("menuId")
-    val menuId: Int = 0,
-    @SerialName("name")
-    val name: String = "",
-    @SerialName("phone")
-    val phone: String? = null,
-    @SerialName("remarks")
-    val remarks: String? = null,
+    val id: Long? = null,
     @SerialName("state")
-    val state: String? = null,
-    @SerialName("website")
-    val website: String? = null
+    val state: String? = null
 )

@@ -116,7 +116,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
     override suspend fun insertEmployee(employeeDao: EmployeeDao) {
         retailTouch.employeesQueries.insertEmployees(
             employeeId = employeeDao.employeeId.toLong(),
-            employeeCode = employeeDao.employeeCode.toUpperCase(),
+            employeeCode = employeeDao.employeeCode.uppercase(),
             employeeName = employeeDao.employeeName,
             employeeRoleName = employeeDao.employeeRoleName,
             employeePassword = employeeDao.employeePassword,
@@ -129,7 +129,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
     }
 
     override fun getEmployeeByCode(employeeCode: String): Flow<EmployeeDao?> = flow {
-        retailTouch.employeesQueries.selectEmployeeByCode(employeeCode.toUpperCase()).executeAsOneOrNull().let { body->
+        retailTouch.employeesQueries.selectEmployeeByCode(employeeCode.uppercase()).executeAsOneOrNull().let { body->
             println("employee : $body")
             if(body!=null){
                 emit(
@@ -429,7 +429,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
     }
 
     override suspend fun insertScannedProduct(productTaxDao: ScannedProductDao) {
-        retailTouch.scannedProductWithTaxQueries.insertScnnedProduct(
+        retailTouch.scannedProductQueries.insertScannedProduct(
             productTaxId = productTaxDao.productId,
             productName = productTaxDao.name,
             inventoryCode = productTaxDao.inventoryCode,
@@ -437,21 +437,23 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
             qtyOnHand = productTaxDao.qty,
             price = productTaxDao.price,
             subTotal = productTaxDao.subtotal,
+            discount = productTaxDao.discount,
             taxValue = productTaxDao.taxValue,
             taxPercentage = productTaxDao.taxPercentage
         )
     }
 
     override suspend fun updateScannedProduct(productTaxDao: ScannedProductDao) {
-        retailTouch.scannedProductWithTaxQueries.updateQuantity(
+        retailTouch.scannedProductQueries.updateScannedProduct(
             qty = productTaxDao.qty,
             subTotal = productTaxDao.subtotal,
+            discount = productTaxDao.discount,
             productTaxId = productTaxDao.productId
         )
     }
 
     override fun fetchAllScannedProduct(): Flow<List<ScannedProductDao>> = flow{
-        retailTouch.scannedProductWithTaxQueries.fetchAllProductWithTax().executeAsList().let { list ->
+        retailTouch.scannedProductQueries.fetchAllScannedProduct().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
@@ -475,13 +477,13 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-    override suspend fun deleteScannedProductById(productId: Long) {
+   /* override suspend fun deleteScannedProductById(productId: Long) {
         retailTouch.scannedProductWithTaxQueries.deleteProductById(productId)
     }
 
     override suspend fun deleteAllScannedProduct() {
        retailTouch.scannedProductWithTaxQueries.deleteAllProduct()
-    }
+    }*/
 
     override suspend fun insertProductLocation(productLocationDao: ProductLocationDao) {
         retailTouch.productLocationQueries.insertProductLocation(

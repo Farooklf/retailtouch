@@ -539,19 +539,21 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 // If no duplicate is found, insert the user
-                deleteExistingLocations()
-                locationResponse.result.items.forEachIndexed{index,location->
-                    val mLocationDao=
-                        LocationDao(
-                            locationId = location.id,
-                            name = location.name,
-                            code = location.code,
-                            country = location.country,
-                            address1 = location.address1,
-                            address2 = location.address2,
-                            isSelected = false
-                        )
-                    databaseRepository.insertLocation(mLocationDao)
+                if(locationResponse.result.items.isNotEmpty()){
+                    deleteExistingLocations()
+                    locationResponse.result.items.forEachIndexed{index,location->
+                        val mLocationDao=
+                            LocationDao(
+                                locationId = location.id?:0,
+                                name = location.name?:"",
+                                code = location.code?:"",
+                                country = location.country?:"",
+                                address1 = location.address1?:"",
+                                address2 = location.address2?:"",
+                                isSelected = false
+                            )
+                        databaseRepository.insertLocation(mLocationDao)
+                    }
                 }
             }
         }
@@ -788,20 +790,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun updateProductWithTax(updatedItem: ProductTaxItem) {
-        // Switch to the IO dispatcher to perform the database operation
-        withContext(Dispatchers.IO) {
-            val dao = ProductTaxDao(
-                productTaxId = updatedItem.id.toLong(),
-                rowItem = updatedItem,
-                isScanned = true
-            )
-            // Call the repository method to update the product
-            databaseRepository.updateProductWithTax(dao)
-        }
-    }
 
-    suspend fun insertScannedProduct(scannedList: List<ProductTaxItem>) {
+
+    suspend fun insertOrUpdateScannedProduct(scannedList: List<ProductTaxItem>) {
         // Switch to the IO dispatcher to perform the database operation
         withContext(Dispatchers.IO) {
             scannedList.forEach {item->
@@ -813,12 +804,27 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                     qty = item.qtyOnHand,
                     price = item.price?:0.0,
                     subtotal = item.price?.times(item.qtyOnHand)?:0.0,
+                    discount = item.discount,
                     taxValue = item.taxValue?:0.0,
-                    taxPercentage = item.taxPercentage?:0.0,
-                    rowItem = item,
+                    taxPercentage = item.taxPercentage?:0.0
                 )
                 databaseRepository.insertScannedProduct(dao)
             }
+        }
+    }
+
+    suspend fun updateScannedProduct(updatedItem: ProductTaxItem) {
+        println("ProductTaxItem : $updatedItem")
+        // Switch to the IO dispatcher to perform the database operation
+        withContext(Dispatchers.IO) {
+            val dao = ScannedProductDao(
+                productId = updatedItem.id.toLong(),
+                qty = updatedItem.qtyOnHand,
+                discount = updatedItem.discount,
+                subtotal = updatedItem.subtotal?:0.0
+            )
+            // Call the repository method to update the product
+            databaseRepository.updateScannedProduct(dao)
         }
     }
 

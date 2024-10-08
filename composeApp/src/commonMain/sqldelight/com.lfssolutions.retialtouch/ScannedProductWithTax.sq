@@ -1,5 +1,3 @@
-
-
 CREATE TABLE ScannedProductWithTax (
     productTaxId INTEGER NOT NULL PRIMARY KEY,
     productName TEXT NOT NULL,
@@ -18,7 +16,7 @@ VALUES(?,?,?,?,?,?,?,?,?);
 
 updateQuantity:
 UPDATE ScannedProductWithTax
-SET qtyOnHand = :qty ,subTotal =:subTotal
+SET productName = :name , qtyOnHand = :qty ,subTotal =:subTotal
 WHERE productTaxId = :productTaxId;
 
 

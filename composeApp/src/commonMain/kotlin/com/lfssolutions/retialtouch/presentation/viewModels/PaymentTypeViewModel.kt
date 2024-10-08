@@ -5,7 +5,11 @@ import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeUIState
+import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoice
+import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -228,6 +233,59 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    private fun getScannedProductList(){
+        viewModelScope.launch(Dispatchers.IO){
+            val scannedProductJob = async { databaseRepository.fetchAllScannedProduct()}.await()
+            scannedProductJob.collectLatest { scannedProductList->
+                val transformedProductList=scannedProductList.map {
+                    ProductTaxItem(
+                        id = it.productId.toInt(),
+                        name = it.name,
+                        inventoryCode = it.inventoryCode,
+                        barCode = it.barCode,
+                        qtyOnHand = it.qty,
+                        price = it.price,
+                        subtotal=it.subtotal,
+                        taxPercentage = it.taxPercentage,
+                        taxValue = it.taxValue
+                    )
+                }
+                _screenUIState.update {
+                    it.copy(scannedPosList = transformedProductList)
+                }
+            }
+        }
 
+    }
+
+    fun onTenderClick(){
+        getScannedProductList()
+        viewModelScope.launch(Dispatchers.IO) {
+          if(screenUIState.value.scannedPosList.isNotEmpty()){
+              updateLoader(true)
+              val isInitialized = initAuthenticationDao()
+              if (isInitialized) {
+                  getEmployeeByCode(preferences.getEmployeeCode().first())
+                  val employeeId=employeeDoa.value?.employeeId
+                  authenticationDao.collectLatest { authUser->
+                      authUser?.loginDao?.let {
+                          val posInvoice=PosInvoice(
+                              invoiceDate=getCurrentDate(),
+                              locationId = it.defaultLocationId?:0,
+                              locationCode= it.locationCode?:"",
+                              tenantId = it.tenantId?:0,
+                              terminalId = it.defaultLocationId?:0,
+                              terminalName = "RetailTouch",
+                              employeeId = employeeId,
+                          )
+                          CreatePOSInvoiceRequest(
+                              posInvoice =posInvoice
+                          )
+                      }
+                  }
+              }
+          }
+        }
+    }
 
 }

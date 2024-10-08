@@ -200,6 +200,14 @@ object DateTime{
         val durationDiff = currentInstant.minus(startInstant).inWholeHours
         return durationDiff
     }
+
+    fun getCurrentDate(): String {
+        // Get the current date
+        val currentDate = now.toLocalDateTime(systemTZ).date
+
+        // Format the date as "YYYY-MM-DD"
+        return currentDate.toString() // LocalDate.toString() defaults to "YYYY-MM-DD"
+    }
 }
 
 object DoubleExtension{
