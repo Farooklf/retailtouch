@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
@@ -168,34 +170,36 @@ fun ButtonRowCard(
     ){
 
         Row(modifier = Modifier
+            .fillMaxWidth()
             .wrapContentHeight()
             .padding(innerPaddingValues), // Inner padding of the card
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
 
-            Text(
-                text = label,
-                style = AppTheme.typography.titleMedium(),
-                color = carTextColor,
-                minLines=1,
-                maxLines = 1,
-                softWrap = true,
-                overflow = TextOverflow.Ellipsis)
+            Row(modifier=Modifier.wrapContentWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),verticalAlignment = Alignment.CenterVertically){
+                Text(
+                    text = label,
+                    style = AppTheme.typography.titleMedium(),
+                    color = carTextColor,
+                    minLines=1,
+                    maxLines = 1,
+                    softWrap = true,
+                    overflow = TextOverflow.Ellipsis)
 
-            //Spacer(modifier=Modifier.height(20.dp))
+                //Spacer(modifier=Modifier.height(20.dp))
 
-            if (icons != null) {
-                Icon(
-                    imageVector = vectorResource(icons),
-                    contentDescription = null,
-                    tint = carTextColor,
-                    modifier = Modifier.size(iconSize)
-                        .rotate(if (isDropdownExpanded) 180f else 0f)
+                if (icons != null) {
+                    Icon(
+                        imageVector = vectorResource(icons),
+                        contentDescription = null,
+                        tint = carTextColor,
+                        modifier = Modifier.size(iconSize)
+                            .rotate(if (isDropdownExpanded) 180f else 0f)
 
-                )
+                    )
+                }
             }
-
         }
 
     }

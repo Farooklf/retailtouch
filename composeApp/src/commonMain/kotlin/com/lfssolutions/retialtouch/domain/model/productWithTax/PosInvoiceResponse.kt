@@ -1,4 +1,4 @@
-package com.lfssolutions.retialtouch.domain.model.menu
+package com.lfssolutions.retialtouch.domain.model.productWithTax
 
 
 import com.lfssolutions.retialtouch.domain.model.ErrorResponse
@@ -6,17 +6,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuCategoryResponse(
+data class PosInvoiceResponse(
     @SerialName("__abp")
-    val abp: Boolean = false,
+    val abp: Boolean,
     @SerialName("error")
     val error: ErrorResponse?,
-    @SerialName("result")
-    val result: MenuCategoryResult = MenuCategoryResult(),
     @SerialName("success")
-    val success: Boolean = false,
+    val success: Boolean,
     @SerialName("targetUrl")
-    val targetUrl: String? = null,
+    val targetUrl: String?,
     @SerialName("unAuthorizedRequest")
-    val unAuthorizedRequest: Boolean = false
+    val unAuthorizedRequest: Boolean
 )

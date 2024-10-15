@@ -13,6 +13,7 @@ data class DesignDimensions internal constructor(
     val phonePadding: Dp = 10.dp,
     val progressWidth: Dp = 5.dp,
     val standerIcon: Dp = 24.dp,
+    val smallXIcon: Dp = 20.dp,
     val smallIcon: Dp = 28.dp,
     val mediumIcon: Dp = 40.dp,
     val largeIcon: Dp = 70.dp,
@@ -31,4 +32,14 @@ data class DesignDimensions internal constructor(
     val tabHorPadding: Dp = 20.dp,
     val phoneVerPadding: Dp = 10.dp,
     val phoneHorPadding: Dp = 10.dp,
+
+    val screenTabPadding: Dp = 20.dp,
+    val screenPhonePortraitHorPadding: Dp = 5.dp,
+    val screenPhonePortraitVerticalPadding: Dp = 10.dp,
+    val screenPhoneLandVerticalPadding: Dp = 5.dp,
+    val screenPhoneLandHorPadding: Dp = 10.dp,
+
+    val verticalItemPadding: Dp = 12.dp,
+    val columnItemPadding: Dp = 10.dp,
+
 )

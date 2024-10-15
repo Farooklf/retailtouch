@@ -15,23 +15,23 @@ data class PosInvoice(
     @SerialName("invoiceDate")
     val invoiceDate: String = "",
     @SerialName("invoiceItemDiscount")
-    val invoiceItemDiscount: Int = 0,
+    val invoiceItemDiscount: Double = 0.0,
     @SerialName("invoiceNetCost")
     val invoiceNetCost: Double = 0.0,
     @SerialName("invoiceNetDiscount")
-    val invoiceNetDiscount: Int = 0,
+    val invoiceNetDiscount: Double = 0.0,
     @SerialName("invoiceNetDiscountPerc")
-    val invoiceNetDiscountPerc: Int = 0,
+    val invoiceNetDiscountPerc: Double = 0.0,
     @SerialName("invoiceNetTotal")
     val invoiceNetTotal: Double = 0.0,
     @SerialName("invoiceNo")
     val invoiceNo: String = "",
     @SerialName("invoiceRoundingAmount")
-    val invoiceRoundingAmount: Int = 0,
+    val invoiceRoundingAmount: Double = 0.0,
     @SerialName("invoiceSubTotal")
     val invoiceSubTotal: Double = 0.0,
     @SerialName("invoiceTax")
-    val invoiceTax: Int = 0,
+    val invoiceTax: Double = 0.0,
     @SerialName("invoiceTotal")
     val invoiceTotal: Double = 0.0,
     @SerialName("invoiceTotalAmount")

@@ -6,6 +6,7 @@ import com.lfssolutions.retialtouch.utils.AppConstants.POS_SCREEN
 
 class Navigator(private val navController: NavHostController) {
 
+
     fun navigateBack(){
         navController.navigate(NavigationScreen.Home(false)){popUpToTop()}
     }

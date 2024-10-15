@@ -1,24 +1,26 @@
-package com.lfssolutions.retialtouch.dataBase
+package com.lfssolutions.retialtouch.domain
 
 
 
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationDao
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoriesDao
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductsDao
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
+import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import kotlinx.coroutines.flow.Flow
 
-interface DatabaseRepository {
+interface SqlPreference {
 
     suspend fun insertAuthentication(authenticateDao: AuthenticateDao)
     fun selectUserByUserId(userId: Long): Flow<AuthenticateDao>
@@ -41,18 +43,18 @@ interface DatabaseRepository {
     suspend fun deleteAllEmpRole()
 
     //Menu Category
-    suspend fun insertMenuCategories(menuCategoriesDao: MenuCategoriesDao)
-    fun selectCategoryById(id: Long): Flow<MenuCategoriesDao?>
-    fun getAllCategories(): Flow<List<MenuCategoriesDao>>
+    suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao)
+    fun selectCategoryById(id: Long): Flow<CategoryDao?>
+    fun getAllCategories(): Flow<List<CategoryDao>>
     suspend fun deleteCategories()
     fun getMenuCategoriesCount():Flow<Int>
 
 
     //Menu Products
-    suspend fun insertMenuProducts(menuProductsDao: MenuProductsDao)
-    fun selectProductsById(id: Long): Flow<MenuProductsDao?>
-    fun getAllProducts(): Flow<List<MenuProductsDao>>
-    suspend fun deleteProducts()
+    suspend fun insertStocks(menuProductsDao: MenuDao)
+    fun selectProductsById(id: Long): Flow<MenuDao?>
+    fun getStocks(): Flow<List<MenuDao>>
+    suspend fun deleteStocks()
     fun getMenuCProductsCount():Flow<Int>
 
 
@@ -76,19 +78,28 @@ interface DatabaseRepository {
     suspend fun insertProductWithTax(productTaxDao: ProductTaxDao)
     suspend fun updateProductWithTax(productTaxDao: ProductTaxDao)
     fun getAllProductWithTax(): Flow<List<ProductTaxDao>>
+    fun getProductById(id: Long): Flow<ProductTaxDao?>
+    fun getProductByCode(code: String): Flow<ProductTaxDao?>
     suspend fun deleteProductWithTax()
 
     //Scanned ProductWithTax
     suspend fun insertScannedProduct(productTaxDao: ScannedProductDao)
     suspend fun updateScannedProduct(productTaxDao: ScannedProductDao)
     fun fetchAllScannedProduct(): Flow<List<ScannedProductDao>>
-    //suspend fun deleteScannedProductById(productId: Long)
-   // suspend fun deleteAllScannedProduct()
+    suspend fun deleteScannedProductById(productId: Long)
+    suspend fun deleteAllScannedProduct()
 
     //ProductLocation
     suspend fun insertProductLocation(productLocationDao: ProductLocationDao)
     fun getAllProductLocation(): Flow<List<ProductLocationDao>>
     suspend fun deleteProductLocation()
+
+    //BarCode
+    suspend fun insertProductBarcode(barcodeDao: BarcodeDao)
+    suspend fun updateProductBarcode(barcodeDao: BarcodeDao)
+    fun getAllBarcode(): Flow<List<BarcodeDao>>
+    suspend fun deleteBarcode()
+
 
     //Member
     suspend fun insertMembers(memberDao: MemberDao)

@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuProductItem(
+data class MenuItem(
     @SerialName("backColor")
     val backColor: String?=null,
     @SerialName("barCode")
@@ -33,7 +33,7 @@ data class MenuProductItem(
     @SerialName("lastModifierUserId")
     val lastModifierUserId: String?=null,
     @SerialName("menuCategoryId")
-    val menuCategoryId: Int=0,
+    var menuCategoryId: Int=0,
     @SerialName("name")
     val name: String="",
     @SerialName("productId")

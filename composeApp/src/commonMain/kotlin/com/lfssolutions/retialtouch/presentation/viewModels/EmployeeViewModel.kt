@@ -1,10 +1,7 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeUIState
-import com.lfssolutions.retialtouch.dataBase.DatabaseRepository
-import com.lfssolutions.retialtouch.domain.LocalRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -15,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
@@ -91,9 +87,8 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
 
     private fun performEmployeeLogin() {
-        getEmployeeByCode(_employeeScreenState.value.employeeCode)
         viewModelScope.launch {
-            val employee=employeeDoa.value
+            val employee=dataBaseRepository.getEmployeeByCode(_employeeScreenState.value.employeeCode)
             if(employee!=null){
                 if (employee.employeePassword == _employeeScreenState.value.pin) {
                     preferences.setEmployeeCode(_employeeScreenState.value.employeeCode)

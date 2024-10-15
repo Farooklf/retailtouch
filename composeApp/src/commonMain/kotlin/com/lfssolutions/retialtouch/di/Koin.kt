@@ -2,14 +2,12 @@ package com.lfssolutions.retialtouch.di
 
 import com.lfssolutions.retialtouch.data.local.PreferencesImpl
 import com.lfssolutions.retialtouch.data.remote.api.ApiServiceImpl
-import com.lfssolutions.retialtouch.dataBase.DatabaseRepository
-import com.lfssolutions.retialtouch.dataBase.DatabaseRepositoryImpl
-import com.lfssolutions.retialtouch.domain.LocalRepository
+import com.lfssolutions.retialtouch.domain.SqlPreference
+import com.lfssolutions.retialtouch.data.sqlDelightDb.SqlPreferenceImpl
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.domain.ApiService
-import com.lfssolutions.retialtouch.domain.ApiUtils
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
-import com.lfssolutions.retialtouch.domain.RemoteService
+import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.utils.viewModelDefinition
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.DashBoardViewmodel
@@ -17,7 +15,8 @@ import com.lfssolutions.retialtouch.presentation.viewModels.EmployeeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
-import com.lfssolutions.retialtouch.presentation.viewModels.PosViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
+import com.lfssolutions.retialtouch.retailTouchDB
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -64,27 +63,24 @@ fun appModule() = module {
     }
 
     single { Settings() }
-    single { RemoteService(get(), get(),get()) }
     single { NetworkRepository() }
+    single { DataBaseRepository() }
     single<PreferencesRepository> { PreferencesImpl(settings = get()) }
-    single { LocalRepository(get()) }
-    single<ApiService> { ApiServiceImpl(httpClient = get(), preferences = get(), databaseRepository = get())}
+    single<ApiService> { ApiServiceImpl(httpClient = get(), preferences = get(), sqlPreference = get())}
 
-    // Initialize ApiUtils with PreferencesRepository
-   /* single {
-        val preferences: PreferencesRepository = get()
-        val apiService: ApiService = get<ApiService>()
-        ApiUtils.init(preferences,apiService) // Call the init method
-    }*/
 
+   //Database Driver
+    single<retailTouchDB> { retailTouchDB.invoke(get()) }
     //DataBaseRepository
-    single<DatabaseRepository> { DatabaseRepositoryImpl(get()) }
+    single<SqlPreference> { SqlPreferenceImpl(get()) }
+    //ViewModels
+    single { SharedPosViewModel() }
 
     viewModelDefinition { BaseViewModel() }
     viewModelDefinition { LoginViewModel() }
     viewModelDefinition { DashBoardViewmodel() }
     viewModelDefinition { EmployeeViewModel() }
     viewModelDefinition { HomeViewModel() }
-    viewModelDefinition { PosViewModel() }
+    //viewModelDefinition { SharedPosViewModel() }
     viewModelDefinition { PaymentTypeViewModel() }
 }

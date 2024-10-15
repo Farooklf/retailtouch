@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceItem
+import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationItem
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
@@ -23,6 +24,10 @@ fun String.toProductTaxItem(): ProductTaxItem = JsonObj.decodeFromString(this)
 fun ProductLocationItem.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toProductLocationItem(): ProductLocationItem = JsonObj.decodeFromString(this)
+
+fun Barcode.toJson(): String = JsonObj.encodeToString(this)
+
+fun String.toBarcode(): Barcode = JsonObj.decodeFromString(this)
 
 fun MemberItem.toJson(): String = JsonObj.encodeToString(this)
 

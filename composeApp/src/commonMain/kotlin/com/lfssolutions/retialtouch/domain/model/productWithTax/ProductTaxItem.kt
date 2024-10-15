@@ -95,7 +95,7 @@ data class ProductTaxItem(
     @SerialName("id")
     val id: Int = 0,
     @SerialName("imagePath")
-    val imagePath: String? = null,
+    val image: String? = null,
     @SerialName("inActiveLastModifiedTime")
     val inActiveLastModifiedTime: String? = null,
     @SerialName("inTransit")
@@ -235,7 +235,7 @@ data class ProductTaxItem(
     @SerialName("subCategoryName")
     val subCategoryName: String? = null,
     @SerialName("tax")
-    val tax: String? = "",
+    val tax: String? = null,
     @SerialName("taxId")
     val taxId: Int? = 0,
     @SerialName("taxName")
@@ -281,6 +281,8 @@ data class ProductTaxItem(
 
     val originalPrice: Double = price?:0.0,
     val originalSubTotal: Double = 0.0,
-    val subtotal: Double? = 0.0,
-    val discount: Double = 0.0,
+    val cartTotal: Double? = 0.0,
+    val cartTotalWithoutDiscount: Double? = 0.0,
+    val itemDiscountPerc: Double = 0.0,
+    val itemDiscount: Double = 0.0,
 )

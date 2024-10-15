@@ -1,19 +1,22 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeUIState
 import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoice
+import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoiceDetail
+import com.lfssolutions.retialtouch.domain.model.productWithTax.PosPayment
+import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
-import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
+import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 
 class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
@@ -30,23 +34,34 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
     private val _screenUIState = MutableStateFlow(PaymentTypeUIState())
     val screenUIState: StateFlow<PaymentTypeUIState> = _screenUIState.asStateFlow()
 
-    fun loadDataFromDatabases(memberId: Int, totalAmount: Double) {
+    fun fetchPaymentList(){
+        viewModelScope.launch(Dispatchers.IO){
+            dataBaseRepository.getPaymentType().collectLatest { list->
+                withContext(Dispatchers.Main) {
+                    _screenUIState.update { it.copy(paymentList = list)
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadDataFromDatabases(posUIState: PosUIState) {
         viewModelScope.launch(Dispatchers.IO) {
             // Set loading to true at the start
             updateLoader(true)
-            delay(2000)
+            //delay(2000)
             try {
                 // Load data from multiple databases concurrently
                 val data1Deferred = async { getCurrencySymbol() }
-                val data2Deferred = async { databaseRepository.getAllPaymentType()}
-                val data3Deferred = async { getDeliveryType() }
-                val data4Deferred = async { getStatusType() }
+                //val data2Deferred = async { sqlPreference.getAllPaymentType()}
+                //val data3Deferred = async { getDeliveryType() }
+                //val data4Deferred = async { getStatusType() }
 
                 // Await all results
                 val currencySymbol = data1Deferred.await()
-                val paymentTypeDao = data2Deferred.await()
-                val deliveryType = data3Deferred.await()
-                val statusType = data4Deferred.await()
+                //val paymentTypeDao = data2Deferred.await()
+                //val deliveryType = data3Deferred.await()
+                //val statusType = data4Deferred.await()
 
                 // Update your state directly with responses
                 _screenUIState.update { currentState->
@@ -55,7 +70,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     )
                 }
 
-                paymentTypeDao.collectLatest { paymentList ->
+                /*paymentTypeDao.collectLatest { paymentList ->
                     val transformedProductList = paymentList.map { itemDao ->
                         // Access the rowItem and map it to the desired format
                         itemDao.rowItem
@@ -63,9 +78,9 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     _screenUIState.update {
                         it.copy(paymentList = transformedProductList)
                     }
-                }
+                }*/
 
-                deliveryType.collectLatest { deliveryList ->
+                /*deliveryType.collectLatest { deliveryList ->
                     _screenUIState.update {
                         it.copy(deliveryTypeList = deliveryList, selectedDeliveryType = deliveryList[0])
                     }
@@ -75,10 +90,10 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     _screenUIState.update {
                         it.copy(statusTypeList = statusList , selectedStatusType = statusList[0])
                     }
-                }
+                }*/
 
                 _screenUIState.update {
-                    it.copy(memberId = memberId , totalAmount = totalAmount, remainingAmount = totalAmount)
+                    it.copy(posUIState = posUIState, remainingBalance = posUIState.grandTotal, grandTotal = posUIState.grandTotal)
                 }
 
                 updateLoader(false)
@@ -140,29 +155,29 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun updatePaymentById(item: PaymentTypeItem ) {
-        println("selectedPayment : $item")
+
         viewModelScope.launch {
             _screenUIState.update { currentState ->
                 val updatedProductList = currentState.paymentList.map { payment ->
                     if (payment.id == item.id){
-                        payment.copy(isSelected=true,isShowPaidAmount=true,paidAmount="${currentState.currencySymbol} ${currentState.remainingAmount}")
+                        payment.copy(isSelected=true,/*isShowPaidAmount=true,paidAmount="${currentState.currencySymbol} ${currentState.remainingAmount}"*/)
                     }
-                    else payment.copy(isSelected = false, isShowPaidAmount = false, paidAmount = "")
+                    else payment
                 }
-                currentState.copy(paymentList = updatedProductList, remainingAmount = 0.0,selectedPayment = item)
+                currentState.copy(paymentList = updatedProductList, /*remainingAmount = 0.0,*/selectedPayment = item, showPaymentCollectorDialog = true)
             }
         }
     }
 
     fun omPaymentIconClick(item: PaymentTypeItem){
         viewModelScope.launch {
-            _screenUIState.update { it.copy(isShowCalculator = true, selectedPayment = item) }
+            _screenUIState.update { it.copy(showPaymentCollectorDialog = true, selectedPayment = item) }
         }
     }
 
     fun dismissNumberPadDialog(){
         viewModelScope.launch {
-            _screenUIState.update { it.copy(isShowCalculator = false) }
+            _screenUIState.update { it.copy(showPaymentCollectorDialog = false) }
         }
     }
 
@@ -180,8 +195,8 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                         numericValue < it.minValue -> {
                             errorMessage = "Value must be at least ${it.minValue}"
                         }
-                        numericValue > it.totalAmount -> {
-                            errorMessage = "Value must not exceed ${it.totalAmount}"
+                        numericValue > it.grandTotal -> {
+                            errorMessage = "Value must not exceed ${it.grandTotal}"
                         }
                     }
                 }
@@ -213,7 +228,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
     fun onNumberPadApplyClick(){
         with(_screenUIState.value){
             if(inputAmount.isNotEmpty()){
-                val updatedRemaining = totalAmount-inputAmount.toDouble()
+                val updatedRemaining = grandTotal-inputAmount.toDouble()
                 updatedRemaining(updatedRemaining)
             }
         }
@@ -228,64 +243,163 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     }
                     else payment.copy(isSelected = false, isShowPaidAmount = false, paidAmount = "")
                 }
-                currentState.copy(remainingAmount = updatedRemaining, paymentList = updatedProductList,isShowCalculator = false)
+                currentState.copy(remainingBalance = updatedRemaining, paymentList = updatedProductList,showPaymentCollectorDialog = false)
             }
         }
     }
 
-    private fun getScannedProductList(){
-        viewModelScope.launch(Dispatchers.IO){
-            val scannedProductJob = async { databaseRepository.fetchAllScannedProduct()}.await()
-            scannedProductJob.collectLatest { scannedProductList->
-                val transformedProductList=scannedProductList.map {
-                    ProductTaxItem(
-                        id = it.productId.toInt(),
-                        name = it.name,
-                        inventoryCode = it.inventoryCode,
-                        barCode = it.barCode,
-                        qtyOnHand = it.qty,
-                        price = it.price,
-                        subtotal=it.subtotal,
-                        taxPercentage = it.taxPercentage,
-                        taxValue = it.taxValue
-                    )
-                }
-                _screenUIState.update {
-                    it.copy(scannedPosList = transformedProductList)
-                }
+
+
+    fun updateDeletePaymentModeDialog(value: Boolean) {
+        _screenUIState.update { state -> state.copy(showDeletePaymentModeDialog = value) }
+    }
+    fun updateSelectedPaymentToDeleteId(selectedPaymentToDelete: Int) {
+        _screenUIState.update { state -> state.copy(selectedPaymentToDelete = selectedPaymentToDelete) }
+    }
+
+    fun deletePayment() {
+        val state=screenUIState.value
+        val deletedPayment = state.createdPayments.find { it.paymentTypeId == state.selectedPaymentToDelete }
+        if (deletedPayment != null) {
+            _screenUIState.update {
+                it.copy(
+                    createdPayments = it.createdPayments.toMutableList().apply { remove(deletedPayment) },
+                    paymentTotal = ((it.paymentTotal - deletedPayment.amount)).roundTo(state.roundToDecimal),
+                    remainingBalance = ((it.grandTotal - (it.paymentTotal - deletedPayment.amount))).roundTo(state.roundToDecimal)
+                )
             }
         }
+    }
 
+    fun applyPaymentValue(){
+        val state=screenUIState.value
+        if(state.inputAmount.isNotEmpty()){
+            val payment=state.inputAmount.toDouble()
+            val appliedPayment = PosPayment(
+                paymentTypeId = state.selectedPayment.id,
+                name = state.paymentList.find { it.id == state.selectedPayment.id }?.name ?: "",
+                amount = payment
+            )
+            _screenUIState.update {
+                it.copy(
+                    paymentTotal = ((it.paymentTotal + payment)).roundTo(),
+                    remainingBalance = ((it.grandTotal - (it.paymentTotal + payment))).roundTo(),
+                    createdPayments = it.createdPayments.apply { add(appliedPayment) },
+                    isPaid = true,
+                    showPaymentCollectorDialog = false
+                )
+            }
+            //if (state.remainingBalance <= 0.0) updatePaymentSuccessDialogVisibility(true)
+        }
     }
 
     fun onTenderClick(){
-        getScannedProductList()
         viewModelScope.launch(Dispatchers.IO) {
-          if(screenUIState.value.scannedPosList.isNotEmpty()){
+            val posState=screenUIState.value.posUIState
+            val scannedList = posState.shoppingCart
+          if(scannedList.isNotEmpty()){
               updateLoader(true)
-              val isInitialized = initAuthenticationDao()
-              if (isInitialized) {
-                  getEmployeeByCode(preferences.getEmployeeCode().first())
-                  val employeeId=employeeDoa.value?.employeeId
-                  authenticationDao.collectLatest { authUser->
-                      authUser?.loginDao?.let {
-                          val posInvoice=PosInvoice(
-                              invoiceDate=getCurrentDate(),
-                              locationId = it.defaultLocationId?:0,
-                              locationCode= it.locationCode?:"",
-                              tenantId = it.tenantId?:0,
-                              terminalId = it.defaultLocationId?:0,
-                              terminalName = "RetailTouch",
-                              employeeId = employeeId,
-                          )
-                          CreatePOSInvoiceRequest(
-                              posInvoice =posInvoice
-                          )
-                      }
+              createStockList(scannedList)
+              val employee=dataBaseRepository.getEmployeeByCode(preferences.getEmployeeCode().first())
+              val employeeId=employee?.employeeId
+              authenticationDao.collectLatest { authUser->
+                  authUser?.loginDao?.let {
+                      val posInvoice=PosInvoice(
+                          invoiceDate=getCurrentDate(),
+                          locationId = it.defaultLocationId?:0,
+                          locationCode= it.locationCode?:"",
+                          tenantId = it.tenantId?:0,
+                          terminalId = it.defaultLocationId?:0,
+                          terminalName = "RetailTouch",
+                          employeeId = employeeId,
+                          invoiceTotal = posState.invoiceSubTotal, //before Tax
+                          invoiceTotalAmount= posState.grandTotal,
+                          invoiceTotalValue = posState.grandTotal,
+                          invoiceSubTotal=posState.grandTotal,
+                          invoiceNetDiscountPerc = posState.invoiceNetDiscountPerc,
+                          invoiceNetDiscount = posState.invoiceNetDiscount,
+                          invoiceItemDiscount= posState.itemsDiscount,
+                          invoiceTax = posState.invoiceTax,
+                          invoiceNetTotal = posState.grandTotal,
+                          invoiceNetCost = posState.grandTotal,
+                          paid = screenUIState.value.paymentTotal,
+                          memberId = posState.selectedMemberId,
+                          posPayments = screenUIState.value.posPayments,
+                          posInvoiceDetails = screenUIState.value.posInvoiceDetails
+                      )
+                      createOrUpdatePosInvoice(CreatePOSInvoiceRequest(
+                          posInvoice =posInvoice
+                      ))
                   }
               }
           }
         }
     }
 
+    private fun createStockList(list: List<ProductTaxItem>) {
+        val posInvoiceDetails: MutableList<PosInvoiceDetail> = mutableListOf()
+        list.forEach { item->
+           val appliedStock = PosInvoiceDetail(
+                productId = item.id,
+                inventoryCode=item.inventoryCode?:"",
+                inventoryName=item.name?:"",
+                qty=item.qtyOnHand,
+                price=item.price?:0.0,
+                total=item.originalSubTotal,
+                itemDiscountPerc=item.itemDiscountPerc,
+                itemDiscount=item.itemDiscount,
+                totalValue=item.originalSubTotal,
+                netDiscount=item.itemDiscount,
+                totalAmount=item.originalSubTotal,
+                subTotal=item.cartTotal?:0.0,
+                tax=item.taxValue?:0.0,
+                netTotal=item.originalSubTotal,
+                averageCost =item.originalSubTotal,
+                netCost=item.originalSubTotal,
+                taxPercentage=item.taxPercentage?.toInt()?:0,
+
+            )
+            posInvoiceDetails.toMutableList().add(appliedStock)
+        }
+        _screenUIState.update {
+            it.copy(
+                posInvoiceDetails = posInvoiceDetails
+            )
+        }
+    }
+
+    private suspend fun createOrUpdatePosInvoice(createPOSInvoiceRequest: CreatePOSInvoiceRequest) {
+        try {
+            println("calling api : ${count++}")
+            networkRepository.createUpdatePosInvoice(createPOSInvoiceRequest).collectLatest { apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            resetScreenState()
+                        }
+                        updateLoader(false)
+                    },
+                    onError = {
+                            errorMsg ->
+                        _screenUIState.update { it.copy(errorMsg=errorMsg) }
+                        updateLoader(false)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorMsg="${e.message}"
+            _screenUIState.update { it.copy(errorMsg=errorMsg) }
+            updateLoader(false)
+        }
+    }
+
+    private fun resetScreenState() {
+        viewModelScope.launch {
+            dataBaseRepository.clearScannedProduct()
+            _screenUIState.update { it.copy(createdPayments = it.createdPayments.toMutableList().apply { clear() }, isPaid = false, posUIState = PosUIState(), isPaymentClose = true) }
+        }
+    }
 }

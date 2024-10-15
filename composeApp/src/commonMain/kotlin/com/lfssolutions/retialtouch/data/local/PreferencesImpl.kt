@@ -7,7 +7,11 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENCY_SYMBOL
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENT_TENANT_URL
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_CODE
 import com.lfssolutions.retialtouch.utils.PrefKeys.IS_LOGGED_IN
+import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
+import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_GROUP_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
 import com.lfssolutions.retialtouch.utils.PrefKeys.TENANT_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_TIME
@@ -151,4 +155,63 @@ class PreferencesImpl(
             defaultValue = false
         )
     }
+
+    override suspend fun setLastSyncTs(result: Long) {
+        flowSettings.putLong(
+            key = LAST_SYNC_TS,
+            value = result
+        )
+    }
+
+    override fun getLastSyncTs(): Flow<Long> {
+        return flowSettings.getLongFlow(
+            key = LAST_SYNC_TS,
+            defaultValue =0
+        )
+    }
+
+    override suspend fun setReSyncTimer(result: Int) {
+        flowSettings.putInt(
+            key = RE_SYNC_TIMER,
+            value = result
+        )
+    }
+
+    override fun getReSyncTime(): Flow<Int> {
+        return flowSettings.getIntFlow(
+            key = RE_SYNC_TIMER,
+            defaultValue = 5
+        )
+    }
+
+    override suspend fun setMemberSyncGrid(result: String) {
+        flowSettings.putString(
+            key = MEMBER_SYNC,
+            value = result
+        )
+    }
+
+    override fun getMemberSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = MEMBER_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setMemberGroupSyncGrid(result: String) {
+        flowSettings.putString(
+            key = MEMBER_GROUP_SYNC,
+            value = result
+        )
+
+    }
+
+    override fun getMemberGroupSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = MEMBER_GROUP_SYNC,
+            defaultValue = ""
+        )
+    }
+
+
 }

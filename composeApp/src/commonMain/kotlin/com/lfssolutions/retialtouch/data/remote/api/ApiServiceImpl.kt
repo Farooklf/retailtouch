@@ -1,13 +1,12 @@
 package com.lfssolutions.retialtouch.data.remote.api
 
 
-import com.lfssolutions.retialtouch.dataBase.DatabaseRepository
+import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.ApiUtils.handleApiResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.handleException
 import com.lfssolutions.retialtouch.domain.ApiUtils.performApiRequestWithBaseUrl
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
-import com.lfssolutions.retialtouch.domain.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.domain.ApiRoutes
 import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
@@ -17,8 +16,8 @@ import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoryResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductResponse
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
+import com.lfssolutions.retialtouch.domain.model.menu.MenuResponse
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
@@ -26,6 +25,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
 import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoiceResponse
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
@@ -47,11 +47,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
-
+const val TOKEN_EXPIRY_THRESHOLD = 6
  class ApiServiceImpl(
     private val httpClient: HttpClient,
     private val preferences: PreferencesRepository,
-    private val databaseRepository: DatabaseRepository
+    private val sqlPreference: SqlPreference
 ) : ApiService{
 
     private suspend fun getBaseUrl() : String {
@@ -101,7 +101,7 @@ import kotlinx.coroutines.withContext
 
     private suspend fun getLoginDetails(): LoginRequest {
         var loginRequest = LoginRequest()
-        databaseRepository.selectUserByUserId(preferences.getUserId().first())
+        sqlPreference.selectUserByUserId(preferences.getUserId().first())
             .collect { authDao ->
                 loginRequest = LoginRequest(
                     usernameOrEmailAddress = authDao.userName,
@@ -170,23 +170,23 @@ import kotlinx.coroutines.withContext
         }
     }
 
-    override fun getMenuCategories(mBasicApiRequest: BasicApiRequest): Flow<RequestState<MenuCategoryResponse>> {
+    override fun getMenuCategories(mBasicApiRequest: BasicApiRequest): Flow<RequestState<CategoryResponse>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.GET_MENU_CATEGORIES_API,
             requestBody = mBasicApiRequest
         ) { response ->
-            handleApiResponse<MenuCategoryResponse>(response)
+            handleApiResponse<CategoryResponse>(response)
         }
     }
 
-    override fun getMenuProducts(mBasicApiRequest: BasicApiRequest): Flow<RequestState<MenuProductResponse>> {
+    override fun getMenuProducts(mBasicApiRequest: BasicApiRequest): Flow<RequestState<MenuResponse>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.GET_MENU_PRODUCTS_API,
             requestBody = mBasicApiRequest
         ) { response ->
-            handleApiResponse<MenuProductResponse>(response)
+            handleApiResponse<MenuResponse>(response)
         }
     }
 
@@ -290,13 +290,13 @@ import kotlinx.coroutines.withContext
         }
     }
 
-     override fun createUpdatePosInvoice(mBasicApiRequest: CreatePOSInvoiceRequest): Flow<RequestState<SyncAllResponse>> {
+     override fun createUpdatePosInvoice(mBasicApiRequest: CreatePOSInvoiceRequest): Flow<RequestState<PosInvoiceResponse>> {
          return performApiRequestWithBaseUrl(
              httpClient=httpClient,
              apiUrl = ApiRoutes.CREATE_UPDATE_POS_INVOICE,
              requestBody = mBasicApiRequest
          ) { response ->
-             handleApiResponse<SyncAllResponse>(response)
+             handleApiResponse<PosInvoiceResponse>(response)
          }
      }
  }

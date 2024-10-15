@@ -8,5 +8,6 @@ data class AppState(
     val authenticated: Boolean = false,
     val isTablet: Boolean = false,
     val screenWidth: Dp = 0.dp,
-    val deviceType: DeviceType = DeviceType.SMALL_PHONE // Default to small phone
+    val deviceType: DeviceType = DeviceType.SMALL_PHONE, // Default to small phone
+    val isPortrait:Boolean=false
 )

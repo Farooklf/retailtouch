@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Icon
@@ -41,14 +42,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.domain.model.AppState
+import com.lfssolutions.retialtouch.domain.model.home.HomeScreenItem
 import com.lfssolutions.retialtouch.domain.model.home.HomeUIState
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
+import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
-import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
-import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import org.jetbrains.compose.resources.DrawableResource
@@ -83,6 +84,18 @@ fun HomeItemGrid(mHomeUIState: HomeUIState, onClick: (Int) -> Unit){
         }
     }
 
+}
+
+fun LazyGridScope.ListGridItems(homeItemList: List<HomeScreenItem>,onClick: (Int) -> Unit) {
+    items(homeItemList.size) { index ->
+        val item = homeItemList[index]
+        val itemName = stringResource(item.labelResId)
+        HomeItem(item.isSyncRotate,item.homeItemId,itemName,item.icon,
+            onClick = {
+                onClick.invoke(item.homeItemId)
+            }
+        )
+    }
 }
 
 
@@ -352,8 +365,11 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onCl
 }
 
 fun getGridCell(appState: AppState): Int {
-    return when (appState.deviceType) {
-        DeviceType.SMALL_PHONE -> {
+    return when (appState.isPortrait) {
+        true -> 2
+        false-> 4
+
+        /*DeviceType.SMALL_PHONE -> {
             2
         }
 
@@ -367,6 +383,6 @@ fun getGridCell(appState: AppState): Int {
 
         DeviceType.LARGE_TABLET -> {
             4
-        }
+        }*/
     }
 }

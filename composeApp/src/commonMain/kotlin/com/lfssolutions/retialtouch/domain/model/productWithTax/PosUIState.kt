@@ -8,7 +8,6 @@ import com.lfssolutions.retialtouch.utils.DiscountType
 
 data class PosUIState(
 
-
     var isLoading : Boolean = false,
     var searchQuery :String = "",
     var showDialog : Boolean = false,
@@ -25,19 +24,33 @@ data class PosUIState(
     var isRemoveDialog : Boolean = false,
 
     var selectedProduct : ProductTaxItem = ProductTaxItem(),
-    val uiPosList: List<ProductTaxItem> = listOf(),
+    val shoppingCart: List<ProductTaxItem> = listOf(),
     val dialogPosList : List<ProductTaxItem> = listOf(),
-    var isInsertion : Boolean = false,
+    var isCallScannedItems : Boolean = false,
 
     var itemsDiscount : Double = 0.0,
-    var promoDiscount : Double = 0.0,
-    val totalQty: Double = 0.0,
-    val totalTax: Double = 0.0,
-    var discounts: Double = 0.0,
-    val subTotal: Double = 0.0,
-    val grandTotal: Double = 0.0,
-    val originalTotal: Double = 0.0,
 
+    val quantityTotal: Double = 0.0,
+    val invoiceTax: Double = 0.0,
+    var discounts: Double = 0.0,
+    var qty: Double = 0.0,
+
+    val invoiceSubTotal: Double = 0.0,
+    val originalTotal: Double = 0.0,
+    val invoiceNetDiscountPerc: Double = 0.0,
+    val invoiceNetDiscount: Double = 0.0,
+    val exchange :Boolean=false,
+    val isSalesTaxInclusive :Boolean=false,
+    val promotionByQuantity :Boolean=false,
+    val promotionActive :Boolean=false,
+    val discountIsInPercent :Boolean=false,
+    val posInvoiceRounded :Double?=0.0,
+    val promoDiscount :Double?=0.0,
+    val amount :Double?=0.0,
+    val cprice :Double?=0.0,
+
+    val grandTotal: Double = 0.0,
+    val grandTotalWithoutDiscount :Double?=0.0,
 
     var isHoldSaleDialog : Boolean = false,
     // HashMap to hold collections

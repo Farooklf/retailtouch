@@ -1,11 +1,12 @@
 package com.lfssolutions.retialtouch.domain.model.menu
 
+import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuProductsDao(
+data class MenuDao(
     val productId:Long =0,
-    val menuProductItem: MenuProductItem = MenuProductItem()
+    val menuProductItem: Stock = Stock()
 )
 
 

@@ -1,7 +1,5 @@
 package com.lfssolutions.retialtouch.utils.serializers.db
 
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductItem
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResult
 import com.lfssolutions.retialtouch.utils.JsonObj
 import kotlinx.serialization.encodeToString

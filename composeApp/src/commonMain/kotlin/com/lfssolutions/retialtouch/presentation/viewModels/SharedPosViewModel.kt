@@ -11,23 +11,81 @@ import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DiscountApplied
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
+import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentageByValue
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.DrawableResource
 import org.koin.core.component.KoinComponent
+import kotlin.math.absoluteValue
 
-class PosViewModel : BaseViewModel(), KoinComponent {
+class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private val _posUIState = MutableStateFlow(PosUIState())
     val posUIState: StateFlow<PosUIState> = _posUIState.asStateFlow()
+
+    fun fetchUIProductList(){
+        viewModelScope.launch(Dispatchers.IO){
+            dataBaseRepository.getScannedProduct().collectLatest { list->
+                withContext(Dispatchers.Main) {
+                    _posUIState.update {
+                        it.copy(shoppingCart = list)
+                    }
+                }
+            }
+        }
+    }
+
+    fun getAuthDetails(){
+        viewModelScope.launch {
+            authUser.collectLatest { authDetails->
+                if(authDetails!=null){
+                    _posUIState.update {
+                        it.copy(
+                            isSalesTaxInclusive = authDetails.loginDao.salesTaxInclusive?:false,
+                            posInvoiceRounded=authDetails.loginDao.posInvoiceRounded
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // Optionally fetch and print products in the ViewModel
+    fun loadDialogProduct() {
+        viewModelScope.launch {
+            productsList.collectLatest { productDaoList ->
+                if(productDaoList.isNotEmpty()){
+                   val productList= productDaoList.map { item->
+                      item.rowItem
+                    }
+                    _posUIState.update { it.copy(dialogPosList=productList)}
+                     println("ProductList: $productList")
+                }
+            }
+        }
+    }
+
+    fun loadMemberList(){
+        viewModelScope.launch {
+            // Collect member list
+            memberList.collectLatest { members ->
+                if(members.isNotEmpty()){
+                    println("memberList: $members")
+                    _posUIState.update { state ->
+                        state.copy(memberList = members.map { it.rowItem})
+                    }
+                }
+            }
+        }
+    }
 
     fun loadDataFromDatabases() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -35,36 +93,37 @@ class PosViewModel : BaseViewModel(), KoinComponent {
             updateLoader(true)
             try {
                 // Load data from multiple databases concurrently
-                val data1Deferred = async { getCurrencySymbol() }
-                val data2Deferred = async { databaseRepository.getAllProductWithTax()}
-                val data3Deferred = async { databaseRepository.getAllMembers()}
-                val data4Deferred = async { databaseRepository.getAllMemberGroup()}
+                //val data1Deferred = async { getCurrencySymbol() }
+                //val data2Deferred = async { dataBaseRepository.getProducts()}
+               // val data3Deferred = async { dataBaseRepository.getAllMembers()}
+                //val data4Deferred = async { dataBaseRepository.getAllMemberGroup()}
 
                 // Await all results
-                val currencySymbol = data1Deferred.await()
-                val productTaxDao = data2Deferred.await()
-                val membersDao = data3Deferred.await()
-                val memberGroupDao = data4Deferred.await()
+                //val currencySymbol = data1Deferred.await()
+                //val productTaxDao = data2Deferred.await()
+                //val membersDao = data3Deferred.await()
+                //val memberGroupDao = data4Deferred.await()
 
                 // Update your state directly with responses
-                _posUIState.update { currentState->
-                    currentState.copy(
-                        currencySymbol = currencySymbol
-                    )
+                currencySymbol.collectLatest {
+                    _posUIState.update { currentState->
+                        currentState.copy(currencySymbol = it)
+                    }
                 }
 
-                productTaxDao.collectLatest { productList ->
-                    val transformedProductList = productList.map { productDao ->
-                        // Access the rowItem and map it to the desired format
-                        productDao.rowItem // Assuming this is the desired format
-                    }
+                productsList.collectLatest {itemDao->
+                    println("productDao: $itemDao")
+                    val transformedList = itemDao?.map { item ->
+                        println("rowItem: ${item.rowItem}")
+                        item.rowItem
+                    }?: emptyList()
                     _posUIState.update {
-                        it.copy(dialogPosList = transformedProductList)
+                        it.copy(dialogPosList = transformedList)
                     }
                 }
 
 
-                membersDao.collectLatest { memberList ->
+                /*membersDao.collectLatest { memberList ->
                     val transformedList = memberList.map { memberDao ->
                         // Access the rowItem and map it to the desired format
                         memberDao.rowItem
@@ -78,6 +137,7 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                     val transformedList = memberList.map { memberDao ->
                         memberDao.rowItem
                     }
+
                     if(transformedList.isNotEmpty()){
                         _posUIState.update {
                             it.copy( selectedMemberGroup= transformedList[0].name?:"", selectedMemberGroupId = transformedList[0].id)
@@ -86,7 +146,7 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                     _posUIState.update {
                         it.copy(memberGroupList = transformedList)
                     }
-                }
+                }*/
 
                 updateLoader(false)
 
@@ -94,6 +154,15 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                 // Handle errors, ensuring loading state is false
                 updateLoader(false)
             }
+        }
+    }
+
+    fun insertPosListItem(item: ProductTaxItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val qty = if (item.qtyOnHand < 1.0) 1.0 else item.qtyOnHand
+            val updatedItem = item.copy(qtyOnHand = qty)
+            dataBaseRepository.insertOrUpdateScannedProduct(updatedItem)
+            _posUIState.update {it.copy(isCallScannedItems= !it.isCallScannedItems)}
         }
     }
 
@@ -110,9 +179,30 @@ class PosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun updateSearchQuery(value:String){
+    fun updateSearchQuery(query:String){
         viewModelScope.launch {
-            _posUIState.update { it.copy(searchQuery = value) }
+            _posUIState.update {
+                if (isCode(query)) {
+                    filterListByCode(query) // Filter by barcode or inventory code
+                }
+                it.copy(searchQuery = query)
+            }
+        }
+    }
+
+    // Detects if a query is likely a code (numeric and shorter than a typical name)
+    private fun isCode(query: String): Boolean {
+        return query.all { it.isDigit() } /*&& query.length <= 10 // Adjust length if needed*/
+    }
+
+    private fun filterListByCode(query: String) {
+        viewModelScope.launch {
+            val filteredList = _posUIState.value.dialogPosList.filter {
+                it.barCode?.contains(query)==true  || it.inventoryCode?.contains(query) == true
+            }
+            if (filteredList.isNotEmpty()) {
+                insertPosListItem(filteredList[0]) // Add only the first matched item
+            }
         }
     }
 
@@ -209,7 +299,7 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                 // Create a new HeldCollection
                 val newCollection = HeldCollection(
                     collectionId = currentState.currentCollectionId,
-                    items = currentState.uiPosList,
+                    items = currentState.shoppingCart,
                     grandTotal = currentState.grandTotal
                 )
 
@@ -220,16 +310,16 @@ class PosViewModel : BaseViewModel(), KoinComponent {
 
 
                 // Check if the current items are the same as the last held collection
-                //val isSameAsLastHeld = updatedMap.values.lastOrNull()?.items == currentState.uiPosList
+                //val isSameAsLastHeld = updatedMap.values.lastOrNull()?.items == currentState.shoppingCart
 
                 val newCollectionId = if(updatedMap.isNotEmpty()) currentState.currentCollectionId+1 else currentState.currentCollectionId
 
 
-                // Reset uiPosList for new entries
+                // Reset shoppingCart for new entries
                 currentState.copy(
                     holdSaleCollections = updatedMap,
                     currentCollectionId = newCollectionId,
-                    uiPosList = listOf(), // Reset after holding
+                    shoppingCart = listOf(), // Reset after holding
                     isHoldSaleDialog = true
                 )
             }
@@ -240,17 +330,17 @@ class PosViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
           _posUIState.update { currentState->
 
-              // Update uiPosList with the selected collection's items
+              // Update shoppingCart with the selected collection's items
               val updatedCollections = currentState.holdSaleCollections.toMutableMap()
 
               updatedCollections.remove(collection.collectionId) // Remove the selected collection
 
-              // Merge the existing items in uiPosList with the items from the selected collection
-              val updatedUiPosList = currentState.uiPosList + collection.items
+              // Merge the existing items in shoppingCart with the items from the selected collection
+              val updatedUiPosList = currentState.shoppingCart + collection.items
 
 
               currentState.copy(
-                  uiPosList = updatedUiPosList,
+                  shoppingCart = updatedUiPosList,
                   holdSaleCollections = updatedCollections,
                   currentCollectionId = if (updatedCollections.isEmpty()) 1 else currentState.currentCollectionId-1
               )
@@ -259,93 +349,91 @@ class PosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-
-    fun insertPosListItem(item: ProductTaxItem) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Ensure the quantity is at least 1
-            val qty = if (item.qtyOnHand < 1.0) 1.0 else item.qtyOnHand
-            val updatedItem = item.copy(qtyOnHand = qty)
-
-            // Insert or update the product in the local database
-            val updatedProductList = _posUIState.value.uiPosList + updatedItem
-            insertOrUpdateScannedProduct(updatedProductList)
-            _posUIState.value.isInsertion=true
-           // Automatically handled by observing the flow in the UI, so no need to manually update the list
-        }
-    }
-
-    fun fetchUIProductList(){
-        viewModelScope.launch(Dispatchers.IO){
-            val scannedProductJob = async { databaseRepository.fetchAllScannedProduct()}.await()
-            scannedProductJob.collectLatest { scannedProductList->
-                val transformedProductList=scannedProductList.map {
-                    ProductTaxItem(
-                        id = it.productId.toInt(),
-                        name = it.name,
-                        inventoryCode = it.inventoryCode,
-                        barCode = it.barCode,
-                        qtyOnHand = it.qty,
-                        price = it.price,
-                        subtotal=it.subtotal,
-                        originalSubTotal = it.subtotal,
-                        taxPercentage = it.taxPercentage,
-                        taxValue = it.taxValue,
-                        discount = it.discount
-                    )
-                }
-                _posUIState.update {
-                    it.copy(uiPosList = transformedProductList)
-                }
-            }
-        }
-
-    }
-
     fun calculateBottomValues(){
         viewModelScope.launch {
             _posUIState.update { currentState ->
-                val totalQty = currentState.uiPosList.sumOf { it.qtyOnHand }
-                val totalTax = currentState.uiPosList.sumOf { it.taxValue ?: 0.0 }
-                val itemSubTotal = currentState.uiPosList.sumOf { it.subtotal?:0.0 }
-                val itemDiscount = currentState.uiPosList.sumOf { it.discount }
-                val grandTotal = currentState.uiPosList.sumOf {
-                    val subtotal = it.subtotal ?: 0.0
+               /* var total = 0.0
+                var taxTotal = 0.0
+                var apiTax = 0.0
+                var cartWithoutDiscount = 0.0
+                var promoDiscount = 0.0
+                var cartItemDiscount = 0.0
+                var cartItemPromotionDiscount = 0.0
+                var qty:Double=0.0
+                currentState.shoppingCart.forEach { item->
+                    qty += item.qtyOnHand.absoluteValue
+                }*/
+                val totalQty = currentState.shoppingCart.sumOf { it.qtyOnHand }
+                val totalTax = currentState.shoppingCart.sumOf { it.taxValue ?: 0.0 }
+                val itemSubTotal = currentState.shoppingCart.sumOf { it.cartTotal?:0.0 }
+                val itemDiscount = currentState.shoppingCart.sumOf { it.itemDiscount }
+                val grandTotal = currentState.shoppingCart.sumOf {
+                    val subtotal = it.cartTotal ?: 0.0
                     val taxAmount = (it.taxPercentage?.div(100.0)?.times(subtotal)) ?: 0.0
                     subtotal + taxAmount
                 }
-                currentState.copy(totalQty =totalQty, totalTax = totalTax, subTotal = itemSubTotal, grandTotal = grandTotal , originalTotal = grandTotal,itemsDiscount=itemDiscount)
+                currentState.copy(quantityTotal =totalQty, invoiceTax = totalTax, invoiceSubTotal = itemSubTotal, grandTotal = grandTotal , originalTotal = grandTotal,itemsDiscount=itemDiscount)
             }
+        }
+    }
+
+    fun getFinalPrice(): Double {
+        with(_posUIState.value) {
+            var amt = if (promotionByQuantity) {
+                (amount ?: 0.0) * qty
+            } else {
+                cprice?.times(qty)
+            }
+
+            amt?.let {
+                if (amt > 0 || exchange) {
+                    val discount= if(inputDiscount.isNotEmpty()) inputDiscount.toDouble() else 0.0
+                    if (discount > 0) {
+                        if (discountIsInPercent) {
+                            if (discount < 100.0) {
+                                amt -= (amt * discount) / 100.0
+                            }
+                        } else if (discount <= amt) {
+                            val des = discount * qty
+                            amt -= des
+                        }
+                    }
+                    return amt // Apply rounding if needed: posRounding(amt, podRounding)
+                }
+                else{
+                  return 0.0
+                }
+            }
+            return 0.0
         }
     }
 
     fun updateQty(selectedItem: ProductTaxItem,isQtyIncrease:Boolean) {
-        println("selectedItem : $selectedItem")
         viewModelScope.launch {
             _posUIState.update { currentState ->
-                val updatedProductList = currentState.uiPosList.map { product ->
+                val updatedProductList = currentState.shoppingCart.map { product ->
                     if (product.id == selectedItem.id){
                         val newQty = if (isQtyIncrease) product.qtyOnHand+1 else{ product.qtyOnHand.takeIf { it > 1 }?.minus(1) ?: 1.0}
                         val newSubTotal= product.price?.times(newQty)
-                        val finalTotal = newSubTotal?.minus(product.discount)
-                        val updatedProduct =  product.copy(qtyOnHand = newQty, subtotal = finalTotal)
-                        updateScannedProduct(updatedProduct)
+                        val taxValue=newSubTotal?.calculatePercentage(product.taxPercentage?:0.0)
+                        val finalTotal = newSubTotal?.minus(product.itemDiscount)
+                        val updatedProduct = product.copy(qtyOnHand = newQty, cartTotal = finalTotal, originalSubTotal = newSubTotal?:0.0, taxValue = taxValue)
+                        dataBaseRepository.updateScannedProduct(updatedProduct)
                         updatedProduct
                     }
                     else product
                 }
-                currentState.copy(uiPosList = updatedProductList)
+                currentState.copy(shoppingCart = updatedProductList)
             }
 
         }
     }
 
-    fun removedListItem(updatedProduct: ProductTaxItem) {
-        println("selectedItem : $updatedProduct")
+    fun removedListItem(selectedItem: ProductTaxItem) {
         viewModelScope.launch {
             _posUIState.update { currentState ->
-                val updatedList = currentState.uiPosList.toMutableList()
-                updatedList.remove(updatedProduct)
-                currentState.copy(uiPosList = updatedList)
+                dataBaseRepository.removeScannedItemById(selectedItem.id.toLong())
+                currentState.copy(isCallScannedItems = !currentState.isCallScannedItems)
             }
         }
     }
@@ -354,7 +442,7 @@ class PosViewModel : BaseViewModel(), KoinComponent {
 
         viewModelScope.launch {
             _posUIState.update { currentState ->
-                currentState.copy(uiPosList = listOf(), selectedMember = "Select Member", holdSaleCollections = hashMapOf(), isRemoveDialog = false)
+                currentState.copy(shoppingCart = listOf(), selectedMember = "Select Member", holdSaleCollections = hashMapOf(), isRemoveDialog = false)
             }
         }
     }
@@ -385,49 +473,55 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                 }else{
                     inputDiscountError=null
 
-
-                    val discount = when (selectedDiscountType) {
-                        DiscountType.PERCENTAGE -> {
-                            if(selectedDiscountApplied==DiscountApplied.TOTAL){
-                                inputDiscount.toDouble().calculatePercentage(grandTotal)
-
-                            }else{
-                                inputDiscount.toDouble().calculatePercentage(itemPriceClickItem.originalSubTotal)
-                            }
+                    val totalAmount = when(selectedDiscountApplied){
+                        DiscountApplied.TOTAL -> {
+                            grandTotal
                         }
-                        DiscountType.FIXED_AMOUNT -> {
-                            //calculate fixed amount
-                            inputDiscount.toDouble()
+                        DiscountApplied.ITEMS -> {
+                            itemPriceClickItem.originalSubTotal
                         }
                     }
 
-                    updateFinalDiscount(discount)
+                    val (discount,discountPer) = when (selectedDiscountType) {
+                        DiscountType.PERCENTAGE -> {
+                            totalAmount.calculatePercentage(inputDiscount.toDouble()) to inputDiscount.toDouble()
+                        }
+                        DiscountType.FIXED_AMOUNT -> {
+                            //calculate fixed amount
+                            inputDiscount.toDouble() to totalAmount.calculatePercentageByValue(inputDiscount.toDouble())
+                        }
+                    }
+                    val finalTotal= totalAmount-discount
+                    val adjustedTotal = finalTotal.coerceAtLeast(0.0)
+                    println("Item : discount -$discount $discountPer $adjustedTotal")
+                    updateFinalDiscount(discount,discountPer,adjustedTotal)
                 }
             }
         }
     }
 
-    private fun updateFinalDiscount(finalDiscount: Double) {
+    private fun updateFinalDiscount(discount: Double,discountPercentage:Double,finalValue:Double) {
         viewModelScope.launch {
             _posUIState.update { currentState->
                 if(currentState.selectedDiscountApplied==DiscountApplied.TOTAL){
-                     val finalTotal= currentState.grandTotal-finalDiscount
-                     val adjustedTotal = finalTotal.coerceAtLeast(0.0)
-                     currentState.copy(isDiscountDialog = false, grandTotal = adjustedTotal, discounts = finalDiscount)
+                    if (currentState.isSalesTaxInclusive) {
+                        //grandTotalWithoutDiscount.value = total
+                    } else {
+                       // grandTotalWithoutDiscount.value = total + taxTotal;
+                    }
+
+                    currentState.copy(isDiscountDialog = false, grandTotal = finalValue, invoiceNetDiscount = discount, invoiceNetDiscountPerc = discountPercentage)
                 }else{
-                    val id=currentState.itemPriceClickItem.id
-                    val finalTotal = currentState.itemPriceClickItem.originalSubTotal-finalDiscount
-                    val adjustedTotal = finalTotal.coerceAtLeast(0.0)
-                    val updatedList=currentState.uiPosList.map { element->
-                        if(element.id==id){
-                            val updatedItem= element.copy(discount = finalDiscount, subtotal = adjustedTotal)
-                            updateScannedProduct(updatedItem)
+                    val updatedList=currentState.shoppingCart.map { element->
+                        if(element.id==currentState.itemPriceClickItem.id){
+                            val updatedItem= element.copy(itemDiscount = discount, itemDiscountPerc = discountPercentage, cartTotal = finalValue)
+                            dataBaseRepository.updateScannedProduct(updatedItem)
                             updatedItem
                         }else{
                             element
                         }
                     }
-                    currentState.copy(isDiscountDialog = false, uiPosList = updatedList)
+                    currentState.copy(isDiscountDialog = false, shoppingCart = updatedList)
                 }
             }
         }
@@ -445,7 +539,8 @@ class PosViewModel : BaseViewModel(), KoinComponent {
                 DiscountType.PERCENTAGE -> {
                     AppIcons.percentageIcon}
                 DiscountType.FIXED_AMOUNT -> {
-                    AppIcons.dollarIcon }
+                    AppIcons.dollarIcon
+                }
             }
         }
     }

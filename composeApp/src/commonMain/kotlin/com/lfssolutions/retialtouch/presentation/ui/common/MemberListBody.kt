@@ -1,15 +1,11 @@
 package com.lfssolutions.retialtouch.presentation.ui.common
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -19,20 +15,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
-import com.lfssolutions.retialtouch.presentation.viewModels.PosViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
@@ -46,21 +38,16 @@ import retailtouch.composeapp.generated.resources.clear
 import retailtouch.composeapp.generated.resources.create
 import retailtouch.composeapp.generated.resources.create_new_member
 import retailtouch.composeapp.generated.resources.email
-import retailtouch.composeapp.generated.resources.location_id
 import retailtouch.composeapp.generated.resources.member_code
 import retailtouch.composeapp.generated.resources.mobile_number
 import retailtouch.composeapp.generated.resources.name
-import retailtouch.composeapp.generated.resources.password
-import retailtouch.composeapp.generated.resources.server_address
-import retailtouch.composeapp.generated.resources.tenant_name
-import retailtouch.composeapp.generated.resources.user_name
 import retailtouch.composeapp.generated.resources.zip_code
 
 
 @Composable
 fun MemberList(
     posUIState : PosUIState,
-    posViewModel: PosViewModel,
+    posViewModel: SharedPosViewModel,
     onMemberCreate: () -> Unit
 ){
     Column(
@@ -155,7 +142,7 @@ fun MemberListItem(member: MemberItem, onClick: (MemberItem) -> Unit) {
 @Composable
 fun CreateMemberForm(
     posUIState : PosUIState,
-    posViewModel: PosViewModel
+    posViewModel: SharedPosViewModel
 ){
 
     Column(modifier = Modifier

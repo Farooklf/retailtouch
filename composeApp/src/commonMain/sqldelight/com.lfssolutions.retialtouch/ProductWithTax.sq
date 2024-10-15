@@ -2,22 +2,27 @@ import kotlin.Boolean;
 
 CREATE TABLE ProductWithTax (
     productTaxId INTEGER NOT NULL PRIMARY KEY,
+    inventoryCode TEXT NOT NULL,
     isScanned INTEGER AS Boolean DEFAULT 0,
     rowItem TEXT NOT NULL
 );
 
 insertProductWithTax:
-INSERT OR REPLACE INTO ProductWithTax(productTaxId,isScanned,rowItem)
-VALUES(?,?,?);
+INSERT OR REPLACE INTO ProductWithTax(productTaxId,inventoryCode,isScanned,rowItem)
+VALUES(?,?,?,?);
 
 updateProductWithTax:
 UPDATE ProductWithTax
 SET isScanned = 1, rowItem = :rowItem
 WHERE productTaxId = :productTaxId;
 
-getCategoryById:
+getProductById:
 SELECT * FROM ProductWithTax
 WHERE productTaxId = ?;
+
+getProductByInventory:
+SELECT * FROM ProductWithTax
+WHERE inventoryCode = ?;
 
 getAllProductWithTax:
 SELECT * FROM ProductWithTax;

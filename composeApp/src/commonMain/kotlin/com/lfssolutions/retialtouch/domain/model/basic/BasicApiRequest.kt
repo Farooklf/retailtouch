@@ -14,4 +14,6 @@ data class BasicApiRequest(
     val id: Int?=null,
     @SerialName("LastSyncDateTime")
     val lastSyncDateTime: String? = null,
+    @SerialName("isDeleted")
+    val isDeleted: Boolean? = null,
 )

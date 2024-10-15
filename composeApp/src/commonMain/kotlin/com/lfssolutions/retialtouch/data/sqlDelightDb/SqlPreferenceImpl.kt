@@ -1,21 +1,25 @@
-package com.lfssolutions.retialtouch.dataBase
+package com.lfssolutions.retialtouch.data.sqlDelightDb
 
 
+import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.location.LocationDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoriesDao
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductsDao
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
+import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
+import com.lfssolutions.retialtouch.utils.serializers.db.toBarcode
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
@@ -33,9 +37,8 @@ import kotlinx.coroutines.flow.flow
 
 
 
-class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRepository{
+class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference {
 
-    private var retailTouch: retailTouchDB = retailTouchDB(driverFactory.create())
 
     override suspend fun insertAuthentication(authenticateDao: AuthenticateDao) {
 
@@ -185,19 +188,19 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         retailTouch.employeeRoleQueries.deleteEmpRole()
     }
 
-    override suspend fun insertMenuCategories(menuCategoriesDao: MenuCategoriesDao) {
+    override suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao) {
         retailTouch.menuCategoryQueries.insertMenuCategory(
             categoryId = menuCategoriesDao.categoryId,
             categoryItem = menuCategoriesDao.categoryItem.toJson()
         )
     }
 
-    override fun selectCategoryById(id: Long): Flow<MenuCategoriesDao?> = flow{
+    override fun selectCategoryById(id: Long): Flow<CategoryDao?> = flow{
         retailTouch.menuCategoryQueries.getCategoryById(id).executeAsOneOrNull().let { body->
             println("menu category : $body")
             if(body!=null){
                 emit(
-                    MenuCategoriesDao(
+                    CategoryDao(
                         categoryId = body.categoryId,
                         categoryItem = body.categoryItem.toMenuCategoryItem()
                     )
@@ -208,12 +211,12 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-    override fun getAllCategories(): Flow<List<MenuCategoriesDao>> = flow{
+    override fun getAllCategories(): Flow<List<CategoryDao>> = flow{
         retailTouch.menuCategoryQueries.getAllMenuCategory().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        MenuCategoriesDao(
+                        CategoryDao(
                             categoryId = body.categoryId,
                             categoryItem = body.categoryItem.toMenuCategoryItem()
                         )
@@ -236,19 +239,19 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-    override suspend fun insertMenuProducts(menuProductsDao: MenuProductsDao) {
+    override suspend fun insertStocks(menuProductsDao: MenuDao) {
         retailTouch.menuProductQueries.insertMenuProduct(
             productId = menuProductsDao.productId,
             productItem = menuProductsDao.menuProductItem.toJson()
         )
     }
 
-    override fun selectProductsById(id: Long): Flow<MenuProductsDao?> = flow{
+    override fun selectProductsById(id: Long): Flow<MenuDao?> = flow{
         retailTouch.menuProductQueries.getProductById(id).executeAsOneOrNull().let { body->
             println("menu products : $body")
             if(body!=null){
                 emit(
-                    MenuProductsDao(
+                    MenuDao(
                         productId = body.productId,
                         menuProductItem = body.productItem.toMenuProductItem()
                     )
@@ -259,12 +262,12 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-    override fun getAllProducts(): Flow<List<MenuProductsDao>> = flow{
+    override fun getStocks(): Flow<List<MenuDao>> = flow{
         retailTouch.menuProductQueries.getAllMenuProduct().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        MenuProductsDao(
+                        MenuDao(
                             productId = body.productId,
                             menuProductItem = body.productItem.toMenuProductItem()
                         )
@@ -277,7 +280,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-    override suspend fun deleteProducts() {
+    override suspend fun deleteStocks() {
         retailTouch.menuProductQueries.deleteMenuProduct()
     }
 
@@ -394,6 +397,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
     override suspend fun insertProductWithTax(productTaxDao: ProductTaxDao) {
         retailTouch.productWithTaxQueries.insertProductWithTax(
             productTaxId = productTaxDao.productTaxId,
+            inventoryCode = productTaxDao.productCode?:"",
             isScanned = productTaxDao.isScanned,
             rowItem = productTaxDao.rowItem.toJson()
         )
@@ -413,6 +417,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
                     list.map { body ->
                         ProductTaxDao(
                             productTaxId = body.productTaxId,
+                            productCode = body.inventoryCode,
                             rowItem = body.rowItem.toProductTaxItem()
                         )
                     }
@@ -420,6 +425,38 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
                 )
             }else{
                 emit(emptyList())
+            }
+        }
+    }
+
+    override fun getProductById(id: Long) : Flow<ProductTaxDao?> = flow{
+        retailTouch.productWithTaxQueries.getProductById(id).executeAsOneOrNull().let { body->
+            println("product db data : $body")
+            if(body!=null){
+                emit(
+                    ProductTaxDao(
+                        productTaxId = body.productTaxId,
+                        rowItem = body.rowItem.toProductTaxItem()
+                    )
+                )
+            }else{
+                emit(body)
+            }
+        }
+    }
+
+    override fun getProductByCode(code: String): Flow<ProductTaxDao?> = flow{
+        retailTouch.productWithTaxQueries.getProductByInventory(code).executeAsOneOrNull().let { body->
+            println("product db data : $body")
+            if(body!=null){
+                emit(
+                    ProductTaxDao(
+                        productTaxId = body.productTaxId,
+                        rowItem = body.rowItem.toProductTaxItem()
+                    )
+                )
+            }else{
+                emit(body)
             }
         }
     }
@@ -466,6 +503,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
                             price = body.price,
                             subtotal = body.subTotal,
                             taxValue = body.taxValue,
+                            discount = body.discount,
                             taxPercentage = body.taxPercentage
                         )
                     }
@@ -477,13 +515,13 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         }
     }
 
-   /* override suspend fun deleteScannedProductById(productId: Long) {
-        retailTouch.scannedProductWithTaxQueries.deleteProductById(productId)
+    override suspend fun deleteScannedProductById(productId: Long) {
+        retailTouch.scannedProductQueries.deleteProductById(productId)
     }
 
     override suspend fun deleteAllScannedProduct() {
-       retailTouch.scannedProductWithTaxQueries.deleteAllProduct()
-    }*/
+       retailTouch.scannedProductQueries.deleteAllProduct()
+    }
 
     override suspend fun insertProductLocation(productLocationDao: ProductLocationDao) {
         retailTouch.productLocationQueries.insertProductLocation(
@@ -514,6 +552,43 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         retailTouch.productWithTaxQueries.deleteProductWithTax()
     }
 
+    override suspend fun insertProductBarcode(barcodeDao: BarcodeDao) {
+        retailTouch.productBarcodeQueries.insert(
+            barcodeId = barcodeDao.barcodeId.toLong(),
+            rowItem = barcodeDao.barcode.toJson()
+        )
+    }
+
+    override suspend fun updateProductBarcode(barcodeDao: BarcodeDao) {
+        retailTouch.productBarcodeQueries.insert(
+            barcodeId = barcodeDao.barcodeId.toLong(),
+            rowItem = barcodeDao.barcode.toJson()
+        )
+    }
+
+    override fun getAllBarcode(): Flow<List<BarcodeDao>>  = flow{
+        retailTouch.productBarcodeQueries.getAllBarcode().executeAsList().let { list ->
+            if(list.isNotEmpty()) {
+                emit(
+                    list.map { body ->
+                        BarcodeDao(
+                            barcodeId = body.barcodeId.toInt(),
+                            barcode = body.rowItem.toBarcode()
+                        )
+                    }
+
+                )
+            }else{
+                emit(emptyList())
+            }
+        }
+
+    }
+
+    override suspend fun deleteBarcode() {
+        retailTouch.productBarcodeQueries.delete()
+    }
+
     override suspend fun insertMembers(memberDao: MemberDao) {
         retailTouch.membersQueries.insert(
             memberId = memberDao.memberId,
@@ -521,7 +596,7 @@ class DatabaseRepositoryImpl(driverFactory: DatabaseDriverFactory) : DatabaseRep
         )
     }
 
-    override fun getAllMembers(): Flow<List<MemberDao>> = flow{
+    override fun getAllMembers(): Flow<List<MemberDao>> = flow {
         retailTouch.membersQueries.getAll().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(

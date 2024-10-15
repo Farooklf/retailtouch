@@ -1,0 +1,17 @@
+CREATE TABLE ProductBarcode (
+    barcodeId INTEGER NOT NULL PRIMARY KEY,
+    rowItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO ProductBarcode(barcodeId,rowItem)
+VALUES(?,?);
+
+getAllBarcode:
+SELECT * FROM ProductBarcode;
+
+delete:
+DELETE  FROM ProductBarcode;
+
+getCount:
+SELECT COUNT(*) FROM ProductBarcode;

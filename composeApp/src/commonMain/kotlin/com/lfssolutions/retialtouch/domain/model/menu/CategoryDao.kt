@@ -3,9 +3,9 @@ package com.lfssolutions.retialtouch.domain.model.menu
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuCategoriesDao(
+data class CategoryDao(
     val categoryId:Long =0,
-    val categoryItem: MenuCategoryItem = MenuCategoryItem(),
+    val categoryItem: CategoryItem = CategoryItem(),
 )
 
 

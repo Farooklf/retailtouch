@@ -22,3 +22,10 @@ updateScannedProduct:
 UPDATE ScannedProduct
 SET qtyOnHand = :qty ,subTotal =:subTotal,discount =:discount
 WHERE productTaxId = :productTaxId;
+
+deleteProductById:
+DELETE FROM ScannedProduct
+WHERE productTaxId = ?;
+
+deleteAllProduct:
+DELETE FROM ScannedProduct;

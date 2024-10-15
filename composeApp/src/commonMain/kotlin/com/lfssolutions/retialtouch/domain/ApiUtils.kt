@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.domain
 
 
+import com.lfssolutions.retialtouch.data.remote.api.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
 import io.ktor.client.HttpClient

@@ -12,7 +12,7 @@ fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.HomeScreen -> HomeScreen(isSplash)
     is Route.LoginScreen -> LoginScreen
      is Route.POSScreen -> PosScreen
-    is Route.PaymentType -> PaymentTypeScreen(memberId,totalAmount)
+    is Route.PaymentType -> PaymentTypeScreen
     else->{
         LoginScreen
     }

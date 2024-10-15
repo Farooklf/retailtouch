@@ -5,13 +5,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuCategoryItem(
+data class CategoryItem(
     @SerialName("backColor")
     val backColor: String? = null,
     @SerialName("categoryGroupHeight")
     val categoryGroupHeight: Int = 0,
     @SerialName("categoryRowCount")
-    val categoryRowCount: Int = 0,
+    val categoryRowCount: Int? = 0,
     @SerialName("columnHeight")
     val columnHeight: Int = 0,
     @SerialName("columnWidth")

@@ -52,8 +52,7 @@ fun AppLeftSideMenu(
     content: @Composable() (BoxScope.(Dp) -> Unit),
     holdSaleContent: @Composable() (BoxScope.() -> Unit) = {},
 ) {
-    val density = LocalDensity.current
-    val defaultTableWidth = AppTheme.dimensions.tabletDefaultWidth
+
     // get local density from composable
     val localDensity = LocalDensity.current
     var heightIs by remember {

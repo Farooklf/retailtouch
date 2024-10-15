@@ -13,12 +13,19 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.sharp.Close
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import com.lfssolutions.retialtouch.domain.model.AppState
+import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.DoubleExtension.calculateDiscountPercentage
+import io.ktor.http.HttpHeaders.Date
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
@@ -163,9 +170,28 @@ object AppStrings{
 }
 
 object AppConstants{
+    const val LOCATION_ERROR_TITLE = "LOCATION FETCHING FAILED"
+    const val EMPLOYEE_ERROR_TITLE = "EMPLOYEE FETCHING FAILED"
+    const val EMPLOYEE_ROLE_ERROR_TITLE = "EMPLOYEE ROLE FETCHING FAILED"
+    const val TERMINAL_ERROR_TITLE = "TERMINAL FETCHING FAILED"
+    const val PRODUCT_TAX_ERROR_TITLE = "PRODUCT TAX FETCHING FAILED"
+    const val MEMBER_ERROR_TITLE = "MEMBER FETCHING FAILED"
+    const val INVENTORY_ERROR_TITLE = "INVENTORY FETCHING FAILED"
+    const val MENU_CATEGORY_ERROR_TITLE = "MENU CATEGORIES FETCHING FAILED"
+    const val MENU_PRODUCTS_ERROR_TITLE = "MENU PRODUCTS FETCHING FAILED"
+    const val PAYMENT_TYPE_ERROR_TITLE = "PAYMENT TYPE FETCHING FAILED"
+    const val SYNC_CHANGES_ERROR_TITLE = "SYNC CHANGES FAILED"
+
     const val POS_SCREEN = "pos"
     const val MEMBER_SCREEN = "member"
     const val PAYMENT_SCREEN = "payment"
+    const val MEMBER = "MEMBER"
+    const val MEMBER_GROUP = "MEMBERGROUP"
+    const val PRODUCT = "PRODUCT"
+    const val CATEGORY = "CATEGORY"
+    const val MENU = "MENU"
+    const val PROMOTION = "PROMOTION"
+    const val PAYMENT_TYPE = "PAYMENTTYPE"
 
 
     const val HOME_GRID = 4
@@ -208,6 +234,29 @@ object DateTime{
         // Format the date as "YYYY-MM-DD"
         return currentDate.toString() // LocalDate.toString() defaults to "YYYY-MM-DD"
     }
+
+    fun getLastSyncDateTime(): Instant {
+        val lastSyncDateTime = Clock.System.now().minus(2, DateTimeUnit.DAY, TimeZone.UTC)
+       return lastSyncDateTime
+    }
+
+    fun String?.parseDateFromApiString(): String {
+        return try {
+            if (this.isNullOrEmpty()) {
+                "1970-01-01 00:00:00"  // Return Epoch as string
+            } else {
+                val newStr = this.substring(0, 10) + " " + this.substring(11, 19) + ".000"
+                val dateTime = LocalDateTime.parse(newStr.replace(" ", "T"))
+                val instant = dateTime.toInstant(systemTZ)
+                instant.toLocalDateTime(systemTZ).toString()
+            }
+        } catch (e: Exception) {
+            now.toLocalDateTime(systemTZ).toString()
+        }
+    }
+
+
+
 }
 
 object DoubleExtension{
@@ -217,17 +266,50 @@ object DoubleExtension{
         return round(this * multiplier) / multiplier
     }
 
-    fun Double.calculatePercentage(totalAmount: Double): Double {
-        return if (totalAmount != 0.0) {
-            (this / totalAmount) * 100
+    fun Double.calculatePercentageByValue(discountedPrice: Double): Double {
+        return ((this - discountedPrice) / this) * 100
+    }
+
+    fun Double.calculatePercentage(percentage: Double): Double {
+        return if (percentage in 0.0..100.0) {
+            val discountAmount = (percentage / 100) * this
+            discountAmount
         } else {
-            0.0 // Handle division by zero case
+            0.0 // Handle invalid discount percentages
         }
     }
+
+    fun Double.calculateDiscountPercentage(discountPercentage: Double): Double {
+        return if (discountPercentage in 0.0..100.0) {
+            val discountAmount = (discountPercentage / 100) * this
+            discountAmount
+        } else {
+            0.0 // Handle invalid discount percentages
+        }
+    }
+
+
+
 }
 
+object ScreenPadding{
 
+    fun getScreenPadding(appState: AppState): Pair<Dp, Dp> {
+        return if (appState.isTablet) {
+            20.dp to 20.dp
+        } else {
+            // Padding for phones
+            if (appState.isPortrait) {
+                // Portrait mode padding for phones
+                16.dp to 10.dp // Adjust as needed
+            } else {
+                // Landscape mode padding for phones
+                10.dp to 5.dp
+            }
+        }
+    }
 
+}
 expect inline fun <reified T : ViewModel> Module.viewModelDefinition(
     qualifier: Qualifier? = null,
     noinline definition: Definition<T>

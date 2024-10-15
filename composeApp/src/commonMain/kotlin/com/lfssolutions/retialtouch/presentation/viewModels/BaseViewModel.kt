@@ -4,8 +4,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
-import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
-import com.lfssolutions.retialtouch.dataBase.DatabaseRepository
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
@@ -14,23 +12,24 @@ import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
-import com.lfssolutions.retialtouch.domain.model.location.LocationDao
+import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginUiState
-import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoriesDao
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoryResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductsDao
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryItem
+import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
+import com.lfssolutions.retialtouch.domain.model.menu.MenuItem
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
@@ -41,21 +40,27 @@ import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDa
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
+import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
+import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
+import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
+import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
+import com.lfssolutions.retialtouch.utils.AppConstants.LOCATION_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.MEMBER_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
+import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT_TAX_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
+import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DeviceType
-import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_ROLE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MENU_CATEGORY_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MENU_PRODUCTS_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.PAYMENT_TYPE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.PRODUCT_TAX_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.TERMINAL_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -67,6 +72,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -78,7 +86,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     val networkRepository: NetworkRepository by inject()
     val preferences: PreferencesRepository by inject()
-    val databaseRepository: DatabaseRepository by inject()
+    val dataBaseRepository: DataBaseRepository by inject()
 
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
@@ -89,21 +97,26 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     var count =0
     private val _authenticationDao = MutableStateFlow(AuthenticateDao())
     val authenticationDao: StateFlow<AuthenticateDao?> = _authenticationDao.asStateFlow()
-    
+
+    private val _lastSyncDateTime = MutableStateFlow<String?>(null)
+    val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
+
+    private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
+
     private val _employeeDoa = MutableStateFlow<EmployeeDao?>(null)
     val employeeDoa = _employeeDoa.asStateFlow()
     
     private val _isMenuCategoryDbInserted = MutableStateFlow(false)
     val isMenuCategoryDbInserted: StateFlow<Boolean> get() = _isMenuCategoryDbInserted
 
-    private val _categoryMenuDao = MutableStateFlow<List<MenuCategoriesDao>>(emptyList())
-    val categoryMenuDao: StateFlow<List<MenuCategoriesDao?>> = _categoryMenuDao
+    private val _categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
+    val categoryResponse: StateFlow<List<CategoryItem?>> = _categoryResponse
 
     private val _isMenuProductDbInserted = MutableStateFlow(false)
     val isMenuProductDbInserted: StateFlow<Boolean> get() = _isMenuProductDbInserted
 
-    private val _productMenuDao = MutableStateFlow<List<MenuProductsDao>>(emptyList())
-    val productMenuDao: StateFlow<List<MenuProductsDao?>> = _productMenuDao
+    private val _categoryItem = MutableStateFlow<CategoryItem?>(null)
+    val categoryItem: StateFlow<CategoryItem?> = _categoryItem
     
     private val _isNEXTPOSSaleDbInserted = MutableStateFlow(false)
     val isNEXTPOSSaleDbInserted: StateFlow<Boolean> get() = _isNEXTPOSSaleDbInserted
@@ -135,13 +148,12 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private val _isSyncDbInserted = MutableStateFlow(false)
     val isSyncDbInserted: StateFlow<Boolean> get() = _isSyncDbInserted
 
-    val _nextPOSSaleResponse = MutableStateFlow<NextPOSSaleInvoiceNoResponse?>(null)
-    val nextPOSSaleResponse: StateFlow<NextPOSSaleInvoiceNoResponse?> get() = _nextPOSSaleResponse
+
 
     val _posInvoiceResponse = MutableStateFlow<POSInvoiceResponse?>(null)
     val _productTaxResponse = MutableStateFlow<ProductWithTaxByLocationResponse?>(null)
     val _productLocationResponse = MutableStateFlow<ProductLocationResponse?>(null)
-    val _paymentTypeResponseResponse = MutableStateFlow<PaymentTypeResponse?>(null)
+    val _paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
 
     val _membersResponse = MutableStateFlow<MemberResponse?>(null)
     val membersResponse: StateFlow<MemberResponse?> get() = _membersResponse
@@ -152,14 +164,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val _promotionResponse = MutableStateFlow<PromotionResponse?>(null)
     val promotionResponse: StateFlow<PromotionResponse?> get() = _promotionResponse
 
-    val _productBarCodeGroupResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
-    val productBarCodeGroupResponse: StateFlow<ProductBarCodeResponse?> get() = _productBarCodeGroupResponse
+    val _productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
+    val productBarCodeGroupResponse: StateFlow<ProductBarCodeResponse?> get() = _productBarCodeResponse
 
     val _syncResponse = MutableStateFlow<SyncAllResponse?>(null)
     val syncResponse: StateFlow<SyncAllResponse?> get() = _syncResponse
 
-    private val _isLoggedOut = MutableStateFlow(false)
-    val isLoggedOut: StateFlow<Boolean> = _isLoggedOut.asStateFlow()
+
 
 
     // Expose the login state as a Flow<Boolean?>, with null indicating loading
@@ -170,33 +181,71 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
-    fun updateScreenMode(width: Dp){
+    val authUser: StateFlow<AuthenticateDao?> = dataBaseRepository.getAuthUser()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(1000),
+            initialValue = null
+        )
+
+
+    val currencySymbol: StateFlow<String> = preferences.getCurrencySymbol()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(1000),
+            initialValue = ""
+        )
+
+    val employee: StateFlow<EmployeeDao?> = flow {
+        // This flow emits the employee data asynchronously
+        val employeeCode = preferences.getEmployeeCode().first()  // Suspends here
+        emit(dataBaseRepository.getEmployee(employeeCode).firstOrNull())
+    }.stateIn(
+            scope = viewModelScope,  // Use viewModelScope
+            started = SharingStarted.WhileSubscribed(5000),  // Keeps the flow alive for 5 seconds after subscription
+            initialValue = null  // Initial state of the flow
+        )
+
+
+    val productsList: StateFlow<List<ProductTaxDao>> = dataBaseRepository.getProduct()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val memberList: StateFlow<List<MemberDao>> = dataBaseRepository.getMember()
+       /* .map { daoList ->
+            daoList.map { item ->
+                mapMembersList(item)
+            }
+        }*/
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+
+    private fun mapMembersList(memberDao: MemberDao): MemberItem {
+        println("member List : ${memberDao.rowItem}")
+        return memberDao.rowItem
+    }
+
+    fun updateScreenMode(width: Dp,height:Dp){
         val deviceType = when {
             width < SMALL_PHONE_MAX_WIDTH -> DeviceType.SMALL_PHONE
             width in SMALL_PHONE_MAX_WIDTH..LARGE_PHONE_MAX_WIDTH -> DeviceType.LARGE_PHONE
             width in LARGE_PHONE_MAX_WIDTH..SMALL_TABLET_MAX_WIDTH -> DeviceType.SMALL_TABLET
             else -> DeviceType.LARGE_TABLET
         }
+        // Determine the orientation based on maxWidth and maxHeight
         _composeAppState.update { state -> state.copy(
             isTablet = deviceType == DeviceType.SMALL_TABLET || deviceType == DeviceType.LARGE_TABLET,
             screenWidth = width,
-            deviceType = deviceType
-            ) }
-    }
-
-    suspend fun initAuthenticationDao(): Boolean {
-        return withContext(Dispatchers.IO) {
-            val userID = preferences.getUserId().first()
-            var isInitialized = false
-
-            databaseRepository.selectUserByUserId(userID).collect { loginUser ->
-                _authenticationDao.update { loginUser }
-                //_isLoggedIn.update { loginUser.isLoggedIn }
-                isInitialized = true // Set to true after updating
-                return@collect // Exit the collect loop, since we only need the first emitted value
-            }
-
-            isInitialized // Return the initialization status
+            deviceType = deviceType,
+            isPortrait = height > width
+        )
         }
     }
 
@@ -237,22 +286,31 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun getProductsWithTax(){
+    suspend fun syncInventory(lastSyncTime:String?=null){
         try {
-            updateLoaderMsg("Fetching Product Tax data...")
-            println("product tax calling api : ${count++}")
-            networkRepository.getProductsWithTax(getBasicRequest()).collectLatest {apiResponse->
-                observeProductWithTax(apiResponse)
+            updateLoaderMsg("Syncing Inventory")
+            println("Syncing Inventory : ${count++}")
+            networkRepository.getProductLocation(getBasicRequest()).collectLatest { stockAvailResponse->
+                observeStock(stockAvailResponse)
             }
+            val inventoryResponse=networkRepository.getProductsWithTax(getBasicRequest())
+            val barcodesResponse=networkRepository.getProductBarCode(getBasicRequest())
+            if(lastSyncTime!=null){
+                networkRepository.getProductBarCode(getBarcodeRequest(true))
+                dataBaseRepository.clearBarcode()
+            }
+            observeInventory(inventoryResponse,lastSyncTime)
+            observeBarcode(barcodesResponse,lastSyncTime)
+
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(PRODUCT_TAX_ERROR_TITLE,error)
+            handleApiError(INVENTORY_ERROR_TITLE,error)
         }
     }
 
-    suspend fun getMembers(){
+    suspend fun syncMembers(){
         try {
-            updateLoaderMsg("Fetching Member Data...")
+            updateLoaderMsg("Syncing Member")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMembers(apiResponse)
             }
@@ -262,10 +320,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-
-    suspend fun getPaymentTypes(){
+    suspend fun syncPaymentTypes(){
         try {
-            updateLoaderMsg("Fetching Payment Data...")
+            updateLoaderMsg("Syncing Payment Type")
             networkRepository.getPaymentTypes(getBasicTenantRequest()).collectLatest {apiResponse->
                 observePaymentType(apiResponse)
             }
@@ -275,9 +332,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun getMemberGroup(){
+    suspend fun syncMemberGroup(){
         try {
-            updateLoaderMsg("Fetching Member Group...")
+            updateLoaderMsg("Syncing Member Group")
             networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMemberGroup(apiResponse)
             }
@@ -285,6 +342,247 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             val error="${e.message}"
             handleApiError(MEMBER_ERROR_TITLE,error)
         }
+    }
+
+    suspend fun syncCategories(){
+        try {
+            updateLoaderMsg("Syncing Categories")
+            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
+                observeCategory(apiResponse)
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            handleApiError(MENU_CATEGORY_ERROR_TITLE,error)
+        }
+    }
+
+
+    private fun observeCategory(apiResponse: RequestState<CategoryResponse>) {
+        observeResponseNew(apiResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        _categoryResponse.update { apiData.result.items }
+                        dataBaseRepository.insertCategories(apiData)
+                        updateSyncGrid(CATEGORY)
+                        //set
+                        syncMenu()
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    suspend fun syncMenu(){
+        val newStock : MutableList<MenuItem> = mutableListOf()
+        _categoryResponse.value.forEach { cat->
+            println("Menu products api : ${cat.id}")
+            networkRepository.getMenuProducts(getBasicRequest(cat.id)).collectLatest {response->
+                observeResponseNew(response,
+                    onLoading = {  },
+                    onSuccess = { menuData ->
+                        if(menuData.success){
+                            menuData.result.items.forEach { menu->
+                                val updatedMenu=menu.copy(menuCategoryId=cat.id, id = if(menu.id==0) menu.productId else menu.id)
+                                newStock.add(updatedMenu)
+                            }
+                            viewModelScope.launch {
+                                dataBaseRepository.insertNewStock(newStock.map{mnu->
+                                    Stock(
+                                        id = mnu.id,
+                                        name = mnu.name,
+                                        icon = mnu.imagePath ?: "",
+                                        categoryId = mnu.menuCategoryId,
+                                        productId = mnu.productId,
+                                        sortOrder = mnu.sortOrder,
+                                        inventoryCode = mnu.inventoryCode,
+                                        fgColor = mnu.foreColor ?: "",
+                                        bgColor = mnu.backColor ?: "",
+                                        barcode = mnu.barCode
+                                    )})
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        handleApiError(MENU_PRODUCTS_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }
+    }
+    
+    private suspend fun observeLocation(apiResponse: Flow<RequestState<LocationResponse>>) {
+        println("location insertion : ${count++}")
+        observeResponse(apiResponse,
+            onLoading = { updateLoaderMsg("Syncing Location")},
+            onSuccess = { apiData ->
+                viewModelScope.launch {
+                    dataBaseRepository.insertLocation(apiData)
+                    //
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(LOCATION_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
+        println("employees insertion : ${count++}")
+        observeResponse(apiResponse,
+            onLoading = {  updateLoaderMsg("Syncing Employees")},
+            onSuccess = { apiData ->
+                viewModelScope.launch {
+                    dataBaseRepository.insertEmployees(apiData)
+                } },
+            onError = {errorMsg->
+                handleApiError(EMPLOYEE_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private suspend fun observeEmpRole(apiResponse: Flow<RequestState<EmployeesResponse>>) {
+        println("employees role insertion : ${count++}")
+        observeResponse(apiResponse,
+            onLoading = {  updateLoaderMsg("Syncing Employees Role")},
+            onSuccess = { apiData ->
+                viewModelScope.launch {
+                    dataBaseRepository.insertEmpRole(apiData)
+                } },
+            onError = {errorMsg->
+                handleApiError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+
+    private fun observeMembers(apiResponse: RequestState<MemberResponse>) {
+        observeResponseNew(apiResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        dataBaseRepository.insertMembers(apiData)
+                        println("member insertion : ${count++}")
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private fun observeMemberGroup(apiResponse: RequestState<MemberGroupResponse>) {
+        observeResponseNew(apiResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        println("member group insertion : ${count++}")
+                        dataBaseRepository.insertMemberGroup(apiData)
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private suspend  fun observeInventory(
+        inventoryResponse: Flow<RequestState<ProductWithTaxByLocationResponse>>,
+        lastSyncTime: String?
+    ) {
+        observeResponse(inventoryResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                viewModelScope.launch {
+                    if(apiData.success){
+                        dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime,stockQtyMap.value)
+                        updateSyncGrid(PRODUCT)
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(INVENTORY_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private fun observeStock(
+        stockAvailResponse: RequestState<ProductLocationResponse>
+    ) {
+        println("menu category insertion : ${count++}")
+        observeResponseNew(stockAvailResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    stockQtyMap.update { oldMap ->
+                        oldMap + apiData.result?.items?.associate { stock ->
+                            stock.id to stock.qtyOnHand
+                        }.orEmpty()
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
+            }
+        )
+    }
+
+    private  fun observeBarcode(
+        barcodesResponse: Flow<RequestState<ProductBarCodeResponse>>,
+        lastSyncTime: String?
+    ) {
+        viewModelScope.launch {
+            observeResponse(barcodesResponse,
+                onLoading = {  },
+                onSuccess = { apiData ->
+                    viewModelScope.launch {
+                        if(apiData.success){
+                            _productBarCodeResponse.update { apiData }
+                            dataBaseRepository.insertUpdateBarcode(apiResponse = apiData,lastSyncDateTime=lastSyncTime)
+                        }
+                    }
+                },
+                onError = {
+                        errorMsg ->
+                    handleApiError(INVENTORY_ERROR_TITLE,errorMsg)
+                }
+            )
+        }
+    }
+
+    private fun observePaymentType(apiResponse: RequestState<PaymentTypeResponse>) {
+        println("payment type insertion : ${count++}")
+
+        observeResponseNew(apiResponse,
+            onLoading = {  },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        _paymentTypeResponse.update { apiData }
+                        dataBaseRepository.insertPaymentType(apiData)
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+            }
+        )
     }
 
     suspend fun getTerminal(){
@@ -298,165 +596,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             val error="${e.message}"
             handleApiError(TERMINAL_ERROR_TITLE,error)
         }
-    }
-
-    suspend fun getMenuCategory(){
-        try {
-            updateLoaderMsg("Fetching menu categories data...")
-            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
-                observeCategoryMenu(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleApiError(MENU_CATEGORY_ERROR_TITLE,error)
-        }
-    }
-
-    private fun getMenuProducts(id:Int){
-        viewModelScope.launch {
-            println("Menu products api : $id")
-            networkRepository.getMenuProducts(getBasicRequest(id)).collectLatest {response->
-                observeProductsMenu(response)
-            }
-
-        }
-    }
-
-    private fun observeCategoryMenu(apiResponse: RequestState<MenuCategoryResponse>) {
-        println("menu category insertion : ${count++}")
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertMenuCategories(apiData)
-                    apiData.result.items.forEach { item->
-                        getMenuProducts(item.id)
-                    }
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeProductsMenu(apiResponse: RequestState<MenuProductResponse>) {
-        println("menu products insertion : ${count++}")
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertMenuProducts(apiData)
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MENU_PRODUCTS_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private suspend fun observeLocation(apiResponse: Flow<RequestState<LocationResponse>>) {
-        println("location insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = { updateLoaderMsg("Fetching Location....")},
-            onSuccess = { apiData -> insertLocation(apiData) },
-            onError = {
-                    errorMsg ->
-                handleApiError(LOCATION_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-
-    private suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
-        println("employees insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = {  updateLoaderMsg("Fetching Employees....")},
-            onSuccess = { apiData -> insertEmployees(apiData) },
-            onError = {errorMsg->
-                handleApiError(EMPLOYEE_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private suspend fun observeEmpRole(apiResponse: Flow<RequestState<EmployeesResponse>>) {
-        println("employees role insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = {  updateLoaderMsg("Fetching Employees Role....")},
-            onSuccess = { apiData -> insertEmpRole(apiData) },
-            onError = {errorMsg->
-                handleApiError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeProductWithTax(apiResponse: RequestState<ProductWithTaxByLocationResponse>) {
-        println("product tax insertion : ${count++}")
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertProductWithTax(apiData)
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(PRODUCT_TAX_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeMembers(apiResponse: RequestState<MemberResponse>) {
-        println("member insertion : ${count++}")
-
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertMembers(apiData)
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeMemberGroup(apiResponse: RequestState<MemberGroupResponse>) {
-        println("member group insertion : ${count++}")
-
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertMemberGroup(apiData)
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observePaymentType(apiResponse: RequestState<PaymentTypeResponse>) {
-        println("payment type insertion : ${count++}")
-
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    insertPaymentType(apiData)
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
-            }
-        )
     }
 
     private fun observeTerminal(apiResponse: RequestState<TerminalResponse>) {
@@ -492,10 +631,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun handleApiError(errorTitle:String,errorMsg: String) {
+    private fun handleApiError(errorTitle:String, errorMsg: String) {
         viewModelScope.launch(Dispatchers.Main) {
             println(errorMsg)
-            // Update login state to reflect error and stop further execution
             updateLoginState(
                 loading = _loginScreenState.value.isLoading,
                 successfulLogin = false,
@@ -504,539 +642,27 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 error = errorMsg)
         }
     }
+
     suspend fun getCurrencySymbol() : String{
-        return preferences.getCurrencySymbol().first()  // Collects the first emitted value from Flow
-    }
-
-    suspend fun insertUserTenantSafely(
-        loginResponse: LoginResponse,
-        finalUrl: String,
-        tenant: String,
-        username: String,
-        password: String
-    ) {
-        withContext(Dispatchers.IO) {
-            // If no duplicate is found, insert the user
-            val authenticateDao=AuthenticateDao(
-                userId = loginResponse.userId,
-                tenantId = loginResponse.tenantId ?: -1,
-                userName = username,
-                serverURL = finalUrl,
-                tenantName = tenant,
-                password = password,
-                isLoggedIn = true,
-                isSelected = true,
-                loginDao = loginResponse
-            )
-
-            databaseRepository.insertAuthentication(authenticateDao)
-        }
-    }
-
-    fun insertLocation(
-        locationResponse: LocationResponse
-    ) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                // If no duplicate is found, insert the user
-                if(locationResponse.result.items.isNotEmpty()){
-                    deleteExistingLocations()
-                    locationResponse.result.items.forEachIndexed{index,location->
-                        val mLocationDao=
-                            LocationDao(
-                                locationId = location.id?:0,
-                                name = location.name?:"",
-                                code = location.code?:"",
-                                country = location.country?:"",
-                                address1 = location.address1?:"",
-                                address2 = location.address2?:"",
-                                isSelected = false
-                            )
-                        databaseRepository.insertLocation(mLocationDao)
-                    }
-                }
-            }
-        }
+        return preferences.getCurrencySymbol().first()
     }
 
 
-    fun insertEmployees(
-        employeesResponse: EmployeesResponse
-    ) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                employeesResponse.result.items.forEach{employee->
-                    val mEmployeeDao=
-                        EmployeeDao(
-                            employeeId = employee.id,
-                            employeeName = employee.name,
-                            employeeCode = employee.employeeCode,
-                            employeeRoleName = employee.employeeRoleName,
-                            employeePassword = employee.password,
-                            employeeCategoryName = employee.employeeCategoryName ?: "",
-                            employeeDepartmentName = employee.employeeDepartmentName ?: "",
-                            isAdmin = employee.isAdmin,
-                            isDeleted = employee.isDeleted
-                        )
-                    databaseRepository.insertEmployee(mEmployeeDao)
-                }
-            }
-        }
-    }
-
-    fun insertEmpRole(
-        employeesResponse: EmployeesResponse
-    ) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                employeesResponse.result.items.forEach{employee->
-                    val mEmployeeDao=
-                        EmployeeDao(
-                            employeeId = employee.id,
-                            employeeName = employee.name,
-                            isAdmin = employee.isAdmin,
-                            isDeleted = employee.isDeleted
-                        )
-                    databaseRepository.insertEmpRole(mEmployeeDao)
-                }
-            }
-        }
-    }
-
-    fun getEmployeeByCode(empCode:String) {
-        viewModelScope.launch {
-            databaseRepository.getEmployeeByCode(empCode.trim())
-                .collect { employee ->
-                    _employeeDoa.update { employee }
-                }
-        }
-    }
-
-    fun insertMenuCategories(
-        response: MenuCategoryResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true // Flag to track if all insertions are successful
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result.items.forEach{item->
-                        val dao=
-                            MenuCategoriesDao(
-                                categoryId =  item.id.toLong(),
-                                categoryItem = item
-                            )
-                        // Try inserting and handle possible failure
-                        try {
-                            databaseRepository.insertMenuCategories(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-                updateMenuCategoriesDb(isSuccess)
-            }catch (ex:Exception){
-                // Once all insertions are done, notify the result
-                updateMenuCategoriesDb(false)
-            }
-        }
-    }
-
-    fun insertMenuProducts(
-        response: MenuProductResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result.items.forEach{item->
-                        val dao=
-                            MenuProductsDao(
-                                productId =  item.id.toLong(),
-                                menuProductItem = item
-                            )
-                        try {
-                            databaseRepository.insertMenuProducts(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-                // Once all insertions are done, notify the result
-                updateMenuProductsDb(isSuccess)
-            }catch (ex:Exception){
-                isSuccess=false
-                updateMenuProductsDb(isSuccess)
-            }
-        }
+    private fun updateSyncGrid(name: String): SyncItem {
+        /*with(_syncDataState.value){
+            return syncerGuid.items.firstOrNull{ it.name.uppercase() == name }
+                ?: SyncItem(name = name, syncerGuid = "", id = 0)
+        }*/
+        return SyncItem()
     }
 
 
-    fun insertNextPosSale(
-        response: NextPOSSaleInvoiceNoResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.let {
-                        val dao= NextPOSSaleDao(
-                            posItem = it
-                        )
-
-                        try {
-                            databaseRepository.insertNextPosSale(dao)
-                        }
-                        catch (ex:Exception){
-                            isSuccess=false
-                        }
-
-                    }
-                }
-                updateNextPOSSaleDb(isSuccess)
-            }catch (ex:Exception){
-               isSuccess=false
-                updateNextPOSSaleDb(isSuccess)
-            }
-        }
-    }
-
-    fun insertPosInvoice(
-        response: POSInvoiceResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= POSInvoiceDao(
-                            posInvoiceId = item.id.toLong(),
-                            totalCount = response.result.totalCount?.toLong()?:0,
-                            posItem = item,
-                        )
-                        try {
-                            databaseRepository.insertPosInvoice(dao)
-                        }catch (ex:Exception){
-                            isSuccess = false
-                        }
-
-                    }
-                }
-
-            }catch (ex:Exception){
-                isSuccess = false
-            }
-
-            // If successful, invoke the callback with true
-            updatePOSInvoiceDb(isSuccess)
-        }
-    }
-
-
-    fun insertPaymentType(
-        response: PaymentTypeResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= PaymentTypeDao(
-                            paymentId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertPaymentType(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-
-            // If successful, invoke the callback with true
-            updatePaymentTypeDb(isSuccess)
-        }
-    }
-
-    fun insertProductWithTax(
-        response: ProductWithTaxByLocationResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= ProductTaxDao(
-                            productTaxId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertProductWithTax(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-
-            // If successful, invoke the callback with true
-            updateProductTaxDb(isSuccess)
-        }
-    }
-
-
-
-    suspend fun insertOrUpdateScannedProduct(scannedList: List<ProductTaxItem>) {
-        // Switch to the IO dispatcher to perform the database operation
-        withContext(Dispatchers.IO) {
-            scannedList.forEach {item->
-                val dao = ScannedProductDao(
-                    productId = item.id.toLong(),
-                    name = item.name?:"",
-                    inventoryCode = item.inventoryCode?:"",
-                    barCode = item.barCode?:"",
-                    qty = item.qtyOnHand,
-                    price = item.price?:0.0,
-                    subtotal = item.price?.times(item.qtyOnHand)?:0.0,
-                    discount = item.discount,
-                    taxValue = item.taxValue?:0.0,
-                    taxPercentage = item.taxPercentage?:0.0
-                )
-                databaseRepository.insertScannedProduct(dao)
-            }
-        }
-    }
-
-    suspend fun updateScannedProduct(updatedItem: ProductTaxItem) {
-        println("ProductTaxItem : $updatedItem")
-        // Switch to the IO dispatcher to perform the database operation
-        withContext(Dispatchers.IO) {
-            val dao = ScannedProductDao(
-                productId = updatedItem.id.toLong(),
-                qty = updatedItem.qtyOnHand,
-                discount = updatedItem.discount,
-                subtotal = updatedItem.subtotal?:0.0
-            )
-            // Call the repository method to update the product
-            databaseRepository.updateScannedProduct(dao)
-        }
-    }
-
-    fun insertMembers(
-        response: MemberResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= MemberDao(
-                            memberId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertMembers(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-
-                    // If successful, invoke the callback with true
-                    updateMemberDb(isSuccess)
-                }
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-        }
-    }
-
-    fun insertMemberGroup(
-        response: MemberGroupResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= MemberGroupDao(
-                            memberGroupId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertMemberGroup(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false
-                        }
-                    }
-
-                    // If successful, invoke the callback with true
-                    updateMemberGroupDb(isSuccess)
-                }
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-        }
-    }
-
-    fun insertProductLocation(
-        response: ProductLocationResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result?.items?.forEach {item->
-                        val dao= ProductLocationDao(
-                            productLocationId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertProductLocation(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-
-            // If successful, invoke the callback with true
-            updateProductLocationDb(isSuccess)
-        }
-    }
-
-
-    fun insertSyncAll(
-        response: SyncAllResponse
-    ) {
-        viewModelScope.launch {
-            var isSuccess = true
-            try {
-                withContext(Dispatchers.IO) {
-                    response.result.items.forEach {item->
-                        val dao= SyncAllDao(
-                            syncId = item.id.toLong(),
-                            rowItem = item,
-                        )
-                        try {
-                            databaseRepository.insertSyncAll(dao)
-                        } catch (e: Exception) {
-                            isSuccess = false // Mark as failed if any insertion fails
-                        }
-                    }
-                }
-
-            }catch (ex:Exception){
-                isSuccess=false
-            }
-
-            // If successful, invoke the callback with true
-            updateSyncDb(isSuccess)
-        }
-    }
-
-    private fun updateMenuCategoriesDb(result:Boolean) {
-        _isMenuCategoryDbInserted.update { result }
-    }
-
-    private fun updateMenuProductsDb(result:Boolean) {
-        _isMenuProductDbInserted.update { result }
-    }
-
-    private fun updateNextPOSSaleDb(result:Boolean) {
-        _isNEXTPOSSaleDbInserted.update { result }
-    }
-
-    private fun updatePOSInvoiceDb(result:Boolean) {
-        _isPOSInvoiceDbInserted.update { result }
-    }
-
-    private fun updatePaymentTypeDb(result:Boolean) {
-        _isPaymentTypeDbInserted.update { result }
-    }
-
-    private fun updateProductTaxDb(result:Boolean) {
-        _isProductTaxDbInserted.update { result }
-    }
-
-    private fun updateProductLocationDb(result:Boolean) {
-        _isProductLocationDbInserted.update { result }
-    }
-    private fun updateMemberDb(result:Boolean) {
-        _isMembersDbInserted.update { result }
-    }
-
-    private fun updateMemberGroupDb(result:Boolean) {
-        _isMemberGroupDbInserted.update { result }
-    }
 
     private fun updateSyncDb(result:Boolean) {
         _isSyncDbInserted.update { result }
     }
 
 
-    fun getAllProductTax() {
-        viewModelScope.launch(Dispatchers.IO) {
-            databaseRepository.getAllProductWithTax()
-                .collectLatest { itemDao ->
-                   // _productMenuDao.update { itemDao }
-                }
-        }
-    }
-
-    fun getAllMenuCategories() {
-        viewModelScope.launch {
-            databaseRepository.getAllCategories()
-                .collect { itemDao ->
-                    _categoryMenuDao.update { itemDao }
-                }
-        }
-    }
-
-    fun getAllMenuCProducts() {
-        viewModelScope.launch {
-            databaseRepository.getAllProducts()
-                .collect { itemDao ->
-                    _productMenuDao.update { itemDao }
-                }
-        }
-    }
-
-    private fun isNEXTPOSSaleDbInserted() {
-        viewModelScope.launch {
-            databaseRepository.getNextPosSaleCount().collect{count->
-                _isNEXTPOSSaleDbInserted.update { count==0 }
-            }
-        }
-    }
-    
-    private fun isMenuCategoryDbInserted() {
-        viewModelScope.launch {
-            databaseRepository.getMenuCategoriesCount().collect{count->
-                _isMenuCategoryDbInserted.update { count>0 }
-            }
-        }
-    }
-
-    private fun isMenuProductDbInserted() {
-        viewModelScope.launch {
-            databaseRepository.getMenuCProductsCount().collect{count->
-                _isMenuProductDbInserted.update { count==0 }
-            }
-        }
-    }
-
-    private suspend fun deleteExistingLocations() {
-        databaseRepository.deleteAllLocations()
-    }
 
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
@@ -1047,27 +673,37 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     suspend fun getBasicRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
+        lastSyncDateTime = _lastSyncDateTime.value
         )
 
-     fun getBasicRequest(id:Int) = BasicApiRequest(
+     private fun getBasicRequest(id:Int) = BasicApiRequest(
         id =id
     )
 
-    suspend fun getBasicTenantRequest() = BasicApiRequest(
+    private suspend fun getBasicTenantRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first()
+    )
+
+    private suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
+        tenantId = preferences.getTenantId().first(),
+        locationId = preferences.getLocationId().first(),
+        lastSyncDateTime = _lastSyncDateTime.value,
+        isDeleted = isDeleted
     )
 
     suspend fun getLocationId() = preferences.getLocationId().first()
     suspend fun getTenantId() = preferences.getTenantId().first()
 
+   suspend fun getUserId() :Long{
+        return preferences.getUserId().first()
+    }
 
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
                 async { _authenticationDao.update { AuthenticateDao() } },
                 async { _employeeDoa.update { EmployeeDao() } },
-                async { _categoryMenuDao.update { emptyList()} },
-                async { _productMenuDao.update { emptyList()} },
+                async { _categoryResponse.update { emptyList()} },
             )
             jobs.awaitAll()
         }
@@ -1091,13 +727,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     fun emptyDataBase() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { databaseRepository.deleteAuthentication() },
-                async { databaseRepository.deleteAllLocations() },
-                async { databaseRepository.deleteAllEmployee() },
-                async { databaseRepository.deleteAllEmpRole() },
-                async { databaseRepository.deleteCategories() },
-                async { databaseRepository.deleteProducts() },
-                async { databaseRepository.deleteProductWithTax() }
+                async { dataBaseRepository.clearAuthentication() },
+                async { dataBaseRepository.clearExistingLocations() },
+                async { dataBaseRepository.clearEmployees() },
+                async { dataBaseRepository.clearEmployeeRole() },
+                async { dataBaseRepository.clearMember() },
+                async { dataBaseRepository.clearMemberGroup() },
+                async { dataBaseRepository.clearInventory() },
+                async { dataBaseRepository.clearBarcode() },
+                async { dataBaseRepository.clearCategory() },
+                async { dataBaseRepository.clearStocks() },
+                async { dataBaseRepository.clearScannedProduct() }
             )
             jobs.awaitAll()
         }

@@ -44,17 +44,14 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     private fun prepareHomeData() {
         viewModelScope.launch {
             // Wait for the authentication DAO to initialize
-            val isInitialized = initAuthenticationDao()
-            if (isInitialized) {
-                prepareHomeScreenItems()
-                updateHomeState()
-            }
+            prepareHomeScreenItems()
+            updateHomeState()
         }
     }
 
     private fun updateHomeState(){
         viewModelScope.launch {
-            authenticationDao.collectLatest{user->
+            authUser.collectLatest{user->
                 _homeUIState.update { it.copy(authUser = user?: AuthenticateDao()) }
             }
         }
@@ -166,27 +163,10 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
                 async {
                     getEmployeeRole()
                 },
-                //product Tax API
-                async {
-                    getProductsWithTax()
-                },
 
-                //Get Members
-                async {
-                    getMembers()
-                },
-
-                //Get Member group
-                async {
-                    getMemberGroup()
-                },
-                //Get Payment
-                async {
-                    getPaymentTypes()
-                },
                 //MenuCategory API
                 async {
-                    getMenuCategory()
+                    syncMenu()
                 },
 
                 //Terminal Api

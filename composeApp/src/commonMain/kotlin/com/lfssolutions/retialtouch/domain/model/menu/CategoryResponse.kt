@@ -6,17 +6,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuProductResponse(
+data class CategoryResponse(
     @SerialName("__abp")
-    val abp: Boolean,
+    val abp: Boolean = false,
     @SerialName("error")
     val error: ErrorResponse?,
     @SerialName("result")
-    val result: com.lfssolutions.retialtouch.domain.model.menu.MenuProductResult,
+    val result: CategoryResult = CategoryResult(),
     @SerialName("success")
-    val success: Boolean,
+    val success: Boolean = false,
     @SerialName("targetUrl")
-    val targetUrl: String?,
+    val targetUrl: String? = null,
     @SerialName("unAuthorizedRequest")
-    val unAuthorizedRequest: Boolean
+    val unAuthorizedRequest: Boolean = false
 )

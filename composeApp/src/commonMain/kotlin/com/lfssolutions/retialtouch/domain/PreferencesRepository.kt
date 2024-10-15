@@ -30,5 +30,15 @@ interface PreferencesRepository {
     suspend fun setUserLoggedIn(result: Boolean)
     fun getUserLoggedIn(): Flow<Boolean>
 
+    suspend fun setLastSyncTs(result: Long)
+    fun getLastSyncTs(): Flow<Long>
 
+    suspend fun setReSyncTimer(result: Int)
+    fun getReSyncTime(): Flow<Int>
+
+    suspend fun setMemberSyncGrid(result: String)
+    fun getMemberSyncGrid(): Flow<String>
+
+    suspend fun setMemberGroupSyncGrid(result: String)
+    fun getMemberGroupSyncGrid(): Flow<String>
 }

@@ -2,41 +2,19 @@ package com.lfssolutions.retialtouch.presentation.viewModels
 
 
 import androidx.lifecycle.viewModelScope
-import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
-import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
-import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.domain.RequestState
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
-import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
-import com.lfssolutions.retialtouch.domain.model.login.LoginUiState
-import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
-import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuCategoryResponse
-import com.lfssolutions.retialtouch.domain.model.menu.MenuProductResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
-import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
-import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_ROLE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MENU_CATEGORY_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.MENU_PRODUCTS_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.PRODUCT_TAX_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.PrefKeys.TERMINAL_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTime.getLastSyncDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 
 class LoginViewModel : BaseViewModel(), KoinComponent {
@@ -230,7 +208,7 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            insertUserTenantSafely(loginResponse,finalUrl,tenant,username,password)
+            dataBaseRepository.insertUser(loginResponse,finalUrl,tenant,username,password)
             preferences.setBaseURL(finalUrl)
             preferences.setToken(loginResponse.result?:"")
             preferences.setUserId(loginResponse.userId.toLong())
@@ -257,33 +235,27 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 async {
                     getEmployeeRole()
                 },
-                //product Tax API
-                async {
-                    getProductsWithTax()
-                },
-
                 //Get Members
                 async {
-                    getMembers()
+                    syncMembers()
                 },
 
                 //Get Member group
                 async {
-                    getMemberGroup()
+                    syncMemberGroup()
                 },
-                //Get Payment
+                //product Tax API
                 async {
-                    getPaymentTypes()
+                    syncInventory()
                 },
                 //MenuCategory API
                 async {
-                    getMenuCategory()
+                    syncCategories()
                 },
-
-                //Terminal Api
+                //Get Payment
                 async {
-                    getTerminal()
-                }
+                    syncPaymentTypes()
+                },
             )
 
             // Await all tasks (this will wait for all the parallel jobs to complete)
@@ -299,66 +271,3 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
 
 }
 
-/*fun hitApiCalls() {
-        viewModelScope.launch(Dispatchers.IO) {
-            /* async(Dispatchers.IO) {
-                                       networkRepository.getTerminal(getBasicRequest()).collectLatest{terminalResponse->
-                                           observeTerminal(terminalResponse)
-                                       }
-                                   }.await() // Await the result of terminalResponse
-                                   //observeTerminal(terminalResponse)*/
-            // Sequential API calls with error handling
-            val result = runCatching {
-                // Location API
-                updateLoaderMsg("Fetching location data...")
-                println("location calling api : ${count++}")
-                val loginApiResponse = networkRepository.getLocationForUser(getBasicRequest())
-                observeLocation(loginApiResponse)
-
-                // Terminal API
-                updateLoaderMsg("Fetching terminal data...")
-                println("terminal calling api : ${count++}")
-                val terminalResponse = networkRepository.getTerminal(getBasicRequest())
-                //observeTerminal(terminalResponse)
-
-                // Employee API
-                updateLoaderMsg("Fetching employees data...")
-                println("employees calling api : ${count++}")
-                val employeesResponse = networkRepository.getEmployees(getBasicRequest())
-                observeEmployees(employeesResponse)
-
-                // Employee Role API
-                updateLoaderMsg("Fetching employee role data...")
-                println("employees role calling api : ${count++}")
-                val empRoleResponse = networkRepository.getEmployeeRole(getBasicRequest())
-                observeEmpRole(empRoleResponse)
-            }
-
-            // Handling success and failure
-            result.onSuccess {
-                // All APIs successful, update the login state
-                withContext(Dispatchers.Main) {
-                    updateLoginState(
-                        loading = false,
-                        loginError = false,
-                        successfulLogin = true,
-                        error = "",
-                        title = ""
-                    )
-                }
-                println("apiCall is successful")
-            }.onFailure { e ->
-                // If any API fails, show error and return to login
-                withContext(Dispatchers.Main) {
-                    updateLoginState(
-                        loading = false,
-                        loginError = true,
-                        successfulLogin = false,
-                        error = "Failed: ${e.message}",
-                        title = ""
-                    )
-                }
-                println("API call failed: ${e.message}")
-            }
-        }
-    }*/

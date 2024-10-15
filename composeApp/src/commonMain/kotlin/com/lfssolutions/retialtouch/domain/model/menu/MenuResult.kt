@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuCategoryResult(
+data class MenuResult(
     @SerialName("items")
-    val items: List<com.lfssolutions.retialtouch.domain.model.menu.MenuCategoryItem> = listOf()
+    val items: List<MenuItem>
 )

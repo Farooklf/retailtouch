@@ -32,20 +32,26 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.outsidesource.oskitcompose.systemui.SystemBarColorEffect
+import com.outsidesource.oskitcompose.systemui.SystemBarIconColor
 
 @Composable
 fun GradientBackgroundScreen(
     modifier: Modifier = Modifier,
     blur: Float = .1f,
     screenBackground: Brush = AppTheme.colors.screenGradientHorizontalBg,
-    contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
-    contentPadding: PaddingValues = PaddingValues(
-        horizontal = 20.dp,
-        vertical = 20.dp,
-    ),
+    navBgColor: Color = AppTheme.colors.backgroundNavbar,
+    statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
+    navIconColor: Color = AppTheme.colors.iconNavbar,
+    statusBarColor: Color = AppTheme.colors.activeColor,
     isBlur: Boolean = true,
-    content: @Composable () -> Unit = {},
+    content: @Composable (Dp) -> Unit = {},
 ){
+    SystemBarColorEffect(
+        statusBarColor = statusBarColor,
+        statusBarIconColor = statusBarIconColor,
+        navigationBarColor = navBgColor
+    )
 
     BoxWithConstraints(
         modifier = modifier
@@ -53,7 +59,7 @@ fun GradientBackgroundScreen(
             .windowInsetsPadding(WindowInsets.systemBars)
             .alpha(if(isBlur) blur else 1f)
     ) {
-        content()
+        content(maxHeight)
     }
 }
 

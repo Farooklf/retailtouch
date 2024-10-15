@@ -24,6 +24,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -446,74 +447,75 @@ fun SearchableTextWithBg(
     minLines: Int = 1,
 ) {
     //var typeValue by remember(value) { mutableStateOf(value) }
-    Surface(modifier=modifier
+    /*Card(modifier=modifier
         .wrapContentHeight()
         .padding(10.dp)
         .background(AppTheme.colors.searchBoxColor),
          shape = RoundedCornerShape(10.dp)
     ){
-        Column(modifier = modifier
-                .wrapContentHeight()
-            .background(AppTheme.colors.searchBoxColor),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = modifier.padding(10.dp),
-                enabled = enabled,
-                textStyle = textStyle,
-                visualTransformation = visualTransformation,
-                label = {
-                    label?.let {
-                        Text(
-                            text = it
-                        )
-                    }
-                },
-                placeholder = {
-                    placeholder?.let {
-                        Text(
-                            text = it
-                        )
-                    }
-                },
-                leadingIcon = if (leadingIcon != null) {
-                    {
-                        Icon(
-                            imageVector = leadingIcon,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                } else null,
 
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
-                isError = error != null,
-                singleLine = singleLine,
-                maxLines = maxLines,
-                minLines = minLines,
-                shape = AppTheme.appShape.textField,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = AppTheme.colors.textWhite,
-                    focusedBorderColor = AppTheme.colors.textWhite,
-                    focusedLabelColor = AppTheme.colors.textWhite,
-                    placeholderColor = AppTheme.colors.textWhite.copy(alpha = .7f),
-                    cursorColor = AppTheme.colors.textWhite,
-                    unfocusedLabelColor = AppTheme.colors.textWhite.copy(alpha = .8f),
-                    unfocusedBorderColor = AppTheme.colors.textWhite.copy(alpha = 0.8f)
-                )
+    }*/
+
+    Column(modifier = modifier
+        .wrapContentHeight(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = modifier.padding(10.dp),
+            enabled = enabled,
+            textStyle = textStyle,
+            visualTransformation = visualTransformation,
+            label = {
+                label?.let {
+                    Text(
+                        text = it
+                    )
+                }
+            },
+            placeholder = {
+                placeholder?.let {
+                    Text(
+                        text = it
+                    )
+                }
+            },
+            leadingIcon = if (leadingIcon != null) {
+                {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            } else null,
+
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            isError = error != null,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            shape = AppTheme.appShape.textField,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                textColor = AppTheme.colors.textColor,
+                focusedBorderColor = AppTheme.colors.textPrimaryBlue,
+                focusedLabelColor = AppTheme.colors.textPrimaryBlue,
+                placeholderColor = AppTheme.colors.textColor.copy(alpha = .7f),
+                cursorColor = AppTheme.colors.textPrimaryBlue,
+                unfocusedLabelColor = AppTheme.colors.textPrimaryBlue.copy(alpha = .8f),
+                unfocusedBorderColor = AppTheme.colors.textPrimaryBlue.copy(alpha = 0.8f)
             )
+        )
 
-            error?.let {
-                Text(
-                    text = it,
-                    modifier = Modifier.padding(start = 10.dp),
-                    style = AppTheme.typography.captionNormal(),
-                    color = errorColor
-                )
-            }
+        error?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(start = 10.dp),
+                style = AppTheme.typography.captionNormal(),
+                color = errorColor
+            )
         }
     }
 

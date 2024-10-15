@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import cafe.adriel.voyager.navigator.Navigator
 import com.lfssolutions.retialtouch.navigation.AppNavHost
@@ -12,7 +13,9 @@ import com.lfssolutions.retialtouch.navigation.Route
 import com.lfssolutions.retialtouch.navigation.toVoyagerScreen
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.lfssolutions.retialtouch.utils.LocalSharedViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 
@@ -24,23 +27,21 @@ fun App(
 ) {
     val appState by baseViewModel.composeAppState.collectAsStateWithLifecycle()
     //val navController = rememberNavController()
+    val sharedViewModel = viewModel<SharedPosViewModel>()
 
 
     AppTheme {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize()
         ){
-            LaunchedEffect(maxWidth) {
-                println("device width : $maxWidth")
-                baseViewModel.updateScreenMode(maxWidth)
+
+            LaunchedEffect(maxWidth, maxHeight) {
+                baseViewModel.updateScreenMode(maxWidth,maxHeight)
             }
 
-            // Provide the appState globally using CompositionLocalProvider
-            CompositionLocalProvider(LocalAppState provides appState) {
-                /*AppNavHost(
-                    navController = navController
-                )*/
 
+            // Provide the appState globally using CompositionLocalProvider
+            CompositionLocalProvider(LocalAppState provides appState,LocalSharedViewModel provides sharedViewModel) {
                 Navigator(screen = Route.SplashScreen.toVoyagerScreen(),
                     onBackPressed = {true})
             }
