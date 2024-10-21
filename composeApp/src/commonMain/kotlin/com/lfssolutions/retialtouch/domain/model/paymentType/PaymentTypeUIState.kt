@@ -2,7 +2,6 @@ package com.lfssolutions.retialtouch.domain.model.paymentType
 
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
-import com.lfssolutions.retialtouch.domain.model.productWithTax.Payment
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoiceDetail
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosPayment
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
@@ -28,8 +27,8 @@ data class PaymentTypeUIState(
     var inputDiscountError  : String? = null,
     var remainingLabel  : String = "Remaining",
     var totalLabel  : String = "Amount To Pay",
-    val paymentList : List<PaymentTypeItem> = listOf(),
-    val selectedPayment: PaymentTypeItem = PaymentTypeItem(),
+    val paymentList : List<PaymentMethod> = listOf(),
+    val selectedPayment: PaymentMethod = PaymentMethod(),
 
     val scannedPosList: List<ProductTaxItem> = listOf(),
 

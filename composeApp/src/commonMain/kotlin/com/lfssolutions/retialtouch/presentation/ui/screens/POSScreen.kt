@@ -36,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
@@ -44,6 +46,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.domain.model.inventory.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.inventory.Product
 import com.lfssolutions.retialtouch.domain.model.productWithTax.HeldCollection
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
@@ -72,6 +76,7 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
+import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.DrawableResource
@@ -116,28 +121,25 @@ fun Pos(
     val navigator = LocalNavigator.currentOrThrow
     val posUIState by posViewModel.posUIState.collectAsStateWithLifecycle()
     val productsList by posViewModel.productsList.collectAsStateWithLifecycle()
-    val memberList by posViewModel.memberList.collectAsStateWithLifecycle()
     val authUser by posViewModel.authUser.collectAsStateWithLifecycle()
 
 
     LaunchedEffect(authUser){
         posViewModel.getAuthDetails()
+        posViewModel.loadDbData()
     }
 
     LaunchedEffect(productsList){
-        posViewModel.loadDialogProduct()
+        //posViewModel.loadDialogProduct()
     }
 
-    LaunchedEffect(memberList){
-        posViewModel.loadMemberList()
-    }
 
     LaunchedEffect(posUIState.isCallScannedItems) {
         posViewModel.fetchUIProductList()
     }
 
-    LaunchedEffect(posUIState.shoppingCart) {
-        posViewModel.calculateBottomValues()
+    LaunchedEffect(posUIState.cartList) {
+        posViewModel.recomputeSale()
     }
 
 
@@ -151,9 +153,13 @@ fun Pos(
             posViewModel.updateDialogState(false)
         },
         content = {
-            DialogList(posUIState.dialogPosList,posUIState.searchQuery,posUIState.currencySymbol, onClick = {selectedItem->
+            if(posUIState.stockList.isEmpty())
+                posViewModel.loadAllProducts()
+
+            DialogList(posUIState.stockList,posUIState.searchQuery,posUIState.currencySymbol, onClick = {selectedItem->
                 posViewModel.updateDialogState(false)
-                posViewModel.insertPosListItem(selectedItem)
+                posViewModel.clearSearch()
+                posViewModel.addSearchProduct(selectedItem)
             })
         }
     )
@@ -257,6 +263,7 @@ fun Pos(
 
 @Composable
 fun PosTopContent(modifier:Modifier, posUIState: PosUIState, posViewModel: SharedPosViewModel, onNavigatePayment:  (Int) -> Unit) {
+    val searchFieldFocus = remember { FocusRequester() }
     Box(modifier = modifier){
         Column(modifier=Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
             var width by remember { mutableStateOf(0) }
@@ -274,11 +281,14 @@ fun PosTopContent(modifier:Modifier, posUIState: PosUIState, posViewModel: Share
                         placeholder = stringResource(Res.string.search),
                         leadingIcon = AppIcons.searchIcon,
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Search
+                            imeAction = ImeAction.Done
                         ),
-                        onSearchClick = { resultVal->
-                            posViewModel.updateDialogState(resultVal)
-                        })
+                        onSubmittedClick = {
+                            posViewModel.scanBarcode()
+                            searchFieldFocus.requestFocus() // Keep focus on the search field
+                        },
+                        modifier = Modifier.focusRequester(searchFieldFocus)
+                        )
 
                     //Select Member
                     showMemberCard(posUIState,posViewModel)
@@ -295,24 +305,33 @@ fun PosTopContent(modifier:Modifier, posUIState: PosUIState, posViewModel: Share
                             ListItemText(label = stringResource(Res.string.qty), modifier = Modifier.width(150.dp))
                             ListItemText(label = stringResource(Res.string.sub_total), modifier = Modifier.width(100.dp))
                             VectorIcons(icons = AppIcons.removeIcon, modifier = Modifier.width(AppTheme.dimensions.smallIcon), onClick = {
-                                posViewModel.updateRemoveDialogState(posUIState.shoppingCart.isNotEmpty())
+                                posViewModel.updateRemoveDialogState(posUIState.cartList.isNotEmpty())
                             })
                         }
                     }
 
                 }
                 var index=0
-                items(posUIState.shoppingCart
+                items(posUIState.cartList
                 ){ product ->
                     AppHorizontalDivider(modifier=Modifier.width(widthDp))
                     index+=1
                     POSTaxItem(
-                        index = index,product,posUIState.currencySymbol,
+                        index = index,
+                        item = product,
+                        posViewModel=posViewModel,
+                        currencySymbol = posUIState.currencySymbol,
                         onPriceClick = { selectedItem->
-                            posViewModel.onPriceItemClick(selectedItem)
+                            posViewModel.onPriceItemClick(selectedItem,index-1)
                         },
-                        onQtyChanged = { selectedItem, isIncrease->
-                            posViewModel.updateQty(selectedItem,isIncrease)
+                        increaseQty = { selectedItem->
+                            posViewModel.increaseQty(selectedItem)
+                        },
+                        decreaseQty = {selectedItem->
+                           posViewModel.decreaseQty(selectedItem)
+                        },
+                        onCustomQtyClick={selectedItem->
+                            posViewModel.applyCustomQty(selectedItem)
                         },
                         onRemoveClick = { selectedItem->
                             posViewModel.removedListItem(selectedItem)
@@ -342,78 +361,24 @@ fun PosTopContent(modifier:Modifier, posUIState: PosUIState, posViewModel: Share
 }
 
 @Composable
-fun POSTaxListView(posUIState: PosUIState, posViewModel: SharedPosViewModel) {
-    var width by remember { mutableStateOf(0) }
-    val density = LocalDensity.current
-    val widthDp = remember(width, density) { with(density) { width.toDp() } }
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .horizontalScroll(rememberScrollState())
-            .padding(vertical = 10.dp)
-    ){
-        Column(modifier = Modifier.fillMaxWidth(),
-        ) {
-
-            //List UI Header
-            Row(modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)
-            ){
-                ListItemText(label = stringResource(Res.string.hash), modifier = Modifier.width(30.dp))
-                ListItemText(label = stringResource(Res.string.items), modifier = Modifier.width(150.dp))
-                ListItemText(label = stringResource(Res.string.price), modifier = Modifier.width(100.dp))
-                ListItemText(label = stringResource(Res.string.qty), modifier = Modifier.width(150.dp))
-                ListItemText(label = stringResource(Res.string.sub_total), modifier = Modifier.width(100.dp))
-                VectorIcons(icons = AppIcons.removeIcon, modifier = Modifier.width(AppTheme.dimensions.smallIcon), onClick = {
-                    posViewModel.updateRemoveDialogState(posUIState.shoppingCart.isNotEmpty())
-                })
-            }
-
-            //List Content
-
-
-            LazyColumn( modifier = Modifier.onSizeChanged {
-                width = it.width
-            }) {
-                var index=0
-                items(posUIState.shoppingCart
-                ){ product ->
-                    AppHorizontalDivider(modifier=Modifier.width(widthDp))
-                    index+=1
-                    POSTaxItem(
-                        index =index,product,posUIState.currencySymbol,
-                        onPriceClick = { selectedItem->
-                            posViewModel.onPriceItemClick(selectedItem)
-                        },
-                        onQtyChanged = { selectedItem, isIncrease->
-                            posViewModel.updateQty(selectedItem,isIncrease)
-                        },
-                        onRemoveClick = { selectedItem->
-                            posViewModel.removedListItem(selectedItem)
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun POSTaxItem(
-    index:Int, product: ProductTaxItem,
+    index:Int,
+    item: CRShoppingCartItem,
     currencySymbol: String,
-    onPriceClick: (ProductTaxItem) -> Unit,
-    onQtyChanged: (ProductTaxItem,Boolean) -> Unit,
-    onRemoveClick: (ProductTaxItem) -> Unit,
+    posViewModel: SharedPosViewModel,
+    onPriceClick: (CRShoppingCartItem) -> Unit,
+    increaseQty: (CRShoppingCartItem) -> Unit,
+    decreaseQty: (CRShoppingCartItem) -> Unit,
+    onCustomQtyClick: (CRShoppingCartItem) -> Unit,
+    onRemoveClick: (CRShoppingCartItem) -> Unit,
 )
 {
     val (textColor, textTotalLabel) = when {
-        product.itemDiscount > 0.0 -> {
-            AppTheme.colors.textError to "$currencySymbol${product.cartTotal?.roundTo()}\n (-${product.itemDiscount.roundTo()}$currencySymbol)"
+        item.discount > 0 || item.currentDiscount > 0 -> {
+            AppTheme.colors.textError to  "${posViewModel.formatPriceForUI(item.getFinalPrice())} \n (${posViewModel.calculateDiscount(item)})"
         }
         else -> {
-            AppTheme.colors.textColor.copy(alpha = 0.8f) to "$currencySymbol${product.cartTotal?.roundTo()}"
+            AppTheme.colors.textColor.copy(alpha = 0.8f) to posViewModel.formatPriceForUI(item.getFinalPrice())
         }
     }
 
@@ -427,7 +392,7 @@ fun POSTaxItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)
         ){
-            //Hash
+            //Hash index
             ListItemText(
                 label = "$index",
                 textStyle = AppTheme.typography.titleMedium(),
@@ -435,9 +400,19 @@ fun POSTaxItem(
                 modifier = Modifier.width(30.dp).padding(vertical = 10.dp)
             )
 
-            //Items
+            if(item.exchange){
+                VectorIcons(icons = AppIcons.e_exchangeIcon,
+                    modifier = Modifier.width(AppTheme.dimensions.smallXIcon),
+                    iconColor= if(item.exchange) AppTheme.colors.textColor else AppTheme.colors.textSecondary,
+                    onClick = {
+
+                    }
+                )
+            }
+
+            //Items name
             ListItemText(
-                label = "${product.name?:""} \n [${product.inventoryCode?:""}]",
+                label = "${item.stock.name} \n [${item.stock.inventoryCode?:""}]",
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(150.dp),
@@ -447,27 +422,30 @@ fun POSTaxItem(
 
             //Price
             ListItemText(
-                label = "$currencySymbol${product.price?.roundTo()}",
+                label = "$currencySymbol${item.price.roundTo()}",
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(100.dp),
                 isButton = true,
                 onButtonClick = {
-                    onPriceClick.invoke(product)
+                    onPriceClick.invoke(item)
                 }
             )
 
             //Qty
             QtyItemText(
-                label = "${product.qtyOnHand}",
+                label = "${item.qty}",
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(160.dp),
                 onIncreaseClick = {
-                    onQtyChanged.invoke(product,true)
+                    increaseQty.invoke(item)
                 },
                 onDecreaseClick = {
-                    onQtyChanged.invoke(product,false)
+                    decreaseQty.invoke(item)
+                },
+                onClick = {
+                    onCustomQtyClick(item)
                 }
             )
 
@@ -495,7 +473,7 @@ fun POSTaxItem(
             VectorIcons(icons = AppIcons.closeIcon,
                 modifier = Modifier.width(AppTheme.dimensions.smallIcon),
                 onClick = {
-                    onRemoveClick(product)
+                    //onRemoveClick(item)
                 }
             )
 
@@ -503,37 +481,6 @@ fun POSTaxItem(
 
     }
 
-}
-
-@Composable
-fun HoldSaleContent(posUIState: PosUIState,posViewModel: SharedPosViewModel){
-    if(posUIState.isHoldSaleDialog){
-        Column(modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            val collectionList = posUIState.holdSaleCollections.entries.toList()
-
-            if(collectionList.size>1){
-                //Header
-                ButtonRowCard(
-                    label = "${posUIState.holdSaleCollections.size}",
-                    icons = AppIcons.downArrowIcon,
-                    iconSize = 28.dp,
-                    innerPaddingValues = PaddingValues(horizontal = 40.dp, vertical = 20.dp),
-
-                    isDropdownExpanded = posUIState.isDropdownExpanded,
-                    onClick = {
-                        posViewModel.onToggleChange()
-                    }
-                )
-            }
-            //List
-            if(posUIState.isDropdownExpanded){
-                showHoldSaleList(posUIState,collectionList,posViewModel)
-            }else if(collectionList.size==1){
-                showHoldSaleList(posUIState,collectionList,posViewModel)
-            }
-        }
-    }
 }
 
 @Composable
@@ -574,23 +521,24 @@ fun showMemberCard(posUIState: PosUIState, posViewModel: SharedPosViewModel) {
 
 @Composable
 fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: SharedPosViewModel, onPaymentClick:  () -> Unit){
+    val appState = LocalAppState.current
     Row(modifier = modifier) {
 
         //Item Discount
         Column(modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = if(appState.isPortrait) AppTheme.dimensions.phoneHorPadding else AppTheme.dimensions.tabHorPadding),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.Start
         ) {
 
             BottomTex(
-                label = stringResource(Res.string.items_discount,"${posUIState.currencySymbol} ${posUIState.itemsDiscount.roundTo()}")
+                label = stringResource(Res.string.items_discount,posViewModel.formatPriceForUI(posUIState.cartItemsDiscount))
             )
 
             //Hold Button
-            if((posUIState.shoppingCart.isNotEmpty() && posUIState.shoppingCart.size>1) || posUIState.holdSaleCollections.isNotEmpty()){
+            if((posUIState.cartList.isNotEmpty() && posUIState.cartList.size>1) || posUIState.holdSaleCollections.isNotEmpty()){
                 ButtonCard(
                     label = stringResource(Res.string.hold_sale),
                     icons = AppIcons.pauseIcon,
@@ -608,13 +556,13 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
         Column(modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = if(appState.isPortrait) AppTheme.dimensions.phoneHorPadding else AppTheme.dimensions.tabHorPadding),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.End
         ) {
 
             BottomTex(
-                label = stringResource(Res.string.promo_discount,"${posUIState.currencySymbol} ${posUIState.promoDiscount?.roundTo()}")
+                label = stringResource(Res.string.promo_discount,posViewModel.formatPriceForUI(posUIState.cartPromotionDiscount))
             )
 
             Row(modifier = Modifier.fillMaxWidth(),
@@ -628,7 +576,7 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
 
                 ) {
                     BottomTex(label = stringResource(Res.string.qty_value,"${posUIState.quantityTotal}"))
-                    BottomTex(label = stringResource(Res.string.items_value,"${posUIState.currencySymbol} ${posUIState.invoiceSubTotal.roundTo()}"))
+                    BottomTex(label = stringResource(Res.string.items_value,posViewModel.formatPriceForUI(posUIState.cartTotalWithoutDiscount)))
 
                     TexWithClickableBg(onClick = {
                         //open discount pad
@@ -638,9 +586,9 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
                         BottomTex(label = stringResource(Res.string.discount_value, posViewModel.getDiscountValue()), color = AppTheme.colors.textWhite)
                     }
 
-                    BottomTex(label = stringResource(Res.string.tax_value,"${posUIState.currencySymbol} ${posUIState.invoiceTax.roundTo()}"))
+                    BottomTex(label = stringResource(Res.string.tax_value,posViewModel.formatPriceForUI(posUIState.globalTax?:0.0)))
 
-                    BottomTex(label = stringResource(Res.string.total_value,"${posUIState.currencySymbol} ${posUIState.grandTotal.roundTo()}"))
+                    BottomTex(label = stringResource(Res.string.total_value,posViewModel.formatPriceForUI(posUIState.grandTotal)))
 
                 }
 
@@ -661,7 +609,36 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
     }
 }
 
+@Composable
+fun HoldSaleContent(posUIState: PosUIState,posViewModel: SharedPosViewModel){
+    if(posUIState.isHoldSaleDialog){
+        Column(modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            val collectionList = posUIState.holdSaleCollections.entries.toList()
 
+            if(collectionList.size>1){
+                //Header
+                ButtonRowCard(
+                    label = "${posUIState.holdSaleCollections.size}",
+                    icons = AppIcons.downArrowIcon,
+                    iconSize = 28.dp,
+                    innerPaddingValues = PaddingValues(horizontal = 40.dp, vertical = 20.dp),
+
+                    isDropdownExpanded = posUIState.isDropdownExpanded,
+                    onClick = {
+                        posViewModel.onToggleChange()
+                    }
+                )
+            }
+            //List
+            if(posUIState.isDropdownExpanded){
+                showHoldSaleList(posUIState,collectionList,posViewModel)
+            }else if(collectionList.size==1){
+                showHoldSaleList(posUIState,collectionList,posViewModel)
+            }
+        }
+    }
+}
 @Composable
 fun showHoldSaleList(posUIState: PosUIState, collectionList: List<MutableMap.MutableEntry<Int, HeldCollection>>, posViewModel: SharedPosViewModel) {
     LazyColumn(modifier = Modifier.weight(1f)) {
@@ -701,7 +678,7 @@ fun HoldSaleCollectionItem(
 
 
 @Composable
-fun DialogList(productTaxList: List<ProductTaxItem>, searchQuery: String,currencySymbol: String,onClick: (ProductTaxItem) -> Unit) {
+fun DialogList(productList: List<Product>, searchQuery: String, currencySymbol: String, onClick: (Product) -> Unit) {
     var width by remember { mutableStateOf(0) }
     val density = LocalDensity.current
     val widthDp = remember(width, density) { with(density) { width.toDp() } }
@@ -734,14 +711,17 @@ fun DialogList(productTaxList: List<ProductTaxItem>, searchQuery: String,currenc
                      width=it.width
                  }){
                      // Filter the product tax list based on the search query
-                     val filteredProducts = productTaxList.filter { product ->
+                     val filteredProducts = productList.filter { it.matches(searchQuery) }.toMutableList()
+
+                     /*val filteredProducts = productTaxList.filter { product ->
                          (searchQuery.isEmpty() || product.name?.contains(searchQuery, ignoreCase = true) == true ||
                                  product.barCode?.contains(searchQuery, ignoreCase = true) == true ||
                          product.inventoryCode?.contains(searchQuery, ignoreCase = true) == true)
-                     }
+                     }*/
+
                      items(filteredProducts){ product ->
                          AppHorizontalDivider(modifier = Modifier.width(widthDp))
-                         POSItem(product,currencySymbol, onClick = { selectedItem->
+                         DialogListItem(product,currencySymbol, onClick = { selectedItem->
                              onClick(selectedItem)
                          })
                      }
@@ -754,7 +734,7 @@ fun DialogList(productTaxList: List<ProductTaxItem>, searchQuery: String,currenc
 }
 
 @Composable
-fun POSItem(product: ProductTaxItem, currencySymbol: String, onClick: (ProductTaxItem) -> Unit) {
+fun DialogListItem(product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
 
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Row(modifier = Modifier
@@ -764,7 +744,7 @@ fun POSItem(product: ProductTaxItem, currencySymbol: String, onClick: (ProductTa
         ){
             //SKU
             ListItemText(
-                label = product.inventoryCode?:"",
+                label = product.productCode?:"",
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(100.dp)
@@ -772,7 +752,7 @@ fun POSItem(product: ProductTaxItem, currencySymbol: String, onClick: (ProductTa
 
             //barCode
             ListItemText(
-                label = product.barCode?:"",
+                label = product.barcode?:"",
                 textStyle = AppTheme.typography.titleMedium(),
                 color = AppTheme.colors.textColor.copy(alpha = .8f),
                 modifier = Modifier.width(100.dp)

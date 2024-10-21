@@ -1,14 +1,35 @@
 CREATE TABLE ProductBarcode (
     barcodeId INTEGER NOT NULL PRIMARY KEY,
+    productId INTEGER NOT NULL,
+    barcode TEXT NOT NULL,
+    productCode TEXT NOT NULL,
     rowItem TEXT NOT NULL
 );
 
 insert:
-INSERT OR REPLACE INTO ProductBarcode(barcodeId,rowItem)
-VALUES(?,?);
+INSERT OR REPLACE INTO ProductBarcode(barcodeId,productId,barcode,productCode,rowItem)
+VALUES(?,?,?,?,?);
+
+
+updateBarcode:
+UPDATE ProductBarcode
+SET productId = :productId,barcode =:barcode,productCode = :productCode, rowItem = :rowItem
+WHERE barcodeId = :barcodeId;
 
 getAllBarcode:
 SELECT * FROM ProductBarcode;
+
+getItemByBarcode:
+SELECT * FROM ProductBarcode
+WHERE barcode = ?;
+
+getItemByProductCode:
+SELECT * FROM ProductBarcode
+WHERE productCode = ?;
+
+getItemByProductId:
+SELECT * FROM ProductBarcode
+WHERE productId = ?;
 
 delete:
 DELETE  FROM ProductBarcode;

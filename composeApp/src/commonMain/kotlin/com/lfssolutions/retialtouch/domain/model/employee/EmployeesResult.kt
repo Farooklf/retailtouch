@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class EmployeesResult(
     @SerialName("items")
-    val items: List<com.lfssolutions.retialtouch.domain.model.employee.EmployeesItem> = listOf()
+    val items: List<EmployeesItem> = listOf()
 )

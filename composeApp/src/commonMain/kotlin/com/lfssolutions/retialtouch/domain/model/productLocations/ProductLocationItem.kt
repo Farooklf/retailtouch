@@ -59,7 +59,7 @@ data class ProductLocationItem(
     @SerialName("productCreationTime")
     val productCreationTime: String? = "",
     @SerialName("productId")
-    val productId: Int? = 0,
+    val productId: Int = 0,
     @SerialName("productLastModificationTime")
     val productLastModificationTime: String? = "",
     @SerialName("qtyOnHand")

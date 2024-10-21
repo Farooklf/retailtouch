@@ -234,28 +234,7 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 //Employee Role API
                 async {
                     getEmployeeRole()
-                },
-                //Get Members
-                async {
-                    syncMembers()
-                },
-
-                //Get Member group
-                async {
-                    syncMemberGroup()
-                },
-                //product Tax API
-                async {
-                    syncInventory()
-                },
-                //MenuCategory API
-                async {
-                    syncCategories()
-                },
-                //Get Payment
-                async {
-                    syncPaymentTypes()
-                },
+                }
             )
 
             // Await all tasks (this will wait for all the parallel jobs to complete)

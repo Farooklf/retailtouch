@@ -1,0 +1,36 @@
+CREATE TABLE PromotionDetails (
+       id INTEGER NOT NULL PRIMARY KEY,
+       promotionDetails TEXT NOT NULL
+       );
+
+insert:
+INSERT OR REPLACE INTO PromotionDetails(id,promotionDetails)
+VALUES(?,?);
+
+selectMaxId:
+SELECT MAX(id) FROM PromotionDetails;
+
+updatePromotionDetails:
+UPDATE PromotionDetails
+SET promotionDetails = :promotion
+WHERE id = :promotionId;
+
+
+getRowById:
+SELECT * FROM PromotionDetails
+WHERE id = ?;
+
+getAll:
+SELECT * FROM PromotionDetails;
+
+delete:
+DELETE  FROM PromotionDetails;
+
+getCount:
+SELECT COUNT(*) FROM PromotionDetails;
+
+
+
+
+
+

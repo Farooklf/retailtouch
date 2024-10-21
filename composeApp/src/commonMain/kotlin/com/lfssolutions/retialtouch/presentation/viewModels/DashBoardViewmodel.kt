@@ -2,22 +2,7 @@ package com.lfssolutions.retialtouch.presentation.viewModels
 
 
 import androidx.lifecycle.viewModelScope
-import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
-import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.dashBoard.DashBoardUIState
-import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
-import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
-import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
-import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
-import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
-import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
-import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
-import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

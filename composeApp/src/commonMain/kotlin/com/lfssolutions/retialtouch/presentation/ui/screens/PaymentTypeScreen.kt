@@ -9,18 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -31,48 +28,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
-import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
+import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeUIState
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosPayment
-import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
-import com.lfssolutions.retialtouch.navigation.Navigator
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.AppDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppLeftSideMenu
-import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedDropDown
-import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
-import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
-import com.lfssolutions.retialtouch.presentation.ui.common.ClickableAppOutlinedTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.DeletePaymentModeDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.LazyVerticalGrid
-import com.lfssolutions.retialtouch.presentation.ui.common.ListItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
-import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import com.lfssolutions.retialtouch.utils.LocalSharedViewModel
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.painterResource
@@ -80,15 +64,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.cancel
-import retailtouch.composeapp.generated.resources.collection_date_time
-import retailtouch.composeapp.generated.resources.discount
-import retailtouch.composeapp.generated.resources.ic_trash
-import retailtouch.composeapp.generated.resources.remarks
 import retailtouch.composeapp.generated.resources.scan
-import retailtouch.composeapp.generated.resources.status
 import retailtouch.composeapp.generated.resources.tender
-import retailtouch.composeapp.generated.resources.type
-import retailtouch.composeapp.generated.resources.zip_code
 
 object PaymentTypeScreen:Screen{
     @Composable
@@ -192,8 +169,8 @@ fun ScreenTopContent(
     onSelection: (Any) -> Unit,
     onValueChange: (String) -> Unit,
     onTenderClick: () -> Unit,
-    onListItemClick: (PaymentTypeItem) -> Unit,
-    onListIconClick: (PaymentTypeItem) -> Unit,
+    onListItemClick: (PaymentMethod) -> Unit,
+    onListIconClick: (PaymentMethod) -> Unit,
     onDeletePaymentClick: (Int) -> Unit = {},
 ) {
     val (textColor, textLabel) = when {

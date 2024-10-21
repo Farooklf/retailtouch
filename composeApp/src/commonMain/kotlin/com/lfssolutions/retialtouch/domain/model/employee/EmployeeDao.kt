@@ -1,5 +1,8 @@
 package com.lfssolutions.retialtouch.domain.model.employee
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class EmployeeDao(
     val employeeId: Int=0,
     val employeeCode: String="",
@@ -11,4 +14,7 @@ data class EmployeeDao(
     val employeeDepartmentName: String = "",
     val employeeCategoryName: String = "",
     val creationTime: String = "",
+    val permissions: List<String>? = listOf(),
+    val grantedPermissionNames: List<String>? = listOf(),
+    val restrictedPermissionNames: List<String>? = listOf()
 )

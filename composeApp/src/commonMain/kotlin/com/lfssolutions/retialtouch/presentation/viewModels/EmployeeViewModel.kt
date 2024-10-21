@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeUIState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -21,9 +22,6 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
     val employeeScreenState: StateFlow<EmployeeUIState> = _employeeScreenState.asStateFlow()
 
 
-    init {
-        println("device width : ${composeAppState.value.screenWidth}")
-    }
 
     fun updateEmployeeCode(urlInput: String) {
         viewModelScope.launch{
@@ -90,8 +88,9 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             val employee=dataBaseRepository.getEmployeeByCode(_employeeScreenState.value.employeeCode)
             if(employee!=null){
+                employeeDoa.update { employee }
                 if (employee.employeePassword == _employeeScreenState.value.pin) {
-                    preferences.setEmployeeCode(_employeeScreenState.value.employeeCode)
+                    setEmployeeCode(_employeeScreenState.value.employeeCode)
                     updateEmployeeLogin(true)
                 } else {
                     updateEmpPinError("PIN is not correct")

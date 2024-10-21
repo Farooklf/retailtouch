@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,11 +50,10 @@ fun EmployeeScreen(
     onDismiss: () -> Unit,
     employeeViewModel: EmployeeViewModel = koinInject()
 ){
-   // Access appState from CompositionLocal
-    val appState = LocalAppState.current
-    println("Screen width is ${appState.screenWidth}")
+
 
     val employeeScreenState by employeeViewModel.employeeScreenState.collectAsStateWithLifecycle()
+
 
     BoxWithConstraints(
         modifier = Modifier
@@ -169,6 +169,7 @@ fun EmployeeScreen(
                 }
 
                 if(employeeScreenState.isEmployeeLoginSuccess){
+                    employeeViewModel.syncEmployeeRights()
                     onDismiss()
                 }
 

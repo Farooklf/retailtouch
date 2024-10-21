@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PaymentTypeItem(
+data class PaymentMethod(
     @SerialName("acceptChange")
     val acceptChange: Boolean? = false,
     @SerialName("accountCode")
@@ -19,7 +19,7 @@ data class PaymentTypeItem(
     @SerialName("deletionTime")
     val deletionTime: String? = null,
     @SerialName("hide")
-    val hide: Boolean? = false,
+    val enabled: Boolean? = false,
     @SerialName("id")
     val id: Int = 0,
     @SerialName("isDeleted")

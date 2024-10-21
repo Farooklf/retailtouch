@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PaymentTypeDao(
     val paymentId: Long = 0L,
-    val rowItem: PaymentTypeItem = PaymentTypeItem(),
+    val rowItem: PaymentMethod = PaymentMethod(),
 )

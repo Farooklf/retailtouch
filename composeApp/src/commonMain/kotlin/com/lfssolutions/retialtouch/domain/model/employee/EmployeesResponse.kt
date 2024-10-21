@@ -12,7 +12,7 @@ data class EmployeesResponse(
     @SerialName("error")
     val error: ErrorResponse?,
     @SerialName("result")
-    val result: com.lfssolutions.retialtouch.domain.model.employee.EmployeesResult = com.lfssolutions.retialtouch.domain.model.employee.EmployeesResult(),
+    val result: EmployeesResult = EmployeesResult(),
     @SerialName("success")
     val success: Boolean = false,
     @SerialName("targetUrl")

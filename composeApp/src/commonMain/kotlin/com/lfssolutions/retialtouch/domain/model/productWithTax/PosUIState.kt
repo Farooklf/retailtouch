@@ -1,9 +1,16 @@
 package com.lfssolutions.retialtouch.domain.model.productWithTax
 
+import com.lfssolutions.retialtouch.domain.model.inventory.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.inventory.Product
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
+import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByPriceBreak
+import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantity
+import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.utils.DiscountApplied
 import com.lfssolutions.retialtouch.utils.DiscountType
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 data class PosUIState(
@@ -16,48 +23,63 @@ data class PosUIState(
     var currencySymbol : String = "$",
     var inputDiscount : String = "",
     var inputDiscountError : String? =null,
-
     var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
-    var selectedDiscountApplied : DiscountApplied = DiscountApplied.TOTAL,
+    var selectedDiscountApplied : DiscountApplied = DiscountApplied.GLOBAL,
 
-    var itemPriceClickItem : ProductTaxItem = ProductTaxItem(),
+    //auth
+    val isDiscountGranted :Boolean=false,
+    val posInvoiceRounded :Double?=0.0,
+    val isSalesTaxInclusive :Boolean=false,
+    val invoiceRounding :Double=0.0,
+
+    //global value
+    val isCartEmpty :Boolean=false,
+    val exchange :Boolean=false,
+    val globalExchangeActivator :Boolean=false,
+    val globalDiscountIsInPercent :Boolean=false,
+    val globalDiscount: Double = 0.0,
+    val quantityTotal: Double = 0.0,
+    val cartTotal: Double = 0.0,
+    val cartTotalWithoutDiscount: Double = 0.0,
+    val cartPromotionDiscount: Double = 0.0,
+    var cartItemsDiscount : Double = 0.0,
+    val grandTotal: Double = 0.0,
+    val grandTotalWithoutDiscount :Double?=0.0,
+    val globalTax :Double?=0.0,
+    val itemTotal :Double?=0.0,
+    val itemDiscount :Double?=0.0,
+    val discountIsInPercent :Boolean=false,
+    val promoDiscount :Double?=0.0,
+
+    //Dialog
+    val stockList : List<Product> = listOf(),
+    val dialogStockList : List<Product> = listOf(),
+    var selectedProduct : CRShoppingCartItem = CRShoppingCartItem(),
+    var itemPosition : Int = 0,
     var isRemoveDialog : Boolean = false,
 
-    var selectedProduct : ProductTaxItem = ProductTaxItem(),
+
     val shoppingCart: List<ProductTaxItem> = listOf(),
-    val dialogPosList : List<ProductTaxItem> = listOf(),
+    val cartList: MutableList<CRShoppingCartItem> = mutableListOf(),
     var isCallScannedItems : Boolean = false,
 
-    var itemsDiscount : Double = 0.0,
 
-    val quantityTotal: Double = 0.0,
+
     val invoiceTax: Double = 0.0,
     var discounts: Double = 0.0,
-    var qty: Double = 0.0,
+
 
     val invoiceSubTotal: Double = 0.0,
     val originalTotal: Double = 0.0,
     val invoiceNetDiscountPerc: Double = 0.0,
     val invoiceNetDiscount: Double = 0.0,
-    val exchange :Boolean=false,
-    val isSalesTaxInclusive :Boolean=false,
-    val promotionByQuantity :Boolean=false,
-    val promotionActive :Boolean=false,
-    val discountIsInPercent :Boolean=false,
-    val posInvoiceRounded :Double?=0.0,
-    val promoDiscount :Double?=0.0,
-    val amount :Double?=0.0,
-    val cprice :Double?=0.0,
 
-    val grandTotal: Double = 0.0,
-    val grandTotalWithoutDiscount :Double?=0.0,
 
+    //Hold
     var isHoldSaleDialog : Boolean = false,
     // HashMap to hold collections
     var holdSaleCollections : MutableMap<Int, HeldCollection> = hashMapOf(),
     var currentCollectionId: Int = 1,
-
-    // Tracks whether the dropdown is expanded or collapsed
     var isDropdownExpanded: Boolean = false,
 
     //members
@@ -81,6 +103,16 @@ data class PosUIState(
 
     //Payment
     var isPaymentScreen: Boolean = false,
+
+
+    //promotion
+    val promotions : MutableList<Promotion> = mutableListOf(),
+    val promotionDetails : MutableList<PromotionDetails> = mutableListOf(),
+    val promoByPriceBreak :MutableMap<Int, CRPromotionByPriceBreak> = HashMap(emptyMap()),
+    val promoByQuantity : MutableMap<Int, CRPromotionByQuantity> = HashMap(emptyMap()),
+    var promotionDiscount : Double=0.0,
+    val promotionByQuantity :Boolean=false,
+    val promotionActive :Boolean=false,
 )
 
 data class HeldCollection(

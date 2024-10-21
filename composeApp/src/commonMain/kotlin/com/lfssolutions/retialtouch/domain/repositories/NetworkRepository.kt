@@ -30,6 +30,9 @@ class NetworkRepository : KoinComponent {
     fun getEmployeeRole(mRequest: BasicApiRequest) =
         api.getTEmployeeRoles(mRequest)
 
+    fun getEmployeeRights(mRequest: BasicApiRequest) =
+        api.getEmployeeRights(mRequest)
+
 
     fun getMenuCategories(mRequest: BasicApiRequest) = 
         api.getMenuCategories(mRequest)
@@ -67,6 +70,12 @@ class NetworkRepository : KoinComponent {
 
     fun getPromotions(mRequest: PromotionRequest) =
         api.getPromotions(mRequest)
+
+    fun getPromotionsByQty(mRequest: PromotionRequest) =
+        api.getPromotionsByQty(mRequest)
+
+    fun getPromotionsByPrice(mRequest: PromotionRequest) =
+        api.getPromotionsByPrice(mRequest)
 
      fun getProductBarCode(mRequest: BasicApiRequest) =
         api.getProductBarCode(mRequest)

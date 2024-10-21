@@ -341,7 +341,7 @@ fun AppOutlinedTextFieldWithOuterIcon(
 fun AppOutlinedSearch(
     value: String,
     onValueChange: (String) -> Unit,
-    onSearchClick: (Boolean) -> Unit,
+    onSubmittedClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier.fillMaxWidth(),
     enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
@@ -395,9 +395,9 @@ fun AppOutlinedSearch(
 
             keyboardOptions = keyboardOptions,
             keyboardActions = KeyboardActions(
-                onSearch = {
-                    // When search button is pressed, open the dialog
-                    onSearchClick(true)
+                onDone = {
+                    // When done is pressed, open the dialog
+                    onSubmittedClick(true)
                 }
             ),
             isError = error != null,

@@ -1,0 +1,20 @@
+import kotlin.Boolean;
+CREATE TABLE EmployeeRights (
+    id INTEGER NOT NULL PRIMARY KEY,
+    employee TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO EmployeeRights(id,employee)
+VALUES(?,?);
+
+
+getAll:
+SELECT * FROM EmployeeRights;
+
+getRowById:
+SELECT * FROM EmployeeRights
+WHERE id = ?;
+
+delete:
+DELETE FROM EmployeeRights;

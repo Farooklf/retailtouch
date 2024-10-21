@@ -4,6 +4,7 @@ package com.lfssolutions.retialtouch.data.sqlDelightDb
 import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.location.LocationDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.inventory.Product
 import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
@@ -13,13 +14,18 @@ import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
-import com.lfssolutions.retialtouch.utils.serializers.db.toBarcode
+import com.lfssolutions.retialtouch.utils.serializers.db.toEmployeeDao
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
@@ -29,15 +35,16 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceItem
+import com.lfssolutions.retialtouch.utils.serializers.db.toProduct
 import com.lfssolutions.retialtouch.utils.serializers.db.toProductLocationItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toProductTaxItem
+import com.lfssolutions.retialtouch.utils.serializers.db.toPromotion
+import com.lfssolutions.retialtouch.utils.serializers.db.toPromotionDetails
 import com.lfssolutions.retialtouch.utils.serializers.db.toSyncItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 
-
-class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference {
+ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference {
 
 
     override suspend fun insertAuthentication(authenticateDao: AuthenticateDao) {
@@ -186,6 +193,36 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
 
     override suspend fun deleteAllEmpRole() {
         retailTouch.employeeRoleQueries.deleteEmpRole()
+    }
+
+    override suspend fun insertEmpRights(employeeDao: EmployeeDao) {
+        retailTouch.employeeRightsQueries.insert(
+            id = employeeDao.employeeId.toLong(),
+            employee = employeeDao.toJson())
+    }
+
+    override fun getAllEmpRights(): Flow<List<EmployeeDao>> = flow{
+        retailTouch.employeeRightsQueries.getAll().executeAsList().let { list ->
+            emit(
+                list.map { body ->
+                    val employee=body.employee.toEmployeeDao()
+                    EmployeeDao(
+                        employeeId = body.id.toInt(),
+                        employeeName = employee.employeeName,
+                        isDeleted = employee.isDeleted,
+                        isAdmin = employee.isAdmin,
+                        permissions = employee.permissions,
+                        grantedPermissionNames = employee.grantedPermissionNames,
+                        restrictedPermissionNames = employee.restrictedPermissionNames
+                    )
+                }
+
+            )
+        }
+    }
+
+    override suspend fun deleteEmpRights() {
+       retailTouch.employeeRightsQueries.delete()
     }
 
     override suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao) {
@@ -394,31 +431,38 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
         }
     }
 
-    override suspend fun insertProductWithTax(productTaxDao: ProductTaxDao) {
+    override suspend fun insertProduct(productTaxDao: ProductTaxDao) {
         retailTouch.productWithTaxQueries.insertProductWithTax(
             productTaxId = productTaxDao.productTaxId,
-            inventoryCode = productTaxDao.productCode?:"",
+            inventoryCode = productTaxDao.product.productCode?:"",
             isScanned = productTaxDao.isScanned,
-            rowItem = productTaxDao.rowItem.toJson()
+            rowItem = productTaxDao.product.toJson()
         )
     }
 
-    override suspend fun updateProductWithTax(productTaxDao: ProductTaxDao) {
+
+    override suspend fun updateProduct(productTaxDao: ProductTaxDao) {
        retailTouch.productWithTaxQueries.updateProductWithTax(
-           rowItem = productTaxDao.rowItem.toJson(),
+           rowItem = productTaxDao.product.toJson(),
            productTaxId = productTaxDao.productTaxId
        )
     }
 
-    override fun getAllProductWithTax(): Flow<List<ProductTaxDao>> = flow{
+    override fun getAllProduct(): Flow<List<Product>> = flow{
         retailTouch.productWithTaxQueries.getAllProductWithTax().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        ProductTaxDao(
-                            productTaxId = body.productTaxId,
-                            productCode = body.inventoryCode,
-                            rowItem = body.rowItem.toProductTaxItem()
+                        val product=body.rowItem.toProduct()
+                        Product(
+                            id = product.id,
+                            productCode = product.productCode,
+                            name = product.name,
+                            barcode = product.barcode,
+                            image = product.image,
+                             tax = product.tax,
+                             price = product.price,
+                             qtyOnHand = product.qtyOnHand,
                         )
                     }
 
@@ -429,15 +473,22 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
         }
     }
 
-    override fun getProductById(id: Long) : Flow<ProductTaxDao?> = flow{
+    override fun getProductById(id: Long) : Flow<Product?> = flow{
         retailTouch.productWithTaxQueries.getProductById(id).executeAsOneOrNull().let { body->
             println("product db data : $body")
             if(body!=null){
+                val product=body.rowItem.toProduct()
                 emit(
-                    ProductTaxDao(
-                        productTaxId = body.productTaxId,
-                        rowItem = body.rowItem.toProductTaxItem()
-                    )
+                Product(
+                    id = product.id,
+                    productCode = product.productCode,
+                    name = product.name,
+                    barcode = product.barcode,
+                    image = product.image,
+                    tax = product.tax,
+                    price = product.price,
+                    qtyOnHand = product.qtyOnHand,
+                )
                 )
             }else{
                 emit(body)
@@ -445,14 +496,21 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
         }
     }
 
-    override fun getProductByCode(code: String): Flow<ProductTaxDao?> = flow{
+    override fun getProductByCode(code: String): Flow<Product?> = flow{
         retailTouch.productWithTaxQueries.getProductByInventory(code).executeAsOneOrNull().let { body->
             println("product db data : $body")
             if(body!=null){
+                val product=body.rowItem.toProduct()
                 emit(
-                    ProductTaxDao(
-                        productTaxId = body.productTaxId,
-                        rowItem = body.rowItem.toProductTaxItem()
+                    Product(
+                        id = product.id,
+                        productCode = product.productCode,
+                        name = product.name,
+                        barcode = product.barcode,
+                        image = product.image,
+                        tax = product.tax,
+                        price = product.price,
+                        qtyOnHand = product.qtyOnHand,
                     )
                 )
             }else{
@@ -461,7 +519,7 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
         }
     }
 
-    override suspend fun deleteProductWithTax() {
+    override suspend fun deleteProduct() {
         retailTouch.productWithTaxQueries.deleteProductWithTax()
     }
 
@@ -530,7 +588,15 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
         )
     }
 
-    override fun getAllProductLocation(): Flow<List<ProductLocationDao>> = flow{
+     override suspend fun updateProductLocation(productLocationDao: ProductLocationDao) {
+         retailTouch.productLocationQueries.updateProductLocation(
+             productTaxId = productLocationDao.productLocationId,
+             rowItem = productLocationDao.rowItem.toJson()
+         )
+
+     }
+
+     override fun getAllProductLocation(): Flow<List<ProductLocationDao>> = flow{
         retailTouch.productLocationQueries.getAllProductLocation().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
@@ -555,25 +621,32 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
     override suspend fun insertProductBarcode(barcodeDao: BarcodeDao) {
         retailTouch.productBarcodeQueries.insert(
             barcodeId = barcodeDao.barcodeId.toLong(),
+            productId = barcodeDao.barcode.productId.toLong(),
+            productCode = barcodeDao.barcode.productCode?:"",
+            barcode = barcodeDao.barcode.code?:"",
             rowItem = barcodeDao.barcode.toJson()
         )
     }
 
     override suspend fun updateProductBarcode(barcodeDao: BarcodeDao) {
-        retailTouch.productBarcodeQueries.insert(
+        retailTouch.productBarcodeQueries.updateBarcode(
             barcodeId = barcodeDao.barcodeId.toLong(),
+            productId = barcodeDao.barcode.productId.toLong(),
+            productCode = barcodeDao.barcode.productCode?:"",
+            barcode = barcodeDao.barcode.code?:"",
             rowItem = barcodeDao.barcode.toJson()
         )
     }
 
-    override fun getAllBarcode(): Flow<List<BarcodeDao>>  = flow{
+    override fun getAllBarcode(): Flow<List<Barcode>>  = flow{
         retailTouch.productBarcodeQueries.getAllBarcode().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        BarcodeDao(
-                            barcodeId = body.barcodeId.toInt(),
-                            barcode = body.rowItem.toBarcode()
+                        Barcode(
+                             productId = body.productId.toInt(),
+                             productCode = body.productCode,
+                             code = body.barcode
                         )
                     }
 
@@ -585,8 +658,150 @@ class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference 
 
     }
 
+    override fun getItemByBarcode(code: String): Flow<Barcode?> = flow{
+        retailTouch.productBarcodeQueries.getItemByBarcode(code).executeAsOneOrNull().let { body->
+            println("db data : $body")
+            if(body!=null){
+                emit(
+                    Barcode(
+                        productId = body.productId.toInt(),
+                        productCode = body.productCode,
+                        code = body.barcode
+                    )
+                )
+            }else{
+                emit(body)
+            }
+        }
+    }
+
+    override fun getItemByInventoryCode(code: String): Flow<Barcode?> = flow{
+        retailTouch.productBarcodeQueries.getItemByProductCode(code).executeAsOneOrNull().let { body->
+            println("db data : $body")
+            if(body!=null){
+                emit(
+                    Barcode(
+                        productId = body.productId.toInt(),
+                        productCode = body.productCode,
+                        code = body.barcode
+                    )
+                )
+            }else{
+                emit(body)
+            }
+        }
+    }
+
+    override fun getItemByProductId(code: Long): Flow<Barcode?> = flow{
+        retailTouch.productBarcodeQueries.getItemByProductId(code).executeAsOneOrNull().let { body->
+            println("db data : $body")
+            if(body!=null){
+                emit(
+                    Barcode(
+                        productId = body.productId.toInt(),
+                        productCode = body.productCode,
+                        code = body.barcode
+                    )
+                )
+            }else{
+                emit(body)
+            }
+        }
+    }
+
     override suspend fun deleteBarcode() {
         retailTouch.productBarcodeQueries.delete()
+    }
+
+    override suspend fun insertPromotions(promotionDao: PromotionDao) {
+        retailTouch.promotionsQueries.insert(
+            promotionId = promotionDao.promotionId,
+            inventoryCode = promotionDao.inventoryCode,
+            promotion = promotionDao.promotion.toJson()
+        )
+    }
+
+    override suspend fun updatePromotions(promotionDao: PromotionDao) {
+        retailTouch.promotionsQueries.updatePromotions(
+            promotionId = promotionDao.promotionId,
+            promotion = promotionDao.promotion.toJson()
+        )
+    }
+
+    override fun getPromotions(): Flow<List<Promotion>> = flow{
+        retailTouch.promotionsQueries.getPromotions().executeAsList().let { list ->
+            if(list.isNotEmpty()) {
+                emit(
+                    list.map { body ->
+                        body.promotion.toPromotion()
+                    }
+                )
+            }else{
+                emit(emptyList())
+            }
+        }
+    }
+
+    override fun getPromotionById(id: Long): Flow<Promotion?> = flow{
+       retailTouch.promotionsQueries.getPromotionsById(id).executeAsOneOrNull().let { body->
+           if(body!=null){
+             emit(
+               body.promotion.toPromotion()
+             )
+           }else{
+               emit(body)
+           }
+       }
+    }
+
+    override suspend fun deletePromotions() {
+        retailTouch.promotionsQueries.delete()
+    }
+
+    override suspend fun insertPromotionDetails(promotionDetails: PromotionDetailsDao) {
+        retailTouch.promotionDetailsQueries.insert(
+             id =  promotionDetails.id.toLong(),
+             promotionDetails = promotionDetails.promotionDetails.toJson()
+        )
+    }
+
+    override suspend fun updatePromotionDetails(promotionDetails: PromotionDetailsDao) {
+
+    }
+
+    override fun getPromotionDetails(): Flow<List<PromotionDetails>> = flow{
+        retailTouch.promotionDetailsQueries.getAll().executeAsList().let { list ->
+            if(list.isNotEmpty()) {
+                emit(
+                    list.map { body ->
+                        body.promotionDetails.toPromotionDetails()
+                    }
+                )
+            }else{
+                emit(emptyList())
+            }
+        }
+    }
+
+    override fun getPromotionDetailsById(id: Long): Flow<PromotionDetails?> = flow{
+        retailTouch.promotionDetailsQueries.getRowById(id).executeAsOneOrNull().let { body->
+            if(body!=null){
+                emit(body.promotionDetails.toPromotionDetails()
+                )
+            }else{
+                emit(body)
+            }
+        }
+    }
+
+    override suspend fun getCount() : Flow<Int> = flow{
+        retailTouch.promotionDetailsQueries.getCount().executeAsOne().let {count->
+            emit(count.toInt())
+        }
+    }
+
+    override suspend fun deletePromotionDetails() {
+        retailTouch.promotionDetailsQueries.delete()
     }
 
     override suspend fun insertMembers(memberDao: MemberDao) {

@@ -44,8 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.home.HomeScreenItem
 import com.lfssolutions.retialtouch.domain.model.home.HomeUIState
-import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
-import com.lfssolutions.retialtouch.navigation.NavigatorActions
+import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
@@ -299,7 +298,7 @@ fun <T> LazyVerticalGrid(
 
 @Composable
 fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onClick: () -> Unit,onIconClick: () -> Unit) {
-    item as PaymentTypeItem
+    item as PaymentMethod
     val cardColor = if (item.isSelected) {
         CardDefaults.cardColors(containerColor = AppTheme.colors.listItemSelectedCardColor)
     } else {

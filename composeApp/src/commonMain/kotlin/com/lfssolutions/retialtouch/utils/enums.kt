@@ -8,8 +8,8 @@ enum class DiscountType {
 }
 
 enum class DiscountApplied {
-    TOTAL,
-    ITEMS;
+    GLOBAL,
+    SUB_ITEMS;
 }
 
 // Enum for Device Type

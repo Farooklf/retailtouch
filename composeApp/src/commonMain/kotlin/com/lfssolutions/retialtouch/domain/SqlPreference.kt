@@ -3,6 +3,7 @@ package com.lfssolutions.retialtouch.domain
 
 
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.inventory.Product
 import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationDao
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
@@ -13,10 +14,16 @@ import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionQtyDetails
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import kotlinx.coroutines.flow.Flow
 
@@ -41,6 +48,20 @@ interface SqlPreference {
     suspend fun insertEmpRole(employeeDao: EmployeeDao)
     fun getAllEmpRole(): Flow<List<EmployeeDao>>
     suspend fun deleteAllEmpRole()
+
+    suspend fun insertEmpRights(employeeDao: EmployeeDao)
+    fun getAllEmpRights(): Flow<List<EmployeeDao>>
+    suspend fun deleteEmpRights()
+
+    //Member
+    suspend fun insertMembers(memberDao: MemberDao)
+    fun getAllMembers(): Flow<List<MemberDao>>
+    suspend fun deleteMembers()
+
+    //Member Group
+    suspend fun insertMemberGroup(memberGroupDao: MemberGroupDao)
+    fun getAllMemberGroup(): Flow<List<MemberGroupDao>>
+    suspend fun deleteMemberGroup()
 
     //Menu Category
     suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao)
@@ -75,12 +96,12 @@ interface SqlPreference {
     fun getPosInvoiceCount():Flow<Int>
 
     //ProductWithTax
-    suspend fun insertProductWithTax(productTaxDao: ProductTaxDao)
-    suspend fun updateProductWithTax(productTaxDao: ProductTaxDao)
-    fun getAllProductWithTax(): Flow<List<ProductTaxDao>>
-    fun getProductById(id: Long): Flow<ProductTaxDao?>
-    fun getProductByCode(code: String): Flow<ProductTaxDao?>
-    suspend fun deleteProductWithTax()
+    suspend fun insertProduct(productTaxDao: ProductTaxDao)
+    suspend fun updateProduct(productTaxDao: ProductTaxDao)
+    fun getAllProduct(): Flow<List<Product>>
+    fun getProductById(id: Long): Flow<Product?>
+    fun getProductByCode(code: String): Flow<Product?>
+    suspend fun deleteProduct()
 
     //Scanned ProductWithTax
     suspend fun insertScannedProduct(productTaxDao: ScannedProductDao)
@@ -91,25 +112,34 @@ interface SqlPreference {
 
     //ProductLocation
     suspend fun insertProductLocation(productLocationDao: ProductLocationDao)
+    suspend fun updateProductLocation(productLocationDao: ProductLocationDao)
     fun getAllProductLocation(): Flow<List<ProductLocationDao>>
     suspend fun deleteProductLocation()
 
     //BarCode
     suspend fun insertProductBarcode(barcodeDao: BarcodeDao)
     suspend fun updateProductBarcode(barcodeDao: BarcodeDao)
-    fun getAllBarcode(): Flow<List<BarcodeDao>>
+    fun getAllBarcode(): Flow<List<Barcode>>
+    fun getItemByBarcode(code:String): Flow<Barcode?>
+    fun getItemByInventoryCode(code:String): Flow<Barcode?>
+    fun getItemByProductId(code:Long): Flow<Barcode?>
     suspend fun deleteBarcode()
 
+    //Promotions
+    suspend fun insertPromotions(promotionDao: PromotionDao)
+    suspend fun updatePromotions(promotionDao: PromotionDao)
+    fun getPromotions(): Flow<List<Promotion>>
+    fun getPromotionById(id: Long): Flow<Promotion?>
+    suspend fun deletePromotions()
 
-    //Member
-    suspend fun insertMembers(memberDao: MemberDao)
-    fun getAllMembers(): Flow<List<MemberDao>>
-    suspend fun deleteMembers()
+    //Promotion Details
+    suspend fun insertPromotionDetails(promotionDetails: PromotionDetailsDao)
+    suspend fun updatePromotionDetails(promotionDetails: PromotionDetailsDao)
+    fun getPromotionDetails(): Flow<List<PromotionDetails>>
+    fun getPromotionDetailsById(id: Long): Flow<PromotionDetails?>
+    suspend fun getCount():Flow<Int>
+    suspend fun deletePromotionDetails()
 
-    //Member Group
-    suspend fun insertMemberGroup(memberGroupDao: MemberGroupDao)
-    fun getAllMemberGroup(): Flow<List<MemberGroupDao>>
-    suspend fun deleteMemberGroup()
 
     //Payment Type
     suspend fun insertPaymentType(paymentTypeDao: PaymentTypeDao)

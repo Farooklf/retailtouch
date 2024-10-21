@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PromotionRequest(
     @SerialName("TenantId")
-    val tenantId: Int,
+    val tenantId: Int=0,
+    val id : Int=0
 )

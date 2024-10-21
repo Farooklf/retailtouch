@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PaymentTypeResult(
     @SerialName("items")
-    val items: List<PaymentTypeItem>? = listOf()
+    val items: List<PaymentMethod>? = listOf()
 )

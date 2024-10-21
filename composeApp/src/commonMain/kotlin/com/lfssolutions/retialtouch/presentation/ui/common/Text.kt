@@ -106,6 +106,7 @@ fun QtyItemText(
     textStyle: TextStyle = AppTheme.typography.titleBold(),
     color: Color = AppTheme.colors.textColor,
     modifier: Modifier=Modifier.wrapContentHeight(),
+    onClick: () -> Unit,
     onIncreaseClick: () -> Unit,
     onDecreaseClick: () -> Unit
 ){
@@ -130,7 +131,9 @@ fun QtyItemText(
             label = label,
             contentColor = color,
             textStyle = textStyle,
-            onClick = {}
+            onClick = {
+                onClick.invoke()
+            }
         )
         //Spacer(modifier=Modifier.width(5.dp))
         IconButton(onClick = { onIncreaseClick() }) {

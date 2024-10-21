@@ -1,0 +1,35 @@
+CREATE TABLE Promotions (
+       promotionId INTEGER NOT NULL PRIMARY KEY,
+       inventoryCode TEXT NOT NULL,
+       promotion TEXT NOT NULL
+       );
+
+insert:
+INSERT OR REPLACE INTO Promotions(promotionId,inventoryCode,promotion)
+VALUES(?,?,?);
+
+
+updatePromotions:
+UPDATE Promotions
+SET promotion = :promotion
+WHERE promotionId = :promotionId;
+
+
+getPromotionsById:
+SELECT * FROM Promotions
+WHERE promotionId = ?;
+
+getPromotions:
+SELECT * FROM Promotions;
+
+delete:
+DELETE  FROM Promotions;
+
+getCount:
+SELECT COUNT(*) FROM Promotions;
+
+
+
+
+
+

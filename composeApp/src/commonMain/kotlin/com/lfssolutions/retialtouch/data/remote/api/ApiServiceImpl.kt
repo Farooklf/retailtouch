@@ -11,6 +11,7 @@ import com.lfssolutions.retialtouch.domain.ApiRoutes
 import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
+import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
@@ -28,7 +29,9 @@ import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoice
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoiceResponse
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
-import com.lfssolutions.retialtouch.domain.model.promotions.PromotionResponse
+import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
+import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
+import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
@@ -170,7 +173,17 @@ const val TOKEN_EXPIRY_THRESHOLD = 6
         }
     }
 
-    override fun getMenuCategories(mBasicApiRequest: BasicApiRequest): Flow<RequestState<CategoryResponse>> {
+     override fun getEmployeeRights(mBasicApiRequest: BasicApiRequest): Flow<RequestState<EmployeesRights>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.EMPLOYEES_RIGHTS_API,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<EmployeesRights>(response)
+         }
+     }
+
+     override fun getMenuCategories(mBasicApiRequest: BasicApiRequest): Flow<RequestState<CategoryResponse>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.GET_MENU_CATEGORIES_API,
@@ -260,17 +273,37 @@ const val TOKEN_EXPIRY_THRESHOLD = 6
         }
     }
 
-    override fun getPromotions(mBasicApiRequest: PromotionRequest): Flow<RequestState<PromotionResponse>> {
+    override fun getPromotions(mBasicApiRequest: PromotionRequest): Flow<RequestState<GetPromotionResult>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.GET_PROMOTIONS_API,
             requestBody = mBasicApiRequest
         ) { response ->
-            handleApiResponse<PromotionResponse>(response)
+            handleApiResponse<GetPromotionResult>(response)
         }
     }
 
-    override fun getProductBarCode(mBasicApiRequest: BasicApiRequest): Flow<RequestState<ProductBarCodeResponse>> {
+     override fun getPromotionsByQty(mBasicApiRequest: PromotionRequest): Flow<RequestState<GetPromotionsByQtyResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.GET_FIXED_QTY_PROMOTIONS_API,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<GetPromotionsByQtyResult>(response)
+         }
+     }
+
+     override fun getPromotionsByPrice(mBasicApiRequest: PromotionRequest): Flow<RequestState<GetPromotionsByPriceResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.GET_FIXED_PRICE_PROMOTIONS_API,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<GetPromotionsByPriceResult>(response)
+         }
+     }
+
+     override fun getProductBarCode(mBasicApiRequest: BasicApiRequest): Flow<RequestState<ProductBarCodeResponse>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.GET_PRODUCT_BARCODE_API,

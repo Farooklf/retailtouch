@@ -34,6 +34,10 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     private val _homeUIState = MutableStateFlow(HomeUIState())
     val homeUIState: StateFlow<HomeUIState> = _homeUIState.asStateFlow()
 
+    init {
+        syncEveryThing()
+    }
+
     fun initialiseSplash(isSplash: Boolean) {
         viewModelScope.launch {
             _homeUIState.update { it.copy(isFromSplash = isSplash,isBlur=isSplash) }

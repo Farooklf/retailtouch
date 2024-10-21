@@ -4,6 +4,8 @@ import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
+import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
+import com.lfssolutions.retialtouch.domain.model.inventory.Product
 import com.lfssolutions.retialtouch.domain.model.inventory.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationDao
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
@@ -20,10 +22,11 @@ import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
-import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
+import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
 import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
@@ -32,7 +35,14 @@ import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
+import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
+import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
+import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -150,6 +160,28 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
+    suspend fun insertEmpRights(
+        employeesResponse: EmployeesRights
+    ) {
+        withContext(Dispatchers.IO) {
+            employeesResponse.result.items.forEach {
+                val employee=it.employeeRole
+                if(employee!=null){
+                    val mEmployeeDao = EmployeeDao(
+                            employeeId = employee.id?:0,
+                            employeeName = employee.name,
+                            isAdmin = employee.isAdmin,
+                            isDeleted = employee.isDeleted,
+                            grantedPermissionNames = it.grantedPermissionNames,
+                            restrictedPermissionNames = it.restrictedPermissionNames,
+                            permissions = it.permissions
+                        )
+                    dataBaseRepository.insertEmpRights(mEmployeeDao)
+                }
+            }
+        }
+    }
+
     suspend fun insertMembers(
         response: MemberResponse
     ) {
@@ -189,13 +221,15 @@ class DataBaseRepository: KoinComponent {
             withContext(Dispatchers.IO) {
                 response.result?.items?.map { item ->
                     val dao = ProductTaxDao(
-                        // tax = item.taxPercentage ?: "0.0",
                         productTaxId = item.id.toLong(),
-                        productCode = item.inventoryCode,
-                        name = item.name,
-                        rowItem = item.copy(
+                        product = Product(
+                            id = item.id,
+                            name = item.name,
+                            productCode = item.inventoryCode,
+                            tax = item.taxPercentage?:0.0,
+                            barcode = item.barCode,
                             price = if (item.specialPrice == 0.0) item.price else item.specialPrice,
-                            qtyOnHand = stockQtyMap[item.id] ?: 1.0,
+                            qtyOnHand = stockQtyMap[item.id] ?: 0.0,
                             image = if (!item.image.isNullOrEmpty()) "${getBaseUrl()}${item.image}".replace(
                                 "\\",
                                 "/"
@@ -203,9 +237,9 @@ class DataBaseRepository: KoinComponent {
                         )
                     )
                     if (lastSyncDateTime == null) {
-                        dataBaseRepository.insertProductWithTax(dao)
+                        dataBaseRepository.insertProduct(dao)
                     } else {
-                        dataBaseRepository.updateProductWithTax(dao)
+                        dataBaseRepository.updateProduct(dao)
                     }
 
                 }
@@ -231,6 +265,30 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
+    suspend fun insertUpdateProductQuantity(
+        response: ProductLocationResponse,
+        lastSyncDateTime: String? = null
+    ) {
+        try {
+            withContext(Dispatchers.IO) {
+                clearProductQuantity()
+                response.result?.items?.forEach { item ->
+                    val dao = ProductLocationDao(
+                        productLocationId = item.productId.toLong(),
+                        rowItem = item,
+                    )
+                    if(lastSyncDateTime==null)
+                    dataBaseRepository.insertProductLocation(dao)
+                    else
+                        dataBaseRepository.updateProductLocation(dao)
+                }
+            }
+
+        } catch (ex: Exception) {
+            println("EXCEPTION STOCK: ${ex.message}")
+        }
+    }
+
     suspend fun insertNewStock(
         newStock: List<Stock>
     ) {
@@ -239,23 +297,21 @@ class DataBaseRepository: KoinComponent {
                 clearStocks()
                 newStock.map { item ->
                     if (item.id != null && item.id != 0) {
-                        var product = getProductById(item.productId ?: 0)
-                        product = getProductByCode(item.inventoryCode.orEmpty())
+                         //var product = getProductById(item.productId ?: 0)
+                         getProductByCode(item.inventoryCode.orEmpty()).collectLatest { product->
+                             product?.let {
+                                 item.stockPrice = it.price
+                                 if (it.image.isNotEmpty() && item.icon.isNullOrEmpty()) {
+                                     item.icon = it.image
+                                 }
+                             }
+                        }
 
                         item.icon = if (!item.icon.isNullOrEmpty()) {
                             "${preferences.getBaseURL()}${item.icon}".replace("\\", "/")
                         } else {
                             ""
                         }
-
-                        product?.let {
-                            item.stockPrice = it.price
-                            if (!it.image.isNullOrEmpty() && item.icon.isNullOrEmpty()) {
-                                item.icon = it.image
-                            }
-                        }
-
-
                         val dao = MenuDao(
                             productId = item.id.toLong(),
                             menuProductItem = item
@@ -276,6 +332,7 @@ class DataBaseRepository: KoinComponent {
     ) {
         try {
             withContext(Dispatchers.IO) {
+                clearBarcode()
                 apiResponse.result.items.forEach { code ->
                     if (code.productId != 0 && !code.code.isNullOrEmpty()) {
                         val mBarcodeDao = BarcodeDao(
@@ -283,7 +340,6 @@ class DataBaseRepository: KoinComponent {
                             barcode = code
                         )
                         if (lastSyncDateTime == null) {
-                            dataBaseRepository.deleteBarcode()
                             dataBaseRepository.insertProductBarcode(mBarcodeDao)
                         } else
                             dataBaseRepository.updateProductBarcode(mBarcodeDao)
@@ -296,6 +352,59 @@ class DataBaseRepository: KoinComponent {
             println("EXCEPTION BARCODE: ${ex.message}")
         }
 
+    }
+
+    suspend fun insertPromotions(
+        response: GetPromotionResult
+    ) {
+        try {
+            withContext(Dispatchers.IO) {
+                clearPromotion()
+                response.result?.map { item ->
+                    if(item!=null){
+                        val dao = PromotionDao(
+                            promotionId = item.id,
+                            inventoryCode = item.inventoryCode?:"",
+                            promotion = Promotion(
+                                id = item.id,
+                                name = item.name?:"",
+                                inventoryCode = item.inventoryCode?:"",
+                                promotionType = item.promotionType?:0,
+                                promotionTypeName = item.promotionTypeName,
+                                qty = item.qty?:0.0,
+                                amount = item.amount?:0.0,
+                                startDate = item.startDate.parseDateFromApiString(),
+                                endDate = item.endDate.parseDateFromApiString(),
+                                startHour1 = item.startHour1?:0,
+                                startHour2 = item.startHour2?:0,
+                                endHour1 = item.endHour1?:0,
+                                endHour2 = item.endHour2?:0,
+                                startMinute1 = item.startMinute1?:0,
+                                startMinute2 = item.startMinute2?:0,
+                                endMinute1 = item.endMinute1?:0,
+                                endMinute2 = item.endMinute2?:0,
+                                priceBreakPromotionAttribute = parsePriceBreakPromotionAttributes(item.priceBreakPromotionAttribute)
+                            ))
+                        dataBaseRepository.insertPromotions(dao)
+                    }
+                }
+            }
+        }catch (ex: Exception){
+            println("EXCEPTION PROMOTION: ${ex.message}")
+        }
+    }
+
+    suspend fun insertPromotionDetails(promotionDetails: PromotionDetails) {
+        withContext(Dispatchers.IO) {
+            val maxId = dataBaseRepository.getCount().first()
+            val newId = maxId + 1
+
+            dataBaseRepository.insertPromotionDetails(
+                PromotionDetailsDao(
+                    id = newId,
+                    promotionDetails=promotionDetails)
+            )
+        }
     }
 
     suspend fun insertPaymentType(
@@ -350,51 +459,31 @@ class DataBaseRepository: KoinComponent {
             }
 
         } catch (ex: Exception) {
-            println("EXCEPTION POSINVOICE: ${ex.message}")
+            println("EXCEPTION POS INVOICE: ${ex.message}")
         }
     }
 
 
-    suspend fun insertOrUpdateScannedProduct(item: ProductTaxItem) {
+    suspend fun insertOrUpdateScannedProduct(item: Product) {
         // Switch to the IO dispatcher to perform the database operation
         withContext(Dispatchers.IO) {
             val subtotal = item.price?.times(item.qtyOnHand) ?: 0.0
-            val taxValue = subtotal.calculatePercentage(item.taxPercentage ?: 0.0)
+            val taxValue = subtotal.calculatePercentage(item.tax ?: 0.0)
             val dao = ScannedProductDao(
-                productId = item.id.toLong(),
+                productId = item.id?.toLong()?:0,
                 name = item.name ?: "",
-                inventoryCode = item.inventoryCode ?: "",
-                barCode = item.barCode ?: "",
+                inventoryCode = item.productCode ?: "",
+                barCode = item.barcode ?: "",
                 qty = item.qtyOnHand,
                 price = item.price ?: 0.0,
                 subtotal = subtotal,
                 discount = item.itemDiscount,
                 taxValue = taxValue,
-                taxPercentage = item.taxPercentage ?: 0.0
+                taxPercentage = item.tax ?: 0.0
             )
             dataBaseRepository.insertScannedProduct(dao)
         }
     }
-
-    suspend fun insertProductLocation(
-        response: ProductLocationResponse
-    ) {
-        try {
-            withContext(Dispatchers.IO) {
-                response.result?.items?.forEach { item ->
-                    val dao = ProductLocationDao(
-                        productLocationId = item.id.toLong(),
-                        rowItem = item,
-                    )
-                    dataBaseRepository.insertProductLocation(dao)
-                }
-            }
-
-        } catch (ex: Exception) {
-
-        }
-    }
-
 
     //Update
 
@@ -405,7 +494,7 @@ class DataBaseRepository: KoinComponent {
                 productId = updatedItem.id.toLong(),
                 qty = updatedItem.qtyOnHand,
                 discount = updatedItem.itemDiscount,
-                subtotal = updatedItem.subtotal ?: 0.0,
+                subtotal = updatedItem.cartTotal ?: 0.0,
                 taxValue = updatedItem.taxValue ?: 0.0
             )
             // Call the repository method to update the product
@@ -427,14 +516,22 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getEmployeeByCode(empCode.trim()).first()
     }
 
-    suspend fun getProductById(id: Int): ProductTaxDao? {
-        return dataBaseRepository.getProductById(id.toLong()).first()
+    fun getEmpRights(): Flow<List<EmployeeDao>> {
+        return dataBaseRepository.getAllEmpRights()
     }
 
-    suspend fun getProductByCode(code: String): ProductTaxDao? {
-        return dataBaseRepository.getProductByCode(code).first()
+
+    fun getBarcode(code: String) : Flow<Barcode?> {
+      return dataBaseRepository.getItemByBarcode(code)
     }
 
+    fun getProductById(id: Int) : Flow<Product?> {
+         return dataBaseRepository.getProductById(id.toLong())
+    }
+
+    fun getProductByCode(code: String): Flow<Product?> {
+        return dataBaseRepository.getProductByCode(code)
+    }
 
     fun getCategories(): Flow<CategoryItem> =
         dataBaseRepository.getAllCategories()
@@ -446,37 +543,14 @@ class DataBaseRepository: KoinComponent {
                 }
             }
 
-    /*fun getCategories() : Flow<CategoryItem?> = flow {
-        dataBaseRepository.getAllCategories().collectLatest { categoryDao->
-            categoryDao.map { cat->
-                emit(cat.categoryItem)
-            }
-        }
-    }*/
-
     fun getMember(): Flow<List<MemberDao>> {
-        println("membersCall")
         return dataBaseRepository.getAllMembers()
             .flowOn(Dispatchers.IO)
     }
 
-    fun getProduct(): Flow<List<ProductTaxDao>> {
-        println("ProductDao : call")
-        return dataBaseRepository.getAllProductWithTax()
+    fun getProduct(): Flow<List<Product>> {
+        return dataBaseRepository.getAllProduct()
             .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
-    }
-
-    suspend fun getAllProducts(): List<ProductTaxItem> {
-        val productList = mutableListOf<ProductTaxItem>()
-        dataBaseRepository.getAllProductWithTax().collectLatest { products ->
-            println("ProductDao : $products")
-            val updatedList=products.map {
-                it.rowItem
-            }
-            productList.addAll(updatedList)
-        }
-        println("productList :$productList")
-        return productList
     }
 
     suspend fun getStocks(): MutableList<Stock> {
@@ -484,7 +558,7 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.getStocks().toList()
         dataBaseRepository.getStocks().collectLatest { itemDao ->
             val updatedList = itemDao.map { item ->
-                val inventory = getProductById(item.menuProductItem.id ?: 0)
+                val inventory = getProductById(item.menuProductItem.id ?: 0).first()
                 if (inventory != null) {
                     item.menuProductItem.copy(tax = inventory.tax)
                 } else {
@@ -506,7 +580,7 @@ class DataBaseRepository: KoinComponent {
                     barCode = it.barCode,
                     qtyOnHand = it.qty,
                     price = it.price,
-                    subtotal = it.subtotal,
+                    cartTotal = it.subtotal,
                     originalSubTotal = it.subtotal,
                     taxPercentage = it.taxPercentage,
                     taxValue = it.taxValue,
@@ -515,7 +589,15 @@ class DataBaseRepository: KoinComponent {
             }
         }
 
-    fun getPaymentType(): Flow<List<PaymentTypeItem>> =
+    fun getPromotions() : Flow<List<Promotion>> {
+        return dataBaseRepository.getPromotions().flowOn(Dispatchers.IO)
+    }
+
+    fun getPromotionDetails() : Flow<List<PromotionDetails>> {
+        return dataBaseRepository.getPromotionDetails().flowOn(Dispatchers.IO)
+    }
+
+    fun getPaymentType(): Flow<List<PaymentMethod>> =
         dataBaseRepository.getAllPaymentType().map { paymentDao ->
             paymentDao.map {
                 it.rowItem
@@ -548,7 +630,7 @@ class DataBaseRepository: KoinComponent {
     }
 
     suspend fun clearInventory(){
-        dataBaseRepository.deleteProductWithTax()
+        dataBaseRepository.deleteProduct()
     }
 
     suspend fun clearBarcode(){
@@ -559,8 +641,20 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteCategories()
     }
 
+    suspend fun clearProductQuantity(){
+        dataBaseRepository.deleteProductLocation()
+    }
+
     suspend fun clearStocks(){
         dataBaseRepository.deleteStocks()
+    }
+
+    suspend fun clearPromotion(){
+        dataBaseRepository.deletePromotions()
+    }
+
+    suspend fun clearPromotionDetails(){
+        dataBaseRepository.deletePromotions()
     }
 
     suspend fun clearScannedProduct() {

@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
-import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeItem
+import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeUIState
 import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoice
@@ -154,7 +154,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updatePaymentById(item: PaymentTypeItem ) {
+    fun updatePaymentById(item: PaymentMethod ) {
 
         viewModelScope.launch {
             _screenUIState.update { currentState ->
@@ -169,7 +169,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun omPaymentIconClick(item: PaymentTypeItem){
+    fun omPaymentIconClick(item: PaymentMethod){
         viewModelScope.launch {
             _screenUIState.update { it.copy(showPaymentCollectorDialog = true, selectedPayment = item) }
         }
@@ -239,6 +239,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
             _screenUIState.update {currentState->
                 val updatedProductList = currentState.paymentList.map { payment ->
                     if (payment.id == currentState.selectedPayment.id){
+
                         payment.copy(paidAmount="${currentState.currencySymbol} ${currentState.inputAmount}")
                     }
                     else payment.copy(isSelected = false, isShowPaidAmount = false, paidAmount = "")
@@ -318,7 +319,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                           invoiceSubTotal=posState.grandTotal,
                           invoiceNetDiscountPerc = posState.invoiceNetDiscountPerc,
                           invoiceNetDiscount = posState.invoiceNetDiscount,
-                          invoiceItemDiscount= posState.itemsDiscount,
+                          invoiceItemDiscount= posState.cartItemsDiscount,
                           invoiceTax = posState.invoiceTax,
                           invoiceNetTotal = posState.grandTotal,
                           invoiceNetCost = posState.grandTotal,

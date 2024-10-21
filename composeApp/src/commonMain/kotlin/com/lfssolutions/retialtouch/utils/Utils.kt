@@ -49,6 +49,7 @@ import retailtouch.composeapp.generated.resources.ic_cross
 import retailtouch.composeapp.generated.resources.ic_dollar
 import retailtouch.composeapp.generated.resources.ic_down
 import retailtouch.composeapp.generated.resources.ic_drawer
+import retailtouch.composeapp.generated.resources.ic_e_exchange
 import retailtouch.composeapp.generated.resources.ic_error
 import retailtouch.composeapp.generated.resources.ic_file_excel
 import retailtouch.composeapp.generated.resources.ic_indian_rupee
@@ -119,6 +120,7 @@ object AppIcons {
     val categoryIcon = Res.drawable.ic_category
 
     val errorIcon = Res.drawable.ic_error
+    val e_exchangeIcon = Res.drawable.ic_e_exchange
     val lockIcon = Res.drawable.ic_login_lock
     val memberIcon = Res.drawable.ic_member
     val locationIcon = Res.drawable.ic_locations
@@ -179,6 +181,7 @@ object AppConstants{
     const val INVENTORY_ERROR_TITLE = "INVENTORY FETCHING FAILED"
     const val MENU_CATEGORY_ERROR_TITLE = "MENU CATEGORIES FETCHING FAILED"
     const val MENU_PRODUCTS_ERROR_TITLE = "MENU PRODUCTS FETCHING FAILED"
+    const val PROMOTIONS_ERROR_TITLE = "PROMOTION FETCHING FAILED"
     const val PAYMENT_TYPE_ERROR_TITLE = "PAYMENT TYPE FETCHING FAILED"
     const val SYNC_CHANGES_ERROR_TITLE = "SYNC CHANGES FAILED"
 

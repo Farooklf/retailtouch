@@ -7,6 +7,11 @@ insertProductLocation:
 INSERT OR REPLACE INTO ProductLocation(productLocationId,rowItem)
 VALUES(?,?);
 
+updateProductLocation:
+UPDATE ProductLocation
+SET  rowItem = :rowItem
+WHERE productLocationId = :productTaxId;
+
 getCategoryById:
 SELECT * FROM ProductLocation
 WHERE productLocationId = ?;
