@@ -25,5 +25,6 @@ object ApiRoutes {
     const val GET_PAYMENT_TYPE_API = "$BASE_API_POINT/paymentType/ApiGetPaymentTypes"
     const val GET_ALL_SYNC_API = "$BASE_API_POINT/sync/ApiGetAll"
     const val CREATE_UPDATE_POS_INVOICE = "$BASE_API_POINT/posinvoice/CreateOrUpdatePosInvoice"
+    const val GET_RECEIPT_TEMPLATE_LOCATION = "$BASE_API_POINT/receipttemplate/GetReceiptTemplateByLocation"
 
 }

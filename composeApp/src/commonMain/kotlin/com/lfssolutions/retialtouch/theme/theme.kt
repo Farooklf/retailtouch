@@ -44,6 +44,7 @@ object AppTheme{
 
 data class AppShape(
     val card: Shape,
+    val cardRound: Shape,
     val button: Shape,
     val textField: Shape,
     val dialog: Shape,
@@ -51,6 +52,7 @@ data class AppShape(
 
 private val shape = AppShape(
     card = RoundedCornerShape(8.dp),
+    cardRound = RoundedCornerShape(100.dp),
     button = RoundedCornerShape(10.dp),
     textField = RoundedCornerShape(6.dp),
     dialog = RoundedCornerShape(10.dp),

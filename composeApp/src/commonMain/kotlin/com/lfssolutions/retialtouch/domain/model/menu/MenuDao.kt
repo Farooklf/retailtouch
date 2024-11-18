@@ -1,6 +1,6 @@
 package com.lfssolutions.retialtouch.domain.model.menu
 
-import com.lfssolutions.retialtouch.domain.model.inventory.Stock
+import com.lfssolutions.retialtouch.domain.model.products.Stock
 import kotlinx.serialization.Serializable
 
 @Serializable

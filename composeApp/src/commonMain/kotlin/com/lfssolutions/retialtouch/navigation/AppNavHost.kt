@@ -2,25 +2,17 @@ package com.lfssolutions.retialtouch.navigation
 
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
-import com.lfssolutions.retialtouch.presentation.ui.screens.HomeScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.LoginScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.MenuScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.PaymentTypeScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.PosScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.SplashScreen
+
 
 @Composable
 fun AppNavHost(

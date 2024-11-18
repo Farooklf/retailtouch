@@ -74,15 +74,5 @@ object SplashScreen:Screen{
     }
 
 }
-@Composable
-fun Splash(
-    onNavigateDashBoard: () -> Unit,
-    onNavigateLogin: () -> Unit,
-    baseViewModel: BaseViewModel = koinInject()
-) {
-    LaunchedEffect(Unit) {
 
-
-    }
-}
 

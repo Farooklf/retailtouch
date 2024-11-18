@@ -5,9 +5,13 @@ import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
-import com.lfssolutions.retialtouch.domain.model.inventory.Product
-import com.lfssolutions.retialtouch.domain.model.inventory.Stock
-import com.lfssolutions.retialtouch.domain.model.location.LocationDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleRecordDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.Stock
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
@@ -24,25 +28,36 @@ import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSal
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
+import com.lfssolutions.retialtouch.domain.model.printer.PrinterScreenState
+import com.lfssolutions.retialtouch.domain.model.sales.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
+import com.lfssolutions.retialtouch.domain.model.products.ProductDao
+import com.lfssolutions.retialtouch.domain.model.products.ProductItem
+import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
+import com.lfssolutions.retialtouch.domain.model.products.SaleOnHoldRecordDao
+import com.lfssolutions.retialtouch.domain.model.products.ScannedProductDao
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
+import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
+import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiStringUTC
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
+import com.lfssolutions.retialtouch.utils.PaperSize
+import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
+import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -106,14 +121,14 @@ class DataBaseRepository: KoinComponent {
                 clearExistingLocations()
                 locationResponse.result.items.forEachIndexed { index, location ->
                     val mLocationDao =
-                        LocationDao(
+                        Location(
                             locationId = location.id ?: 0,
                             name = location.name ?: "",
                             code = location.code ?: "",
                             country = location.country ?: "",
                             address1 = location.address1 ?: "",
                             address2 = location.address2 ?: "",
-                            isSelected = false
+                            isSelected = location.id==getLocationId()
                         )
                     dataBaseRepository.insertLocation(mLocationDao)
                 }
@@ -220,10 +235,10 @@ class DataBaseRepository: KoinComponent {
         try {
             withContext(Dispatchers.IO) {
                 response.result?.items?.map { item ->
-                    val dao = ProductTaxDao(
-                        productTaxId = item.id.toLong(),
+                    val dao = ProductDao(
+                        productId = item.id.toLong(),
                         product = Product(
-                            id = item.id,
+                            id = item.id.toLong(),
                             name = item.name,
                             productCode = item.inventoryCode,
                             tax = item.taxPercentage?:0.0,
@@ -296,12 +311,12 @@ class DataBaseRepository: KoinComponent {
             withContext(Dispatchers.IO) {
                 clearStocks()
                 newStock.map { item ->
-                    if (item.id != null && item.id != 0) {
+                    if (item.id != null && item.id != 0L) {
                          //var product = getProductById(item.productId ?: 0)
                          getProductByCode(item.inventoryCode.orEmpty()).collectLatest { product->
                              product?.let {
                                  item.stockPrice = it.price
-                                 if (it.image.isNotEmpty() && item.icon.isNullOrEmpty()) {
+                                 if (it.image?.isNotEmpty() == true && item.icon.isNullOrEmpty()) {
                                      item.icon = it.image
                                  }
                              }
@@ -334,7 +349,7 @@ class DataBaseRepository: KoinComponent {
             withContext(Dispatchers.IO) {
                 clearBarcode()
                 apiResponse.result.items.forEach { code ->
-                    if (code.productId != 0 && !code.code.isNullOrEmpty()) {
+                    if (code.productId != 0L && !code.code.isNullOrEmpty()) {
                         val mBarcodeDao = BarcodeDao(
                             barcodeId = code.productId,
                             barcode = code
@@ -426,6 +441,39 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
+    suspend fun insertNewLatestSales(
+        response: GetPosInvoiceResult
+    ) {
+        try {
+            withContext(Dispatchers.IO) {
+                response.result?.items?.forEach { item ->
+                    val dao = SaleRecord(
+                        id = item.id,
+                        count  = response.result.totalCount ?: 0,
+                        receiptNumber = item.invoiceNo?:"",
+                        amount = item.invoiceNetTotal?:0.0,
+                        date  = item.invoiceDate.parseDateFromApiString(),
+                        deliveryDate  = item.deliveryDateTime.parseDateFromApiString(),
+                        creationDate  = item.creationTime.parseDateFromApiStringUTC(),
+                        remarks = item.remarks?:"",
+                        delivered = item.isDelivered?:false,
+                        delivery = item.deliveryDateTime!=null,
+                        rental = item.isRental?:false,
+                        rentalCollected= item.isRentalCollected?:false,
+                        selfCollection=item.selfCollection?:false,
+                        type = item.type?:0,
+                        status= if (item.isCancelled == true) 666 else item.status,
+                        memberId = item.memberId?:0
+                    )
+                    dataBaseRepository.insertLatestSales(dao)
+                }
+            }
+
+        } catch (ex: Exception) {
+            println("$SYNC_SALES_ERROR_TITLE :${ex.message}")
+        }
+    }
+
     suspend fun insertNextPosSale(
         response: NextPOSSaleInvoiceNoResponse
     ) {
@@ -440,26 +488,6 @@ class DataBaseRepository: KoinComponent {
             }
         } catch (ex: Exception) {
             println("EXCEPTION NEXTPOSSALE: ${ex.message}")
-        }
-    }
-
-    suspend fun insertPosInvoice(
-        response: POSInvoiceResponse
-    ) {
-        try {
-            withContext(Dispatchers.IO) {
-                response.result?.items?.forEach { item ->
-                    val dao = POSInvoiceDao(
-                        posInvoiceId = item.id.toLong(),
-                        totalCount = response.result.totalCount?.toLong() ?: 0,
-                        posItem = item,
-                    )
-                    dataBaseRepository.insertPosInvoice(dao)
-                }
-            }
-
-        } catch (ex: Exception) {
-            println("EXCEPTION POS INVOICE: ${ex.message}")
         }
     }
 
@@ -485,9 +513,138 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
+    suspend fun insertOrUpdateHoldSaleRecord(
+        response: MutableMap<Long, CRSaleOnHold>
+    ) {
+        try {
+            withContext(Dispatchers.IO) {
+                response.map { (key, value) ->
+                    val holdRecord=SaleOnHoldRecordDao(
+                        id=key,
+                        item=value
+                    )
+                    dataBaseRepository.insertHoldSaleRecord(holdRecord)
+                }
+            }
+        } catch (ex: Exception) {
+            println("EXCEPTION :${ex.message}")
+        }
+    }
+
+    suspend fun addNewPendingSales(data: PendingSaleRecordDao){
+        withContext(Dispatchers.IO) {
+          val id = getCurrentDateAndTimeInEpochMilliSeconds()
+            val posInvoice=data.posInvoice
+            val pendingSaleRecord=PosInvoicePendingSaleRecord(
+                 id=id,
+                 locationId = posInvoice.locationId?:0,
+                 tenantId = posInvoice.tenantId?:0,
+                 terminalName = posInvoice.terminalName?:"",
+                 locationCode = posInvoice.locationCode?:"",
+                 invoiceTotal = posInvoice.invoiceTotal?:0.0,
+                 invoiceItemDiscount = posInvoice.invoiceItemDiscount?:0.0,
+                 invoiceTotalValue = posInvoice.invoiceTotalValue,
+                 invoiceNetDiscountPerc = posInvoice.invoiceNetDiscountPerc?:0.0,
+                 invoiceNetDiscount = posInvoice.invoiceNetDiscount,
+                 invoiceTotalAmount = posInvoice.invoiceTotalAmount,
+                 invoiceSubTotal = posInvoice.invoiceSubTotal,
+                 invoiceNetTotal = posInvoice.invoiceNetTotal?:0.0,
+                 invoiceNetCost = posInvoice.invoiceNetCost,
+                 paid = posInvoice.paid,
+                 employeeId = posInvoice.employeeId?:0,
+                 invoiceNo = posInvoice.invoiceNo?:"",
+                 invoiceDate = posInvoice.invoiceDate?:"",
+                 grandTotal = posInvoice.invoiceTotalAmount,
+                 globalTax = posInvoice.invoiceTax,
+                 remarks = posInvoice.remarks?:"",
+                 deliveryDateTime = posInvoice.deliveryDateTime?:"",
+                 type = posInvoice.type?:0,
+                 globalDiscount = posInvoice.invoiceNetDiscount,
+                 status = posInvoice.status?:0,
+                 posPaymentConfigRecord = posInvoice.posPayments?: emptyList(),
+                 posInvoiceDetailRecord = posInvoice.posInvoiceDetails?: emptyList(),
+                 isSynced =data.isSynced
+            )
+            dataBaseRepository.insertPosPendingSaleRecord(pendingSaleRecord)
+            posInvoice.posPayments?.map { payment ->
+                val paymentRecord  = PosConfiguredPaymentRecord(
+                    posPaymentRecordId = id,
+                    posInvoiceId = payment.posInvoiceId,
+                    paymentTypeId = payment.paymentTypeId,
+                    amount = payment.amount
+                )
+                dataBaseRepository.insertPosConfiguredPaymentRecord(paymentRecord)
+            }
+
+            posInvoice.posInvoiceDetails?.forEach { invoice->
+              val posInvoiceDetails= PosInvoiceDetailRecord(
+                  posPaymentRecordId = id, 
+                  productId=invoice.productId,
+                 inventoryCode=invoice.inventoryCode,
+                 inventoryName=invoice.inventoryName,
+                 qty=invoice.qty,
+                 price=invoice.price,
+                 total=invoice.total,
+                totalAmount=invoice.totalAmount,
+                subTotal=invoice.subTotal,
+                itemDiscountPerc=invoice.itemDiscountPerc,
+                itemDiscount=invoice.itemDiscount,
+                finalPrice=invoice.total,
+                discount=invoice.netDiscount,
+                tax=invoice.tax,
+                taxPercentage=invoice.taxPercentage
+              )
+                dataBaseRepository.insertPosDetailsRecord(posInvoiceDetails)
+            }
+
+        }
+        }
+
+    suspend  fun insertPrinter(printer: PrinterScreenState) {
+        withContext(Dispatchers.IO){
+            dataBaseRepository.insertPrinter(
+                PrinterDao(
+                printerStationName = printer.printerStationName,
+                printerName = printer.printerName?:"",
+                numbersOfCopies = printer.numbersOfCopies.toLong(),
+                paperSize =  when (printer.paperSize) {
+                    PaperSize.Size58mm -> 58
+                    PaperSize.Size80mm -> 80
+                },
+                isReceipts = printer.isReceipts,
+                isOrders = printer.isOrders,
+                isRefund = printer.isRefund,
+                isPrinterEnable = printer.isPrinterEnable,
+                printerType = when (printer.printerType) {
+                    PrinterType.Ethernet -> 1
+                    PrinterType.USB -> 2
+                    PrinterType.Bluetooth -> 3
+                },
+                networkIpAddress = printer.networkIpAddress,
+                selectedBluetoothAddress = printer.selectedBluetoothAddress,
+                selectedUsbId = printer.selectedUsbId,
+                    templateId=printer.printerTemplates.id?:0L
+            ))
+        }
+    }
+
     //Update
 
-    suspend fun updateScannedProduct(updatedItem: ProductTaxItem) {
+    suspend fun updateProductStockQuantity(posInvoice: PosInvoice){
+        withContext(Dispatchers.IO) {
+            posInvoice.posInvoiceDetails?.map { item ->
+                val oldQty= dataBaseRepository.getProductQty(item.inventoryCode).first()
+                val newQty=if(oldQty>0){
+                    oldQty-item.qty
+                }else{
+                    oldQty+item.qty
+                }
+                dataBaseRepository.updateProductQuantity(item.inventoryCode,newQty)
+            }
+        }
+    }
+
+    suspend fun updateScannedProduct(updatedItem: ProductItem) {
         // Switch to the IO dispatcher to perform the database operation
         withContext(Dispatchers.IO) {
             val dao = ScannedProductDao(
@@ -497,15 +654,22 @@ class DataBaseRepository: KoinComponent {
                 subtotal = updatedItem.cartTotal ?: 0.0,
                 taxValue = updatedItem.taxValue ?: 0.0
             )
-            // Call the repository method to update the product
             dataBaseRepository.updateScannedProduct(dao)
         }
     }
 
 
     //fetch
+    fun getAllPendingSaleRecordsCount() : Flow<Long>{
+        return dataBaseRepository.getAllPendingSalesCount().flowOn(Dispatchers.IO)
+    }
+
     fun getAuthUser(): Flow<AuthenticateDao> {
         return dataBaseRepository.getAllAuthentication()
+    }
+
+    fun getSelectedLocation(): Flow<Location?> {
+        return dataBaseRepository.getSelectedLocation().flowOn(Dispatchers.IO)
     }
 
     fun getEmployee(empCode: String): Flow<EmployeeDao?> {
@@ -520,13 +684,12 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getAllEmpRights()
     }
 
-
     fun getBarcode(code: String) : Flow<Barcode?> {
       return dataBaseRepository.getItemByBarcode(code)
     }
 
-    fun getProductById(id: Int) : Flow<Product?> {
-         return dataBaseRepository.getProductById(id.toLong())
+    fun getProductById(id: Long) : Flow<Product?> {
+         return dataBaseRepository.getProductById(id)
     }
 
     fun getProductByCode(code: String): Flow<Product?> {
@@ -570,10 +733,10 @@ class DataBaseRepository: KoinComponent {
         return stockList
     }
 
-    fun getScannedProduct(): Flow<List<ProductTaxItem>> =
+    fun getScannedProduct(): Flow<List<ProductItem>> =
         dataBaseRepository.fetchAllScannedProduct().map { productDao ->
             productDao.map {
-                ProductTaxItem(
+                ProductItem(
                     id = it.productId.toInt(),
                     name = it.name,
                     inventoryCode = it.inventoryCode,
@@ -603,6 +766,10 @@ class DataBaseRepository: KoinComponent {
                 it.rowItem
             }
         }
+
+    fun getAllPrinterList() : Flow<List<Printers>>{
+        return dataBaseRepository.getAllPrinterList().flowOn(Dispatchers.IO)
+    }
 
     //Delete
     suspend fun clearAuthentication() {
@@ -641,7 +808,7 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteCategories()
     }
 
-    suspend fun clearProductQuantity(){
+    private suspend fun clearProductQuantity(){
         dataBaseRepository.deleteProductLocation()
     }
 
@@ -649,7 +816,7 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteStocks()
     }
 
-    suspend fun clearPromotion(){
+    private suspend fun clearPromotion(){
         dataBaseRepository.deletePromotions()
     }
 
@@ -668,14 +835,24 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
+    suspend fun removeHoldSaleItemById(id:Long){
+        withContext(Dispatchers.IO) {
+            dataBaseRepository.deleteHoldSaleById(id)
+        }
+    }
+
     //local preference
 
-    suspend fun getBaseUrl(): String {
+    private suspend fun getBaseUrl(): String {
         return preferences.getBaseURL().first()
     }
 
     suspend fun getEmployeeCode(): String {
         return preferences.getEmployeeCode().first()
+    }
+
+    suspend fun getLocationId(): Long {
+        return preferences.getLocationId().first().toLong()
     }
 
     // Clean up the scope (important to avoid memory leaks)

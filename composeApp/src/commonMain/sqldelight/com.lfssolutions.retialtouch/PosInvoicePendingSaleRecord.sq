@@ -1,0 +1,24 @@
+import kotlin.Boolean;
+
+CREATE TABLE PosInvoicePendingSaleRecord (
+     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+     isSync INTEGER AS Boolean DEFAULT 0,
+     posInvoice TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO PosInvoicePendingSaleRecord(id,isSync,posInvoice)
+VALUES(?,?,?);
+
+getAll:
+SELECT * FROM PosInvoicePendingSaleRecord;
+
+delete:
+DELETE  FROM PosInvoicePendingSaleRecord;
+
+getPendingSaleCount:
+SELECT COUNT(*)  FROM PosInvoicePendingSaleRecord
+WHERE isSync = 0;
+
+getCount:
+SELECT COUNT(*) FROM PosInvoicePendingSaleRecord;

@@ -12,29 +12,30 @@ import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
-import com.lfssolutions.retialtouch.domain.model.inventory.Product
-import com.lfssolutions.retialtouch.domain.model.inventory.Stock
+import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginUiState
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
-import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryItem
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
 import com.lfssolutions.retialtouch.domain.model.menu.MenuItem
+import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
+import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
+import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
+import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.sales.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
+import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionItem
-import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
@@ -43,19 +44,25 @@ import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.INVOICE
 import com.lfssolutions.retialtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.LOCATION_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MEMBER_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.NEXT_SALE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
+import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
+import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -75,8 +82,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 open class BaseViewModel: ViewModel(), KoinComponent {
 
@@ -91,8 +96,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val loginScreenState: StateFlow<LoginUiState> = _loginScreenState
 
     var count =0
-    private val _authenticationDao = MutableStateFlow(AuthenticateDao())
-    val authenticationDao: StateFlow<AuthenticateDao?> = _authenticationDao.asStateFlow()
+
+    private val _isPrinterEnabled = MutableStateFlow(false)
+    val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
 
     private val _lastSyncDateTime = MutableStateFlow<String?>(null)
     val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
@@ -100,40 +106,32 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
     val employeeDoa = MutableStateFlow<EmployeeDao?>(null)
-    
-    private val _isMenuCategoryDbInserted = MutableStateFlow(false)
-    val isMenuCategoryDbInserted: StateFlow<Boolean> get() = _isMenuCategoryDbInserted
-
-    private val _categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
-    val categoryResponse: StateFlow<List<CategoryItem?>> = _categoryResponse
-
-    private val _isMenuProductDbInserted = MutableStateFlow(false)
-    val isMenuProductDbInserted: StateFlow<Boolean> get() = _isMenuProductDbInserted
-
-    private val _categoryItem = MutableStateFlow<CategoryItem?>(null)
-    val categoryItem: StateFlow<CategoryItem?> = _categoryItem
-    
-
-    val _posInvoiceResponse = MutableStateFlow<POSInvoiceResponse?>(null)
-    val _productTaxResponse = MutableStateFlow<ProductWithTaxByLocationResponse?>(null)
-    val _productLocationResponse = MutableStateFlow<ProductLocationResponse?>(null)
-    val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
-    val _paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
-
-    val _membersResponse = MutableStateFlow<MemberResponse?>(null)
-    val membersResponse: StateFlow<MemberResponse?> get() = _membersResponse
-
-    val _memberGroupResponse = MutableStateFlow<MemberGroupResponse?>(null)
-    val memberGroupResponse: StateFlow<MemberGroupResponse?> get() = _memberGroupResponse
-
-    val _productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
-    val productBarCodeGroupResponse: StateFlow<ProductBarCodeResponse?> get() = _productBarCodeResponse
-
-    val _syncResponse = MutableStateFlow<SyncAllResponse?>(null)
-    val syncResponse: StateFlow<SyncAllResponse?> get() = _syncResponse
 
 
 
+    private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
+
+    private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
+    private val paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
+    private val productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
+
+    private val _printerTemplates = MutableStateFlow<List<PrinterTemplates>?>(emptyList())
+    val printerTemplates : StateFlow<List<PrinterTemplates>?> = _printerTemplates.asStateFlow()
+
+    private val _syncInProgress = MutableStateFlow(false)
+    val syncInProgress: StateFlow<Boolean> = _syncInProgress.asStateFlow()
+
+    private val _syncProgressStatus = MutableStateFlow("")
+    val syncProgressStatus: StateFlow<String> = _syncProgressStatus.asStateFlow()
+
+    private val _syncError = MutableStateFlow(false)
+    val syncError: StateFlow<Boolean> = _syncError.asStateFlow()
+
+    private val _syncErrorInfo = MutableStateFlow("")
+    val syncErrorInfo: StateFlow<String> = _syncErrorInfo.asStateFlow()
+
+    private val _lastSyncTs = MutableStateFlow(0L)
+    val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
 
     // Expose the login state as a Flow<Boolean?>, with null indicating loading
     val isUserLoggedIn: StateFlow<Boolean?> = preferences.getUserLoggedIn()
@@ -150,17 +148,16 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
-
-    val currencySymbol: StateFlow<String> = preferences.getCurrencySymbol()
+    val isPrinterEnable: StateFlow<Boolean?> = preferences.getIsPrinterEnabled()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(1000),
-            initialValue = ""
+            initialValue = null
         )
 
     val employee: StateFlow<EmployeeDao?> = flow {
         // This flow emits the employee data asynchronously
-        val employeeCode = preferences.getEmployeeCode().first()  // Suspends here
+        val employeeCode = getEmpCode()  // Suspends here
         emit(dataBaseRepository.getEmployee(employeeCode).firstOrNull())
     }.stateIn(
             scope = viewModelScope,  // Use viewModelScope
@@ -168,25 +165,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null  // Initial state of the flow
         )
 
-
-    val productsList: StateFlow<List<Product>> = dataBaseRepository.getProduct()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    val memberList: StateFlow<List<MemberDao>> = dataBaseRepository.getMember()
-       /* .map { daoList ->
-            daoList.map { item ->
-                mapMembersList(item)
-            }
-        }*/
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
 
 
     suspend fun isDiscountEnabledTaxInclusiveName():Boolean{
@@ -201,10 +179,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return enabled
     }
 
-    private fun mapMembersList(memberDao: MemberDao): MemberItem {
-        println("member List : ${memberDao.rowItem}")
-        return memberDao.rowItem
-    }
 
     fun updateScreenMode(width: Dp,height:Dp){
         val deviceType = when {
@@ -221,6 +195,30 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             isPortrait = height > width
         )
         }
+    }
+
+     fun updatePrinterValue(isPrinter: Boolean) {
+        viewModelScope.launch {
+            _isPrinterEnabled.update { isPrinter }
+            preferences.setIsPrinterEnabled(isPrinter)
+        }
+    }
+
+    private fun updateSyncProgress(syncStatus: Boolean) {
+        _syncInProgress.update { syncStatus }
+    }
+
+    private fun updateSyncStatus(syncStatus: String) {
+        _syncProgressStatus.update { syncStatus }
+    }
+
+    private fun updateLastSyncTs(syncStatus: Long) {
+        _lastSyncTs.update { syncStatus }
+    }
+    // Handle any sync errors
+    private fun handleError(error:Boolean,errorTitle: String, errorMsg: String) {
+        _syncError.update { error }
+        _syncErrorInfo.update {  "$errorTitle \n $errorMsg" }
     }
 
     //Api Calls
@@ -291,10 +289,18 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-
     fun syncEveryThing(){
        try {
          viewModelScope.launch(Dispatchers.IO) {
+             updateSyncProgress(true)
+
+             val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
+             if (pendingCount <= 0) {
+                 loadNextSalesInvoiceNumber()
+             } else {
+                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
+             }
+
              syncMembers()
              syncMemberGroup()
              syncStockQuantity()
@@ -303,16 +309,31 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
-             updateLoaderMsg("All Sync Operations Completed Successfully")
+             updateSyncStatus("All Sync Operations Completed Successfully")
+             updateSyncProgress(false)
          }
        }catch (e: Exception){
            val error = "failed during sync: ${e.message}"
            println("SYNC_ERROR $error")
-           //handleApiError("SYNC_ERROR", error)
+           handleError(true,"SYNC_ERROR", error)
+           updateSyncProgress(false)
        }
     }
 
-    suspend fun syncStockQuantity(lastSyncTime:String?=null){
+    private suspend fun loadNextSalesInvoiceNumber(){
+        try {
+            println("API CALL : ${count++}")
+            updateSyncStatus("loading sale invoice count")
+            networkRepository.getNextPOSSaleInvoice(getBasicRequest()).collectLatest {apiResponse->
+                observeNextSaleInvoices(apiResponse)
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            handleError(true,NEXT_SALE_ERROR_TITLE,error)
+        }
+    }
+
+     suspend fun syncStockQuantity(lastSyncTime:String?=null){
         try {
             println("API CALL : ${count++}")
             updateLoaderMsg("Syncing Inventory Count")
@@ -326,7 +347,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private suspend fun syncInventory(lastSyncTime:String?=null){
+     suspend fun syncInventory(lastSyncTime:String?=null){
         try {
             updateLoaderMsg("Syncing Inventory")
             println("API CALL : ${count++}")
@@ -345,7 +366,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncMembers(){
+    private suspend fun syncMembers(){
         try {
             println("API CALL : ${count++}")
             updateLoaderMsg("Syncing Member")
@@ -358,7 +379,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncPaymentTypes(){
+    private suspend fun syncPaymentTypes(){
         try {
             updateLoaderMsg("Syncing Payment Type")
             networkRepository.getPaymentTypes(getBasicTenantRequest()).collectLatest {apiResponse->
@@ -370,7 +391,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncMemberGroup(){
+    private suspend fun syncMemberGroup(){
         try {
             updateLoaderMsg("Syncing Member Group")
             println("API CALL : ${count++}")
@@ -383,7 +404,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncCategories(){
+    private suspend fun syncCategories(){
         try {
             updateLoaderMsg("Syncing Categories")
             networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
@@ -397,7 +418,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun syncMenu(){
         val newStock : MutableList<MenuItem> = mutableListOf()
-        _categoryResponse.value.forEach { cat->
+        categoryResponse.value.forEach { cat->
             println("Menu products api : ${cat.id}")
             networkRepository.getMenuProducts(getBasicRequest(cat.id)).collectLatest {response->
                 observeResponseNew(response,
@@ -405,7 +426,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                     onSuccess = { menuData ->
                         if(menuData.success){
                             menuData.result.items.forEach { menu->
-                                val updatedMenu=menu.copy(menuCategoryId=cat.id, id = if(menu.id==0) menu.productId else menu.id)
+                                val updatedMenu=menu.copy(menuCategoryId=cat.id, id = if(menu.id==0L) menu.productId else menu.id)
                                 newStock.add(updatedMenu)
                             }
                             viewModelScope.launch {
@@ -421,7 +442,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                                         fgColor = mnu.foreColor ?: "",
                                         bgColor = mnu.backColor ?: "",
                                         barcode = mnu.barCode
-                                    )})
+                                    )
+                                })
                             }
                         }
                     },
@@ -434,7 +456,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncPromotion(){
+    private suspend fun syncPromotion(){
         try {
             updateLoaderMsg("Syncing Promotions")
             networkRepository.getPromotions(PromotionRequest(tenantId = getTenantId())).collectLatest { apiResponse->
@@ -446,6 +468,112 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
+    suspend fun syncSales(){
+        try {
+            if(_syncInProgress.value)
+                return
+
+            updateSyncStatus("Syncing Sales History")
+            networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=10, skipCount = 0, sorting = "Id")).collectLatest { apiResponse->
+                observeLatestSales(apiResponse)
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            handleError(true,SYNC_SALES_ERROR_TITLE,error)
+            updateSyncProgress(false)
+        }
+    }
+
+    suspend fun syncPrintTemplate(templateType: TemplateType){
+        try {
+            if(_syncInProgress.value)
+                return
+
+            println("Syncing Print Template: ${templateType.toInt()}")
+            updateSyncStatus("Syncing Print Template")
+            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collectLatest { apiResponse->
+                observePrintTemplate(apiResponse)
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            handleError(true,SYNC_TEMPLATE_ERROR_TITLE,error)
+            updateSyncProgress(false)
+            println("Syncing Print Template: $error")
+        }
+    }
+
+    private fun observePrintTemplate(apiResponse: RequestState<GetPrintTemplateResult>) {
+        observeResponseNew(apiResponse,
+            onLoading = {
+                updateSyncProgress(true)
+                        },
+            onSuccess = { apiData ->
+                println("print template insertion : ${count++}")
+                if(apiData.success){
+                    _printerTemplates.update { apiData.result }
+                }else{
+                    handleError(true,SYNC_TEMPLATE_ERROR_TITLE,apiData.error?.message?:"template not found")
+                }
+                updateSyncProgress(false)
+            },
+            onError = { errorMsg ->
+                handleError(true,SYNC_TEMPLATE_ERROR_TITLE,errorMsg)
+                updateSyncProgress(false)
+            }
+        )
+    }
+
+    private fun observeNextSaleInvoices(apiResponse: RequestState<NextPOSSaleInvoiceNoResponse>) {
+        observeResponseNew(apiResponse,
+            onLoading = {
+                updateSyncProgress(true)
+            },
+            onSuccess = { apiData ->
+                viewModelScope.launch {
+                    if(apiData.success){
+                        apiData.result?.let { result->
+                            preferences.setNextSalesInvoiceNumber(result.invoiceNo?:"")
+                            preferences.setSalesInvoicePrefix(result.invoicePrefix?:"")
+                            preferences.setSalesInvoiceNoLength(result.posLength?:0)
+                        }
+                    }
+                }
+
+            },
+            onError = {
+                    errorMsg ->
+                handleError(true,NEXT_SALE_ERROR_TITLE,errorMsg)
+            }
+        )
+
+    }
+
+    private fun observeLatestSales(apiResponse: RequestState<GetPosInvoiceResult>) {
+        observeResponseNew(apiResponse,
+            onLoading = {
+                updateSyncProgress(true)
+            },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        dataBaseRepository.insertNewLatestSales(apiData)
+                        updateSyncGrid(INVOICE)
+                        //set
+                        updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
+                    }
+                    updateSyncProgress(false)
+                    updateSyncStatus("")
+                    handleError(false,"","")
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
+                updateSyncProgress(false)
+            }
+        )
+
+    }
 
     private fun observeCategory(apiResponse: RequestState<CategoryResponse>) {
         observeResponseNew(apiResponse,
@@ -453,7 +581,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
-                        _categoryResponse.update { apiData.result.items }
+                        categoryResponse.update { apiData.result.items }
                         dataBaseRepository.insertCategories(apiData)
                         updateSyncGrid(CATEGORY)
                         //set
@@ -600,29 +728,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     }
 
 
-    private fun observeStock1(
-        stockAvailResponse: RequestState<ProductLocationResponse>
-    ) {
-
-        observeResponseNew(stockAvailResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    stockQtyMap.update { oldMap ->
-                        oldMap + apiData.result?.items?.associate { stock ->
-                            stock.id to stock.qtyOnHand
-                        }.orEmpty()
-                    }
-                    println("product quantity insertion : ${count++}")
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
     private  fun observeBarcode(
         barcodesResponse: Flow<RequestState<ProductBarCodeResponse>>,
         lastSyncTime: String?
@@ -633,7 +738,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 onSuccess = { apiData ->
                     viewModelScope.launch {
                         if(apiData.success){
-                            _productBarCodeResponse.update { apiData }
+                            productBarCodeResponse.update { apiData }
                             dataBaseRepository.insertUpdateBarcode(apiResponse = apiData,lastSyncDateTime=lastSyncTime)
                         }
                     }
@@ -842,7 +947,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
-                        _paymentTypeResponse.update { apiData }
+                        paymentTypeResponse.update { apiData }
                         dataBaseRepository.insertPaymentType(apiData)
                     }
                 }
@@ -930,8 +1035,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setEmployeeCode(code)
     }
 
-
-
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
@@ -959,19 +1062,24 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         isDeleted = isDeleted
     )
 
-    suspend fun getLocationId() = preferences.getLocationId().first()
+    suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
     suspend fun getTenantId() = preferences.getTenantId().first()
 
     suspend fun getUserId() :Long{
         return preferences.getUserId().first()
     }
 
+    suspend fun getEmpCode() :String{
+        return preferences.getEmployeeCode().first()
+    }
+
+
+
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { _authenticationDao.update { AuthenticateDao() } },
                 async { employeeDoa.update { EmployeeDao() } },
-                async { _categoryResponse.update { emptyList()} },
+                async { categoryResponse.update { emptyList()} },
             )
             jobs.awaitAll()
         }
@@ -990,7 +1098,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             jobs.awaitAll()
         }
     }
-
 
     fun emptyDataBase() {
         viewModelScope.launch {

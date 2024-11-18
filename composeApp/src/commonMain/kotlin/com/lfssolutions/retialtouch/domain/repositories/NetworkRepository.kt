@@ -3,8 +3,9 @@ package com.lfssolutions.retialtouch.domain.repositories
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
-import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
+import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -46,8 +47,8 @@ class NetworkRepository : KoinComponent {
         api.getNextPOSSaleInvoice(mRequest)
    
 
-     fun getPOSInvoice(mRequest: POSInvoiceRequest) =  
-        api.getPOSInvoice(mRequest)
+     fun getLatestSales(mRequest: POSInvoiceRequest) =
+        api.getLatestSales(mRequest)
    
 
      fun getProductsWithTax(mRequest: BasicApiRequest) =  
@@ -85,5 +86,8 @@ class NetworkRepository : KoinComponent {
 
     fun createUpdatePosInvoice(mRequest: CreatePOSInvoiceRequest) =
         api.createUpdatePosInvoice(mRequest)
+
+    fun getPrintTemplate(mRequest: GetPrintTemplateRequest) =
+        api.getPrintTemplate(mRequest)
 
 }

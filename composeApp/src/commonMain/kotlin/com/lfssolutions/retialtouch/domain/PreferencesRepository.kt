@@ -5,8 +5,20 @@ import kotlinx.coroutines.flow.Flow
 
 interface PreferencesRepository {
 
+    suspend fun setOverlayState(result: Boolean)
+    suspend fun getOverlayState():Flow<Boolean>
+
     suspend fun setBaseURL(result: String)
     suspend fun getBaseURL():Flow<String>
+
+    suspend fun setNextSalesInvoiceNumber(result: String)
+    suspend fun getNextSalesInvoiceNumber():Flow<String>
+
+    suspend fun setSalesInvoicePrefix(result: String)
+    suspend fun getSalesInvoicePrefix():Flow<String>
+
+    suspend fun setSalesInvoiceNoLength(result: Int)
+    suspend fun getSalesInvoiceNoLength():Flow<Int>
 
     suspend fun setToken(result: String)
     suspend fun getToken(): Flow<String>
@@ -41,4 +53,10 @@ interface PreferencesRepository {
 
     suspend fun setMemberGroupSyncGrid(result: String)
     fun getMemberGroupSyncGrid(): Flow<String>
+
+    suspend fun setIsPrinterEnabled(result: Boolean)
+    fun getIsPrinterEnabled(): Flow<Boolean>
+
+    suspend fun setTerminalCode(result: String)
+    fun getTerminalCode(): Flow<String>
 }

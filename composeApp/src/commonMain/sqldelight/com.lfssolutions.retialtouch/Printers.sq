@@ -1,0 +1,33 @@
+import kotlin.Boolean;
+
+CREATE TABLE Printers (
+    bluetoothAddress TEXT,
+    networkAddress TEXT,
+    usbId TEXT,
+    paperSize INTEGER ,
+    noOfCopies INTEGER DEFAULT 1,
+    printerType INTEGER NOT NULL ,
+    printerName TEXT NOT NULL ,
+    printerStationName Text NOT NULL,
+    isReceipts INTEGER AS Boolean DEFAULT 0,
+    isOrders INTEGER AS Boolean DEFAULT 0,
+    isRefund INTEGER AS Boolean DEFAULT 0,
+    templateId INTEGER NOT NULL ,
+    printerId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT
+);
+
+insertIntoPrinter:
+INSERT INTO Printers(bluetoothAddress,
+    networkAddress, usbId, paperSize, noOfCopies, printerName,
+    printerType, printerStationName, isReceipts, isRefund, isOrders,templateId
+) VALUES (?,?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?);
+
+
+getAllPrinters:
+SELECT * FROM Printers;
+
+deleteAll:
+DELETE FROM Printers;
+
+deletebyId:
+DELETE FROM Printers WHERE printerId=:printerId;

@@ -33,7 +33,6 @@ import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
 import com.lfssolutions.retialtouch.presentation.ui.common.GradientBackgroundScreen
-import com.lfssolutions.retialtouch.presentation.ui.common.HomeItem
 import com.lfssolutions.retialtouch.presentation.ui.common.ListGridItems
 import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -60,14 +59,13 @@ data class HomeScreen(val isSplash: Boolean): Screen{
            NavigatorActions.navigateToLoginScreen()
        })
     }
-
 }
 
 @Composable
 fun Home(
     homeViewModel: HomeViewModel,
     isFromSplash:Boolean,
-    onLogout: @Composable () -> Unit,
+    onLogout: @Composable () -> Unit
     )
 {
     val navigator = LocalNavigator.currentOrThrow
@@ -76,19 +74,28 @@ fun Home(
 
     val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
+    val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
 
-    when(homeUIState.hasEmployeeLoggedIn){
+    LaunchedEffect(isFromSplash) {
+           println("callIsSplash :$isFromSplash")
+        if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
+            homeViewModel.initialiseSplash(true)
+        }
+    }
+
+
+    /*when(homeUIState.hasEmployeeLoggedIn){
         true -> {
             //homeViewModel.updateSyncRotation(5)
         }
         false -> {
             homeViewModel.initialiseSplash(isFromSplash)
         }
-    }
+    }*/
 
-    LaunchedEffect(homeUIState.isSync){
-        if(homeUIState.isSync){
-            homeViewModel.onSyncClick()
+    LaunchedEffect(syncInProgress){
+        if(syncInProgress){
+            //homeViewModel.onSyncClick()
         }
     }
 
@@ -112,7 +119,7 @@ fun Home(
         GradientBackgroundScreen(
             modifier = Modifier.fillMaxSize(),
             isBlur = homeUIState.isBlur
-        ){maxHeight->
+        ){
             // The main screen
             AppScreenPadding(
                 content = {horizontalPadding, verticalPadding ->
@@ -129,39 +136,6 @@ fun Home(
                              modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                             homeUIState.authUser)
 
-                        /*Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = AppTheme.dimensions.verticalItemPadding)
-                                .verticalScroll(rememberScrollState())
-
-                            ,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-
-                            CurrentTimeDisplay(currentTime, showColon)
-                            Text(text = stringResource(Res.string.home_header),
-                                style = AppTheme.typography.titleBold(),
-                                color = AppTheme.colors.textWhite
-                            )
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed( getGridCell(appState)), // Adjust the minSize as needed
-                                contentPadding = PaddingValues(20.dp),
-                                modifier = Modifier.fillMaxWidth().padding(vertical = AppTheme.dimensions.verticalItemPadding)
-                            ) {
-                                ListGridItems(homeUIState.homeItemList){id->
-                                    when(id){
-                                        1->{ //Cashier
-                                            NavigatorActions.navigateToPOSScreen(navigator)
-                                        }
-                                        5->{ //Sync
-                                            homeViewModel.updateSyncRotation(id)
-                                        }
-                                    }
-                                }
-                            }
-                        }*/
-
 
                         LazyVerticalGrid(
                             columns = GridCells.Fixed( getGridCell(appState)),
@@ -173,11 +147,11 @@ fun Home(
                              item(span = { GridItemSpan(getGridCell(appState))}) {
                                 Text(text = stringResource(Res.string.home_header),
                                     style = AppTheme.typography.titleBold(),
-                                    color = AppTheme.colors.textWhite,
+                                    color = AppTheme.colors.appWhite,
                                     textAlign = TextAlign.Center
                                 )
                             }
-                            ListGridItems(homeUIState.homeItemList){id->
+                            ListGridItems(homeUIState.homeItemList,syncInProgress){id->
                                 when(id){
                                     1->{ //Cashier
                                         NavigatorActions.navigateToPOSScreen(navigator)
@@ -185,54 +159,22 @@ fun Home(
                                     5->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
                                     }
+
+                                    8->{
+                                        NavigatorActions.navigateToPrinterScreen(navigator)
+                                    }
                                 }
                             }
-
-                            /* item {
-                                 Box(modifier = Modifier.fillMaxWidth()){
-                                     LazyVerticalGrid(
-                                         columns = GridCells.Fixed( getGridCell(appState)), // Adjust the minSize as needed
-                                         contentPadding = PaddingValues(20.dp),
-                                         modifier = Modifier.fillMaxWidth().padding(vertical = AppTheme.dimensions.verticalItemPadding)
-                                     ) {
-                                         ListGridItems(homeUIState.homeItemList){id->
-                                             when(id){
-                                                 1->{ //Cashier
-                                                     NavigatorActions.navigateToPOSScreen(navigator)
-                                                 }
-                                                 5->{ //Sync
-                                                     homeViewModel.updateSyncRotation(id)
-                                                 }
-                                             }
-                                         }
-                                     }
-                                 }
-
-                             }*/
                          }
-
-                       /* HomeItemGrid(homeUIState){id->
-                            when(id){
-                                1->{ //Cashier
-                                    NavigatorActions.navigateToPOSScreen(navigator)
-                                }
-                                5->{ //Sync
-                                    homeViewModel.updateSyncRotation(id)
-                                }
-                            }
-                        }*/
-
                     }
                 }
             )
-
         }
 
         if (homeUIState.isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
             EmployeeScreen(
                 onNavigateLogout = {
                     onLogout.invoke()
-                   //navigator.navigateToLogin()
                 },
                 onDismiss = {
                     homeViewModel.onEmployeeLoggedIn() }
@@ -240,10 +182,8 @@ fun Home(
         }
     }
 
+
 }
-
-
-
 
 
 @Composable
@@ -257,7 +197,7 @@ fun TopSection(modifier : Modifier, user: AuthenticateDao) {
 
         Row(modifier = Modifier.wrapContentWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spacedBy(10.dp),verticalAlignment = Alignment.CenterVertically) {
             Icon(imageVector = vectorResource(AppIcons.locationIcon),
-                tint = AppTheme.colors.textWhite,
+                tint = AppTheme.colors.appWhite,
                 contentDescription = "",
                 modifier = Modifier
                     .size(AppTheme.dimensions.smallIcon)
@@ -265,7 +205,7 @@ fun TopSection(modifier : Modifier, user: AuthenticateDao) {
              //Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "${user.loginDao.defaultLocation} | ${user.loginDao.locationCode}",
-                color = AppTheme.colors.textWhite,
+                color = AppTheme.colors.appWhite,
                 style = AppTheme.typography.titleMedium(),
             )
         }
@@ -274,12 +214,12 @@ fun TopSection(modifier : Modifier, user: AuthenticateDao) {
 
             Text(
                 text = user.loginDao.userName.uppercase(),
-                color = AppTheme.colors.textWhite,
+                color = AppTheme.colors.appWhite,
                 style = AppTheme.typography.titleMedium(),
             )
 
             Icon(imageVector = vectorResource(AppIcons.empRoleIcon),
-                tint = AppTheme.colors.textWhite,
+                tint = AppTheme.colors.appWhite,
                 contentDescription = "",
                 modifier = Modifier
                     .size(AppTheme.dimensions.smallIcon))

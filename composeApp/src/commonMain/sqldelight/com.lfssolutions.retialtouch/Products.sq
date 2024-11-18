@@ -1,0 +1,51 @@
+import kotlin.Boolean;
+
+CREATE TABLE Product (
+    productId INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    inventoryCode TEXT NOT NULL,
+    barcode TEXT NOT NULL,
+    quantity REAL NOT NULL,
+    price REAL NOT NULL,
+    tax REAL NOT NULL,
+    itemDiscount REAL NOT NULL,
+    image TEXT NOT NULL,
+    isScanned INTEGER AS Boolean DEFAULT 0,
+    rowItem TEXT NOT NULL
+);
+
+insertProduct:
+INSERT OR REPLACE INTO Product(productId,name,inventoryCode,barcode,quantity,price,tax,itemDiscount,image,isScanned,rowItem)
+VALUES(?,?,?,?,?,?,?,?,?,?,?);
+
+updateProduct:
+UPDATE Product
+SET name = :name,inventoryCode =:inventoryCode,barcode=:barcode,quantity=:qty,price =:price,tax =:tax,itemDiscount =:discount,image=:image,isScanned = :isScanned, rowItem = :rowItem
+WHERE productId = :productId;
+
+updateProductQuantity:
+UPDATE Product
+SET quantity = :quantity
+WHERE inventoryCode = :inventoryCode;
+
+getProductById:
+SELECT * FROM Product
+WHERE productId = ?;
+
+getProductByInventory:
+SELECT * FROM Product
+WHERE inventoryCode = ?;
+
+getProductQty:
+SELECT quantity FROM Product
+WHERE inventoryCode = ?;
+
+getAllProduct:
+SELECT * FROM Product;
+
+deleteProduct:
+DELETE  FROM Product;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM Product;

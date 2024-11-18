@@ -96,7 +96,7 @@ fun NumberPad(
                     ) {
                         Text(
                             text = symbol,
-                            color = AppTheme.colors.textColor,
+                            color = AppTheme.colors.primaryText,
                             style = AppTheme.typography.bodyMedium()
                         )
                     }

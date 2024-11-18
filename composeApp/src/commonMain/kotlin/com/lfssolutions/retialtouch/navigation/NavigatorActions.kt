@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
 
 
 object NavigatorActions {
@@ -13,6 +12,11 @@ object NavigatorActions {
     fun navigateBack(navigator: Navigator) {
         navigator.pop()
     }
+
+    fun navigateBackToHomeScreen(navigator: Navigator,isSplash: Boolean) {
+        navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
+    }
+
     @Composable
     fun navigateToLoginScreen() {
         val navigator = LocalNavigator.currentOrThrow
@@ -22,7 +26,7 @@ object NavigatorActions {
     @Composable
     fun navigateToHomeScreen(isSplash : Boolean) {
         val navigator = LocalNavigator.currentOrThrow
-        navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
+        navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
 
@@ -31,7 +35,11 @@ object NavigatorActions {
     }
 
 
-    fun navigateToPaymentScreen(navigator: Navigator/*,memberId: Int, totalAmount:Double,mPosUIState: PosUIState*/) {
+    fun navigateToPaymentScreen(navigator: Navigator) {
         navigator.push(Route.PaymentType.toVoyagerScreen())
+    }
+
+    fun navigateToPrinterScreen(navigator: Navigator) {
+        navigator.push(Route.Printer.toVoyagerScreen())
     }
 }

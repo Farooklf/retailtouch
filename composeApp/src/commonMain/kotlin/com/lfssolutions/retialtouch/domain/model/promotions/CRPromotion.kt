@@ -2,12 +2,12 @@ package com.lfssolutions.retialtouch.domain.model.promotions
 
 
 data class CRPromotionByQuantity(
-    val amount :Double,
-    val qty :Double,
-    val promoQty :Double,
-    val percentage :Double?,
-    var remainingPromotionQty :Double,
-    val items :List<CRPromotionByQuantityItem>,
+    var amount :Double=0.0,
+    var qty :Double=0.0,
+    var promoQty :Double=0.0,
+    var percentage :Double?=0.0,
+    var remainingPromotionQty :Double=0.0,
+    var items :MutableList<CRPromotionByQuantityItem> = mutableListOf(),
 )
 data class CRPromotionByQuantityItem(
     val code :String,
@@ -16,7 +16,7 @@ data class CRPromotionByQuantityItem(
     val checked :Boolean
 )
 data class CRPromotionByPriceBreak(
-    val price :Double,
-    val qty :Double,
-    val promoQty :Double,
+    var price :Double=0.0,
+    var qty :Double=0.0,
+    var promoQty :Double=0.0,
 )

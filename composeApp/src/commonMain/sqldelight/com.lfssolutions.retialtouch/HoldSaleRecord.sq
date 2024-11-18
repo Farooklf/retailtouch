@@ -1,0 +1,30 @@
+CREATE TABLE HoldSaleRecord (
+     holdSaleId INTEGER NOT NULL PRIMARY KEY,
+     holdSaleItem TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO HoldSaleRecord(holdSaleId,holdSaleItem)
+VALUES(?,?);
+
+update:
+UPDATE HoldSaleRecord
+SET holdSaleItem = :rowItem
+WHERE holdSaleId = :holdSaleId;
+
+getSaleRecordById:
+SELECT * FROM HoldSaleRecord
+WHERE holdSaleId = ?;
+
+getAll:
+SELECT * FROM HoldSaleRecord;
+
+deleteSaleById:
+DELETE FROM HoldSaleRecord
+WHERE holdSaleId = ?;
+
+delete:
+DELETE  FROM HoldSaleRecord;
+
+getCount:
+SELECT COUNT(*) FROM HoldSaleRecord;

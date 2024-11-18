@@ -3,9 +3,11 @@ package com.lfssolutions.retialtouch.domain
 
 
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
-import com.lfssolutions.retialtouch.domain.model.inventory.Product
-import com.lfssolutions.retialtouch.domain.model.inventory.Stock
-import com.lfssolutions.retialtouch.domain.model.location.LocationDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
@@ -13,18 +15,23 @@ import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
+import com.lfssolutions.retialtouch.domain.model.products.ProductDao
+import com.lfssolutions.retialtouch.domain.model.products.SaleOnHoldRecordDao
+import com.lfssolutions.retialtouch.domain.model.products.ScannedProductDao
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
-import com.lfssolutions.retialtouch.domain.model.promotions.PromotionQtyDetails
+import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
+import com.lfssolutions.retialtouch.utils.PaperSize
+import com.lfssolutions.retialtouch.utils.PrinterType
+import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
 
 interface SqlPreference {
@@ -35,7 +42,8 @@ interface SqlPreference {
     suspend fun deleteAuthentication()
 
     //Location
-    suspend fun insertLocation(locationDao: LocationDao)
+    suspend fun insertLocation(locationDao: Location)
+    fun getSelectedLocation() : Flow<Location?>
     suspend fun deleteAllLocations()
 
     //Employees
@@ -88,27 +96,37 @@ interface SqlPreference {
     fun getNextPosSaleCount():Flow<Int>
 
 
-    //POS Invoice
-    suspend fun insertPosInvoice(posInvoiceDao: POSInvoiceDao)
-    fun getPosInvoiceById(id: Long): Flow<POSInvoiceDao?>
-    fun getAllPosInvoice(): Flow<List<POSInvoiceDao>>
-    suspend fun deletePosInvoice()
-    fun getPosInvoiceCount():Flow<Int>
+    //Latest POS Invoice
+    suspend fun insertLatestSales(saleRecord: SaleRecord)
+    fun getLatestSalesById(id: Long): Flow<SaleRecord?>
+    fun getLatestSales(): Flow<List<SaleRecord>>
+    suspend fun deletePosSales()
+    fun getSalesCount():Flow<Int>
 
-    //ProductWithTax
-    suspend fun insertProduct(productTaxDao: ProductTaxDao)
-    suspend fun updateProduct(productTaxDao: ProductTaxDao)
+    //Product
+    suspend fun insertProduct(productDao: ProductDao)
+    suspend fun updateProduct(productDao: ProductDao)
+    suspend fun updateProductQuantity(productCode: String,quantity:Double)
     fun getAllProduct(): Flow<List<Product>>
     fun getProductById(id: Long): Flow<Product?>
     fun getProductByCode(code: String): Flow<Product?>
+    fun getProductQty(code: String) : Flow<Double>
     suspend fun deleteProduct()
 
-    //Scanned ProductWithTax
+    //Scanned Product
     suspend fun insertScannedProduct(productTaxDao: ScannedProductDao)
     suspend fun updateScannedProduct(productTaxDao: ScannedProductDao)
     fun fetchAllScannedProduct(): Flow<List<ScannedProductDao>>
     suspend fun deleteScannedProductById(productId: Long)
     suspend fun deleteAllScannedProduct()
+
+    //Hold Sale
+    suspend fun insertHoldSaleRecord(crSaleOnHold: SaleOnHoldRecordDao)
+    suspend fun updateHoldSaleRecord(crSaleOnHold: SaleOnHoldRecordDao)
+    fun getAllHoldSaleRecord(): Flow<List<CRSaleOnHold>>
+    fun getHoldSaleById(id: Long): Flow<CRSaleOnHold?>
+    suspend fun deleteHoldSaleById(id: Long)
+    suspend fun deleteHoldSale()
 
     //ProductLocation
     suspend fun insertProductLocation(productLocationDao: ProductLocationDao)
@@ -146,6 +164,24 @@ interface SqlPreference {
     fun getAllPaymentType(): Flow<List<PaymentTypeDao>>
     suspend fun deletePaymentType()
 
+    //posInvoiceDetails
+    suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord)
+    fun getPosPendingSaleRecord(): Flow<List<PosInvoicePendingSaleRecord>>
+    suspend fun deletePosPendingSaleRecord()
+    fun getAllPendingSalesCount():Flow<Long>
+
+    suspend fun insertPosDetailsRecord(posInvoice: PosInvoiceDetailRecord)
+    fun getPosDetailsRecord(): Flow<List<PosInvoiceDetailRecord>>
+    suspend fun deletePosDetailsRecord()
+
+    suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosConfiguredPaymentRecord)
+    fun getPosConfiguredPaymentRecord(): Flow<List<PosConfiguredPaymentRecord>>
+    suspend fun deletePosConfiguredPaymentRecord()
+
+    //Printer
+    suspend fun insertPrinter(printerDao: PrinterDao)
+    fun getAllPrinterList():Flow<List<Printers>>
+    suspend fun deleteAllPrinters()
 
     //Sync
     suspend fun insertSyncAll(syncAllDao: SyncAllDao)

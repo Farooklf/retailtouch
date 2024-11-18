@@ -45,13 +45,13 @@
     <string name="qty">Qty</string>
     <string name="discount">Discount</string>
     <string name="sub_total">Subtotal</string>
-    <string name="items_discount">Items Discount :     %1$s</string>
-    <string name="promo_discount">Promo Discount :     %1$s</string>
-    <string name="qty_value">Qty :     %1$s</string>
-    <string name="items_value">Items :     %1$s</string>
-    <string name="tax_value">Tax :     %1$s</string>
-    <string name="total_value">Total :     %1$s</string>
-    <string name="discount_value">Discount :     %1$s</string>
+    <string name="items_discount">Items Discount</string>
+    <string name="promo_discount">Promo Discount</string>
+    <string name="qty_value">Qty : </string><!--%1$s-->
+    <string name="items_value">Items :</string>
+    <string name="tax_value">Tax : </string>
+    <string name="total_value">Total :</string>
+    <string name="discount_value">Discount : %1$s</string>
 
     <string name="hold_sale">Hold Sale</string>
     <string name="payment">Payment</string>
@@ -91,12 +91,57 @@
     <string name="scan">Scan</string>
     <string name="type">Type</string>
     <string name="status">Status</string>
-    <string name="delete_payment">Status</string>
+    <string name="delete_payment">Are you sure want to delete ?</string>
     <string name="alert">Alert</string>
     <string name="alert_ok">OK</string>
+    <string name="alert_yes">Yes</string>
     <string name="alert_cancel">Cancel</string>
     <string name="alert_save">Save</string>
     <string name="alert_close">Close</string>
     <string name="select_location">Select Location</string>
+
+    <string name="order_summary">Order Summary</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="tax">Tax</string>
+    <string name="grand_total">Grand Total</string>
+    <string name="payment_total">Payment Total</string>
+    <string name="balance">Balance</string>
+    <string name="add_more">Add More</string>
+    <string name="payment_success">Payment Success!</string>
+    <string name="email_receipts">Email Receipts</string>
+    <string name="phone_receipts">Phone Receipts</string>
+    <string name="print_receipts">Print Receipts</string>
+    <string name="error_title">Retail POS</string>
+    <string name="new_order">New Order</string>
+
+    //Printer
+    <string name="create_printer">Create Printer</string>
+    <string name="printer_type">Printer Type</string>
+    <string name="ethernet">Ethernet</string>
+    <string name="usb">USB</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="printer_station_name">Printer Station Name</string>
+    <string name="number_of_copies">Number of Copies</string>
+    <string name="paper_size">Paper Size</string>
+    <string name="_58mm">58mm</string>
+    <string name="_80mm">80mm</string>
+    <string name="no_printer_selected">No Printer Selected</string>
+    <string name="receipts">Receipts</string>
+    <string name="orders">Orders</string>
+    <string name="choose_printer_template">Choose an printer template</string>
+    <string name="default_template">Default Template</string>
+    <string name="select_print_template">Select Print Template</string>
+    <string name="enable_this_printer">Enable this printer</string>
+    <string name="add_printer">Add Printer</string>
+    <string name="edit_printer">Edit Printer</string>
+    <string name="terminal_code">Terminal Code</string>
+    <string name="network_dialog_title">Please type printer station IP address or hostname and optionally a port number, separated by location</string>
+    <string name="network_dialog_hint">192.168.1.111:9100</string>
+    <string name="no_usb_devices">No USB Devices Available</string>
+    <string name="no_bluetooth_devices">No Bluetooth Devices Available</string>
+    <string name="enter_terminal_code">Please enter the Terminal Code</string>
+    <string name="terminal_code_saved_successfully">Terminal code saved successfully</string>
+    <string name="select_bluetooth_device">Select an Bluetooth Device</string>
+    <string name="select_usb_device">Select an USB Device</string>
 
 </resources>

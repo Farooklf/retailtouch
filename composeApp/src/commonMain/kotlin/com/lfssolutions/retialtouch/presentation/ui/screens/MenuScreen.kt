@@ -21,9 +21,6 @@ fun MenuScreen(
 
     AppLeftSideMenu(
         modifier = Modifier.fillMaxSize(),
-        onMenuItemClick = {
-            navigator.handleNavigation(it)
-        },
         content = { menuHeightPadding->
             when(screen){
                  AppConstants.POS_SCREEN -> {

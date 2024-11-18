@@ -81,7 +81,7 @@ fun EmployeeScreen(
                         imageVector = vectorResource(AppIcons.lockIcon),
                         contentDescription = "Lock Icon",
                         modifier = Modifier.size(100.dp),
-                        tint = AppTheme.colors.textWhite
+                        tint = AppTheme.colors.appWhite
                     )
                     Spacer(modifier = Modifier.height(5.dp))
 
@@ -147,12 +147,12 @@ fun EmployeeScreen(
                             imageVector = vectorResource(AppIcons.logoutIcon),
                             contentDescription = stringResource(Res.string.logout),
                             modifier = Modifier.size(24.dp),
-                            tint = AppTheme.colors.textWhite
+                            tint = AppTheme.colors.appWhite
                         )
 
                         Text(
                             text = stringResource(Res.string.logout_from_this_server),
-                            color = AppTheme.colors.textWhite,
+                            color = AppTheme.colors.appWhite,
                             style = AppTheme.typography.bodyMedium(),
                             modifier = Modifier.padding(end = 2.dp)
                         )

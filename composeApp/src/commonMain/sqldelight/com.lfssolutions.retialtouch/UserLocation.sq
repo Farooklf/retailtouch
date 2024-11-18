@@ -17,8 +17,8 @@ VALUES(?,?,?,?,?,?,?);
 getAllLocation:
 SELECT * FROM Location;
 
-getSelectedLocationsId:
-SELECT locationId FROM Location
+getSelectedLocation:
+SELECT * FROM Location
 WHERE isSelected=1;
 
 updateLocationSelected:

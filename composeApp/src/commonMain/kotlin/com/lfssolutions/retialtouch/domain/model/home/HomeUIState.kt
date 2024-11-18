@@ -3,6 +3,7 @@ package com.lfssolutions.retialtouch.domain.model.home
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 
+
 data class HomeUIState(
     val isLoading: Boolean = false,
     val isFromSplash: Boolean = false,
@@ -16,4 +17,5 @@ data class HomeUIState(
     val employeeRole: String = "",
     val employeeDao: EmployeeDao = EmployeeDao(),
     val authUser: AuthenticateDao = AuthenticateDao(),
+
 )

@@ -51,6 +51,11 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android)
             implementation(libs.kotlinx.coroutines.android)
+            implementation (libs.gson)
+            //implementation(libs.template)
+            implementation(libs.kotlin.mustache)
+            implementation(libs.mustache.compiler)
+            implementation(project(":escposprinter"))
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -84,7 +89,7 @@ kotlin {
 
             implementation(libs.kotlinx.datetime)
 
-            implementation(libs.androidx.material.icons.extended)
+            //implementation(libs.androidx.material.icons.extended)
             implementation(libs.kamel.imageLoader)
             implementation(libs.oskit.kmp)
             implementation(libs.oskit.compose)

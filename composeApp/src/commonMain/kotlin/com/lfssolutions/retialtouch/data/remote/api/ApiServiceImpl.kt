@@ -21,13 +21,15 @@ import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
 import com.lfssolutions.retialtouch.domain.model.menu.MenuResponse
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceRequest
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
+import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
+import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.sales.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.CreatePOSInvoiceRequest
-import com.lfssolutions.retialtouch.domain.model.productWithTax.PosInvoiceResponse
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductWithTaxByLocationResponse
+import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceResponse
+import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
@@ -213,13 +215,13 @@ const val TOKEN_EXPIRY_THRESHOLD = 6
         }
     }
 
-    override fun getPOSInvoice(mBasicApiRequest: POSInvoiceRequest): Flow<RequestState<POSInvoiceResponse>> {
+    override fun getLatestSales(mBasicApiRequest: POSInvoiceRequest): Flow<RequestState<GetPosInvoiceResult>> {
         return performApiRequestWithBaseUrl(
             httpClient=httpClient,
             apiUrl = ApiRoutes.POS_INVOICE_API,
             requestBody = mBasicApiRequest
         ) { response ->
-            handleApiResponse<POSInvoiceResponse>(response)
+            handleApiResponse<GetPosInvoiceResult>(response)
         }
     }
 
@@ -330,6 +332,16 @@ const val TOKEN_EXPIRY_THRESHOLD = 6
              requestBody = mBasicApiRequest
          ) { response ->
              handleApiResponse<PosInvoiceResponse>(response)
+         }
+     }
+
+     override fun getPrintTemplate(mBasicApiRequest: GetPrintTemplateRequest): Flow<RequestState<GetPrintTemplateResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.GET_RECEIPT_TEMPLATE_LOCATION,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<GetPrintTemplateResult>(response)
          }
      }
  }

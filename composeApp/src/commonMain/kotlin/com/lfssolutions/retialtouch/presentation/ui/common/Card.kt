@@ -1,7 +1,11 @@
 package com.lfssolutions.retialtouch.presentation.ui.common
 
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,13 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -32,6 +36,29 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.vectorResource
 
+@Composable
+fun AppBaseCard(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+    paddingValues: PaddingValues = PaddingValues(4.dp),
+    content: @Composable () -> Unit = {},
+) {
+    Card(
+        modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(paddingValues),
+        border = BorderStroke(width = 1.4.dp, color = AppTheme.colors.primaryCardBorder),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.primaryCardBg),
+        elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
+        shape = AppTheme.appShape.card
+    ) {
+        content()
+    }
+}
 
 @Composable
 fun ButtonCard(
@@ -41,7 +68,7 @@ fun ButtonCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     backgroundColor: Color = AppTheme.colors.appGreen,
-    contentColor: Color = AppTheme.colors.textWhite,
+    contentColor: Color = AppTheme.colors.appWhite,
     elevation: CardElevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
     innerPaddingValues: PaddingValues = PaddingValues(AppTheme.dimensions.buttonSquarePadding),
     iconSize: Dp = AppTheme.dimensions.smallIcon,
@@ -65,7 +92,7 @@ fun ButtonCard(
         contentColor
     } else {
         if(!isColorChange){
-            AppTheme.colors.textColor
+            AppTheme.colors.primaryText
         }else{
             contentColor
         }
@@ -131,7 +158,8 @@ fun ButtonRowCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     backgroundColor: Color = AppTheme.colors.appGreen,
-    contentColor: Color = AppTheme.colors.textWhite,
+    disableBgColor: Color = AppTheme.colors.greyButtonBg,
+    contentColor: Color = AppTheme.colors.appWhite,
     elevation: CardElevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
     innerPaddingValues: PaddingValues = PaddingValues(AppTheme.dimensions.buttonSquarePadding),
     iconSize: Dp = AppTheme.dimensions.smallIcon,
@@ -146,7 +174,7 @@ fun ButtonRowCard(
         if(!isColorChange){
             CardDefaults.cardColors(containerColor = AppTheme.colors.greyDarkButtonBg)
         }else{
-            CardDefaults.cardColors(containerColor = backgroundColor)
+            CardDefaults.cardColors(containerColor = disableBgColor)
         }
 
     }
@@ -155,9 +183,9 @@ fun ButtonRowCard(
         contentColor
     } else {
         if(!isColorChange){
-            AppTheme.colors.textColor
+            AppTheme.colors.primaryText
         }else{
-            contentColor
+            AppTheme.colors.primaryText
         }
     }
 

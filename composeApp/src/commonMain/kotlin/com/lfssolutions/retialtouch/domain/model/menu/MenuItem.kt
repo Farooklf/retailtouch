@@ -21,7 +21,7 @@ data class MenuItem(
     @SerialName("foreColor")
     val foreColor: String?=null,
     @SerialName("id")
-    val id: Int=0,
+    val id: Long=0,
     @SerialName("imagePath")
     val imagePath: String?=null,
     @SerialName("inventoryCode")
@@ -37,7 +37,7 @@ data class MenuItem(
     @SerialName("name")
     val name: String="",
     @SerialName("productId")
-    val productId: Int=0,
+    val productId: Long=0,
     @SerialName("sortOrder")
     val sortOrder: Int=0
 )

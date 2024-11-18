@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
-import com.lfssolutions.retialtouch.domain.model.productWithTax.PosUIState
+import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -121,14 +121,14 @@ fun MemberListItem(member: MemberItem, onClick: (MemberItem) -> Unit) {
             Icon(
                 modifier = Modifier.size(AppTheme.dimensions.smallIcon),
                 imageVector = vectorResource(AppIcons.empRoleIcon),
-                tint = AppTheme.colors.textColor,
+                tint = AppTheme.colors.primaryText,
                 contentDescription = ""
             )
 
             ListItemText(
                 label = "${member.name} \n${member.memberCode}",
                 textStyle = AppTheme.typography.bodyMedium(),
-                color = AppTheme.colors.textColor,
+                color = AppTheme.colors.primaryText,
                 modifier = Modifier.wrapContentWidth(),
                 singleLine = false
             )
@@ -187,8 +187,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.member_code),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = posUIState.memberCodeError,
             enabled = !posUIState.isLoading
         )
@@ -207,8 +207,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.name),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = posUIState.memberNameError,
             enabled = !posUIState.isLoading
         )
@@ -228,8 +228,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.email),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = null,
             enabled = !posUIState.isLoading
         )
@@ -249,8 +249,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.mobile_number),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = null,
             enabled = !posUIState.isLoading
         )
@@ -270,8 +270,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.address),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = null,
             enabled = !posUIState.isLoading
         )
@@ -291,8 +291,8 @@ fun CreateMemberForm(
             label = stringResource(Res.string.zip_code),
             placeholder = "",
             singleLine = true,
-            focusedBorderColor=AppTheme.colors.textPrimaryBlue,
-            unfocusedBorderColor =AppTheme.colors.textSecondaryBlue,
+            focusedBorderColor=AppTheme.colors.primaryColor,
+            unfocusedBorderColor =AppTheme.colors.secondaryColor,
             error = null,
             enabled = !posUIState.isLoading
         )

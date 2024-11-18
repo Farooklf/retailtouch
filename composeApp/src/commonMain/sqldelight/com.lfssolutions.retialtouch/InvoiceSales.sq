@@ -1,0 +1,23 @@
+CREATE TABLE InvoiceSales (
+    posInvoiceId INTEGER NOT NULL PRIMARY KEY,
+    totalCount INTEGER NOT NULL,
+    salesRecord TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO InvoiceSales(posInvoiceId,totalCount,salesRecord)
+VALUES(?,?,?);
+
+getRowById:
+SELECT * FROM InvoiceSales
+WHERE posInvoiceId = ?;
+
+getAll:
+SELECT * FROM InvoiceSales;
+
+delete:
+DELETE  FROM InvoiceSales;
+
+-- Query to count rows in the table
+getCount:
+SELECT COUNT(*) FROM InvoiceSales;

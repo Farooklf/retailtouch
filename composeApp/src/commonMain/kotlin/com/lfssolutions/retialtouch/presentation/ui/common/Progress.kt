@@ -119,7 +119,7 @@ fun AppCircleProgressIndicatorWithMessage(
                     errorMsg?.let {
                         Text(
                             text = errorMsg,
-                            color = AppTheme.colors.textColor,
+                            color = AppTheme.colors.primaryText,
                             style = AppTheme.typography.titleMedium()
                         )
                     }

@@ -1,5 +1,11 @@
 package com.lfssolutions.retialtouch.presentation.ui.common
 
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +23,15 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -31,24 +40,30 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.navigation.NavigationItem
 import com.lfssolutions.retialtouch.navigation.NavigationScreen
+import com.lfssolutions.retialtouch.navigation.Navigator
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.AppIcons.categoryIcon
 import com.outsidesource.oskitcompose.systemui.SystemBarColorEffect
 import com.outsidesource.oskitcompose.systemui.SystemBarIconColor
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.vectorResource
 
 
 
 @Composable
 fun AppLeftSideMenu(
+    syncInProgress:Boolean=false,
+    exchangeActive:Boolean=false,
+    printerEnabled:Boolean=false,
     modifier: Modifier = Modifier,
-    contentBgColor: Color = AppTheme.colors.contentBgColor,
+    contentBgColor: Color = AppTheme.colors.screenBackground,
     navBgColor: Color = AppTheme.colors.backgroundNavbar,
     statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
     navIconColor: Color = AppTheme.colors.iconNavbar,
     statusBarColor: Color = AppTheme.colors.activeColor,
-    onMenuItemClick: (NavigationScreen) -> Unit,
+    onActivatePrinter: () -> Unit = {},
+    onActivateExchange: () -> Unit = {},
     content: @Composable() (BoxScope.(Dp) -> Unit),
     holdSaleContent: @Composable() (BoxScope.() -> Unit) = {},
 ) {
@@ -57,6 +72,28 @@ fun AppLeftSideMenu(
     val localDensity = LocalDensity.current
     var heightIs by remember {
         mutableStateOf(0.dp)
+    }
+
+    // Create an Animatable to control rotation angle
+    val rotation = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(syncInProgress) {
+        if (syncInProgress) {
+            scope.launch {
+                // Infinite rotation loop
+                rotation.animateTo(
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    )
+                )
+            }
+        } else {
+            // Reset rotation when stopped
+            rotation.snapTo(0f)
+        }
     }
 
     SystemBarColorEffect(
@@ -97,20 +134,20 @@ fun AppLeftSideMenu(
                                 imageVector = vectorResource(AppIcons.wifiIcon),
                                 contentDescription = "",
                                 tint = navIconColor,
-                                modifier = modifier.size(24.dp).padding(horizontal = 5.dp)
+                                modifier = modifier.size(AppTheme.dimensions.smallIcon).padding(horizontal = 5.dp)
                             )
                         }
 
 
                         // Category Icon
                         IconButton(onClick = {
-                            onMenuItemClick.invoke(NavigationScreen.Category)
+
                         }) {
                             Icon(
                                 imageVector = vectorResource(categoryIcon),
                                 contentDescription = "Category",
                                 tint = navIconColor,
-                                modifier = modifier.size(24.dp).padding(horizontal = 5.dp)
+                                modifier = modifier.size(AppTheme.dimensions.smallIcon).padding(horizontal = 5.dp)
                             )
                         }
 
@@ -120,27 +157,34 @@ fun AppLeftSideMenu(
                                 imageVector = vectorResource(AppIcons.syncIcon),
                                 contentDescription = "sync",
                                 tint = navIconColor,
-                                modifier = modifier.size(24.dp).padding(horizontal = 5.dp)
+                                modifier = modifier
+                                    .size(AppTheme.dimensions.smallIcon)
+                                    .padding(horizontal = 5.dp)
+                                    .rotate(rotation.value) // Apply rotation
                             )
                         }
 
-                        // excel Icon
-                        IconButton(onClick = {  }) {
+                        // exchange Icon
+                        IconButton(onClick = {
+                            onActivateExchange.invoke()
+                        }) {
                             Icon(
                                 imageVector = vectorResource(AppIcons.excelIcon),
                                 contentDescription = "receipt",
-                                tint = navIconColor,
-                                modifier = modifier.size(24.dp).padding(horizontal = 5.dp)
+                                tint = if(exchangeActive) navIconColor else navIconColor.copy(alpha = 0.6f),
+                                modifier = modifier.size(AppTheme.dimensions.smallIcon).padding(horizontal = 5.dp)
                             )
                         }
 
                         // excel Icon
-                        IconButton(onClick = {  }) {
+                        IconButton(onClick = {
+                            onActivatePrinter.invoke()
+                        }) {
                             Icon(
                                 imageVector = vectorResource(AppIcons.printerIcon),
                                 contentDescription = "printer",
-                                tint = navIconColor,
-                                modifier = modifier.size(24.dp).padding(horizontal = 5.dp)
+                                tint = if(printerEnabled) navIconColor else navIconColor.copy(alpha = 0.6f),
+                                modifier = modifier.size(AppTheme.dimensions.smallIcon).padding(horizontal = 5.dp)
                             )
                         }
                     }

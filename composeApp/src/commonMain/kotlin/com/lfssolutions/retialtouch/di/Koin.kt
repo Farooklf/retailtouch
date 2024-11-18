@@ -14,7 +14,9 @@ import com.lfssolutions.retialtouch.presentation.viewModels.DashBoardViewmodel
 import com.lfssolutions.retialtouch.presentation.viewModels.EmployeeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.PaymentCollectorViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.retailTouchDB
 import com.russhwolf.settings.Settings
@@ -75,12 +77,13 @@ fun appModule() = module {
     single<SqlPreference> { SqlPreferenceImpl(get()) }
     //ViewModels
     single { SharedPosViewModel() }
+    single { HomeViewModel() }
+    single { PrinterViewModel() }
 
     viewModelDefinition { BaseViewModel() }
+    viewModelDefinition { PaymentCollectorViewModel() }
     viewModelDefinition { LoginViewModel() }
     viewModelDefinition { DashBoardViewmodel() }
     viewModelDefinition { EmployeeViewModel() }
-    viewModelDefinition { HomeViewModel() }
-    //viewModelDefinition { SharedPosViewModel() }
     viewModelDefinition { PaymentTypeViewModel() }
 }

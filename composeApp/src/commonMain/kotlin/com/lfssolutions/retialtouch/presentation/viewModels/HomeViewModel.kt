@@ -145,7 +145,7 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
                     else
                         item
                 }
-                uiState.copy(homeItemList = updatedList,isSync=true)
+                uiState.copy(homeItemList = updatedList,isSync=false)
             }
         }
     }
@@ -155,10 +155,6 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             // Prepare all API calls in parallel using async
             val deferredResults = listOf(
-                //Location API
-                async {
-                    getLocations()
-                },
                 //Employee API
                 async {
                     getEmployees()
@@ -170,12 +166,7 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
 
                 //MenuCategory API
                 async {
-                    syncMenu()
-                },
-
-                //Terminal Api
-                async {
-                    getTerminal()
+                    //syncMenu()
                 }
             )
 

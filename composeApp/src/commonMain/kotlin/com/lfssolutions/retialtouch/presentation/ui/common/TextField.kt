@@ -26,7 +26,10 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -54,9 +58,9 @@ fun AppOutlinedTextField(
     enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
     errorColor: Color =AppTheme.colors.textError,
-    textColor: Color =AppTheme.colors.textColor,
+    primaryText: Color =AppTheme.colors.primaryText,
     focusedBorderColor: Color = AppTheme.colors.textPrimary,
-    unfocusedBorderColor: Color =AppTheme.colors.textSecondary,
+    unfocusedBorderColor: Color =AppTheme.colors.secondaryText,
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
@@ -100,7 +104,7 @@ fun AppOutlinedTextField(
                     Icon(
                         painter = painterResource(trailingIcon),
                         contentDescription = null,
-                        tint = textColor,
+                        tint = primaryText,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -123,11 +127,11 @@ fun AppOutlinedTextField(
             minLines = minLines,
             shape = AppTheme.appShape.textField,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = textColor,
+                textColor = primaryText,
                 focusedBorderColor = focusedBorderColor,
                 focusedLabelColor = focusedBorderColor,
                 cursorColor = focusedBorderColor,
-                unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                unfocusedLabelColor = primaryText.copy(alpha = 0.7f),
                 unfocusedBorderColor = unfocusedBorderColor,
                 placeholderColor = unfocusedBorderColor,
                 errorLabelColor = errorColor,
@@ -166,7 +170,7 @@ fun AppTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     keyboardActions: KeyboardActions = KeyboardActions(),
-    background: Color = AppTheme.colors.textWhite
+    background: Color = AppTheme.colors.appWhite
 ) {
     Column(
         modifier = modifier,
@@ -220,7 +224,7 @@ fun AppTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             colors = TextFieldDefaults.textFieldColors(
-                textColor = AppTheme.colors.textSecondary,
+                textColor = AppTheme.colors.secondaryText,
                 backgroundColor = background,
                 cursorColor = AppTheme.colors.textPrimary,
                 leadingIconColor = AppTheme.colors.textPrimary,
@@ -254,10 +258,10 @@ fun AppOutlinedTextFieldWithOuterIcon(
     modifier: Modifier = Modifier.fillMaxWidth(),
     enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
-    errorColor: Color =AppTheme.colors.textWhite,
-    textColor: Color =AppTheme.colors.textWhite,
-    focusedColor: Color =AppTheme.colors.textWhite,
-    unfocusedColor: Color =AppTheme.colors.textOffWhite,
+    errorColor: Color =AppTheme.colors.appWhite,
+    primaryText: Color =AppTheme.colors.appWhite,
+    focusedColor: Color =AppTheme.colors.appWhite,
+    unfocusedColor: Color =AppTheme.colors.appOffWhite,
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
@@ -278,7 +282,7 @@ fun AppOutlinedTextFieldWithOuterIcon(
             imageVector = vectorResource(leadingIcon),
             contentDescription = "employee code",
             modifier = Modifier.size(30.dp).padding(top = 5.dp),
-            colorFilter = ColorFilter.tint(AppTheme.colors.textWhite)
+            colorFilter = ColorFilter.tint(AppTheme.colors.appWhite)
         )
         Column (
             modifier=modifier,
@@ -314,7 +318,7 @@ fun AppOutlinedTextFieldWithOuterIcon(
                 minLines = minLines,
                 shape = AppTheme.appShape.textField,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = textColor,
+                    textColor = primaryText,
                     focusedBorderColor = focusedColor,
                     focusedLabelColor = focusedColor,
                     cursorColor = focusedColor,
@@ -342,7 +346,7 @@ fun AppOutlinedSearch(
     value: String,
     onValueChange: (String) -> Unit,
     onSubmittedClick: (Boolean) -> Unit,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier.fillMaxWidth().padding(10.dp),
     enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
     errorColor: Color =AppTheme.colors.textError,
@@ -359,7 +363,7 @@ fun AppOutlinedSearch(
 ) {
     //var typeValue by remember(value) { mutableStateOf(value) }
     Column(
-        modifier = modifier.padding(10.dp),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         OutlinedTextField(
@@ -406,13 +410,13 @@ fun AppOutlinedSearch(
             minLines = minLines,
             shape = AppTheme.appShape.textField,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = AppTheme.colors.textColor,
-                focusedBorderColor = AppTheme.colors.textColor,
-                focusedLabelColor = AppTheme.colors.textColor,
-                placeholderColor = AppTheme.colors.textColor.copy(alpha = .8f),
-                cursorColor = AppTheme.colors.textColor,
-                unfocusedLabelColor = AppTheme.colors.textColor.copy(alpha = .8f),
-                unfocusedBorderColor = AppTheme.colors.textColor.copy(alpha = 0.8f)
+                textColor = AppTheme.colors.primaryText,
+                focusedBorderColor = AppTheme.colors.primaryText,
+                focusedLabelColor = AppTheme.colors.primaryText,
+                placeholderColor = AppTheme.colors.primaryText.copy(alpha = .8f),
+                cursorColor = AppTheme.colors.primaryText,
+                unfocusedLabelColor = AppTheme.colors.primaryText.copy(alpha = .8f),
+                unfocusedBorderColor = AppTheme.colors.primaryText.copy(alpha = 0.8f)
             )
         )
 
@@ -499,13 +503,13 @@ fun SearchableTextWithBg(
             minLines = minLines,
             shape = AppTheme.appShape.textField,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = AppTheme.colors.textColor,
-                focusedBorderColor = AppTheme.colors.textPrimaryBlue,
-                focusedLabelColor = AppTheme.colors.textPrimaryBlue,
-                placeholderColor = AppTheme.colors.textColor.copy(alpha = .7f),
-                cursorColor = AppTheme.colors.textPrimaryBlue,
-                unfocusedLabelColor = AppTheme.colors.textPrimaryBlue.copy(alpha = .8f),
-                unfocusedBorderColor = AppTheme.colors.textPrimaryBlue.copy(alpha = 0.8f)
+                textColor = AppTheme.colors.primaryText,
+                focusedBorderColor = AppTheme.colors.primaryColor,
+                focusedLabelColor = AppTheme.colors.primaryColor,
+                placeholderColor = AppTheme.colors.primaryText.copy(alpha = .7f),
+                cursorColor = AppTheme.colors.primaryColor,
+                unfocusedLabelColor = AppTheme.colors.primaryColor.copy(alpha = .8f),
+                unfocusedBorderColor = AppTheme.colors.primaryColor.copy(alpha = 0.8f)
             )
         )
 
@@ -521,6 +525,115 @@ fun SearchableTextWithBg(
 
 }
 
+@Composable
+fun PrinterTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    label: String? = null,
+    maxLength: Int = 0,
+    isDigitInputOnly: Boolean = false,
+    fontSize: TextUnit = 14.sp,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+    keyboardActions: KeyboardActions = KeyboardActions(),
+) {
+    var displayedValue by remember(value) { mutableStateOf(value) }
+
+    TextField(
+        value = displayedValue,
+        onValueChange = {
+            val filtered = it.filter { symbol ->
+                symbol.isDigit()
+            }
+
+            if (maxLength <= 0 || it.length <= maxLength) {
+                val str = if (isDigitInputOnly) filtered else it
+                displayedValue = str
+                onValueChange(str)
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        enabled = enabled,
+        readOnly = readOnly,
+        textStyle = LocalTextStyle.current.copy(fontSize = fontSize),
+        label = {
+            label?.let {
+                Text(
+                    text = label,
+                    style = AppTheme.typography.bodyNormal().copy(fontSize = fontSize)
+                )
+            }
+        },
+        singleLine = true,
+        maxLines = 1,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = AppTheme.colors.primaryText,
+            backgroundColor = AppTheme.colors.secondaryCardBg,
+            cursorColor = AppTheme.colors.brandText,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            unfocusedLabelColor = AppTheme.colors.secondaryText,
+            focusedLabelColor = AppTheme.colors.brandText,
+            disabledLabelColor = AppTheme.colors.secondaryText,
+            disabledTextColor = AppTheme.colors.primaryText
+        )
+    )
+}
+
+@Composable
+fun AppDialogTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+    placeholder: String = "",
+    maxLength: Int = 0,
+    inputType: InputType = InputType.Any,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+) {
+    var displayedValue by remember(value) { mutableStateOf(value) }
+
+    TextField(
+        value = value,
+        onValueChange = { str ->
+            str.filterInput(maxLength, inputType)?.let {
+                displayedValue = it
+                onValueChange(it)
+            }
+        },
+        modifier = modifier.fillMaxWidth(),
+        textStyle = textStyle,
+        placeholder = {
+            Text(
+                text = placeholder,
+                style = textStyle,
+                color = AppTheme.colors.secondaryText
+            )
+        },
+        keyboardOptions = keyboardOptions,
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = AppTheme.colors.primaryText,
+            cursorColor = AppTheme.colors.activeColor,
+            backgroundColor = Color.Transparent,
+            focusedIndicatorColor = AppTheme.colors.brand,
+            unfocusedLabelColor = AppTheme.colors.brand,
+        )
+    )
+}
+
 
 @Composable
 fun ClickableAppOutlinedTextField(
@@ -529,10 +642,10 @@ fun ClickableAppOutlinedTextField(
     modifier: Modifier,
     enabled: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current,
-    textColor : Color = AppTheme.colors.textColor,
+    primaryText : Color = AppTheme.colors.primaryText,
     errorColor: Color =AppTheme.colors.textError,
-    focusedColor: Color =AppTheme.colors.textPrimaryBlue,
-    unfocusedColor: Color =AppTheme.colors.textPrimaryBlue.copy(alpha = 0.8f),
+    focusedColor: Color =AppTheme.colors.primaryColor,
+    unfocusedColor: Color =AppTheme.colors.primaryColor.copy(alpha = 0.8f),
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
@@ -578,7 +691,7 @@ fun ClickableAppOutlinedTextField(
                     Icon(
                         painter = painterResource(trailingIcon),
                         contentDescription = null,
-                        tint = textColor,
+                        tint = primaryText,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -601,17 +714,17 @@ fun ClickableAppOutlinedTextField(
             minLines = minLines,
             shape = AppTheme.appShape.textField,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = textColor,
+                textColor = primaryText,
                 focusedBorderColor = focusedColor,
                 focusedLabelColor = focusedColor,
                 cursorColor = focusedColor,
-                unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                unfocusedLabelColor = primaryText.copy(alpha = 0.7f),
                 unfocusedBorderColor = unfocusedColor,
-                placeholderColor = textColor.copy(alpha = 0.7f),
+                placeholderColor = primaryText.copy(alpha = 0.7f),
                 errorLabelColor = errorColor,
                 trailingIconColor = focusedColor,
-                leadingIconColor = textColor.copy(alpha = 0.7f),
-                disabledTrailingIconColor=textColor.copy(alpha = 0.7f)
+                leadingIconColor = primaryText.copy(alpha = 0.7f),
+                disabledTrailingIconColor=primaryText.copy(alpha = 0.7f)
 
             )
         )
@@ -627,6 +740,31 @@ fun ClickableAppOutlinedTextField(
     }
 
 
+}
+
+fun String.filterInput(
+    maxLength: Int,
+    inputType: InputType
+): String? {
+
+    if (maxLength > 0 && this.length > maxLength) return null
+
+    if (inputType == InputType.Decimal && (this.count { it == '.' } > 1) || (this.isNotEmpty() && this[0] == '.')) return null
+
+    val filtered = this.filter { symbol ->
+        when (inputType) {
+            InputType.OnlyDigital -> symbol.isDigit()
+            InputType.Decimal -> symbol.isDigit() || symbol == '.'
+            else -> true
+        }
+    }
+
+    if (inputType == InputType.Decimal && '.' in this) {
+        val substring = this.substringAfter('.')
+        if (substring.length > 2) return null
+    }
+
+    return filtered
 }
 
 enum class InputType {

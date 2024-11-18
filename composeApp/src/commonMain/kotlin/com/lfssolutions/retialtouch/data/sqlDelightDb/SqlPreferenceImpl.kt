@@ -1,11 +1,14 @@
 package com.lfssolutions.retialtouch.data.sqlDelightDb
 
 
+
 import com.lfssolutions.retialtouch.domain.SqlPreference
-import com.lfssolutions.retialtouch.domain.model.location.LocationDao
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
-import com.lfssolutions.retialtouch.domain.model.inventory.Product
-import com.lfssolutions.retialtouch.domain.model.inventory.Stock
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
@@ -13,19 +16,24 @@ import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
-import com.lfssolutions.retialtouch.domain.model.posInvoice.POSInvoiceDao
+import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationDao
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxDao
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ScannedProductDao
+import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
+import com.lfssolutions.retialtouch.domain.model.products.ProductDao
+import com.lfssolutions.retialtouch.domain.model.products.SaleOnHoldRecordDao
+import com.lfssolutions.retialtouch.domain.model.products.ScannedProductDao
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
+import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
+import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.serializers.db.toEmployeeDao
+import com.lfssolutions.retialtouch.utils.serializers.db.toHoldSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
@@ -34,12 +42,14 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toMenuCategoryItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toProduct
+import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceDetailRecord
+import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.utils.serializers.db.toPosPaymentConfigRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toProductLocationItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotion
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotionDetails
 import com.lfssolutions.retialtouch.utils.serializers.db.toSyncItem
+import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -107,7 +117,7 @@ import kotlinx.coroutines.flow.flow
         retailTouch.userTenanatQueries.deleteAuth()
     }
 
-    override suspend fun insertLocation(locationDao: LocationDao) {
+    override suspend fun insertLocation(locationDao: Location) {
         retailTouch.userLocationQueries.insertLocation(
             locationId  = locationDao.locationId,
             name = locationDao.name,
@@ -119,7 +129,24 @@ import kotlinx.coroutines.flow.flow
         )
     }
 
-    override suspend fun deleteAllLocations() {
+     override fun getSelectedLocation(): Flow<Location?> = flow{
+         retailTouch.userLocationQueries.getSelectedLocation().executeAsOneOrNull().let { body ->
+             if(body!=null){
+                 emit(
+                     Location(
+                         locationId = body.locationId,
+                         name = body.name,
+                         code = body.code,
+                         isSelected = body.isSelected ?: false
+                     )
+                 )
+             }else{
+                 emit(body)
+             }
+         }
+     }
+
+     override suspend fun deleteAllLocations() {
         retailTouch.userLocationQueries.deleteAllLocation()
     }
 
@@ -377,23 +404,22 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun insertPosInvoice(posInvoiceDao: POSInvoiceDao) {
-        retailTouch.pOSInvoiceQueries.insert(
-            posInvoiceId = posInvoiceDao.posInvoiceId,
-            totalCount = posInvoiceDao.totalCount,
-            rowItem = posInvoiceDao.posItem.toJson()
+    override suspend fun insertLatestSales(saleRecord: SaleRecord) {
+        retailTouch.invoiceSalesQueries.insert(
+            posInvoiceId = saleRecord.id,
+            totalCount = saleRecord.count?:0,
+            salesRecord = saleRecord.toJson()
         )
     }
 
-    override fun getPosInvoiceById(id: Long): Flow<POSInvoiceDao?> = flow{
-        retailTouch.pOSInvoiceQueries.getRowById(id).executeAsOneOrNull().let { body->
-            println("pos invoice : $body")
+    override fun getLatestSalesById(id: Long): Flow<SaleRecord?> = flow{
+        retailTouch.invoiceSalesQueries.getRowById(id).executeAsOneOrNull().let { body->
+            println("latest sale : $body")
             if(body!=null){
                 emit(
-                    POSInvoiceDao(
-                        posInvoiceId = body.posInvoiceId,
-                        totalCount = body.totalCount,
-                        posItem = body.rowItem.toPosInvoiceItem()
+                    SaleRecord(
+                        id = body.posInvoiceId,
+                        count  = body.totalCount
                     )
                 )
             }else{
@@ -402,15 +428,14 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override fun getAllPosInvoice(): Flow<List<POSInvoiceDao>> = flow{
-        retailTouch.pOSInvoiceQueries.getAll().executeAsList().let { list ->
+    override fun getLatestSales(): Flow<List<SaleRecord>> = flow{
+        retailTouch.invoiceSalesQueries.getAll().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        POSInvoiceDao(
-                            posInvoiceId = body.posInvoiceId,
-                            totalCount = body.totalCount,
-                            posItem = body.rowItem.toPosInvoiceItem()
+                        SaleRecord(
+                            id = body.posInvoiceId,
+                            count  = body.totalCount
                         )
                     }
 
@@ -421,48 +446,71 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deletePosInvoice() {
-        retailTouch.pOSInvoiceQueries.delete()
+    override suspend fun deletePosSales() {
+        retailTouch.invoiceSalesQueries.delete()
     }
 
-    override fun getPosInvoiceCount(): Flow<Int> = flow{
-        retailTouch.pOSInvoiceQueries.getCount().executeAsOne().let {count->
+    override fun getSalesCount(): Flow<Int> = flow{
+        retailTouch.invoiceSalesQueries.getCount().executeAsOne().let {count->
             emit(count.toInt())
         }
     }
 
-    override suspend fun insertProduct(productTaxDao: ProductTaxDao) {
-        retailTouch.productWithTaxQueries.insertProductWithTax(
-            productTaxId = productTaxDao.productTaxId,
-            inventoryCode = productTaxDao.product.productCode?:"",
-            isScanned = productTaxDao.isScanned,
-            rowItem = productTaxDao.product.toJson()
+    override suspend fun insertProduct(productDao: ProductDao) {
+        retailTouch.productsQueries.insertProduct(
+            productId = productDao.productId,
+            name = productDao.product.name?:"",
+            inventoryCode = productDao.product.productCode?:"",
+            barcode = productDao.product.barcode?:"",
+            image = productDao.product.image?:"",
+            quantity = productDao.product.qtyOnHand,
+            price = productDao.product.price?:0.0,
+            itemDiscount = productDao.product.itemDiscount,
+            tax = productDao.product.tax?:0.0,
+            isScanned = productDao.isScanned,
+            rowItem = productDao.product.toJson()
         )
     }
 
 
-    override suspend fun updateProduct(productTaxDao: ProductTaxDao) {
-       retailTouch.productWithTaxQueries.updateProductWithTax(
-           rowItem = productTaxDao.product.toJson(),
-           productTaxId = productTaxDao.productTaxId
+    override suspend fun updateProduct(productDao: ProductDao) {
+       retailTouch.productsQueries.updateProduct(
+           productId = productDao.productId,
+           name = productDao.product.name?:"",
+           inventoryCode = productDao.product.productCode?:"",
+           barcode = productDao.product.barcode?:"",
+           image = productDao.product.image?:"",
+           qty = productDao.product.qtyOnHand,
+           price = productDao.product.price?:0.0,
+           discount = productDao.product.itemDiscount,
+           tax = productDao.product.tax?:0.0,
+           isScanned = productDao.isScanned,
+           rowItem = productDao.product.toJson()
        )
     }
 
-    override fun getAllProduct(): Flow<List<Product>> = flow{
-        retailTouch.productWithTaxQueries.getAllProductWithTax().executeAsList().let { list ->
+     override suspend fun updateProductQuantity(productCode: String,quantity:Double) {
+         retailTouch.productsQueries.updateProductQuantity(
+             inventoryCode =productCode,
+             quantity = quantity
+         )
+     }
+
+     override fun getAllProduct(): Flow<List<Product>> = flow{
+        retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
-                    list.map { body ->
-                        val product=body.rowItem.toProduct()
+                    list.map { product ->
                         Product(
-                            id = product.id,
-                            productCode = product.productCode,
+                            id = product.productId,
+                            productCode = product.inventoryCode,
                             name = product.name,
                             barcode = product.barcode,
                             image = product.image,
-                             tax = product.tax,
-                             price = product.price,
-                             qtyOnHand = product.qtyOnHand,
+                            tax = product.tax,
+                            price = product.price,
+                            qtyOnHand = product.quantity,
+                            itemDiscount = product.itemDiscount
                         )
                     }
 
@@ -474,53 +522,58 @@ import kotlinx.coroutines.flow.flow
     }
 
     override fun getProductById(id: Long) : Flow<Product?> = flow{
-        retailTouch.productWithTaxQueries.getProductById(id).executeAsOneOrNull().let { body->
-            println("product db data : $body")
-            if(body!=null){
-                val product=body.rowItem.toProduct()
+        retailTouch.productsQueries.getProductById(id).executeAsOneOrNull().let { product->
+            println("product_db_data : $product")
+            if(product!=null){
+                //val product=body.rowItem.toProduct()
                 emit(
                 Product(
-                    id = product.id,
-                    productCode = product.productCode,
+                    id = product.productId,
+                    productCode = product.inventoryCode,
                     name = product.name,
                     barcode = product.barcode,
                     image = product.image,
                     tax = product.tax,
                     price = product.price,
-                    qtyOnHand = product.qtyOnHand,
+                    qtyOnHand = product.quantity,
+                    itemDiscount = product.itemDiscount
                 )
                 )
             }else{
-                emit(body)
+                emit(product)
             }
         }
     }
 
     override fun getProductByCode(code: String): Flow<Product?> = flow{
-        retailTouch.productWithTaxQueries.getProductByInventory(code).executeAsOneOrNull().let { body->
-            println("product db data : $body")
-            if(body!=null){
-                val product=body.rowItem.toProduct()
+        retailTouch.productsQueries.getProductByInventory(code).executeAsOneOrNull().let { product->
+            println("product_db_data : $product")
+            if(product!=null){
                 emit(
                     Product(
-                        id = product.id,
-                        productCode = product.productCode,
+                        id = product.productId,
+                        productCode = product.inventoryCode,
                         name = product.name,
                         barcode = product.barcode,
                         image = product.image,
                         tax = product.tax,
                         price = product.price,
-                        qtyOnHand = product.qtyOnHand,
+                        qtyOnHand = product.quantity,
+                        itemDiscount = product.itemDiscount
                     )
                 )
             }else{
-                emit(body)
+                emit(product)
             }
         }
     }
 
-    override suspend fun deleteProduct() {
-        retailTouch.productWithTaxQueries.deleteProductWithTax()
+     override fun getProductQty(code: String): Flow<Double> = flow{
+         retailTouch.productsQueries.getProductQty(code).executeAsOneOrNull()
+     }
+
+     override suspend fun deleteProduct() {
+        retailTouch.productsQueries.deleteProduct()
     }
 
     override suspend fun insertScannedProduct(productTaxDao: ScannedProductDao) {
@@ -581,7 +634,69 @@ import kotlinx.coroutines.flow.flow
        retailTouch.scannedProductQueries.deleteAllProduct()
     }
 
-    override suspend fun insertProductLocation(productLocationDao: ProductLocationDao) {
+     override suspend fun insertHoldSaleRecord(crSaleOnHold: SaleOnHoldRecordDao) {
+         retailTouch.holdSaleRecordQueries.insert(
+             holdSaleId =  crSaleOnHold.id,
+             holdSaleItem = crSaleOnHold.item.toJson()
+         )
+     }
+
+     override suspend fun updateHoldSaleRecord(crSaleOnHold: SaleOnHoldRecordDao) {
+         retailTouch.holdSaleRecordQueries.update(
+             holdSaleId =  crSaleOnHold.id,
+             rowItem= crSaleOnHold.item.toJson()
+         )
+     }
+
+     override fun getAllHoldSaleRecord(): Flow<List<CRSaleOnHold>> = flow{
+         retailTouch.holdSaleRecordQueries.getAll().executeAsList().let { list ->
+             if(list.isNotEmpty()) {
+                 emit(
+                     list.map { body ->
+                         val item=body.holdSaleItem.toHoldSaleRecord()
+                         CRSaleOnHold(
+                               ts = item.ts,
+                               collectionId = item.collectionId,
+                               grandTotal = item.grandTotal,
+                               member = item.member,
+                               items = item.items,
+                         )
+                     }
+
+                 )
+             }else{
+                 emit(emptyList())
+             }
+         }
+     }
+
+     override fun getHoldSaleById(id: Long): Flow<CRSaleOnHold?> = flow{
+         retailTouch.holdSaleRecordQueries.getSaleRecordById(id).executeAsOneOrNull().let { body->
+             println("product_db_data : $body")
+             if(body!=null){
+                 val item=body.holdSaleItem.toHoldSaleRecord()
+                 CRSaleOnHold(
+                     ts = item.ts,
+                     collectionId = item.collectionId,
+                     grandTotal = item.grandTotal,
+                     member = item.member,
+                     items = item.items,
+                 )
+             }else{
+                 emit(body)
+             }
+         }
+     }
+
+     override suspend fun deleteHoldSaleById(id: Long) {
+         retailTouch.holdSaleRecordQueries.deleteSaleById(id)
+     }
+
+     override suspend fun deleteHoldSale() {
+         retailTouch.holdSaleRecordQueries.delete()
+     }
+
+     override suspend fun insertProductLocation(productLocationDao: ProductLocationDao) {
         retailTouch.productLocationQueries.insertProductLocation(
             productLocationId = productLocationDao.productLocationId,
             rowItem = productLocationDao.rowItem.toJson()
@@ -615,13 +730,13 @@ import kotlinx.coroutines.flow.flow
     }
 
     override suspend fun deleteProductLocation() {
-        retailTouch.productWithTaxQueries.deleteProductWithTax()
+        retailTouch.productLocationQueries.deleteProductLocation()
     }
 
     override suspend fun insertProductBarcode(barcodeDao: BarcodeDao) {
         retailTouch.productBarcodeQueries.insert(
-            barcodeId = barcodeDao.barcodeId.toLong(),
-            productId = barcodeDao.barcode.productId.toLong(),
+            barcodeId = barcodeDao.barcodeId,
+            productId = barcodeDao.barcode.productId,
             productCode = barcodeDao.barcode.productCode?:"",
             barcode = barcodeDao.barcode.code?:"",
             rowItem = barcodeDao.barcode.toJson()
@@ -630,8 +745,8 @@ import kotlinx.coroutines.flow.flow
 
     override suspend fun updateProductBarcode(barcodeDao: BarcodeDao) {
         retailTouch.productBarcodeQueries.updateBarcode(
-            barcodeId = barcodeDao.barcodeId.toLong(),
-            productId = barcodeDao.barcode.productId.toLong(),
+            barcodeId = barcodeDao.barcodeId,
+            productId = barcodeDao.barcode.productId,
             productCode = barcodeDao.barcode.productCode?:"",
             barcode = barcodeDao.barcode.code?:"",
             rowItem = barcodeDao.barcode.toJson()
@@ -644,7 +759,7 @@ import kotlinx.coroutines.flow.flow
                 emit(
                     list.map { body ->
                         Barcode(
-                             productId = body.productId.toInt(),
+                             productId = body.productId,
                              productCode = body.productCode,
                              code = body.barcode
                         )
@@ -664,7 +779,7 @@ import kotlinx.coroutines.flow.flow
             if(body!=null){
                 emit(
                     Barcode(
-                        productId = body.productId.toInt(),
+                        productId = body.productId,
                         productCode = body.productCode,
                         code = body.barcode
                     )
@@ -677,11 +792,11 @@ import kotlinx.coroutines.flow.flow
 
     override fun getItemByInventoryCode(code: String): Flow<Barcode?> = flow{
         retailTouch.productBarcodeQueries.getItemByProductCode(code).executeAsOneOrNull().let { body->
-            println("db data : $body")
+            println("db_data : $body")
             if(body!=null){
                 emit(
                     Barcode(
-                        productId = body.productId.toInt(),
+                        productId = body.productId,
                         productCode = body.productCode,
                         code = body.barcode
                     )
@@ -698,7 +813,7 @@ import kotlinx.coroutines.flow.flow
             if(body!=null){
                 emit(
                     Barcode(
-                        productId = body.productId.toInt(),
+                        productId = body.productId,
                         productCode = body.productCode,
                         code = body.barcode
                     )
@@ -891,7 +1006,135 @@ import kotlinx.coroutines.flow.flow
         retailTouch.paymentTypeQueries.delete()
     }
 
-    override suspend fun insertSyncAll(syncAllDao: SyncAllDao) {
+     override suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord) {
+        retailTouch.posInvoicePendingSaleRecordQueries.insert(
+            id = null,
+            isSync = posPaymentRecordDao.isSynced,
+            posInvoice = posPaymentRecordDao.toJson()
+        )
+     }
+
+     override fun getPosPendingSaleRecord(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
+         retailTouch.posInvoicePendingSaleRecordQueries.getAll().executeAsList().let { list ->
+             if(list.isNotEmpty()) {
+                 emit(
+                     list.map { body ->
+                         val data= body.posInvoice.toPosInvoicePendingSaleRecord()
+                         PosInvoicePendingSaleRecord(
+                             id = data.id,
+                             isSynced = data.isSynced,
+                             locationId = data.locationId,
+                             locationCode = data.locationCode
+                         )
+                     }
+
+                 )
+             }else{
+                 emit(emptyList())
+             }
+         }
+     }
+
+     override suspend fun deletePosPendingSaleRecord() {
+         retailTouch.posInvoicePendingSaleRecordQueries.delete()
+     }
+
+     override fun getAllPendingSalesCount(): Flow<Long> = flow{
+         retailTouch.posInvoicePendingSaleRecordQueries.getPendingSaleCount().executeAsOne().let {count->
+             emit(count)
+         }
+     }
+
+     override suspend fun insertPosDetailsRecord(posInvoice: PosInvoiceDetailRecord) {
+         retailTouch.posInvoiceDetailRecordQueries.insert(
+             id = null,
+             posInvoiceDetails = posInvoice.toJson()
+         )
+     }
+
+     override fun getPosDetailsRecord(): Flow<List<PosInvoiceDetailRecord>> = flow{
+         retailTouch.posInvoiceDetailRecordQueries.getAll().executeAsList().let { list ->
+             if(list.isNotEmpty()) {
+                 emit(
+                     list.map { body ->
+                         val data= body.posInvoiceDetails.toPosInvoiceDetailRecord()
+                         PosInvoiceDetailRecord(
+                             id = data.id,
+                             productId = data.productId,
+                             posPaymentRecordId = data.posPaymentRecordId
+                         )
+                     }
+
+                 )
+             }else{
+                 emit(emptyList())
+             }
+         }
+     }
+
+     override suspend fun deletePosDetailsRecord() {
+         retailTouch.posInvoiceDetailRecordQueries.delete()
+     }
+
+     override suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosConfiguredPaymentRecord) {
+         retailTouch.posInvoiceConfiguredPaymentQueries.insert(
+             id = null,
+             posInvoiceConfiguredPayment = posInvoice.toJson()
+         )
+     }
+
+     override fun getPosConfiguredPaymentRecord(): Flow<List<PosConfiguredPaymentRecord>> =flow{
+         retailTouch.posInvoiceConfiguredPaymentQueries.getAll().executeAsList().let { list ->
+             if(list.isNotEmpty()) {
+                 emit(
+                     list.map { body ->
+                        val data= body.posInvoiceConfiguredPayment.toPosPaymentConfigRecord()
+                         PosConfiguredPaymentRecord(
+                             id = data.id,
+                             paymentTypeId = data.paymentTypeId,
+                             posInvoiceId = data.posInvoiceId,
+                             amount = data.amount,
+                             posPaymentRecordId = data.posPaymentRecordId,
+                         )
+                     }
+
+                 )
+             }else{
+                 emit(emptyList())
+             }
+         }
+     }
+
+     override suspend fun deletePosConfiguredPaymentRecord() {
+        retailTouch.posInvoiceConfiguredPaymentQueries.delete()
+     }
+
+     override suspend fun insertPrinter(printerDao: PrinterDao) {
+         retailTouch.printersQueries.insertIntoPrinter(
+            printerStationName = printerDao.printerStationName,
+            printerName = printerDao.printerName,
+            printerType =  printerDao.printerType,
+             usbId = printerDao.selectedUsbId,
+            paperSize = printerDao.paperSize,
+            noOfCopies = printerDao.numbersOfCopies,
+            networkAddress = printerDao.networkIpAddress,
+             bluetoothAddress = printerDao.selectedBluetoothAddress,
+            isRefund = printerDao.isRefund,
+            isReceipts = printerDao.isReceipts,
+            isOrders = printerDao.isOrders,
+            templateId = printerDao.templateId,
+         )
+     }
+
+     override fun getAllPrinterList(): Flow<List<Printers>> = flow {
+         emit(retailTouch.printersQueries.getAllPrinters().executeAsList())
+     }
+
+     override suspend fun deleteAllPrinters() {
+         retailTouch.printersQueries.deleteAll()
+     }
+
+     override suspend fun insertSyncAll(syncAllDao: SyncAllDao) {
         retailTouch.syncAllQueries.insertSyncAll(
             syncId = syncAllDao.syncId,
             rowItem = syncAllDao.rowItem.toJson()

@@ -1,0 +1,17 @@
+CREATE TABLE PosInvoiceConfiguredPayment (
+     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+     posInvoiceConfiguredPayment TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO PosInvoiceConfiguredPayment(id,posInvoiceConfiguredPayment)
+VALUES(?,?);
+
+getAll:
+SELECT * FROM PosInvoiceConfiguredPayment;
+
+delete:
+DELETE  FROM PosInvoiceConfiguredPayment;
+
+getCount:
+SELECT COUNT(*) FROM PosInvoiceConfiguredPayment;

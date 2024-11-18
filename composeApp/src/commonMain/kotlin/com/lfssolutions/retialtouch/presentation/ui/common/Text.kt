@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +28,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lfssolutions.retialtouch.domain.model.productWithTax.ProductTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import org.jetbrains.compose.resources.vectorResource
@@ -40,7 +37,7 @@ fun SmallTextComponent(text: String, modifier: Modifier = Modifier) {
     androidx.compose.material3.Text(
         modifier = modifier,
         text = text,
-        color = AppTheme.colors.textColor,
+        color = AppTheme.colors.primaryText,
         style = AppTheme.typography.bodyMedium()
     )
 }
@@ -63,7 +60,7 @@ fun ScreenHeaderText(
 fun ListItemText(
     label:String,
     textStyle: TextStyle = AppTheme.typography.bodyBold(),
-    color: Color = AppTheme.colors.textColor,
+    color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
     arrangement: Arrangement.Horizontal =Arrangement.Center,
     isButton:Boolean=false,
@@ -104,7 +101,7 @@ fun ListItemText(
 fun QtyItemText(
     label:String,
     textStyle: TextStyle = AppTheme.typography.titleBold(),
-    color: Color = AppTheme.colors.textColor,
+    color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
     onClick: () -> Unit,
     onIncreaseClick: () -> Unit,
@@ -141,7 +138,7 @@ fun QtyItemText(
                 imageVector = vectorResource(AppIcons.addIcon),
                 contentDescription = "Increase Quantity",
                 modifier = Modifier.size(24.dp),
-                tint = AppTheme.colors.textSecondary
+                tint = AppTheme.colors.secondaryText
             )
         }
 
@@ -153,9 +150,9 @@ fun QtyItemText(
 fun BottomTex(
     label:String,
     textStyle: TextStyle = AppTheme.typography.titleMedium(),
-    color: Color = AppTheme.colors.textColor,
+    color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
-    singleLine:Boolean=true,
+    singleLine:Boolean=false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1
 ){

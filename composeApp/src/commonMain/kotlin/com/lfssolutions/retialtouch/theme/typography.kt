@@ -149,13 +149,13 @@ object DesignTypography{
         fontFamily = FontFamily(Font(Res.font.Rubik_Medium)),
         fontSize = 14.sp,
         lineHeight = 14.sp,
-        color = AppTheme.colors.textColor
+        color = AppTheme.colors.primaryText
     )
 
     @Composable
     fun timerHeader(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Bold)),
-        color = AppTheme.colors.textWhite,
+        color = AppTheme.colors.appWhite,
         fontSize = 34.sp,
         lineHeight = 30.sp
     )

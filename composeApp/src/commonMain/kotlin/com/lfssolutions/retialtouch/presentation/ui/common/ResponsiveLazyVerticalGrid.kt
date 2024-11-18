@@ -30,10 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -67,29 +64,17 @@ import retailtouch.composeapp.generated.resources.settlement
 import retailtouch.composeapp.generated.resources.stock
 import retailtouch.composeapp.generated.resources.sync
 
-@Composable
-fun HomeItemGrid(mHomeUIState: HomeUIState, onClick: (Int) -> Unit){
-    val appState = LocalAppState.current
-    LazyVerticalGrid(
-        columns = GridCells.Fixed( getGridCell(appState)), // Adjust the minSize as needed
-        contentPadding = PaddingValues(20.dp),
-        modifier = Modifier.fillMaxSize().padding(vertical = 20.dp)
-    ) {
-        items(mHomeUIState.homeItemList.size) { index ->
-            val item = mHomeUIState.homeItemList[index]
-            val itemName = stringResource(item.labelResId)
-            HomeItem(item.isSyncRotate,item.homeItemId,itemName,item.icon,
-                onClick = {onClick(item.homeItemId)})
-        }
-    }
 
-}
 
-fun LazyGridScope.ListGridItems(homeItemList: List<HomeScreenItem>,onClick: (Int) -> Unit) {
+fun LazyGridScope.ListGridItems(
+    homeItemList: List<HomeScreenItem>,
+    syncInProgress: Boolean,
+    onClick: (Int) -> Unit
+) {
     items(homeItemList.size) { index ->
         val item = homeItemList[index]
         val itemName = stringResource(item.labelResId)
-        HomeItem(item.isSyncRotate,item.homeItemId,itemName,item.icon,
+        HomeItem(syncInProgress,itemName,item.icon,item.homeItemId,
             onClick = {
                 onClick.invoke(item.homeItemId)
             }
@@ -100,16 +85,16 @@ fun LazyGridScope.ListGridItems(homeItemList: List<HomeScreenItem>,onClick: (Int
 
 @Composable
 fun HomeItem(
-    isSyncRotate:Boolean=false,
-    id:Int=-1,
+    syncInProgress:Boolean=false,
     title:String,
     icon: DrawableResource,
+    id:Int=0,
     onClick: () -> Unit,
 ) {
     val rotation = remember { Animatable(0f) }
 
-    LaunchedEffect(isSyncRotate) {
-        if (isSyncRotate) {
+    LaunchedEffect(syncInProgress) {
+        if (syncInProgress) {
             rotation.animateTo(
                 targetValue = 360f,
                 animationSpec = infiniteRepeatable(
@@ -132,17 +117,17 @@ fun HomeItem(
     ) {
 
         Icon( imageVector = vectorResource(icon),
-            tint = AppTheme.colors.textWhite,
+            tint = AppTheme.colors.appWhite,
             contentDescription = title,
             modifier = Modifier
                 .size(50.dp)
                 .align(Alignment.CenterHorizontally)
                 .padding(8.dp)
-                .rotate(rotation.value))
+                .rotate(if(id==5)rotation.value else 0f))
 
         Text(
             text = title.uppercase(),
-            color = AppTheme.colors.textWhite,
+            color = AppTheme.colors.appWhite,
             style = AppTheme.typography.titleNormal(),
             textAlign = TextAlign.Center
         )
@@ -262,16 +247,14 @@ fun HomeGridSection() {
 
 
 @Composable
-fun <T> LazyVerticalGrid(
+fun <T> LazyVerticalGridG(
     items: List<T>,
     onClick: (T) -> Unit,
-    onIconClick: (T) -> Unit,
     modifier:Modifier=Modifier.fillMaxSize()
 ) {
     val appState = LocalAppState.current
     val gridCell=getGridCell(appState)
 
-    var selectedItem by remember { mutableStateOf<T?>(null) }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridCell), // Adjust the column count as needed
@@ -282,22 +265,17 @@ fun <T> LazyVerticalGrid(
 
             LazyVerticalItem(
                  item=item,
-                 isSelected = item == selectedItem,
                 isTab=appState.isTablet,
                  onClick = {
-                     selectedItem = item
                      onClick(item)
-                 },
-                onIconClick = {
-                    onIconClick.invoke(item)
-                }
+                 }
             )
         }
     }
 }
 
 @Composable
-fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onClick: () -> Unit,onIconClick: () -> Unit) {
+fun <T> LazyVerticalItem(item: T,isTab:Boolean, onClick: () -> Unit) {
     item as PaymentMethod
     val cardColor = if (item.isSelected) {
         CardDefaults.cardColors(containerColor = AppTheme.colors.listItemSelectedCardColor)
@@ -328,7 +306,7 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onCl
           Text(
               text = item.name?.trim()?:"",
               style = AppTheme.typography.captionMedium(),
-              color = AppTheme.colors.textWhite,
+              color = AppTheme.colors.appWhite,
               minLines=1,
               maxLines = 1,
               softWrap = true,
@@ -341,7 +319,7 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onCl
               Text(
                   text = item.paidAmount,
                   style = AppTheme.typography.bodyMedium(),
-                  color = AppTheme.colors.textWhite,
+                  color = AppTheme.colors.appWhite,
                   minLines=1,
                   maxLines = 1,
                   softWrap = true,
@@ -350,9 +328,9 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean,isSelected: Boolean = false, onCl
 
               VectorIcons(icons = AppIcons.calculatorIcon,
                   modifier = Modifier.width(AppTheme.dimensions.smallIcon),
-                  iconColor = AppTheme.colors.textWhite,
+                  iconColor = AppTheme.colors.appWhite,
                   onClick = {
-                      onIconClick.invoke()
+                      //onIconClick.invoke()
                   }
               )
           }

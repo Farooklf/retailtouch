@@ -6,13 +6,19 @@ import com.lfssolutions.retialtouch.utils.DateTime
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENCY_SYMBOL
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENT_TENANT_URL
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_CODE
+import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_STATE
 import com.lfssolutions.retialtouch.utils.PrefKeys.IS_LOGGED_IN
 import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_GROUP_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.NEXT_SALE_INVOICE_NUMBER
+import com.lfssolutions.retialtouch.utils.PrefKeys.PRINTER_ENABLE
 import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
+import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_LENGTH
+import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_PREFIX
 import com.lfssolutions.retialtouch.utils.PrefKeys.TENANT_ID
+import com.lfssolutions.retialtouch.utils.PrefKeys.TERMINAL_CODE
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_TIME
 import com.lfssolutions.retialtouch.utils.PrefKeys.USER_ID
@@ -31,6 +37,20 @@ class PreferencesImpl(
 
     private val flowSettings: FlowSettings = (settings as ObservableSettings).toFlowSettings()
 
+    override suspend fun setOverlayState(result: Boolean) {
+        flowSettings.putBoolean(
+            key = EMPLOYEE_STATE,
+            value = result
+        )
+    }
+
+    override suspend fun getOverlayState(): Flow<Boolean> {
+        return flowSettings.getBooleanFlow(
+            key = EMPLOYEE_STATE,
+            defaultValue = false
+        )
+    }
+
     @OptIn(ExperimentalSettingsApi::class)
     override suspend fun setBaseURL(result: String) {
         flowSettings.putString(
@@ -43,6 +63,48 @@ class PreferencesImpl(
         return flowSettings.getStringFlow(
             key = CURRENT_TENANT_URL,
             defaultValue = ""
+        )
+    }
+
+    override suspend fun setNextSalesInvoiceNumber(result: String) {
+        flowSettings.putString(
+            key = NEXT_SALE_INVOICE_NUMBER,
+            value = result
+        )
+    }
+
+    override suspend fun getNextSalesInvoiceNumber(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = NEXT_SALE_INVOICE_NUMBER,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setSalesInvoicePrefix(result: String) {
+        flowSettings.putString(
+            key = SALE_INVOICE_PREFIX,
+            value = result
+        )
+    }
+
+    override suspend fun getSalesInvoicePrefix(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = SALE_INVOICE_PREFIX,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setSalesInvoiceNoLength(result: Int) {
+        flowSettings.putInt(
+            key = SALE_INVOICE_LENGTH,
+            value = result
+        )
+    }
+
+    override suspend fun getSalesInvoiceNoLength(): Flow<Int> {
+        return flowSettings.getIntFlow(
+            key = SALE_INVOICE_LENGTH,
+            defaultValue = 0
         )
     }
 
@@ -203,12 +265,39 @@ class PreferencesImpl(
             key = MEMBER_GROUP_SYNC,
             value = result
         )
-
     }
 
     override fun getMemberGroupSyncGrid(): Flow<String> {
         return flowSettings.getStringFlow(
             key = MEMBER_GROUP_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setIsPrinterEnabled(result: Boolean) {
+        flowSettings.putBoolean(
+            key = PRINTER_ENABLE,
+            value = result
+        )
+    }
+
+    override fun getIsPrinterEnabled(): Flow<Boolean> {
+        return flowSettings.getBooleanFlow(
+            key = PRINTER_ENABLE,
+            defaultValue = false
+        )
+    }
+
+    override suspend fun setTerminalCode(result: String) {
+        flowSettings.putString(
+            key = TERMINAL_CODE,
+            value = result
+        )
+    }
+
+    override fun getTerminalCode(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = TERMINAL_CODE,
             defaultValue = ""
         )
     }

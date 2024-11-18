@@ -5,8 +5,10 @@ import androidx.compose.ui.unit.dp
 
 data class DesignDimensions internal constructor(
 
+    val contentMaxWidth: Dp = 1000.dp,
     val horizontalPadding: Dp = 16.dp,
-    val verticalPadding: Dp = 6.dp,
+    val verticalPadding: Dp = 20.dp,
+
     val screenDefaultMaxWidth: Dp = 500.dp,
     val tabletDefaultWidth: Dp = 1000.dp,
     val tabPadding: Dp = 16.dp,
@@ -16,7 +18,7 @@ data class DesignDimensions internal constructor(
     val smallXIcon: Dp = 20.dp,
     val smallIcon: Dp = 28.dp,
     val mediumIcon: Dp = 40.dp,
-    val largeIcon: Dp = 70.dp,
+    val largeIcon: Dp = 60.dp,
     val cardElevation: Dp = 5.dp,
 
     val buttonHorizontalPadding: Dp = 20.dp,
@@ -34,12 +36,18 @@ data class DesignDimensions internal constructor(
     val phoneHorPadding: Dp = 10.dp,
 
     val screenTabPadding: Dp = 20.dp,
-    val screenPhonePortraitHorPadding: Dp = 5.dp,
+    val screenPhonePortraitHorPadding: Dp = 10.dp,
     val screenPhonePortraitVerticalPadding: Dp = 10.dp,
     val screenPhoneLandVerticalPadding: Dp = 5.dp,
     val screenPhoneLandHorPadding: Dp = 10.dp,
 
     val verticalItemPadding: Dp = 12.dp,
     val columnItemPadding: Dp = 10.dp,
+
+    val defaultCardMinSize: Dp = 60.dp,
+    val defaultButtonSize: Dp = 65.dp,
+    val paddingV: Dp = 10.dp,
+    val paddingH: Dp = 10.dp,
+    val holdSaleListDefaultWidth: Dp = 100.dp,
 
 )
