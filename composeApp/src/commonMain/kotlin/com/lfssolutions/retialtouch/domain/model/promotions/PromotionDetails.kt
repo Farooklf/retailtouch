@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PromotionDetails(
-    val id:Int=0,
+    val id:Long=0,
     val promotionId: Int=0,
     val productId: Int=0,
     val price: Double=0.0,

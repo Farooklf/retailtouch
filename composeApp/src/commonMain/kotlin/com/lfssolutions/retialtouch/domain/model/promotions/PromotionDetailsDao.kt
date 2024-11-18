@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PromotionDetailsDao(
-    val id:Int = 0,
+    val id:Long = 0,
     val promotionDetails: PromotionDetails = PromotionDetails()
 )

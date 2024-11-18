@@ -622,7 +622,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tryApplyPromo(promo: PromotionDetails, item: CRShoppingCartItem) {
         println("Matched promo")
-        println("Type: ${promo.inventoryCode}")
+
 
         when (promo.promotionTypeName) {
             "PromotionByQty" -> tryApplyPromoByQty(promo, item)
@@ -665,12 +665,14 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tryApplyPromoByPrice(promo: PromotionDetails, item: CRShoppingCartItem) {
         item.promotion = promo
+        println("Type: ${item.promotion}")
         if (promo.qty <= item.qty) {
             item.promotionActive = true
-            if ((promo.promotionPerc ?: 0.0) > 0) {
-                item.promotion?.promotionPrice = promo.price.let { price ->
+            if (promo.promotionPrice > 0) {
+                item.promotion?.promotionPrice=promo.promotionPrice
+                /*item.promotion?.promotionPrice = promo.price.let { price ->
                     price - (price * (promo.promotionPerc ?: 0.0)) / 100
-                }
+                }*/
             }
         } else {
             item.promotionActive = false

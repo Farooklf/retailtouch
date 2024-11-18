@@ -411,12 +411,12 @@ class DataBaseRepository: KoinComponent {
 
     suspend fun insertPromotionDetails(promotionDetails: PromotionDetails) {
         withContext(Dispatchers.IO) {
-            val maxId = dataBaseRepository.getCount().first()
-            val newId = maxId + 1
+            //val maxId = dataBaseRepository.getCount().first()
+            //val newId = maxId + 1
 
             dataBaseRepository.insertPromotionDetails(
                 PromotionDetailsDao(
-                    id = newId,
+                    id = promotionDetails.id.toLong(),
                     promotionDetails=promotionDetails)
             )
         }

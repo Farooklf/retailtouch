@@ -821,13 +821,14 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                        apiData.result?.forEach { item ->
                               dataBaseRepository.insertPromotionDetails(
                                   PromotionDetails(
+                                      id=item.productId?.toLong()?:0,
                                       promotionId = item.promotionId?:0,
                                       productId = item.productId?:0,
                                       inventoryCode = item.inventoryCode?:"",
                                       promotionTypeName = promotion.promotionTypeName?:"",
                                       price = item.price?:0.0,
                                       promotionPrice = item.price?:0.0,
-                                      promotionPerc = promotion.discountPercentage?.takeIf { it > 0 },
+                                      promotionPerc = promotion.discountPercentage?.takeIf { it > 0.00 },
                                       qty = promotion.qty?:0.0,
                                       amount = promotion.amount?:0.0)
 
@@ -854,12 +855,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         apiData.result?.forEach { element ->
                             dataBaseRepository.insertPromotionDetails(
                                 PromotionDetails(
+                                    id=element.productId.toLong(),
                                     promotionId = element.promotionId,
                                     productId = element.productId,
                                     inventoryCode = element.inventoryCode,
                                     promotionTypeName = promotion.promotionTypeName?:"",
                                     price = element.price,
-                                    promotionPrice = element.price,
+                                    promotionPrice = element.promotionPrice,
                                     promotionPerc = element.promotionPerc,
                                     qty = promotion.qty?:0.0)
 
@@ -880,13 +882,14 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         promotion: PromotionItem
     ){
         observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Promotion QTY....")},
+            onLoading = { updateLoaderMsg("Syncing Promotion By Price Break....")},
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
                         apiData.result?.forEach { element ->
                             dataBaseRepository.insertPromotionDetails(
                                 PromotionDetails(
+                                    id=element.productId?.toLong()?:0,
                                     promotionId = element.promotionId?:0,
                                     productId = element.productId?:0,
                                     inventoryCode = element.inventoryCode?:"",
@@ -921,6 +924,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         apiData.result?.forEach { item ->
                             dataBaseRepository.insertPromotionDetails(
                                 PromotionDetails(
+                                    id =item.productId?.toLong()?:0 ,
                                     promotionId = item.promotionId?:0,
                                     productId = item.productId?:0,
                                     inventoryCode = item.inventoryCode?:"",
