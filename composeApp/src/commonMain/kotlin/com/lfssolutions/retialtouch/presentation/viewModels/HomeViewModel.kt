@@ -141,7 +141,7 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
             _homeUIState.update { uiState->
                 val updatedList = uiState.homeItemList.map { item ->
                     if (item.homeItemId == id)
-                        item.copy( isSyncRotate = true)
+                        item.copy(isSyncRotate = true)
                     else
                         item
                 }

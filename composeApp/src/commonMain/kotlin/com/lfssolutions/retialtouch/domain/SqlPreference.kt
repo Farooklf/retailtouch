@@ -166,7 +166,9 @@ interface SqlPreference {
 
     //posInvoiceDetails
     suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord)
-    fun getPosPendingSaleRecord(): Flow<List<PosInvoicePendingSaleRecord>>
+    suspend fun updatePosSales(posPaymentRecordDao: PosInvoicePendingSaleRecord)
+    fun getAllPosSale(): Flow<List<PosInvoicePendingSaleRecord>>
+    fun getPendingSaleRecords(): Flow<List<PosInvoicePendingSaleRecord>>
     suspend fun deletePosPendingSaleRecord()
     fun getAllPendingSalesCount():Flow<Long>
 

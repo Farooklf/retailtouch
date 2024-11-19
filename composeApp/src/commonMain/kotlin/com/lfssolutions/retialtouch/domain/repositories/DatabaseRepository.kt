@@ -533,14 +533,16 @@ class DataBaseRepository: KoinComponent {
 
     suspend fun addNewPendingSales(data: PendingSaleRecordDao){
         withContext(Dispatchers.IO) {
-          val id = getCurrentDateAndTimeInEpochMilliSeconds()
             val posInvoice=data.posInvoice
-            val pendingSaleRecord=PosInvoicePendingSaleRecord(
+             val id =  if(data.isDbUpdate) posInvoice.id else getCurrentDateAndTimeInEpochMilliSeconds()
+             println("posInvoicesId : $id")
+             val pendingSaleRecord=PosInvoicePendingSaleRecord(
                  id=id,
                  locationId = posInvoice.locationId?:0,
                  tenantId = posInvoice.tenantId?:0,
                  terminalName = posInvoice.terminalName?:"",
                  locationCode = posInvoice.locationCode?:"",
+                 isRetailWebRequest = posInvoice.isRetailWebRequest?:false,
                  invoiceTotal = posInvoice.invoiceTotal?:0.0,
                  invoiceItemDiscount = posInvoice.invoiceItemDiscount?:0.0,
                  invoiceTotalValue = posInvoice.invoiceTotalValue,
@@ -560,12 +562,18 @@ class DataBaseRepository: KoinComponent {
                  deliveryDateTime = posInvoice.deliveryDateTime?:"",
                  type = posInvoice.type?:0,
                  globalDiscount = posInvoice.invoiceNetDiscount,
+                 invoiceRoundingAmount = posInvoice.invoiceRoundingAmount,
                  status = posInvoice.status?:0,
+                 memberId = posInvoice.memberId?:0,
                  posPaymentConfigRecord = posInvoice.posPayments?: emptyList(),
                  posInvoiceDetailRecord = posInvoice.posInvoiceDetails?: emptyList(),
-                 isSynced =data.isSynced
+                 isSynced = data.isSynced
             )
-            dataBaseRepository.insertPosPendingSaleRecord(pendingSaleRecord)
+            if(!data.isDbUpdate){
+                dataBaseRepository.insertPosPendingSaleRecord(pendingSaleRecord)
+            }else{
+                dataBaseRepository.updatePosSales(pendingSaleRecord)
+            }
             posInvoice.posPayments?.map { payment ->
                 val paymentRecord  = PosConfiguredPaymentRecord(
                     posPaymentRecordId = id,
@@ -664,8 +672,16 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getAllPendingSalesCount().flowOn(Dispatchers.IO)
     }
 
+    fun getPosPendingSales() :Flow<List<PosInvoicePendingSaleRecord>>{
+        return dataBaseRepository.getPendingSaleRecords().flowOn(Dispatchers.IO)
+    }
+
     fun getAuthUser(): Flow<AuthenticateDao> {
         return dataBaseRepository.getAllAuthentication()
+    }
+
+    suspend fun getAuthUser(id:Long): AuthenticateDao {
+        return dataBaseRepository.selectUserByUserId(id).first()
     }
 
     fun getSelectedLocation(): Flow<Location?> {

@@ -1008,13 +1008,22 @@ import kotlinx.coroutines.flow.flow
 
      override suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord) {
         retailTouch.posInvoicePendingSaleRecordQueries.insert(
-            id = null,
+            id = posPaymentRecordDao.id,
             isSync = posPaymentRecordDao.isSynced,
             posInvoice = posPaymentRecordDao.toJson()
         )
      }
 
-     override fun getPosPendingSaleRecord(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
+     override suspend fun updatePosSales(posPaymentRecordDao: PosInvoicePendingSaleRecord) {
+         println("posPaymentRecordDao :$posPaymentRecordDao")
+         retailTouch.posInvoicePendingSaleRecordQueries.updatePosSale(
+             ticketId = posPaymentRecordDao.id,
+             isSynced = posPaymentRecordDao.isSynced,
+             ticket = posPaymentRecordDao.toJson()
+         )
+     }
+
+     override fun getAllPosSale(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
          retailTouch.posInvoicePendingSaleRecordQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
@@ -1026,6 +1035,21 @@ import kotlinx.coroutines.flow.flow
                              locationId = data.locationId,
                              locationCode = data.locationCode
                          )
+                     }
+
+                 )
+             }else{
+                 emit(emptyList())
+             }
+         }
+     }
+
+     override fun getPendingSaleRecords(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
+         retailTouch.posInvoicePendingSaleRecordQueries.getPendingSale().executeAsList().let { list ->
+             if(list.isNotEmpty()) {
+                 emit(
+                     list.map { body ->
+                          body.posInvoice.toPosInvoicePendingSaleRecord()
                      }
 
                  )

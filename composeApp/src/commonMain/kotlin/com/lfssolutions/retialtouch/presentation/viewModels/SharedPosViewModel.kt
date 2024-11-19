@@ -9,6 +9,7 @@ import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleRecordDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
@@ -130,7 +131,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     val login=authDetails.loginDao
                     _posUIState.update {
                         it.copy(
-                            loginUser =login,
+                            loginUser = login,
                             currencySymbol = login.currencySymbol?:"$",
                             isSalesTaxInclusive = login.salesTaxInclusive?:false,
                             posInvoiceRounded=login.posInvoiceRounded,
@@ -183,7 +184,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             dataBaseRepository.getProduct().collectLatest { productList ->
                 if(productList.isNotEmpty()){
                     _posUIState.update { it.copy(stockList=productList, isLoading = false)}
-                     println("ProductList: $productList")
+
                 }
             }
         }
@@ -337,6 +338,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { it.copy(globalExchangeActivator = value) }
         }
     }
+
+    fun updateSyncInProgress(value:Boolean){
+        viewModelScope.launch {
+            _posUIState.update { it.copy(syncInProgress = value) }
+        }
+    }
+
 
     fun addSearchProduct(product: Product){
         val qty = 1.0
@@ -496,9 +504,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     ?: PromotionDetails(id = 0)
 
                 if (promo.promotionId != 0) {
-                    val promoForName = currentState.promotions.firstOrNull { it.id.toInt() == promo.promotionId }
+                    item.promotionName = promo.promotionTypeName
+                    /*val promoForName = currentState.promotions.firstOrNull { it.id.toInt() == promo.promotionId }
                         ?: Promotion(id = 0)
-                    item.promotionName = promoForName.name
+                    item.promotionName = promoForName.name*/
                     tryApplyPromo(promo, item)
                 }
             }
@@ -622,8 +631,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tryApplyPromo(promo: PromotionDetails, item: CRShoppingCartItem) {
         println("Matched promo")
-
-
         when (promo.promotionTypeName) {
             "PromotionByQty" -> tryApplyPromoByQty(promo, item)
             "PromotionByPrice" -> tryApplyPromoByPrice(promo, item)
@@ -633,9 +640,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun tryApplyPromoByQty(promo: PromotionDetails, item: CRShoppingCartItem){
-
         item.promotion=promo
-        println("ItemPromotions:${item.promotion}")
+        println("PromoTypeDetails: ${item.promotion}")
         val id = item.promotion?.promotionId ?: 0
 
         posUIState.value.run {
@@ -665,14 +671,14 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tryApplyPromoByPrice(promo: PromotionDetails, item: CRShoppingCartItem) {
         item.promotion = promo
-        println("Type: ${item.promotion}")
+        println("PromoTypeDetails: ${item.promotion}")
         if (promo.qty <= item.qty) {
             item.promotionActive = true
-            if (promo.promotionPrice > 0) {
-                item.promotion?.promotionPrice=promo.promotionPrice
-                /*item.promotion?.promotionPrice = promo.price.let { price ->
-                    price - (price * (promo.promotionPerc ?: 0.0)) / 100
-                }*/
+            if (promo.promotionPerc!=null  && promo.promotionPerc > 0.0) {
+                //item.promotion?.promotionPrice=promo.promotionPrice
+                item.promotion?.promotionPrice = promo.price.let { price ->
+                    price - (price * (promo.promotionPerc)) / 100
+                }
             }
         } else {
             item.promotionActive = false
@@ -967,6 +973,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { it.copy(isLoading = value) }
         }
     }
+
+
 
     fun dismissErrorDialog(){
         viewModelScope.launch {
@@ -1385,12 +1393,55 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun updateUnSyncedInvoices(value: Long) {
-        _posUIState.update { state -> state.copy(unsyncInvoices = value) }
+        _posUIState.update { state -> state.copy(unSyncInvoices = value) }
     }
 
+    fun syncPendingSales() {
+        viewModelScope.launch {
+            posUIState.value.let { state->
+                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
+                    if(pendingCount>0){
+                        updateSyncInProgress(!state.syncInProgress)
+                        dataBaseRepository.getPosPendingSales().collect{ response->
+                            response.forEach { data->
+                                val posInvoice=PosInvoice(
+                                    id = data.id,
+                                    tenantId = data.tenantId,
+                                    employeeId = data.employeeId,
+                                    locationId=data.locationId,
+                                    locationCode = data.locationCode,
+                                    terminalId = data.locationId,
+                                    terminalName = data.terminalName,
+                                    isRetailWebRequest=data.isRetailWebRequest,
+                                    invoiceNo = data.invoiceNo,
+                                    invoiceDate= data.invoiceDate,
+                                    invoiceTotal = data.invoiceTotal, //before Tax
+                                    invoiceItemDiscount = data.invoiceItemDiscount,
+                                    invoiceTotalValue= data.invoiceTotalValue,
+                                    invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
+                                    invoiceNetDiscount= data.invoiceNetDiscount,
+                                    invoiceTotalAmount=data.invoiceTotalAmount,
+                                    invoiceSubTotal= data.invoiceSubTotal,
+                                    invoiceTax= data.globalTax,
+                                    invoiceRoundingAmount=data.invoiceRoundingAmount,
+                                    invoiceNetTotal= data.invoiceNetTotal,
+                                    invoiceNetCost= data.invoiceNetCost,
+                                    paid= data.paid, //netCost
+                                    memberId = data.memberId,
+                                    posInvoiceDetails = data.posInvoiceDetailRecord,
+                                    posPayments = data.posPaymentConfigRecord,
+                                    pendingInvoices = pendingCount
+                                )
+                                executePosPayment(posInvoice)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-
-    private fun onTenderClick(){
+    private fun onTenderClick() {
         if (employeeId.value== 0 || posUIState.value.location==null) {
             updatePOSError("POS Locked Exception")
             return
@@ -1406,7 +1457,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tender() {
         viewModelScope.launch(Dispatchers.IO) {
-            updateLoader(true)
             val posState=_posUIState.value
             if(posState.createdPayments.isNotEmpty()){
                 posState.createdPayments.forEach {element->
@@ -1415,21 +1465,24 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     }
                 }
             }
-            executePosPayment(posState)
-
+            val posInvoice=tenderPosInvoice(posState)
+            executePosPayment(posInvoice)
         }
     }
 
-    private suspend fun executePosPayment(posState: PosUIState) {
-        val posInvoice=tenderPosInvoice(posState)
+    private suspend fun executePosPayment(posInvoice: PosInvoice) {
         try {
             networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collectLatest { apiResponse->
                 observeResponseNew(apiResponse,
                     onLoading = {
                         updateLoader(true)
+                        updateSyncInProgress(true)
                     },
                     onSuccess = { apiData ->
-                        holdCurrentSync(posInvoice,true)
+                        if(apiData.result?.posInvoice != null)
+                             holdCurrentSync(posInvoice,true)
+                        else
+                            holdCurrentSync(posInvoice, false)
                     },
                     onError = { errorMsg ->
                         holdCurrentSync(posInvoice, false)
@@ -1525,7 +1578,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         amount = payment.amount,
                         name = payment.name?:""
                     )
-                }.toList()
+                }.toList(),
+
             )
 
             return posInvoice
@@ -1537,7 +1591,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             try {
                 dataBaseRepository.addNewPendingSales(PendingSaleRecordDao(
                     posInvoice = posInvoice,
-                    isSynced=isSync
+                    isDbUpdate = posInvoice.pendingInvoices>0,
+                    isSynced = isSync
                 ))
                 //update qty
                 //dataBaseRepository.updateProductStockQuantity(posInvoice)
@@ -1554,6 +1609,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 val errorMsg="Error Saving Data \n${ex.message}"
                 updatePOSError(errorMsg)
                 updateLoader(false)
+                updateSyncInProgress(false)
             }
         }
 

@@ -133,8 +133,10 @@ fun Pos(
     val navigator = LocalNavigator.currentOrThrow
     val posUIState by posViewModel.posUIState.collectAsStateWithLifecycle()
     val authUser by posViewModel.authUser.collectAsStateWithLifecycle()
-    val syncInProgress by posViewModel.syncInProgress.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        posViewModel.isLoggedIn()
+    }
 
     LaunchedEffect(Unit){
        posViewModel.initialState()
@@ -155,7 +157,7 @@ fun Pos(
     }
 
     AppLeftSideMenu(
-        syncInProgress = syncInProgress,
+        syncInProgress = posUIState.syncInProgress,
         exchangeActive = posUIState.globalExchangeActivator,
         printerEnabled = posUIState.isPrinterEnable,
         modifier = Modifier.fillMaxSize(),
@@ -164,6 +166,12 @@ fun Pos(
         },
         onActivatePrinter={
             posViewModel.updatePrinterValue(!posUIState.isPrinterEnable)
+        },
+        onCategoryClick = {
+            NavigatorActions.navigateBackToHomeScreen(navigator,false)
+        },
+        onSyncClick = {
+            posViewModel.syncPendingSales()
         },
         content = {
             //for POS Screen

@@ -80,6 +80,8 @@ fun Home(
            println("callIsSplash :$isFromSplash")
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
             homeViewModel.initialiseSplash(true)
+        }else{
+            homeViewModel.isLoggedIn()
         }
     }
 

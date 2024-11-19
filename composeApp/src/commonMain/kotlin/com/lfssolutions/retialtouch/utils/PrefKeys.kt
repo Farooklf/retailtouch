@@ -7,12 +7,16 @@ object PrefKeys {
     const val TOKEN = "token"
     const val TOKEN_TIME = "tokenTime"
     const val USER_ID = "userID"
+    const val USER_NAME = "userName"
+    const val USER_PASSWORD = "userPassword"
+    const val USER_TENANT_NAME = "userTenancyName"
     const val LOCATION_ID = "locationID"
     const val CURRENCY_SYMBOL = "currencySymbol"
     const val TENANT_ID = "tenantID"
     const val EMPLOYEE_CODE = "employeeCode"
     const val EMPLOYEE_STATE = "employeeState"
     const val PRINTER_ENABLE= "printerEnable"
+    const val TOKEN_EXPIRY_THRESHOLD = 1
 
     const val LAST_SYNC_TS= "lastSyncTs"
     const val RE_SYNC_TIMER= "reSyncTimer"

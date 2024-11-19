@@ -13,8 +13,18 @@ data class PosInvoiceResponse(
     val error: ErrorResponse?,
     @SerialName("success")
     val success: Boolean,
+    @SerialName("result")
+    val result: PosResult? = null,
     @SerialName("targetUrl")
     val targetUrl: String?,
     @SerialName("unAuthorizedRequest")
     val unAuthorizedRequest: Boolean
+)
+
+@Serializable
+data class PosResult(
+    @SerialName("posInvoice")
+    val posInvoice: Long? = 0,
+    @SerialName("posInvoiceNo")
+    val posInvoiceNo: String? = ""
 )

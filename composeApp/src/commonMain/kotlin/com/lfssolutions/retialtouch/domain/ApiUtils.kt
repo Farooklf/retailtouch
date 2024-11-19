@@ -1,9 +1,10 @@
 package com.lfssolutions.retialtouch.domain
 
 
-import com.lfssolutions.retialtouch.data.remote.api.TOKEN_EXPIRY_THRESHOLD
+import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -20,9 +21,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.append
 import io.ktor.util.network.UnresolvedAddressException
 import io.ktor.utils.io.errors.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -30,7 +35,7 @@ import org.koin.core.component.inject
 object ApiUtils : KoinComponent {
 
     // Inject PreferencesRepository and ApiService using Koin
-    private val preferences: PreferencesRepository by inject()
+    val preferences: PreferencesRepository by inject()
     private val apiService: ApiService by inject()
 
 
@@ -39,21 +44,20 @@ object ApiUtils : KoinComponent {
     }
 
     private suspend fun getBearerToken(): String {
-        return "Bearer ${preferences.getToken().first()}"
-        /*return if (isTokenExpired())
+        return if (isLoggedIn())
             "Bearer ${refreshToken()}"
         else
-            "Bearer ${preferences.getToken().first()}"*/
+            "Bearer ${preferences.getToken().first()}"
     }
 
-    private suspend fun isTokenExpired() : Boolean {
-        val tokenTime = preferences.getTokenTime().first()
+    suspend fun isLoggedIn() : Boolean {
+        val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
         val hoursPassed = getHoursDifferenceFromEpochMillSeconds(tokenTime, currentTime)
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
     }
 
-   /* private suspend fun refreshToken(): String {
+    private suspend fun refreshToken(): String {
         return runBlocking {
             try {
                 var result=""
@@ -76,21 +80,17 @@ object ApiUtils : KoinComponent {
                 ""
             }
         }
-    }*/
+    }
 
-   /* private suspend fun getLoginDetails(): LoginRequest {
-        var loginRequest = LoginRequest()
-        databaseRepository.selectUserByUserId(preferences.getUserId().first())
-            .collect { authDao ->
-                loginRequest = LoginRequest(
-                    usernameOrEmailAddress = authDao.userName,
-                    tenancyName = authDao.tenantName,
-                    password = authDao.password,
-                )
-            }
+    private suspend fun getLoginDetails(): LoginRequest {
+        val loginRequest = LoginRequest(
+            usernameOrEmailAddress = preferences.getUserName().first(),
+            tenancyName = preferences.getTenancyName().first(),
+            password = preferences.getUserPass().first(),
+        )
         return loginRequest
 
-    }*/
+    }
 
     fun <T> performApiRequestWithBaseUrl(
         httpClient: HttpClient,

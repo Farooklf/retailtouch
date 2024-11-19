@@ -11,7 +11,7 @@ data class PosInvoice(
     @SerialName("employeeId")
     val employeeId: Int? = 0,
     @SerialName("id")
-    val id: Long? = 0,
+    val id: Long = 0,
     @SerialName("invoiceDate")
     val invoiceDate: String? = null,
     @SerialName("creationTime")
@@ -76,5 +76,6 @@ data class PosInvoice(
     val terminalName: String? = null,
     @SerialName("type")
     val type: Int? = 0,
-    val lastModifiedUserName :String? = null
+
+    val pendingInvoices :Long = 0
 )

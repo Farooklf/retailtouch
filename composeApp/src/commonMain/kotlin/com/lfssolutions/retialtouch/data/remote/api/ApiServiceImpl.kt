@@ -38,6 +38,7 @@ import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import io.ktor.client.HttpClient
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -52,7 +53,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
-const val TOKEN_EXPIRY_THRESHOLD = 6
+
  class ApiServiceImpl(
     private val httpClient: HttpClient,
     private val preferences: PreferencesRepository,
@@ -64,61 +65,53 @@ const val TOKEN_EXPIRY_THRESHOLD = 6
     }
 
 
-    private suspend fun getBearerToken(): String {
-        return if (isTokenExpired())
-            "Bearer ${refreshToken()}"
-        else
-            "Bearer ${preferences.getToken().first()}"
-    }
-
-    private suspend fun isTokenExpired(): Boolean {
+     private suspend fun isTokenExpired(): Boolean {
         val tokenTime = preferences.getTokenTime().first()
         val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
         val hoursPassed = getHoursDifferenceFromEpochMillSeconds(tokenTime, currentTime)
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
     }
 
-    private suspend fun refreshToken(): String {
-        return runBlocking {
-            try {
-                var result=""
-                withContext(Dispatchers.IO) {
+
+     private suspend fun refreshToken(): String {
+         return runBlocking {
+             try {
+                 var result=""
+                 withContext(Dispatchers.IO) {
                     hitLoginAPI(getLoginDetails()).collect{response->
-                        when(response){
-                            is RequestState.Success -> {
-                                val token=response.data.result
-                                preferences.setToken(token?:"")
-                                result=token?:""
-                            }
-                            else ->{
+                         when(response){
+                             is RequestState.Success -> {
+                                 val token=response.data.result
+                                 preferences.setToken(token?:"")
+                                 result=token?:""
+                             }
+                             else ->{
 
-                            }
-                        }
-                    }
-                    result
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                ""
-            }
-        }
-    }
+                             }
+                         }
+                     }
+                     result
+                 }
+             } catch (e: Exception) {
+                 e.printStackTrace()
+                 ""
+             }
+         }
+     }
 
-    private suspend fun getLoginDetails(): LoginRequest {
-        var loginRequest = LoginRequest()
-        sqlPreference.selectUserByUserId(preferences.getUserId().first())
-            .collect { authDao ->
-                loginRequest = LoginRequest(
-                    usernameOrEmailAddress = authDao.userName,
-                    tenancyName = authDao.tenantName,
-                    password = authDao.password,
-                )
-            }
-        return loginRequest
+     private suspend fun getLoginDetails(): LoginRequest {
+         val authDao=sqlPreference.selectUserByUserId(preferences.getUserId().first()).first()
+         val loginRequest = LoginRequest(
+             usernameOrEmailAddress = authDao.userName,
+             tenancyName = authDao.tenantName,
+             password = authDao.password,
+         )
+         return loginRequest
 
-    }
+     }
 
-    override fun hitLoginAPI(loginRequest: LoginRequest): Flow<RequestState<LoginResponse>> =
+
+     override fun hitLoginAPI(loginRequest: LoginRequest): Flow<RequestState<LoginResponse>> =
         flow{
             emit(RequestState.Loading)  // Indicate loading state
             try {

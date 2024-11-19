@@ -22,6 +22,9 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.TERMINAL_CODE
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_TIME
 import com.lfssolutions.retialtouch.utils.PrefKeys.USER_ID
+import com.lfssolutions.retialtouch.utils.PrefKeys.USER_NAME
+import com.lfssolutions.retialtouch.utils.PrefKeys.USER_PASSWORD
+import com.lfssolutions.retialtouch.utils.PrefKeys.USER_TENANT_NAME
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
@@ -159,6 +162,48 @@ class PreferencesImpl(
         return flowSettings.getIntFlow(
             key = TENANT_ID,
             defaultValue = 0
+        )
+    }
+
+    override suspend fun setUserName(result: String) {
+        flowSettings.putString(
+            key = USER_NAME,
+            value = result
+        )
+    }
+
+    override suspend fun getUserName(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = USER_NAME,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setUserPass(result: String) {
+        flowSettings.putString(
+            key = USER_PASSWORD,
+            value = result
+        )
+    }
+
+    override suspend fun getUserPass(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = USER_PASSWORD,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setTenancyName(result: String) {
+        flowSettings.putString(
+            key = USER_TENANT_NAME,
+            value = result
+        )
+    }
+
+    override suspend fun getTenancyName(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = USER_TENANT_NAME,
+            defaultValue = ""
         )
     }
 

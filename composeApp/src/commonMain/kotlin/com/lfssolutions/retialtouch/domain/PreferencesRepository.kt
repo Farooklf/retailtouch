@@ -30,6 +30,15 @@ interface PreferencesRepository {
     suspend fun setTenantId(result: Int)
     fun getTenantId(): Flow<Int>
 
+    suspend fun setUserName(result: String)
+    suspend fun getUserName(): Flow<String>
+
+    suspend fun setUserPass(result: String)
+    suspend fun getUserPass(): Flow<String>
+
+    suspend fun setTenancyName(result: String)
+    suspend fun getTenancyName(): Flow<String>
+
     suspend fun setLocationId(result: Int)
     fun getLocationId(): Flow<Int>
 

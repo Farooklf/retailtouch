@@ -64,6 +64,8 @@ fun AppLeftSideMenu(
     statusBarColor: Color = AppTheme.colors.activeColor,
     onActivatePrinter: () -> Unit = {},
     onActivateExchange: () -> Unit = {},
+    onCategoryClick: () -> Unit = {},
+    onSyncClick: () -> Unit = {},
     content: @Composable() (BoxScope.(Dp) -> Unit),
     holdSaleContent: @Composable() (BoxScope.() -> Unit) = {},
 ) {
@@ -141,7 +143,7 @@ fun AppLeftSideMenu(
 
                         // Category Icon
                         IconButton(onClick = {
-
+                               onCategoryClick.invoke()
                         }) {
                             Icon(
                                 imageVector = vectorResource(categoryIcon),
@@ -152,7 +154,9 @@ fun AppLeftSideMenu(
                         }
 
                         // sync Icon
-                        IconButton(onClick = {  }) {
+                        IconButton(onClick = {
+                           onSyncClick.invoke()
+                        }) {
                             Icon(
                                 imageVector = vectorResource(AppIcons.syncIcon),
                                 contentDescription = "sync",

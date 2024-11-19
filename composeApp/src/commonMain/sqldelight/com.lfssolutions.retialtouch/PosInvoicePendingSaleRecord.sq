@@ -1,7 +1,7 @@
 import kotlin.Boolean;
 
 CREATE TABLE PosInvoicePendingSaleRecord (
-     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+     id INTEGER NOT NULL PRIMARY KEY,
      isSync INTEGER AS Boolean DEFAULT 0,
      posInvoice TEXT NOT NULL
 );
@@ -10,8 +10,17 @@ insert:
 INSERT OR REPLACE INTO PosInvoicePendingSaleRecord(id,isSync,posInvoice)
 VALUES(?,?,?);
 
+updatePosSale:
+UPDATE PosInvoicePendingSaleRecord
+SET isSync = :isSynced , posInvoice =:ticket
+WHERE id = :ticketId;
+
 getAll:
 SELECT * FROM PosInvoicePendingSaleRecord;
+
+getPendingSale:
+SELECT * FROM PosInvoicePendingSaleRecord
+WHERE isSync=0;
 
 delete:
 DELETE  FROM PosInvoicePendingSaleRecord;

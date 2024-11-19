@@ -36,8 +36,9 @@ data class PosUIState(
     val invoiceRounding :Double=0.0,
 
     //global value
+    val syncInProgress :Boolean=false,
     val isCartEmpty :Boolean=false,
-    val unsyncInvoices :Long=0,
+    val unSyncInvoices : Long=0,
     val exchange :Boolean=false,
     val globalExchangeActivator :Boolean=false,
     val isPrinterEnable :Boolean=false,

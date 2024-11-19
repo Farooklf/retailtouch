@@ -14,6 +14,7 @@ import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
+import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginUiState
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
@@ -61,7 +62,9 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
+import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +83,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -99,6 +104,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val _isPrinterEnabled = MutableStateFlow(false)
     val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
+
+
+    private var refreshingToken : StateFlow<Boolean> = MutableStateFlow(false)
 
     private val _lastSyncDateTime = MutableStateFlow<String?>(null)
     val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
@@ -220,6 +228,59 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncError.update { error }
         _syncErrorInfo.update {  "$errorTitle \n $errorMsg" }
     }
+
+
+    //check if user logged in or not
+    suspend fun isLoggedIn() : Boolean {
+        val tokenTime : Long = getLastTokenTime()
+        val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
+        val hoursPassed = getHoursDifferenceFromEpochMillSeconds(tokenTime, currentTime)
+        if(hoursPassed > TOKEN_EXPIRY_THRESHOLD){
+            refreshToken()
+        }
+        return true
+    }
+
+
+    private fun refreshToken(){
+        viewModelScope.launch {
+            try {
+                val response = async {
+                    networkRepository.hitLoginAPI(getLoginDetails())
+                }.await()
+                observeResponse(response,
+                    onLoading = {
+
+                    },
+                    onSuccess = {loginRes->
+                       viewModelScope.launch {
+                           if(loginRes.success==true){
+                               preferences.setToken(loginRes.result?:"")
+                           }
+                       }
+                    },
+                    onError = {
+
+                    }
+                )
+
+            }catch (ex:Exception){
+              //Go to Login Page
+
+            }
+        }
+    }
+
+    private suspend fun getLoginDetails(): LoginRequest {
+        val loginRequest = LoginRequest(
+            usernameOrEmailAddress = preferences.getUserName().first(),
+            tenancyName = preferences.getTenancyName().first(),
+            password =   preferences.getUserPass().first(),
+        )
+        return loginRequest
+
+    }
+
 
     //Api Calls
 
@@ -1045,13 +1106,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun getBasicRequest() = BasicApiRequest(
+    private suspend fun getBasicRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
         lastSyncDateTime = _lastSyncDateTime.value
         )
 
-     private fun getBasicRequest(id:Int) = BasicApiRequest(
+    private fun getBasicRequest(id:Int) = BasicApiRequest(
         id =id
     )
 
@@ -1071,6 +1132,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun getUserId() :Long{
         return preferences.getUserId().first()
+    }
+
+    suspend fun getLastTokenTime() : Long{
+        return preferences.getTokenTime().first()
     }
 
     suspend fun getEmpCode() :String{
@@ -1094,6 +1159,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             val jobs = listOf(
                 async { preferences.setBaseURL("") },
                 async { preferences.setToken("") },
+                async { preferences.setUserName("") },
+                async { preferences.setUserPass("") },
+                async { preferences.setTenancyName("") },
                 async { preferences.setUserId(-1) },
                 async { preferences.setTenantId(-1) },
                 async { preferences.setLocationId(-1) },
