@@ -137,6 +137,9 @@ import kotlinx.coroutines.flow.flow
                          locationId = body.locationId,
                          name = body.name,
                          code = body.code,
+                         address1 = body.address1,
+                         address2= body.address2,
+                         country = body.country,
                          isSelected = body.isSelected ?: false
                      )
                  )

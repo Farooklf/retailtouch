@@ -141,14 +141,15 @@ data class PosUIState(
     val showPaymentCollectorDialog: Boolean = false,
     val isExecutePosSaving: Boolean = false,
     val startPaymentLib: Boolean = false,
+    val paymentFromLib:Boolean=false,
+    val paymentFromLibAmount:Double=0.0,
     val roundToDecimal: Int = 2,
     val posPayments: MutableList<PosPayment> = mutableListOf(),
     val createdPayments: MutableList<PaymentMethod> = mutableListOf(),
     val posInvoiceDetails: MutableList<PosInvoiceDetail> = mutableListOf(),
     val showEmailReceiptsDialog: Boolean = false,
-    val showPhoneReceiptsDialog: Boolean = false,
-
-    )
+    val showPhoneReceiptsDialog: Boolean = false
+)
 
 data class HeldCollection(
     var collectionId:Int,

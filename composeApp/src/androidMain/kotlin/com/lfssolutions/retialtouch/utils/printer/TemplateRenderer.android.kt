@@ -4,6 +4,7 @@ import com.github.mustachejava.DefaultMustacheFactory
 import java.io.PrintWriter
 import java.io.StringReader
 import java.io.StringWriter
+import java.io.Writer
 
 
 actual class TemplateRenderer actual constructor(){
@@ -17,7 +18,14 @@ actual class TemplateRenderer actual constructor(){
         // Create a Mustache factory instance
         val mf = DefaultMustacheFactory()
         val mustache = mf.compile(StringReader(renderedTemplate), "invoiceTemplate")
-        return mustache.execute(PrintWriter(System.out), data).flush().toString()
+        // Use StringWriter to capture the rendered output
+        val writer = StringWriter()
+        mustache.execute(writer, data).flush()
+        //val writer=mustache.execute(PrintWriter(System.out), data)
+       //  writer.flush()
+        println("Template: $writer")
+        // Return the rendered template as a String
+        return writer.toString()
 
 
         // Create a map to store placeholders and their values

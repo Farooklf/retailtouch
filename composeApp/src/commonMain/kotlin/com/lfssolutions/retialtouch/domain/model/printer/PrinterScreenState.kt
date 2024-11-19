@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.domain.model.printer
 
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
+import com.lfssolutions.retialtouch.utils.defaultTemplate
 
 data class PrinterScreenState(
     val isTablet: Boolean = false,
@@ -26,9 +27,7 @@ data class PrinterScreenState(
     val printerTemplates: PrinterTemplates = PrinterTemplates(
         id = 10101,
         name = "Default Template",
-        mergeLines = false,
-        contents = "",
-        files = ""
+        template = defaultTemplate
     ),
 
     val showChoosePrinterTemplateDialog: Boolean = false,

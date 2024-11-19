@@ -370,7 +370,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
-             updateSyncStatus("All Sync Operations Completed Successfully")
+             updateSyncStatus("All Sync Operations have been Completed Successfully")
              updateSyncProgress(false)
          }
        }catch (e: Exception){
@@ -552,7 +552,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
             println("Syncing Print Template: ${templateType.toInt()}")
             updateSyncStatus("Syncing Print Template")
-            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collectLatest { apiResponse->
+            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collect { apiResponse->
                 observePrintTemplate(apiResponse)
             }
         }catch (e: Exception){

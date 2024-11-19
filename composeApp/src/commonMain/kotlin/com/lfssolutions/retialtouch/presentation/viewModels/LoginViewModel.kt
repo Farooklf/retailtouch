@@ -6,6 +6,7 @@ import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.utils.DateTime.getLastSyncDateTime
+import com.lfssolutions.retialtouch.utils.TemplateType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -237,6 +238,10 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 //Employee Role API
                 async {
                     getEmployeeRole()
+                },
+
+                async {
+                    syncPrintTemplate(TemplateType.POSInvoice)
                 }
             )
 

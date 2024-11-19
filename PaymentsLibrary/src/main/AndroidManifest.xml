@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <package android:name="com.lfsolutions.paymenttestactivity" />
+        <package android:name="com.app.smartpay" />
+        <package android:name="sg.com.eftpos.mobilepos.dbs" />
+        <package android:name="sg.com.eftpos.mobilepos.ocbc" />
+        <package android:name="sg.com.eftpos.mobilepos.boc" />
+    </queries>
+</manifest>

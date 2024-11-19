@@ -68,6 +68,8 @@ import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.lfssolutions.retialtouch.utils.payment.PaymentLibTypes
+import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import io.kamel.image.KamelImage
@@ -109,14 +111,30 @@ fun Payment(
 
 
     LaunchedEffect(Unit){
-        println("state_createdPayments: ${state.createdPayments}")
         viewModel.fetchPaymentList()
         viewModel.getEmployee()
     }
 
+    LaunchedEffect(state.isExecutePosSaving){
+        if (state.isExecutePosSaving) {
+            viewModel.callTender(true)
+        }
+    }
+
+    if (state.startPaymentLib){
+        startPayment(viewModel,state)
+    }
+
+    LaunchedEffect(state.paymentFromLib) {
+        if (state.paymentFromLib) {
+            viewModel.applyPaymentValue(state.paymentFromLibAmount)
+            viewModel.resetPaymentLibValues()
+        }
+    }
+
     LaunchedEffect(state.isPaymentClose){
         if(state.isPaymentClose){
-            NavigatorActions.navigateToPOSScreen(navigator)
+            NavigatorActions.navigateBack(navigator)
         }
     }
 
@@ -128,13 +146,6 @@ fun Payment(
         }
     }
 
-
-
-    LaunchedEffect(state.isExecutePosSaving){
-        if (state.isExecutePosSaving) {
-            viewModel.callTender(true)
-        }
-    }
 
     AppLeftSideMenu(
         syncInProgress = state.isLoading,
@@ -179,16 +190,14 @@ fun Payment(
             paymentName = state.availablePayments.find { it.id == state.selectedPaymentTypesId }?.name ?: "Payment Amount",
             onPayClick = {payment->
                 println("dialogAmount:$payment")
-                viewModel.dismissPaymentCollectorDialog()
+                viewModel.updatePaymentCollectorDialogVisibility(false)
                 viewModel.applyPaymentValue(payment)
             },
             onDismiss = {
-                viewModel.dismissPaymentCollectorDialog()
+                viewModel.updatePaymentCollectorDialogVisibility(false)
             }
         )
     }
-
-
 
     DeletePaymentModeDialog(
         isVisible = state.showDeletePaymentModeDialog,
@@ -213,6 +222,36 @@ fun Payment(
         }
     )
 
+}
+@Composable
+fun startPayment(viewModel: SharedPosViewModel, state: PosUIState) {
+    viewModel.resetStartPaymentLibState()
+    state.apply {
+        val processorName = availablePayments.find { it.id == selectedPaymentTypesId }?.paymentProcessorName?:""
+        val paymentName = availablePayments.find { it.id ==selectedPaymentTypesId }?.name?:""
+
+        //paymentName should be replace with processorName
+        if (paymentName.equals("RFM", ignoreCase = true)) {
+            PaymentProvider().launchExternalApp(grandTotal, PaymentLibTypes.RFM, "")
+        }else if (paymentName.equals("Ascan", ignoreCase = true)){
+            PaymentProvider().launchExternalApp(
+                paymentTotal,
+                PaymentLibTypes.ASCAN,
+                paymentName//processorName
+            )
+        }else if (paymentName.equals("Paytm", ignoreCase = true)) {
+            //PaymentProvider().launchApi(PaymentLibTypes.PAYTM, httpClient = httpClient)
+        }else if (paymentName.equals("Nets", ignoreCase = true)) {
+            PaymentProvider().launchExternalApp(
+                paymentTotal,
+                PaymentLibTypes.PAYTM,
+                paymentName
+            )
+        }else{
+            //Normal Payment flow
+            viewModel.updatePaymentCollectorDialogVisibility(true)
+        }
+    }
 }
 
 @Composable
@@ -248,7 +287,6 @@ private fun PortraitPaymentScreen(
             balance = state.remainingBalance,
             payments = state.createdPayments
         )
-
 
         ButtonRowCard(
             modifier = Modifier.fillMaxWidth().height(AppTheme.dimensions.defaultButtonSize).padding(vertical = 10.dp),

@@ -41,6 +41,8 @@ data class PaymentMethod(
     @SerialName("tenantId")
     val tenantId: Int? = 0,
 
+    val paymentProcessorName: String = "",
+    val paymentProcessor: Int = 0,
     val amount: Double = 0.0,
     val isSelected: Boolean = false,
     val isShowPaidAmount: Boolean = false,

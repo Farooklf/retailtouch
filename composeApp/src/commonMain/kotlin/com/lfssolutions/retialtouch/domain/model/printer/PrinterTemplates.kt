@@ -18,7 +18,8 @@ data class PrinterTemplates(
     val type: Int?=0,
     @SerialName("group")
     val group: Boolean?=false,
-    val mergeLines: Boolean,
+
+    /*val mergeLines: Boolean,
     val contents: String,
-    val files: String
+    val files: String*/
 )

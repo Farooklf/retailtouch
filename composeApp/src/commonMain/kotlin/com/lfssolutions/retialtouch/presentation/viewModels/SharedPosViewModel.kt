@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.location.Location
@@ -32,9 +33,14 @@ import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateTime
 import com.lfssolutions.retialtouch.utils.DiscountApplied
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
+import com.lfssolutions.retialtouch.utils.PrinterType
+import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.defaultTemplate
 import com.lfssolutions.retialtouch.utils.formatAmountForPrint
+import com.lfssolutions.retialtouch.utils.payment.PaymentLibTypes
+import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
 import com.lfssolutions.retialtouch.utils.printer.ItemData
+import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -1265,11 +1271,19 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     //Payment
 
+    fun updatePaymentStatus(transactionAmount: Double) {
+        //  println("transactionAmount $transactionAmount")
+        _posUIState.update {
+            it.copy(
+                paymentFromLib = true,
+                paymentFromLibAmount = transactionAmount
+            )
+        }
+    }
 
-
-    fun dismissPaymentCollectorDialog(){
+    fun updatePaymentCollectorDialogVisibility(value: Boolean){
         viewModelScope.launch {
-            _posUIState.update { it.copy(showPaymentCollectorDialog = false) }
+            _posUIState.update { it.copy(showPaymentCollectorDialog = value) }
         }
     }
 
@@ -1279,9 +1293,16 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 currentState.copy(
                     selectedPaymentTypesId=item.id,
                     selectedPayment = item,
-                    showPaymentCollectorDialog = true
+                    startPaymentLib = true
+                    //showPaymentCollectorDialog = true
                 )
             }
+        }
+    }
+
+    fun resetStartPaymentLibState() {
+        viewModelScope.launch{
+            _posUIState.update { state -> state.copy(startPaymentLib = false) }
         }
     }
 
@@ -1371,16 +1392,22 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     remainingBalance = remaining,
                     createdPayments = updatedPayments,
                     availablePayments = updatedPayment,
-                    showPaymentCollectorDialog = false,
+                    /*showPaymentCollectorDialog = false,*/
                     isExecutePosSaving = remaining<=0.0
                 )
             }
         }
     }
 
+    fun resetPaymentLibValues(){
+        viewModelScope.launch {
+            _posUIState.update { state -> state.copy(paymentFromLib = false, paymentFromLibAmount = 0.0) }
+        }
+    }
+
     fun callTender(value: Boolean) {
         if (value) {
-            onTenderClick()
+            createTicketRequest()
         }
     }
 
@@ -1441,13 +1468,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun onTenderClick() {
+    private fun createTicketRequest() {
         if (employeeId.value== 0 || posUIState.value.location==null) {
             updatePOSError("POS Locked Exception")
             return
         }
 
-        if (_posUIState.value.createdPayments.isEmpty()) {
+        if (posUIState.value.createdPayments.isEmpty()) {
             updatePOSError("choose payment first")
             return
         }
@@ -1619,148 +1646,25 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         updatePaymentInvoiceState(ticket)
 
         val state = posUIState.value
-        /*if(!state.isPrinterEnable)
-            return*/
+        if(!state.isPrinterEnable)
+            return
 
         viewModelScope.launch {
-            val templateRenderer = TemplateRenderer()
-            val renderedTemplate = templateRenderer.renderInvoiceTemplate(defaultTemplate, prepareData(ticket,state))
-            println("Receipt_Template : $renderedTemplate")
-
-           /* var textToPrint : String = defaultTemplate
-            val imagePrint = ""
-            val printerWidthMM = 80F
-
-            syncPrintTemplate(templateType=TemplateType.POSInvoice)
-            printerTemplates.collectLatest { templateSource->
-                if(!templateSource.isNullOrEmpty()){
-                    textToPrint = templateSource[0].template?:defaultTemplate
+            var textToPrint:String=defaultTemplate
+            syncPrintTemplate(TemplateType.POSInvoice)
+            printerTemplates.collectLatest {templateList->
+                templateList?.map { template->
+                    textToPrint=template.template?: defaultTemplate
                 }
-
-                if (imagePrint.isNotEmpty()) {
-                    textToPrint += "[C]<img>$imagePrint</img>\n"
-                }
-
-                textToPrint += "\n[C]Receipt\n"
-
-                if (printerWidthMM == 58f){
-                    textToPrint += "\n " +
-                                  "[L]Date & Time: ${getCurrentFormattedDate()}\n" +
-                                  "[L]Terminal Code:[R]${ticket.terminalName}\n" +
-                                  "[L]Cashier:[R]${ticket.lastModifiedUserName}\n"
-
-                }else{
-
-                }
-
-                val rows = ticket.posInvoiceDetails?.mapIndexed { index, row ->
-                    mapOf(
-                        "index" to index + 1,
-                        "productName" to row.inventoryName,
-                        "qty" to row.qty,
-                        "price" to formatAmountForPrint(
-                            row.price,
-                            _posUIState.value.currencySymbol
-                        ),
-                        "netTotal" to formatAmountForPrint(
-                            row.netTotal
-                            ,currencySymbol),
-                        "id" to row.posInvoiceId,
-                        "posInvoiceId" to row.posInvoiceId,
-                        "productId" to row.productId,
-                        "inventoryCode" to row.inventoryCode,
-                        "itemDiscountPerc" to row.itemDiscountPerc,
-                        "itemDiscount" to formatAmountForPrint(
-                            row.itemDiscount,
-                            currencySymbol
-                        ),
-                        "subTotal" to formatAmountForPrint(
-                            row.subTotal,
-                            currencySymbol
-                        ),
-                        "tax" to formatAmountForPrint(
-                            row.tax,
-                            currencySymbol
-                        )
-                    )
-                } ?: emptyList()
-
-                val paymentRows = ticket.posPayments?.mapIndexed { index, row ->
-                    mapOf(
-                        "index" to index + 1,
-                        "name" to (row.name),
-                        "amount" to row.amount)
-                } ?: emptyList()
-
-                val templateData = mapOf(
-                    "payment" to mapOf(
-                        "invoiceNo" to ticket.invoiceNo,
-                        "invoiceDate" to formatDateTimeForUI(
-                            ticket.invoiceDate?:"",
-                            ticket.creationTime?:""
-                        ),
-                        "qty" to ticket.posInvoiceDetails?.size,
-                        "invoiceTotal" to formatAmountForPrint(ticket.invoiceTotal ?: 0.0,currencySymbol),
-                        "invoiceNetTotal" to formatAmountForPrint(ticket.invoiceNetTotal ?: 0.0,currencySymbol),
-                        "invoiceNetDiscount" to formatAmountForPrint(ticket.invoiceNetDiscount,currencySymbol),
-                        "invoiceTotalValue" to formatAmountForPrint(ticket.invoiceTotalValue,currencySymbol),
-                        "invoiceTax" to formatAmountForPrint(ticket.invoiceTax ,currencySymbol),
-                        "id" to ticket.id,
-                        "invoiceItemDiscount" to formatAmountForPrint(ticket.invoiceItemDiscount ?: 0.0,currencySymbol),
-                        "invoiceNetDiscountPerc" to formatAmountForPrint(ticket.invoiceNetDiscountPerc ?: 0.0,currencySymbol),
-                        "invoiceSubTotal" to formatAmountForPrint(ticket.invoiceSubTotal,currencySymbol),
-                        "invoiceRoundingAmount" to formatAmountForPrint(ticket.invoiceRoundingAmount,currencySymbol),
-                        "remarks" to ticket.remarks
-                    ),
-                    "items" to rows,
-                    "paymentType" to paymentRows
-                )
-
-                // Render the template
-                val renderedReceipt = renderTemplate(textToPrint, templateData)
-                // Print or use the rendered receipt
-                println("Receipt Template : $renderedReceipt")
-
-
-                val renderedTemplate = textToPrint
-                    .replace("\${payment.invoiceNo}", ticket.invoiceNo ?: "")
-                    .replace("\${payment.invoiceDate}",
-                        formatDateTimeForUI(
-                            ticket.invoiceDate?:"",
-                            ticket.creationTime?:""
-                        ))
-                    .replace("\${payment.qty}", ticket.posInvoiceDetails?.size.toString())
-                    .replace("\${payment.invoiceTotal}", formatAmountForPrint(
-                        ticket.invoiceTotal ?: 0.0,
-                        currencySymbol
-                    ))
-                    .replace("\${payment.invoiceNetTotal}", formatAmountForPrint(
-                        ticket.invoiceNetTotal ?: 0.0,
-                        currencySymbol
-                    ))
-                    .replace("\${payment.invoiceNetDiscount}", formatAmountForPrint(
-                        ticket.invoiceNetDiscount,
-                        currencySymbol
-                    ))
-                    .replace("\${payment.invoiceTax}", formatAmountForPrint(
-                        ticket.invoiceTax,
-                        currencySymbol
-                    ))
-
-                      // Render items list
-                val items = rows.joinToString("\n") {
-                    "[L]${it["index"]}. ${it["productName"]}\n[L]${it["qty"]}   x   ${it["price"]}          ${it["netTotal"]}"
-                }
-
-                val finalRenderedTemplate = renderedTemplate.replace("\${items}", items)
-
-                println("Template : $finalRenderedTemplate")
-
-            }*/
+                val templateRenderer = TemplateRenderer()
+                val renderedTemplate = templateRenderer.renderInvoiceTemplate(textToPrint, prepareData(ticket,state))
+                 println("Receipt_Template : $renderedTemplate")
+                connectAndPrint(renderedTemplate)
+            }
         }
     }
 
-    fun prepareData(ticket: PosInvoice, state: PosUIState): Map<String, Any?> {
+    private fun prepareData(ticket: PosInvoice, state: PosUIState): Map<String, Any?> {
         val currencySymbol=state.currencySymbol
 
         val row = ticket.posInvoiceDetails?.mapIndexed { index, items ->
@@ -1776,7 +1680,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             "invoice.invoiceNo" to ticket.invoiceNo,
             "invoice.invoiceDate" to ticket.invoiceDate,
             "invoice.terms" to  ticket.posPayments?.get(0)?.name,
-            "invoice.customerName" to state.selectedMember,
+            "invoice.customerName" to if(state.selectedMember=="Select Member") "" else state.selectedMember,
             "customer.address1" to state.location?.address1,
             "customer.address2" to state.location?.address2,
             "items" to row,
@@ -1790,16 +1694,34 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         return data
     }
 
+    private fun connectAndPrint(textToPrint: String) {
+        viewModelScope.launch {
+            dataBaseRepository.getAllPrinterList().collect { printerList ->
+                printerList.forEach { printer ->
+                    PrinterServiceProvider().connectPrinterAndPrint(
+                        printers = printer,
+                        printerType = when (printer.printerType) {
+                            1L -> {
+                                PrinterType.Ethernet
+                            }
 
+                            2L -> {
+                                PrinterType.USB
+                            }
 
-    private fun renderTemplate(template: String, data: Map<String, Any?>): String {
-        var rendered = template
+                            3L -> {
+                                PrinterType.Bluetooth
+                            }
 
-        // Replace each placeholder in the template with the value from the data map
-        data.forEach { (key, value) ->
-            rendered = rendered.replace("{{${key}}}", value.toString())
+                            else -> {
+                                PrinterType.Bluetooth
+                            }
+                        },
+                        textToPrint = textToPrint
+                    )
+                }
+            }
         }
-        return rendered
     }
 
 

@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.kotlin.mustache)
             implementation(libs.mustache.compiler)
             implementation(project(":escposprinter"))
+            implementation(project(":PaymentsLibrary"))
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -140,6 +141,14 @@ android {
         getByName("release") {
             isMinifyEnabled = false
         }
+        /*getByName("release") {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("upload")
+        }
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("upload")
+            isDebuggable = true
+        }*/
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

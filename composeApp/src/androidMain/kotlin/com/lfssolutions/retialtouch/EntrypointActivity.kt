@@ -3,13 +3,16 @@ package com.lfssolutions.retialtouch
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.content.pm.ActivityInfo
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
+import com.lfsolutions.paymentslibrary.ASCAN_REQUEST_CODE
+import com.lfsolutions.paymentslibrary.Payments
+import com.lfsolutions.paymentslibrary.RFM_REQUEST_CODE
+import com.lfsolutions.paymentslibrary.getPaymentFactory
 import com.lfssolutions.retialtouch.di.androidModule
 import com.lfssolutions.retialtouch.di.appModule
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -70,14 +73,38 @@ class AndroidApp : Application() {
         })
     }
 }
-class MainActivity : ComponentActivity() {
-    //private val mSharedPosViewModel:SharedPosViewModel by inject()
+class EntrypointActivity : ComponentActivity() {
+    private val mSharedPosViewModel: SharedPosViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContent {
             App()
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RFM_REQUEST_CODE) {
+            val transactionAmount = getPaymentFactory(Payments.RFM).createPayment().postProcess(
+                requestCode,
+                resultCode,
+                data,
+                this
+            )
+            println("transactionAmount $transactionAmount")
+
+            if (transactionAmount > 0) {
+                mSharedPosViewModel.updatePaymentStatus(transactionAmount)
+                //mainViewModel.resetPaymentStatus()
+            }
+        }else if (requestCode == ASCAN_REQUEST_CODE) {
+            val transactionAmount = getPaymentFactory(Payments.ASCAN).createPayment().postProcess(
+                requestCode, resultCode, data, this
+            )
+            mSharedPosViewModel.updatePaymentStatus(transactionAmount)
         }
     }
 }
