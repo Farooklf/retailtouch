@@ -42,6 +42,7 @@ import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
 import com.lfssolutions.retialtouch.utils.printer.ItemData
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
+import io.kamel.core.utils.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1642,7 +1643,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     }
 
-    fun constructReceiptAndPrint(ticket: PosInvoice){
+    private fun constructReceiptAndPrint(ticket: PosInvoice){
         updatePaymentInvoiceState(ticket)
 
         val state = posUIState.value
@@ -1663,6 +1664,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
         }
     }
+
 
     private fun prepareData(ticket: PosInvoice, state: PosUIState): Map<String, Any?> {
         val currencySymbol=state.currencySymbol

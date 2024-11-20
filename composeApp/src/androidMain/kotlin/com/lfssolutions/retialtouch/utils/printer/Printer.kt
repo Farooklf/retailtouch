@@ -583,9 +583,9 @@ class Printer(val receiptWidth: Int = 1600) {
                     }
 
                     PrinterType.Bluetooth -> {
-                        var bluetoothConnection =
+                        val bluetoothConnection =
                             getBluetoothDeviceList()?.first() { bluetoothConnection ->
-                                bluetoothConnection?.device?.address.toString()
+                                bluetoothConnection.device?.address.toString()
                                     .contentEquals(printers.bluetoothAddress)
                             }
                         if (bluetoothConnection != null) {
