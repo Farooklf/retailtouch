@@ -451,6 +451,7 @@ fun SearchableTextWithBg(
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
+    onSubmittedClick: (Boolean) -> Unit={},
 ) {
     Column(modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)

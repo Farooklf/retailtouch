@@ -71,6 +71,7 @@ interface SystemDesignColors {
     val mintGreenColor: Color
     val switchCheckedThumbColor: Color
     val switchUncheckedThumbColor: Color
+    val primaryDarkColor: Color
     val displayMasterBackground: Brush
     val screenGradientVerticalBg: Brush
     val screenGradientHorizontalBg: Brush
@@ -84,7 +85,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val backgroundDialog: Color = Color(0xFFFFFFFF)
     override val closeButtonBg: Color = Color(0xFFED1C24)
     override val closeButtonContent: Color = Color(0xFFFFFFFF)
-    override val textPrimary: Color = TextPrimary
+    override val textPrimary: Color = Color(0xFF005ce5)
     override val progressPrimary: Color = ProgressPrimary
     override val primaryButtonBg: Color = Color(0xFFED1C24)
     override val primaryButtonContent: Color = Color(0xFFFFFFFF)
@@ -92,7 +93,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val headerTextColor: Color = Color(0xFF000000)
     override val loaderBgColor: Color = Color(0xFFFFFFFF)
     override val iconNavbar: Color = Color(0xFFFFFFFF)
-    override val activeColor: Color = Color(0xFF35a3d6)
+    override val activeColor: Color = Color(0xFF1954a0)//35a3d6
     override val inactiveColor: Color = Color(0xFF35a3d6)
     override val screenBackground: Color = Color(0xFFbfd7e3)
     override val searchBoxColor: Color = Color(0xFF438afe)
@@ -103,6 +104,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
     override val primaryColor= Color(0xFF005ce5)
+    override val primaryDarkColor= Color(0xFF1954a0)
     override val secondaryColor= Color(0xFFbcdffb)
     override val listItemCardColor= Color(0xFF607d8b)
     override val cartItemBg = Color(0xFFF8F8F8)
@@ -177,7 +179,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val closeButtonBg: Color = Color(0xFFED1C24)
     override val greyButtonBg: Color = Color(0xFFc8d0d3)
     override val closeButtonContent: Color = Color(0xFFFFFFFF)
-    override val textPrimary: Color = TextPrimary
+    override val textPrimary: Color = Color(0xFF005ce5)
     override val progressPrimary: Color = ProgressPrimary
     override val primaryButtonBg: Color = Color(0xFFED1C24)
     override val primaryButtonContent: Color = Color(0xFFFFFFFF)
@@ -185,7 +187,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val headerTextColor: Color = Color(0xFF000000)
     override val loaderBgColor: Color = Color(0xFFFFFFFF)
     override val iconNavbar: Color = Color(0xFFFFFFFF)
-    override val activeColor: Color = Color(0xFF35a3d6)
+    override val activeColor: Color = Color(0xFF1954a0)
     override val inactiveColor: Color = Color(0xFF35a3d6)
     override val screenBackground: Color = Color(0xFFbfd7e3)
     override val searchBoxColor: Color = Color(0xFF438afe)
@@ -195,6 +197,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
     override val primaryColor= Color(0xFF005ce5)
+    override val primaryDarkColor= Color(0xFF1954a0)
     override val secondaryColor= Color(0xFFbcdffb)
     override val listItemCardColor= Color(0xFF607d8b)
     override val cartItemBg = Color(0xFF383A3D)

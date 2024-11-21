@@ -173,7 +173,7 @@ fun ErrorDialog(
 }
 
 @Composable
-fun SearchableTextFieldWithDialog(
+fun SearchableTextField(
     isVisible:Boolean,
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
@@ -195,19 +195,6 @@ fun SearchableTextFieldWithDialog(
     ){
         content.invoke()
     }
-
-    /*if(isVisible){
-        Dialog(onDismissRequest = { onDismiss() },
-            properties = DialogProperties(
-            dismissOnClickOutside = true,
-            dismissOnBackPress = true,
-            usePlatformDefaultWidth = false
-        )){
-
-
-        }*/
-
-
 }
 
 

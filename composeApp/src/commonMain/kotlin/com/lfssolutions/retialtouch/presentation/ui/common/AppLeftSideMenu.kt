@@ -209,7 +209,7 @@ fun AppLeftSideMenu(
             //.offset(y = leftMenuHeight.toDp(density)) // Positioned below the sidebar
              val sizeM=24+16+20
             val adjustedPadding = if (heightIs > sizeM.dp) heightIs - sizeM.dp else 0.dp
-            println("leftMenuHeight : ${heightIs.value}")
+            //println("leftMenuHeight : ${heightIs.value}")
             // Green box to show collections
             Box(
                 modifier = Modifier

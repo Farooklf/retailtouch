@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import org.jetbrains.compose.resources.DrawableResource
@@ -24,18 +25,20 @@ import retailtouch.composeapp.generated.resources.app_logo
 fun VectorIcons(
     modifier: Modifier = Modifier.wrapContentHeight(),
     icons: DrawableResource,
+    iconSize: Dp =AppTheme.dimensions.smallXIcon,
     iconColor : Color =AppTheme.colors.textError,
+    alignment: Arrangement.Horizontal = Arrangement.End,
     onClick: ()-> Unit
 )
 {
-    Row( modifier = Modifier.padding(horizontal = 10.dp).clickable{
+    Row(modifier = modifier.clickable{
          onClick.invoke()
        },
-        horizontalArrangement = Arrangement.Center){
+        horizontalArrangement = alignment){
         Image(
             imageVector = vectorResource(icons),
             contentDescription = "",
-            modifier = modifier,
+            modifier = Modifier.size(iconSize),
             colorFilter = ColorFilter.tint(iconColor)
         )
     }

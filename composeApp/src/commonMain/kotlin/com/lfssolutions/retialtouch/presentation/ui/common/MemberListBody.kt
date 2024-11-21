@@ -125,7 +125,7 @@ fun MemberListItem(member: MemberItem, onClick: (MemberItem) -> Unit) {
                 contentDescription = ""
             )
 
-            ListItemText(
+            ListText(
                 label = "${member.name} \n${member.memberCode}",
                 textStyle = AppTheme.typography.bodyMedium(),
                 color = AppTheme.colors.primaryText,

@@ -259,9 +259,6 @@ fun AppBorderButton(
 }
 
 
-
-
-
 @Composable
 fun GreyButtonWithElevation(
     onClick: () -> Unit,
@@ -269,9 +266,9 @@ fun GreyButtonWithElevation(
     label: String,
     enabled: Boolean = true,
     textStyle: TextStyle = AppTheme.typography.titleMedium(),
-    contentColor: Color = AppTheme.colors.primaryText,
-    buttonBgdColor: Color = AppTheme.colors.greyButtonBg,
-    horizontalInnerPadding: Dp = 20.dp,
+    contentColor: Color = AppTheme.colors.primaryColor,
+    buttonBgdColor: Color = AppTheme.colors.textLightGrey,
+    horizontalInnerPadding: Dp = 10.dp,
     verticalInnerPadding: Dp = 10.dp,
 ) {
     Button(
@@ -285,7 +282,7 @@ fun GreyButtonWithElevation(
         colors = ButtonDefaults.buttonColors(
             backgroundColor = buttonBgdColor,    // Set background to grey
             contentColor = contentColor, // Set content color to white
-            disabledBackgroundColor = backgroundColor.copy(alpha = .7f)
+            disabledBackgroundColor = AppTheme.colors.greyButtonBg
         ),
         modifier = modifier,
         enabled = enabled,

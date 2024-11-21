@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -32,6 +36,9 @@ import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import org.jetbrains.compose.resources.vectorResource
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.ic_add_24
+import retailtouch.composeapp.generated.resources.ic_plus
 
 @Composable
 fun SmallTextComponent(text: String, modifier: Modifier = Modifier) {
@@ -122,48 +129,61 @@ fun ListText(
 @Composable
 fun QtyItemText(
     label:String,
-    textStyle: TextStyle = AppTheme.typography.titleBold(),
+    textStyle: TextStyle = AppTheme.typography.bodyMedium(),
     color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
+    isEven:Boolean=false,
     onClick: () -> Unit,
     onIncreaseClick: () -> Unit,
     onDecreaseClick: () -> Unit
 ){
 
-    Row( modifier = modifier.padding(vertical = 10.dp),
-          horizontalArrangement = Arrangement.SpaceBetween) {
-
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         //modifier icons
         // Decrease button
-        IconButton(onClick = { onDecreaseClick() }) {
-            Icon(
-                imageVector = vectorResource(AppIcons.minusCircleIcon),
-                contentDescription = "Decrease Quantity",
-                modifier = Modifier.size(24.dp),
-                tint = AppTheme.colors.appGreen
-            )
+        val (cardColor,carTextColor) = if (isEven) {
+            CardDefaults.cardColors(containerColor = AppTheme.colors.appWhite) to AppTheme.colors.mintGreenColor
+        } else {
+            CardDefaults.cardColors(containerColor = AppTheme.colors.textLightGrey) to AppTheme.colors.mintGreenColor
         }
-        //Spacer(modifier=Modifier.width(5.dp))
 
-        GreyButtonWithElevation(
-            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-            label = label,
-            contentColor = color,
-            textStyle = textStyle,
-            onClick = {
-                onClick.invoke()
+        Card(
+            modifier = Modifier.size(30.dp).clickable{onDecreaseClick() },
+            colors = cardColor,
+            elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
+            shape = AppTheme.appShape.cardRound
+        ){
+            Box(modifier=Modifier.fillMaxSize()){
+                Icon(
+                    imageVector = vectorResource(AppIcons.minusIcon),
+                    contentDescription = "Decrease Quantity",
+                    modifier = Modifier.size(15.dp).align(Alignment.Center),
+                    tint = carTextColor
+                )
             }
-        )
-        //Spacer(modifier=Modifier.width(5.dp))
-        IconButton(onClick = { onIncreaseClick() }) {
-            Icon(
-                imageVector = vectorResource(AppIcons.addIcon),
-                contentDescription = "Increase Quantity",
-                modifier = Modifier.size(24.dp),
-                tint = AppTheme.colors.secondaryText
-            )
         }
+        ListText(
+            label = label,
+            textStyle = textStyle,
+            color = color,
+            modifier = Modifier.wrapContentWidth()
+        )
 
+        Card(
+            modifier = Modifier.size(30.dp).clickable{onIncreaseClick() },
+            colors = cardColor,
+            elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
+            shape = AppTheme.appShape.cardRound
+        ){
+            Box(modifier=Modifier.fillMaxSize()){
+                Icon(
+                    imageVector = vectorResource(Res.drawable.ic_add_24),
+                    contentDescription = "Increase Quantity",
+                    modifier = Modifier.size(13.dp).align(Alignment.Center),
+                    tint = AppTheme.colors.textDarkGrey
+                )
+            }
+        }
     }
 
 }

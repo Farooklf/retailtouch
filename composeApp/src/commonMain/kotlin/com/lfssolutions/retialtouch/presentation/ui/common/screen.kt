@@ -89,10 +89,10 @@ fun GradientBackgroundScreen(
 fun BackgroundScreen(
     modifier: Modifier = Modifier,
     appToolbarContent: @Composable () -> Unit = {},
-    statusBarColor: Color = AppTheme.colors.activeColor,
+    statusBarColor: Color = AppTheme.colors.primaryDarkColor,
     statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
     navigationBarColor: Color = Color.Transparent,
-    screenBackground: Color = AppTheme.colors.screenBackground,
+    screenBackground: Color = AppTheme.colors.appWhite,
     contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = 0.dp,
@@ -102,7 +102,6 @@ fun BackgroundScreen(
     isScrollable: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
-
 
     SystemBarColorEffect(
         statusBarColor = statusBarColor,
@@ -160,7 +159,7 @@ fun TopAppBar(
     title: String,
     leftContent: (@Composable RowScope.() -> Unit)? = null,
     rightContent: (@Composable RowScope.() -> Unit)? = null,
-    background: Color = AppTheme.colors.appBarBg,
+    background: Color = AppTheme.colors.primaryColor,
     contentColor: Color = AppTheme.colors.appBarContent,
     textStyle: TextStyle = AppTheme.typography.titleMedium(),
     showBackButton: Boolean = true,
