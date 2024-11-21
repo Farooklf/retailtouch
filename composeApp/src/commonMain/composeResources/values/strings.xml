@@ -35,6 +35,7 @@
 
     //POS
     <string name="search">Search</string>
+    <string name="search_items">Search Items..</string>
     <string name="sku">SKU</string>
     <string name="barcode">BarCode</string>
     <string name="price">Price</string>

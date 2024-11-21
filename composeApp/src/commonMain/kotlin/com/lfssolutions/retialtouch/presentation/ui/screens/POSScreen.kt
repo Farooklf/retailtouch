@@ -3,6 +3,7 @@ package com.lfssolutions.retialtouch.presentation.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
 import com.lfssolutions.retialtouch.domain.model.products.Product
@@ -73,11 +75,13 @@ import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
 import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListItemText
+import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.QtyItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextFieldWithDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -114,6 +118,7 @@ import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.search
+import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.sku
 import retailtouch.composeapp.generated.resources.sub_total
 import retailtouch.composeapp.generated.resources.tax_value
@@ -133,6 +138,7 @@ fun Pos(
     val navigator = LocalNavigator.currentOrThrow
     val posUIState by posViewModel.posUIState.collectAsStateWithLifecycle()
     val authUser by posViewModel.authUser.collectAsStateWithLifecycle()
+    val appState = LocalAppState.current
 
     LaunchedEffect(Unit) {
         posViewModel.isLoggedIn()
@@ -204,10 +210,6 @@ fun Pos(
 
     SearchableTextFieldWithDialog(
         isVisible = posUIState.showDialog,
-        query = posUIState.searchQuery,
-        onQueryChange = { newQuery ->
-            posViewModel.updateSearchQuery(newQuery)
-        },
         onDismiss = {
             posViewModel.updateDialogState(false)
         },
@@ -215,15 +217,20 @@ fun Pos(
             if(posUIState.stockList.isEmpty())
                 posViewModel.loadAllProducts()
 
-            DialogList(
-                posUIState.stockList,
-                posUIState.searchQuery,
-                posUIState.currencySymbol,
+            DialogStockScreen(
+                state = posUIState,
+                searchQuery = posUIState.searchQuery,
+                currencySymbol = posUIState.currencySymbol,
                 onClick = {selectedItem->
-                posViewModel.updateDialogState(false)
-                posViewModel.clearSearch()
-                posViewModel.addSearchProduct(selectedItem)
-            })
+                    posViewModel.updateDialogState(false)
+                    posViewModel.clearSearch()
+                    posViewModel.addSearchProduct(selectedItem)
+                },
+                onQueryChange = { newQuery ->
+                    posViewModel.updateSearchQuery(newQuery)
+                },
+            )
+
         }
     )
 
@@ -805,110 +812,203 @@ fun HoldSaleCollectionItem(
 
 
 @Composable
-fun DialogList(productList: List<Product>, searchQuery: String, currencySymbol: String, onClick: (Product) -> Unit) {
-    var width by remember { mutableStateOf(0) }
-    val density = LocalDensity.current
-    val widthDp = remember(width, density) { with(density) { width.toDp() } }
+fun DialogStockScreen(
+    state:PosUIState, searchQuery: String, currencySymbol: String,
+    onClick: (Product) -> Unit,
+    onQueryChange: (String) -> Unit,
 
-     Surface(modifier = Modifier.fillMaxSize(),
-         shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp),
-         border = BorderStroke(width = 1.dp, color = AppTheme.colors.listBorderColor)
-     ){
-         Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-             Column(modifier = Modifier.fillMaxWidth()) {
+){
+    val appState = LocalAppState.current
+    val horizontalPadding=if(appState.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
 
-                 Row(modifier = Modifier.fillMaxWidth(),
-                     verticalAlignment = Alignment.CenterVertically,
-                     horizontalArrangement = Arrangement.Center
-                 ){
+    Column(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight().background(AppTheme.colors.appWhite)
+    ){
+        SearchableTextWithBg(
+            value = state.searchQuery,
+            leadingIcon=AppIcons.searchIcon,
+            placeholder = stringResource(Res.string.search_items),
+            label = stringResource(Res.string.search_items),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
+            onValueChange = {
+                onQueryChange(it)
+            }
+        )
 
-                     // Adjust the weight proportions
-                     ListItemText(label = stringResource(Res.string.sku), modifier = Modifier.width(100.dp))
-                     ListItemText(label = stringResource(Res.string.barcode), modifier = Modifier.width(100.dp))
-                     ListItemText(label = stringResource(Res.string.price), modifier = Modifier.width(100.dp))
-                     ListItemText(label = stringResource(Res.string.in_stock), modifier = Modifier.width(100.dp))
-                     ListItemText(label = stringResource(Res.string.description), modifier = Modifier.wrapContentWidth())
-
-                 }
-
-
-
-                 // Display filtered products in a LazyColumn
-                 LazyColumn(modifier = Modifier.onSizeChanged {
-                     width=it.width
-                 }){
-                     // Filter the product tax list based on the search query
-                     val filteredProducts = productList.filter { it.matches(searchQuery) }.toMutableList()
-
-                     /*val filteredProducts = productTaxList.filter { product ->
-                         (searchQuery.isEmpty() || product.name?.contains(searchQuery, ignoreCase = true) == true ||
-                                 product.barCode?.contains(searchQuery, ignoreCase = true) == true ||
-                         product.inventoryCode?.contains(searchQuery, ignoreCase = true) == true)
-                     }*/
-
-                     items(filteredProducts){ product ->
-                         AppHorizontalDivider(modifier = Modifier.width(widthDp))
-                         DialogListItem(product,currencySymbol, onClick = { selectedItem->
-                             onClick(selectedItem)
-                         })
-                     }
-                 }
-             }
-         }
-
-     }
-
+        //List Content
+        CommonListHeader()
+        // Display filtered products in a LazyColumn
+        LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight()){
+            // Filter the product tax list based on the search query
+            val filteredProducts = state.stockList.filter { it.matches(searchQuery) }.toMutableList()
+            itemsIndexed(filteredProducts){ index, product ->
+                DialogListItem(position=index,product=product,currencySymbol=currencySymbol, onClick = { selectedItem->
+                    onClick(selectedItem)
+                })
+            }
+        }
+    }
 }
 
 @Composable
-fun DialogListItem(product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+fun CommonListHeader(){
+    val appState = LocalAppState.current
+    val textStyle=if(appState.isPortrait)
+        AppTheme.typography.bodyBold()
+    else
+        AppTheme.typography.titleBold()
 
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-        Row(modifier = Modifier
-            .fillMaxWidth().clickable{onClick(product)},
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ){
-            //SKU
-            ListItemText(
-                label = product.productCode?:"",
-                textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                modifier = Modifier.width(100.dp)
-            )
+    val horizontalPadding=if(appState.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
 
-            //barCode
-            ListItemText(
-                label = product.barcode?:"",
-                textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                modifier = Modifier.width(100.dp)
-            )
+    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
 
-            ListItemText(
-                label = "$currencySymbol${product.price}",
-                textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                modifier = Modifier.width(100.dp)
-            )
+    ){
+        //SKU
+        // Adjust the weight proportions
+        ListText(
+            label = stringResource(Res.string.sku).uppercase(),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1.2f)
+        )
+        ListText(
+            label = stringResource(Res.string.barcode),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1.2f))
+        ListText(
+            label = stringResource(Res.string.price),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1f))
+        ListText(
+            label = stringResource(Res.string.in_stock),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1f))
 
-
-            ListItemText(
-                label = "${product.qtyOnHand}",
-                textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                modifier = Modifier.width(100.dp)
-            )
-
-            ListItemText(
-                label = product.name?:"",
-                textStyle = AppTheme.typography.titleMedium(),
-                color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                modifier = Modifier.wrapContentWidth()
-            )
-
+        if(!appState.isPortrait)
+        {
+            ListText(
+                label = stringResource(Res.string.description),
+                color = AppTheme.colors.textBlack,
+                textStyle = textStyle,
+                modifier = Modifier.weight(1.5f))
         }
+    }
+}
 
+@Composable
+fun DialogListItem(position :Int,product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+    val appState = LocalAppState.current
+    val (borderColor,rowBgColor)=when(position%2 != 0){
+        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
+    }
+
+    val horizontalPadding=if(appState.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    if(appState.isPortrait){
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor).clickable{onClick(product)},
+                verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                CommonListRow(product=product, currencySymbol=currencySymbol)
+                ListText(
+                    label = product.name?:"",
+                    textStyle = AppTheme.typography.bodyMedium(),
+                    color = AppTheme.colors.textBlack,
+                    modifier = Modifier.wrapContentWidth().padding(start = horizontalPadding)
+                )
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+    else{
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(rowBgColor)
+                .clickable{onClick(product)},
+                verticalArrangement =Arrangement.spaceBetweenPadded(10.dp)
+            ) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                CommonListRow(product=product,currencySymbol=currencySymbol)
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+}
+
+@Composable
+fun CommonListRow(product: Product,currencySymbol: String){
+    val appState = LocalAppState.current
+    val textStyle=if(appState.isPortrait)
+        AppTheme.typography.bodyMedium()
+      else
+        AppTheme.typography.titleMedium()
+
+    val horizontalPadding=if(appState.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+
+    ){
+        //SKU
+        ListText(
+            label = product.productCode?.uppercase()?:"",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1.2f)
+        )
+
+        //barCode
+        ListText(
+            label = product.barcode?:"",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey.copy(alpha = .8f),
+            modifier = Modifier.weight(1.2f)
+        )
+
+        ListText(
+            label = "$currencySymbol${product.price}",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1f)
+        )
+
+
+        ListText(
+            label = "${product.qtyOnHand}",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1f)
+        )
+
+        if(!appState.isPortrait){
+            ListText(
+                label = product.name?:"",
+                textStyle =textStyle,
+                color = AppTheme.colors.textBlack,
+                modifier = Modifier.weight(1.5f)
+            )
+        }
     }
 }
 

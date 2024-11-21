@@ -60,50 +60,50 @@ object DesignTypography{
     @Composable
     fun titleNormal(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Regular)),
-        fontSize = 16.sp,
-        lineHeight = 16.sp
+        fontSize = 18.sp,
+        lineHeight = 18.sp
     )
 
     @Composable
     fun titleMedium(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Medium)),
-        fontSize = 16.sp,
-        lineHeight = 16.sp
+        fontSize = 18.sp,
+        lineHeight = 18.sp
     )
 
     @Composable
     fun titleBold(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Bold)),
-        fontSize = 16.sp,
-        lineHeight = 16.sp
+        fontSize = 18.sp,
+        lineHeight = 18.sp
     )
 
 
     @Composable
     fun bodyNormal(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Regular)),
-        fontSize = 15.sp,
-        lineHeight = 16.sp
+        fontSize = 16.sp,
+        lineHeight = 18.sp
     )
 
     @Composable
     fun bodyMedium(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Medium)),
-        fontSize = 15.sp,
+        fontSize = 16.sp,
         lineHeight = 18.sp
     )
 
     @Composable
     fun bodyBold(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Bold)),
-        fontSize = 15.sp,
+        fontSize = 16.sp,
         lineHeight = 18.sp
     )
 
     @Composable
     fun bodyBlack(): TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.Rubik_Black)),
-        fontSize = 15.sp,
+        fontSize = 16.sp,
         lineHeight = 18.sp
     )
 

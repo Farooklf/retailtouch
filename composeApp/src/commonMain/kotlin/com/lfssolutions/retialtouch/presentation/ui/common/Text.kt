@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -62,17 +63,16 @@ fun ListItemText(
     textStyle: TextStyle = AppTheme.typography.bodyBold(),
     color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
-    arrangement: Arrangement.Horizontal =Arrangement.Center,
+    arrangement: Arrangement.Horizontal = Arrangement.Start,
     isButton:Boolean=false,
     singleLine:Boolean=true,
-    verticalPadding:Dp=10.dp,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     onButtonClick: () -> Unit={},
 ){
 
-    Row(modifier = modifier.padding(vertical = verticalPadding),
-        horizontalArrangement = arrangement) {
+    Row(modifier = modifier,
+        horizontalArrangement = arrangement, verticalAlignment = Alignment.CenterVertically) {
         if(isButton){
             GreyButtonWithElevation(
                 modifier = Modifier.wrapContentWidth().wrapContentHeight(),
@@ -94,7 +94,29 @@ fun ListItemText(
         }
 
     }
+}
 
+@Composable
+fun ListText(
+    label:String,
+    textStyle: TextStyle = AppTheme.typography.bodyBold(),
+    color: Color = AppTheme.colors.primaryText,
+    modifier: Modifier = Modifier.wrapContentHeight(),
+    singleLine:Boolean=true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
+    onButtonClick: () -> Unit={},
+){
+    Text(
+        text = label,
+        style = textStyle,
+        color = color,
+        minLines=minLines,
+        maxLines = maxLines,
+        softWrap = true,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+    )
 }
 
 @Composable

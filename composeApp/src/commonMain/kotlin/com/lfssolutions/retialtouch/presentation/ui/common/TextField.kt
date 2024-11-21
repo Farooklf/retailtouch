@@ -1,7 +1,9 @@
 package com.lfssolutions.retialtouch.presentation.ui.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -442,7 +444,7 @@ fun SearchableTextWithBg(
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
-    leadingIcon: ImageVector? = null,
+    leadingIcon: DrawableResource? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -450,24 +452,23 @@ fun SearchableTextWithBg(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
 ) {
-    //var typeValue by remember(value) { mutableStateOf(value) }
-    /*Card(modifier=modifier
-        .wrapContentHeight()
-        .padding(10.dp)
-        .background(AppTheme.colors.searchBoxColor),
-         shape = RoundedCornerShape(10.dp)
-    ){
-
-    }*/
-
-    Column(modifier = modifier
-        .wrapContentHeight(),
+    Column(modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier.padding(10.dp),
+
+        TextField(
+          value=value,
+            onValueChange=onValueChange,
+            modifier = Modifier.fillMaxWidth().border(BorderStroke(width = 1.dp, color = AppTheme.colors.listRowBorderColor)),
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = AppTheme.colors.listRowBgColor,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                textColor = AppTheme.colors.textBlack,
+                placeholderColor = AppTheme.colors.textDarkGrey,
+                focusedLabelColor = AppTheme.colors.textDarkGrey,
+                cursorColor = AppTheme.colors.textBlack
+            ),
             enabled = enabled,
             textStyle = textStyle,
             visualTransformation = visualTransformation,
@@ -488,13 +489,13 @@ fun SearchableTextWithBg(
             leadingIcon = if (leadingIcon != null) {
                 {
                     Icon(
-                        imageVector = leadingIcon,
+                        imageVector = vectorResource(leadingIcon),
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        tint = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.size(AppTheme.dimensions.smallXIcon)
                     )
                 }
             } else null,
-
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             isError = error != null,
@@ -502,15 +503,7 @@ fun SearchableTextWithBg(
             maxLines = maxLines,
             minLines = minLines,
             shape = AppTheme.appShape.textField,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = AppTheme.colors.primaryText,
-                focusedBorderColor = AppTheme.colors.primaryColor,
-                focusedLabelColor = AppTheme.colors.primaryColor,
-                placeholderColor = AppTheme.colors.primaryText.copy(alpha = .7f),
-                cursorColor = AppTheme.colors.primaryColor,
-                unfocusedLabelColor = AppTheme.colors.primaryColor.copy(alpha = .8f),
-                unfocusedBorderColor = AppTheme.colors.primaryColor.copy(alpha = 0.8f)
-            )
+
         )
 
         error?.let {
@@ -521,6 +514,7 @@ fun SearchableTextWithBg(
                 color = errorColor
             )
         }
+
     }
 
 }

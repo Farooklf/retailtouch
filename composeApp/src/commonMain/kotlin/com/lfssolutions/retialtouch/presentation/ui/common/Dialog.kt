@@ -33,6 +33,7 @@ import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,6 +54,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.popup.Modal
@@ -82,6 +84,8 @@ import retailtouch.composeapp.generated.resources.new_order
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
 import retailtouch.composeapp.generated.resources.print_receipts
+import retailtouch.composeapp.generated.resources.search
+import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.yes
 
@@ -171,48 +175,38 @@ fun ErrorDialog(
 @Composable
 fun SearchableTextFieldWithDialog(
     isVisible:Boolean,
-    query: String="",
-    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
 ){
 
-    if(isVisible){
+    AppDialog(
+        isVisible = isVisible,
+        properties = DialogProperties(
+            dismissOnClickOutside = true,
+            dismissOnBackPress = true,
+            usePlatformDefaultWidth = false
+        ),
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = false,
+    ){
+        content.invoke()
+    }
+
+    /*if(isVisible){
         Dialog(onDismissRequest = { onDismiss() },
             properties = DialogProperties(
             dismissOnClickOutside = true,
             dismissOnBackPress = true,
             usePlatformDefaultWidth = false
         )){
-            // Surface allows customization of the dialog's appearance
-            Surface(
-                modifier = Modifier.fillMaxWidth(0.80f)
-                    .wrapContentHeight()
-                    .padding(20.dp),
-                shape = AppTheme.appShape.dialog,
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 10.dp
-            ) {
 
-                Column(
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
-                ){
 
-                    SearchableTextWithBg(
-                        value = query,
-                        onValueChange = {
-                            onQueryChange(it)
-                        }
-                    )
+        }*/
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    content()
-                }
-            }
-
-        }
-    }
 
 }
 

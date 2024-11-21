@@ -50,4 +50,7 @@ data class DesignDimensions internal constructor(
     val paddingH: Dp = 10.dp,
     val holdSaleListDefaultWidth: Dp = 100.dp,
 
+    val padding10: Dp = 10.dp,
+    val padding20: Dp = 20.dp,
+
 )
