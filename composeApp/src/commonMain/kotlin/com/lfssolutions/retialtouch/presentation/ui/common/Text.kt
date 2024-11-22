@@ -133,12 +133,18 @@ fun QtyItemText(
     color: Color = AppTheme.colors.primaryText,
     modifier: Modifier=Modifier.wrapContentHeight(),
     isEven:Boolean=false,
+    isPortrait:Boolean=false,
     onClick: () -> Unit,
     onIncreaseClick: () -> Unit,
     onDecreaseClick: () -> Unit
 ){
+    val (cardSize,iconSize)=if(isPortrait){
+        20.dp to 10.dp
+    }else{
+        30.dp to 15.dp
+    }
 
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
         //modifier icons
         // Decrease button
         val (cardColor,carTextColor) = if (isEven) {
@@ -148,7 +154,7 @@ fun QtyItemText(
         }
 
         Card(
-            modifier = Modifier.size(30.dp).clickable{onDecreaseClick() },
+            modifier = Modifier.size(cardSize).clickable{onDecreaseClick() },
             colors = cardColor,
             elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
             shape = AppTheme.appShape.cardRound
@@ -157,7 +163,7 @@ fun QtyItemText(
                 Icon(
                     imageVector = vectorResource(AppIcons.minusIcon),
                     contentDescription = "Decrease Quantity",
-                    modifier = Modifier.size(15.dp).align(Alignment.Center),
+                    modifier = Modifier.size(iconSize).align(Alignment.Center),
                     tint = carTextColor
                 )
             }
@@ -170,7 +176,7 @@ fun QtyItemText(
         )
 
         Card(
-            modifier = Modifier.size(30.dp).clickable{onIncreaseClick() },
+            modifier = Modifier.size(cardSize).clickable{onIncreaseClick() },
             colors = cardColor,
             elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
             shape = AppTheme.appShape.cardRound
@@ -179,7 +185,7 @@ fun QtyItemText(
                 Icon(
                     imageVector = vectorResource(Res.drawable.ic_add_24),
                     contentDescription = "Increase Quantity",
-                    modifier = Modifier.size(13.dp).align(Alignment.Center),
+                    modifier = Modifier.size(iconSize).align(Alignment.Center),
                     tint = AppTheme.colors.textDarkGrey
                 )
             }
@@ -191,13 +197,16 @@ fun QtyItemText(
 @Composable
 fun BottomTex(
     label:String,
-    textStyle: TextStyle = AppTheme.typography.titleMedium(),
     color: Color = AppTheme.colors.primaryText,
+    textStyle: TextStyle=AppTheme.typography.bodyBold(),
     modifier: Modifier=Modifier.wrapContentHeight(),
     singleLine:Boolean=false,
+    isPortrait:Boolean=false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1
 ){
+
+
     Text(
         text = label,
         style = textStyle,
@@ -205,6 +214,7 @@ fun BottomTex(
         minLines=minLines,
         maxLines = maxLines,
         softWrap = true,
+        modifier = modifier,
         overflow = TextOverflow.Ellipsis
     )
 }

@@ -44,7 +44,7 @@ data class CRShoppingCartItem(
 ){
 
     // Calculate the current price (with promotion if active)
-    private val currentPrice: Double
+     val currentPrice: Double
         get() = if (promotionActive) promotion?.promotionPrice ?: price else price
 
     // Calculate the total discount (item + promo)

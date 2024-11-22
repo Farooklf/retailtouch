@@ -14,6 +14,8 @@ UPDATE Promotions
 SET promotion = :promotion
 WHERE promotionId = :promotionId;
 
+getAllPromotions:
+SELECT * FROM Promotions;
 
 getPromotionsById:
 SELECT * FROM Promotions

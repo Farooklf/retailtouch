@@ -1043,7 +1043,35 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { it.copy(inputDiscount = discount) }
         }
     }
+    
+    //Promotion Dialog Code
 
+    fun updateDiscountDialog(value:Boolean){
+        viewModelScope.launch {
+            _posUIState.update { it.copy(showDiscountDialog = value) }
+        }
+    }
+
+    fun updateDiscount(promotion:Promotion){
+        viewModelScope.launch {
+            //updateGlobalDiscounts(isInPercent = promotion.promotionValueType==1, discount = promotion.amount)
+            _posUIState.update { state->
+
+                val finalTotal=if (promotion.promotionValueType==1) {
+                    if (promotion.amount < 100.0) {
+                        state.grandTotal - ((state.grandTotal * promotion.amount) / 100.0)
+                    } else state.grandTotal
+                } else {
+                    max(0.0, state.grandTotal - promotion.amount) // Ensure total doesn't go negative
+                }
+
+                state.copy(grandTotal = finalTotal, globalDiscountIsInPercent = promotion.promotionValueType==1, globalDiscount = promotion.amount)
+
+            }
+
+
+        }
+    }
 
     fun getDiscountValue():String{
         val state=_posUIState.value
@@ -1095,7 +1123,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             _posUIState.update {
                 it.copy(
-                    isDiscountDialog = true,
+                    showItemDiscountDialog = true,
                     selectedDiscountApplied = DiscountApplied.GLOBAL,
                     inputDiscount = ""
                 )
@@ -1105,7 +1133,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun onPriceItemClick(selectedItem: CRShoppingCartItem, index: Int) {
         viewModelScope.launch {
-            _posUIState.update { it.copy(isDiscountDialog = true, selectedDiscountApplied = DiscountApplied.SUB_ITEMS,itemPosition=index, selectedProduct = selectedItem, inputDiscount = "") }
+            _posUIState.update { it.copy(showItemDiscountDialog = true, selectedDiscountApplied = DiscountApplied.SUB_ITEMS,itemPosition=index, selectedProduct = selectedItem, inputDiscount = "") }
         }
 
     }
@@ -1113,7 +1141,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun dismissDiscountDialog() {
         viewModelScope.launch {
             _posUIState.update {
-                it.copy(isDiscountDialog = false)
+                it.copy(showItemDiscountDialog = false)
             }
         }
     }

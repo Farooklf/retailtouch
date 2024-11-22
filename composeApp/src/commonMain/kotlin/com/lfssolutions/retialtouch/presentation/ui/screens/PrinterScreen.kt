@@ -45,7 +45,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ChoosePrinterTemplate
 import com.lfssolutions.retialtouch.presentation.ui.common.NetworkAddressDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.PrinterTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.TerminalCodeDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.TopAppBar
+import com.lfssolutions.retialtouch.presentation.ui.common.TopAppBarContent
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -101,7 +101,7 @@ fun PrinterContent(
     BackgroundScreen(
         modifier = Modifier.systemBarsPadding(),
         appToolbarContent = {
-            TopAppBar(
+            TopAppBarContent(
                 title = stringResource(Res.string.settings),
                 showBackButton = true,
                 isTablet = appState.isTablet,
@@ -205,8 +205,7 @@ fun PrinterContent(
                         viewModel.createPrinter()
                         NavigatorActions.navigateBack(navigator)
                               },
-                    modifier = Modifier.height(if (state.isTablet) 60.dp else 50.dp).fillMaxWidth(),
-                    textStyle = AppTheme.typography.bodyMedium().copy(fontSize = if (state.isTablet) 18.sp else 14.sp),
+                    modifier = Modifier.height(if (state.isTablet) 60.dp else 50.dp).fillMaxWidth()
                 )
             }
 

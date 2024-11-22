@@ -3,6 +3,7 @@ package com.lfssolutions.retialtouch.presentation.ui.common
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,15 +14,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,7 +57,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
+import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.presentation.ui.screens.POSTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
@@ -62,6 +70,7 @@ import com.outsidesource.oskitcompose.popup.ModalStyles
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.alert_cancel
 import retailtouch.composeapp.generated.resources.alert_close
@@ -81,9 +90,11 @@ import retailtouch.composeapp.generated.resources.ic_success
 import retailtouch.composeapp.generated.resources.network_dialog_hint
 import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
+import retailtouch.composeapp.generated.resources.paper_size
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
 import retailtouch.composeapp.generated.resources.print_receipts
+import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.search
 import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.terminal_code
@@ -410,10 +421,10 @@ fun CreateMemberDialog(
 
 
 @Composable
-fun DiscountDialog(
+fun ItemDiscountDialog(
     isVisible: Boolean,
     modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
+    contentMaxWidth: Dp = 600.dp,
     isFullScreen: Boolean = false,
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: () -> Unit,
@@ -423,11 +434,115 @@ fun DiscountDialog(
         isVisible = isVisible,
         properties = properties,
         onDismissRequest = onDismissRequest,
-        modifier = modifier.padding(10.dp),
         contentMaxWidth = contentMaxWidth,
         isFullScreen = isFullScreen,
     ){
         dialogBody()
+    }
+}
+
+@Composable
+fun DiscountDialog(
+    isVisible: Boolean,
+    isPortrait: Boolean=true,
+    promotions : MutableList<Promotion>,
+    modifier: Modifier = Modifier.wrapContentHeight().wrapContentWidth(),
+    contentMaxWidth: Dp = 600.dp,
+    isFullScreen: Boolean = false,
+    properties: DialogProperties = DialogProperties(dismissOnBackPress = true,dismissOnClickOutside = false,usePlatformDefaultWidth = false),
+    onDismiss: () -> Unit,
+    onItemClick: (Promotion) -> Unit,
+){
+    val (vertPadding,horPadding)=if(isPortrait)
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
+
+    val textStyleHeader=if(isPortrait)
+        AppTheme.typography.titleMedium()
+    else
+        AppTheme.typography.titleBold()
+
+    AppDialog(
+        isVisible = isVisible,
+        properties = properties,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = isFullScreen,
+    ){
+       LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10)){
+           item{
+               Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                   VectorIcons(icons = AppIcons.cancelIcon,
+                       modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                       iconSize = AppTheme.dimensions.smallIcon,
+                       iconColor=AppTheme.colors.appRed,
+                       onClick = {
+                       onDismiss.invoke()
+                   })
+
+                   Icon(
+                       imageVector = vectorResource(AppIcons.promotionIcon),
+                       contentDescription = "Discount",
+                       tint = AppTheme.colors.appRed,
+                       modifier = Modifier.width(AppTheme.dimensions.mediumIcon)
+                   )
+
+                   Text(
+                       text = stringResource(Res.string.promotion_discounts),
+                       color = AppTheme.colors.textBlack,
+                       style = textStyleHeader
+                   )
+               } }
+           val filteredPromotion = promotions.filter { it.promotionType ==3 }.toMutableList()
+           itemsIndexed(filteredPromotion
+           ){index, promotion ->
+
+               PromotionListItem(
+                   index = index,
+                   item = promotion,
+                   isPortrait = isPortrait,
+                   horizontalPadding=horPadding,
+                   verticalPadding=vertPadding,
+                   onClick = {onItemClick.invoke(promotion)}
+               )
+           }
+       }
+    }
+}
+
+
+@Composable
+fun PromotionListItem(
+    index:Int,
+    item:Promotion,
+    isPortrait: Boolean,
+    horizontalPadding:Dp,
+    verticalPadding:Dp,
+    onClick: () -> Unit
+){
+    val textStyle=if(isPortrait)
+        AppTheme.typography.bodyMedium()
+    else
+        AppTheme.typography.titleMedium()
+
+    AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = horizontalPadding, vertical = verticalPadding).clickable{onClick.invoke()},
+            horizontalArrangement = Arrangement.spaceBetweenPadded(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "${index+1}. ${item.name.uppercase()}",
+                style = textStyle,
+                color = AppTheme.colors.textPrimary
+            )
+
+            Text(
+                text = "Discount: ${item.amount}",
+                style = AppTheme.typography.bodyBold(),
+                color = AppTheme.colors.textBlack
+            )
+
+        }
     }
 }
 
@@ -763,6 +878,8 @@ fun TerminalCodeDialog(
         }
     }
 }
+
+
 
 @Composable
 fun NetworkAddressDialog(

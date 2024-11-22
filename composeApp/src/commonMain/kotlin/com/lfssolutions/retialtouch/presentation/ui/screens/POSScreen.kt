@@ -3,16 +3,13 @@ package com.lfssolutions.retialtouch.presentation.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +29,6 @@ import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -69,8 +65,10 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndi
 import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppLeftSideMenu
 import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedSearch
+import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
 import com.lfssolutions.retialtouch.presentation.ui.common.BackgroundScreen
+import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
@@ -79,6 +77,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
 import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.GreyButtonWithElevation
 import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.ItemDiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
@@ -88,7 +87,6 @@ import com.lfssolutions.retialtouch.presentation.ui.common.QtyItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
-import com.lfssolutions.retialtouch.presentation.ui.common.TopAppBar
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -98,7 +96,6 @@ import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
-import com.outsidesource.oskitcompose.modifier.defaultMaxSize
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -106,9 +103,11 @@ import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.barcode
+import retailtouch.composeapp.generated.resources.cashier
 import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.description
 import retailtouch.composeapp.generated.resources.discount
+import retailtouch.composeapp.generated.resources.discount_str
 import retailtouch.composeapp.generated.resources.discount_value
 import retailtouch.composeapp.generated.resources.hash
 import retailtouch.composeapp.generated.resources.hold_sale
@@ -123,9 +122,7 @@ import retailtouch.composeapp.generated.resources.promo_discount
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
-import retailtouch.composeapp.generated.resources.search
 import retailtouch.composeapp.generated.resources.search_items
-import retailtouch.composeapp.generated.resources.settings
 import retailtouch.composeapp.generated.resources.sku
 import retailtouch.composeapp.generated.resources.sub_total
 import retailtouch.composeapp.generated.resources.tax_value
@@ -166,17 +163,13 @@ fun Pos(
         posViewModel.recomputeSale()
     }
 
-    BackgroundScreen(
+    BasicScreen(
         modifier = Modifier.systemBarsPadding(),
-        appToolbarContent = {
-            TopAppBar(
-                title = stringResource(Res.string.settings),
-                showBackButton = true,
-                isTablet = appState.isTablet,
-                onBackClick = {navigator.pop()}
-            )
-        },
+        title = stringResource(Res.string.cashier),
         contentMaxWidth = Int.MAX_VALUE.dp,
+        onBackClick = {
+            navigator.pop()
+        }
     ){
         val (vertPadding,horPadding)=if(appState.isPortrait)
             AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
@@ -188,14 +181,26 @@ fun Pos(
         else
             AppTheme.typography.titleBold()
 
+        val space=if(appState.isPortrait)
+            AppTheme.dimensions.padding3
+        else
+            AppTheme.dimensions.padding20
+
+        val discountText=if(posUIState.globalDiscount>0){
+            stringResource(Res.string.discount_str, posViewModel.getDiscountValue())
+        }else{
+            stringResource(Res.string.discount)
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillScreenHeight()
+                .fillMaxHeight()
                 .align(Alignment.TopCenter),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ){
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)){
+            //Top scrollable content
+            LazyColumn(modifier = Modifier.weight(1f)){
                 item{
                     //Top Search Bar
                     SearchableTextWithBg(
@@ -231,10 +236,10 @@ fun Pos(
                     //List UI Header
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = vertPadding),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)
+                        horizontalArrangement = Arrangement.Center
                     ){
                         ListText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.width(30.dp))
-                        ListText(label = stringResource(Res.string.items), textStyle = textStyleHeader,modifier = Modifier.weight(1f))
+                        ListText(label = stringResource(Res.string.items), textStyle = textStyleHeader,modifier = Modifier.weight(1.2f))
                         ListText(label = stringResource(Res.string.price),textStyle = textStyleHeader, modifier = Modifier.weight(1.2f))
                         ListText(label = stringResource(Res.string.qty), textStyle = textStyleHeader,modifier = Modifier.weight(1.2f))
                         ListText(label = stringResource(Res.string.sub_total),textStyle = textStyleHeader, modifier = Modifier.weight(1.2f))
@@ -257,6 +262,140 @@ fun Pos(
                     )
                 }
             }
+
+            //Bottom fix content
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)){
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
+                    BottomTex(
+                        label = stringResource(Res.string.qty_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                        isPortrait = appState.isPortrait,
+                        modifier = Modifier.wrapContentWidth()
+                    )
+
+                    BottomTex(
+                        label = "${posUIState.quantityTotal}",
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.wrapContentWidth()
+                    )
+                }
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.items_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                    )
+
+                    BottomTex(
+                        label = posViewModel.formatPriceForUI(posUIState.cartTotalWithoutDiscount),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                    )
+                }
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.discount_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.appRed)
+
+                    BottomTex(
+                        label = posViewModel.formatPriceForUI(posUIState.cartItemsDiscount),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.appRed)
+                }
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.tax_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+
+                    BottomTex(
+                        label = posViewModel.formatPriceForUI(posUIState.globalTax),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+                }
+
+                //Total Value
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.total_value,":"),
+                        textStyle = AppTheme.typography.h1Bold(),
+                        color = AppTheme.colors.textPrimary
+                    )
+
+
+                    BottomTex(
+                        label = posViewModel.formatPriceForUI(posUIState.grandTotal),
+                        textStyle = AppTheme.typography.h1Bold(),
+                        color = AppTheme.colors.textPrimary)
+                }
+
+                Row(modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(space)) {
+
+                    //Hold Button
+                    AppPrimaryButton(
+                        enabled = posUIState.cartList.isNotEmpty(),
+                        label = stringResource(Res.string.hold_sale),
+                        leftIcon = AppIcons.pauseIcon,
+                        backgroundColor = AppTheme.colors.textPrimary,
+                        disabledBackgroundColor = AppTheme.colors.textPrimary,
+                        isPortrait = appState.isPortrait,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            posViewModel.holdCurrentSale()
+                        }
+                    )
+
+                    //Discount Button
+                    AppPrimaryButton(
+                        enabled = posUIState.cartList.isNotEmpty(),
+                        label = discountText,
+                        leftIcon = AppIcons.discountIcon,
+                        backgroundColor = AppTheme.colors.appRed,
+                        disabledBackgroundColor = AppTheme.colors.appRed,
+                        isPortrait = appState.isPortrait,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            //posViewModel.onTotalDiscountItemClick()
+                            posViewModel.updateDiscountDialog(true)
+                        }
+                    )
+
+                    //Payment Button
+                    AppPrimaryButton(
+                        enabled = posUIState.cartList.isNotEmpty(),
+                        label = stringResource(Res.string.payment),
+                        leftIcon = AppIcons.paymentIcon,
+                        backgroundColor = AppTheme.colors.appGreen,
+                        disabledBackgroundColor = AppTheme.colors.appGreen,
+                        isPortrait = appState.isPortrait,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            NavigatorActions.navigateToPaymentScreen(navigator)
+                        }
+                    )
+
+                }
+            }
+
         }
     }
 
@@ -337,7 +476,22 @@ fun Pos(
 
     //Discount Content
     DiscountDialog(
-        isVisible = posUIState.isDiscountDialog,
+        isVisible = posUIState.showDiscountDialog,
+        promotions=posUIState.promotions,
+        isPortrait=appState.isPortrait,
+        onDismiss = {
+            posViewModel.updateDiscountDialog(false)
+        },
+        onItemClick = {promotion->
+            posViewModel.updateDiscountDialog(false)
+            posViewModel.updateDiscount(promotion)
+
+        }
+    )
+
+    //Cart Item Discount Content
+    ItemDiscountDialog(
+        isVisible = posUIState.showItemDiscountDialog,
         onDismissRequest = {
             posViewModel.dismissDiscountDialog()
         },
@@ -462,12 +616,12 @@ fun POSTaxItem(
                 verticalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
                 Row(modifier = Modifier.fillMaxWidth().clickable{
-
+                    posViewModel.removedListItem(item)
                 }, horizontalArrangement = Arrangement.End){
                     Image(
-                        imageVector = vectorResource(AppIcons.closeIcon),
+                        imageVector = vectorResource(AppIcons.cancelIcon),
                         contentDescription = "",
-                        modifier = Modifier.size(AppTheme.dimensions.smallIcon),
+                        modifier = Modifier.size(AppTheme.dimensions.smallXIcon),
                         colorFilter = ColorFilter.tint(AppTheme.colors.textError)
                     )
                 }
@@ -500,34 +654,41 @@ fun POSTaxItem(
                     }
                 }
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(1.3f))
+
                     //Price
-                    GreyButtonWithElevation(
-                        modifier = Modifier.weight(1.2f).wrapContentHeight(),
-                        label = posViewModel.formatPriceForUI(item.price),
-                        contentColor = textColor,
-                        buttonBgdColor = buttonBgColor,
-                        textStyle = AppTheme.typography.bodyNormal(),
-                        onClick = {posViewModel.onPriceItemClick(item,index)}
-                    )
+                    Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                        GreyButtonWithElevation(
+                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                            label = posViewModel.formatPriceForUI(item.getFinalPrice()),
+                            contentColor = textColor,
+                            buttonBgdColor = buttonBgColor,
+                            textStyle = AppTheme.typography.bodyNormal(),
+                            onClick = {posViewModel.onPriceItemClick(item,index)}
+                        )
+                    }
+
                     //Qty
-                    QtyItemText(
-                        label = "${item.qty}",
-                        textStyle = AppTheme.typography.bodyMedium(),
-                        color = AppTheme.colors.textPrimary,
-                        modifier = Modifier.weight(1.2f),
-                        isEven=index%2 == 0,
-                        onIncreaseClick = {
-                            posViewModel.increaseQty(item)
-                        },
-                        onDecreaseClick = {
-                            posViewModel.decreaseQty(item)
-                        },
-                        onClick = {
-                            posViewModel.applyCustomQty(item)
-                        }
-                    )
-                    Column(modifier = Modifier.weight(1.2f).wrapContentHeight(),horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)){
+                        QtyItemText(
+                            label = "${item.qty}",
+                            textStyle = AppTheme.typography.bodyMedium(),
+                            color = AppTheme.colors.textPrimary,
+                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                            isEven=index%2 == 0,
+                            isPortrait=isPortrait,
+                            onIncreaseClick = {
+                                posViewModel.increaseQty(item)
+                            },
+                            onDecreaseClick = {
+                                posViewModel.decreaseQty(item)
+                            },
+                            onClick = {
+                                posViewModel.applyCustomQty(item)
+                            }
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1.2f).wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         ListText(
                             modifier = Modifier.wrapContentWidth().wrapContentHeight(),
                             label = posViewModel.formatPriceForUI(item.getFinalPrice()),
@@ -551,104 +712,119 @@ fun POSTaxItem(
         }
     }
     else{
-        Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = 10.dp).horizontalScroll(
-            rememberScrollState()
-        )) {
-
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)
-            ){
-                //Hash index
-                ListItemText(
-                    label = "${index+1}",
-                    textStyle = AppTheme.typography.titleNormal(),
-                    color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                    modifier = Modifier.width(30.dp).padding(vertical = 10.dp)
-                )
-
-                if(item.exchange){
-                    VectorIcons(icons = AppIcons.e_exchangeIcon,
-                        modifier = Modifier.width(AppTheme.dimensions.smallXIcon),
-                        iconColor= if(item.exchange) AppTheme.colors.primaryText else AppTheme.colors.secondaryText,
-                        onClick = {
-
-                        }
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),verticalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    //Hash index
+                    ListItemText(
+                        label = "${index+1}",
+                        textStyle = AppTheme.typography.bodyMedium(),
+                        color = AppTheme.colors.textBlack,
+                        modifier = Modifier.width(30.dp)
                     )
-                }
 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    if(item.promotion!=null){
-                        Image(
-                            painter = painterResource(Res.drawable.ic_star),
-                            contentDescription = null,
-                            modifier = Modifier.size(AppTheme.dimensions.smallXIcon),
-                            contentScale = ContentScale.Crop
+                    if(item.exchange){
+                        VectorIcons(icons = AppIcons.e_exchangeIcon,
+                            modifier = Modifier.width(AppTheme.dimensions.smallXIcon),
+                            iconColor= if(item.exchange) AppTheme.colors.primaryText else AppTheme.colors.secondaryText,
+                            onClick = {
+
+                            }
                         )
                     }
-                    //Items name
-                    ListItemText(
-                        label = "${item.stock.name} \n[${item.stock.inventoryCode?:""}]",
-                        textStyle = AppTheme.typography.titleNormal(),
-                        color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                        modifier = Modifier.width(150.dp),
-                        singleLine = false
+
+                    Row(modifier = Modifier.weight(1.2f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        if(item.promotion!=null){
+                            Image(
+                                painter = painterResource(Res.drawable.ic_star),
+                                contentDescription = null,
+                                modifier = Modifier.size(AppTheme.dimensions.smallXIcon),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        //Items name
+                        ListItemText(
+                            label = "${item.stock.name} \n[${item.stock.inventoryCode?:""}]",
+                            textStyle = AppTheme.typography.bodyMedium(),
+                            color = AppTheme.colors.textBlack,
+                            modifier = Modifier.wrapContentWidth(),
+                            singleLine = false
+                        )
+                    }
+
+
+                    //Price
+                    Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                        GreyButtonWithElevation(
+                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                            label = posViewModel.formatPriceForUI(item.getFinalPrice()),
+                            contentColor = textColor,
+                            buttonBgdColor = buttonBgColor,
+                            textStyle = AppTheme.typography.bodyNormal(),
+                            onClick = {posViewModel.onPriceItemClick(item,index)}
+                        )
+                    }
+
+
+                    //Qty
+                    Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)){
+                        QtyItemText(
+                            label = "${item.qty}",
+                            textStyle = AppTheme.typography.bodyMedium(),
+                            color = AppTheme.colors.primaryText,
+                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                            isPortrait=isPortrait,
+                            isEven=index%2 == 0,
+                            onIncreaseClick = {
+                                posViewModel.increaseQty(item)
+                            },
+                            onDecreaseClick = {
+                                posViewModel.decreaseQty(item)
+                            },
+                            onClick = {
+                                posViewModel.applyCustomQty(item)
+                            }
+                        )
+                    }
+
+
+                    //Subtotal
+                    Column(modifier = Modifier.weight(1.2f).wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        ListText(
+                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                            label = posViewModel.formatPriceForUI(item.getFinalPrice()),
+                            textStyle = AppTheme.typography.bodyMedium(),
+                            color = primaryText
+                        )
+                        if(item.discount > 0 || item.currentDiscount > 0){
+                            ListText(
+                                modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                                label = "(${posViewModel.calculateDiscount(item)})",
+                                textStyle = AppTheme.typography.bodyMedium(),
+                                color = AppTheme.colors.textError
+                            )
+                        }
+
+                    }
+
+                    //modifier icons
+                    VectorIcons(icons = AppIcons.cancelIcon,
+                        modifier = Modifier.weight(.5f),
+                        onClick = {
+                            posViewModel.removedListItem(item)
+                        }
                     )
+
                 }
-
-                //Price
-                ListItemText(
-                    label = posViewModel.formatPriceForUI(item.getFinalPrice()),
-                    textStyle = AppTheme.typography.titleNormal(),
-                    color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                    modifier = Modifier.width(100.dp),
-                    isButton = true,
-                    onButtonClick = {
-                        posViewModel.onPriceItemClick(item,index)
-                    }
-                )
-
-                //Qty
-                QtyItemText(
-                    label = "${item.qty}",
-                    textStyle = AppTheme.typography.titleNormal(),
-                    color = AppTheme.colors.primaryText.copy(alpha = .8f),
-                    modifier = Modifier.width(160.dp),
-                    onIncreaseClick = {
-                        posViewModel.increaseQty(item)
-                    },
-                    onDecreaseClick = {
-                        posViewModel.decreaseQty(item)
-                    },
-                    onClick = {
-                        posViewModel.applyCustomQty(item)
-                    }
-                )
-
-                //Subtotal
-                Column(modifier = Modifier.width(100.dp).wrapContentHeight(),horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    ListItemText(
-                        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                        label = textTotalLabel,
-                        textStyle = AppTheme.typography.titleNormal(),
-                        color = primaryText,
-                        singleLine = false
-                    )
-                }
-
-                //modifier icons
-                VectorIcons(icons = AppIcons.closeIcon,
-                    modifier = Modifier.width(AppTheme.dimensions.smallIcon),
-                    onClick = {
-                        posViewModel.removedListItem(item)
-                    }
-                )
-
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
-
         }
     }
 }
@@ -857,7 +1033,6 @@ fun HoldSaleContent(modifier : Modifier,posUIState: PosUIState,posViewModel: Sha
                 label = "${posUIState.salesOnHold.size}",
                 icons = AppIcons.downArrowIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
-                innerPaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
                 isDropdownExpanded = posUIState.isDropdownExpanded,
                 onClick = {
                     posViewModel.onToggleChange()

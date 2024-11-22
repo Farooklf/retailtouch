@@ -2,7 +2,6 @@ package com.lfssolutions.retialtouch.presentation.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -13,10 +12,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -25,21 +27,32 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RenderEffect
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -48,12 +61,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.systemui.SystemBarColorEffect
 import com.outsidesource.oskitcompose.systemui.SystemBarIconColor
 import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.general_back
 
@@ -108,7 +122,7 @@ fun BackgroundScreen(
         navigationBarColor = navigationBarColor,
         statusBarIconColor = statusBarIconColor,
     )
-
+    val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -122,6 +136,7 @@ fun BackgroundScreen(
                 .widthIn(max = contentMaxWidth)
                 .fillMaxWidth(),
         ) {
+           // val statusBarInsets = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             val screenHeight = maxHeight - contentPadding.verticalPadding()
 
             CompositionLocalProvider(
@@ -140,7 +155,7 @@ fun BackgroundScreen(
                                 )
                                 .padding(PaddingValues(
                                     horizontal = horizontalPadding,
-                                    vertical = verticalPadding,
+                                    vertical = verticalPadding + navigationBarPadding,
                                 )),
                             contentAlignment = contentAlignment,
                             content = content,
@@ -152,9 +167,94 @@ fun BackgroundScreen(
     }
 
 
+@Composable
+fun BasicScreen(
+    modifier: Modifier = Modifier,
+    title: String,
+    statusBarColor: Color = AppTheme.colors.primaryDarkColor,
+    statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
+    navigationBarColor: Color = Color.Transparent,
+    screenBackground: Color = AppTheme.colors.appWhite,
+    contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
+    contentColor: Color = AppTheme.colors.appBarContent,
+    textStyle: TextStyle = AppTheme.typography.titleMedium(),
+    contentAlignment: Alignment = Alignment.Center,
+    showBackButton: Boolean = true,
+    isTablet: Boolean = false,
+    isScrollable: Boolean = true,
+    onBackClick: () -> Unit = { },
+    content: @Composable BoxScope.() -> Unit,
+) {
+    SystemBarColorEffect(
+        statusBarColor = statusBarColor,
+        navigationBarColor = navigationBarColor,
+        statusBarIconColor = statusBarIconColor,
+    )
+    var showMenu by remember { mutableStateOf(false) }
+
+    Scaffold(topBar = {
+        TopAppBar(
+            modifier = modifier.shadow(elevation = 8.dp),
+            backgroundColor=AppTheme.colors.primaryDarkColor,
+            contentColor=AppTheme.colors.appWhite,
+            title = { Text(text = title , color = contentColor, style = textStyle) },
+            /*actions = {
+                IconButton(onClick = { }) {
+                    Icon(imageVector = Icons.Filled.Share, contentDescription = "Share")
+                }
+                IconButton(onClick = { }) {
+                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Save")
+                }
+                // over flow menu
+                *//*IconButton(onClick = { showMenu = !showMenu }) {
+                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "")
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(text = { Text(text = "Menu Item") }, onClick = { })
+                }*//*
+            },*/
+            navigationIcon = {
+                IconButton(onClick = {
+                    onBackClick.invoke()
+                }) {
+                    Icon(imageVector = vectorResource(AppIcons.backIcon), contentDescription = "Back")
+                }
+            }
+        )
+    }) { innerPadding ->
+        // screen content.
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(max = contentMaxWidth)
+                .fillMaxWidth()
+                .padding(innerPadding)
+                .background(screenBackground),
+        ){
+            AppScreenPadding(
+                content = { horizontalPadding, verticalPadding ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(PaddingValues(
+                                horizontal = horizontalPadding,
+                                vertical = verticalPadding,
+                            )),
+                        contentAlignment = contentAlignment,
+                        content = content,
+                    )
+                }
+            )
+        }
+    }
+}
+
 
 @Composable
-fun TopAppBar(
+fun TopAppBarContent(
     modifier: Modifier = Modifier,
     title: String,
     leftContent: (@Composable RowScope.() -> Unit)? = null,
@@ -257,6 +357,8 @@ private val LocalScreenHeight = staticCompositionLocalOf { Dp.Unspecified }
  * for allowing screen scrolling while also have buttons anchored to the bottom.
  */
 fun Modifier.fillScreenHeight() = composed {
+    val backButtonSpace = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    //heightIn(min = LocalScreenHeight.current - backButtonSpace)
     heightIn(min = LocalScreenHeight.current)
 }
 

@@ -382,6 +382,7 @@ class DataBaseRepository: KoinComponent {
                             inventoryCode = item.inventoryCode?:"",
                             promotion = Promotion(
                                 id = item.id,
+                                promotionValueType=item.promotionValueType?:0,
                                 name = item.name?:"",
                                 inventoryCode = item.inventoryCode?:"",
                                 promotionType = item.promotionType?:0,
@@ -416,7 +417,7 @@ class DataBaseRepository: KoinComponent {
 
             dataBaseRepository.insertPromotionDetails(
                 PromotionDetailsDao(
-                    id = promotionDetails.id.toLong(),
+                    id = promotionDetails.id,
                     promotionDetails=promotionDetails)
             )
         }

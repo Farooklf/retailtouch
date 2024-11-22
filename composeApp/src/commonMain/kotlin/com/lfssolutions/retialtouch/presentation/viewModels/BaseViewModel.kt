@@ -857,7 +857,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                             observePromotionByPriceBreak(promotionsData,item)
                         }
                     }
-
                     else->{
                         networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
                             observeDefaultPromotions(promotionsData,item)
@@ -985,7 +984,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         apiData.result?.forEach { item ->
                             dataBaseRepository.insertPromotionDetails(
                                 PromotionDetails(
-                                    id =item.productId?.toLong()?:0 ,
+                                    id = item.productId?.toLong()?:0 ,
                                     promotionId = item.promotionId?:0,
                                     productId = item.productId?:0,
                                     inventoryCode = item.inventoryCode?:"",

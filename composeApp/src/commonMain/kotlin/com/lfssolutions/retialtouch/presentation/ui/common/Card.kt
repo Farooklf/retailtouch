@@ -153,7 +153,7 @@ fun ButtonCard(
 @Composable
 fun ButtonRowCard(
     label:String,
-    discountType:String="",
+    isPortrait:Boolean=true,
     icons:DrawableResource?=null,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
@@ -161,17 +161,23 @@ fun ButtonRowCard(
     disableBgColor: Color = AppTheme.colors.greyButtonBg,
     contentColor: Color = AppTheme.colors.appWhite,
     elevation: CardElevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
-    innerPaddingValues: PaddingValues = PaddingValues(AppTheme.dimensions.buttonSquarePadding),
     iconSize: Dp = AppTheme.dimensions.smallIcon,
     isEnabled:Boolean=true,
     isColorChange:Boolean=false,
     isDropdownExpanded:Boolean=false,
 ){
+    val (vertPadding,horPadding)=if(isPortrait)
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
+
+    val innerPaddingValues = PaddingValues(vertical = vertPadding, horizontal = horPadding)
+
     // Conditional color: gray if disabled, white if enabled
     val cardColor = if (isEnabled) {
         CardDefaults.cardColors(containerColor = backgroundColor)
     } else {
-        if(!isColorChange){
+        if(isColorChange){
             CardDefaults.cardColors(containerColor = AppTheme.colors.greyDarkButtonBg)
         }else{
             CardDefaults.cardColors(containerColor = disableBgColor)
@@ -182,10 +188,10 @@ fun ButtonRowCard(
     val carTextColor = if (isEnabled) {
         contentColor
     } else {
-        if(!isColorChange){
+        if(isColorChange){
             AppTheme.colors.primaryText
         }else{
-            AppTheme.colors.primaryText
+            contentColor
         }
     }
 
@@ -206,16 +212,6 @@ fun ButtonRowCard(
         ) {
 
             Row(modifier=Modifier.wrapContentWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),verticalAlignment = Alignment.CenterVertically){
-                Text(
-                    text = label,
-                    style = AppTheme.typography.titleMedium(),
-                    color = carTextColor,
-                    minLines=1,
-                    maxLines = 1,
-                    softWrap = true,
-                    overflow = TextOverflow.Ellipsis)
-
-                //Spacer(modifier=Modifier.height(20.dp))
 
                 if (icons != null) {
                     Icon(
@@ -223,10 +219,16 @@ fun ButtonRowCard(
                         contentDescription = null,
                         tint = carTextColor,
                         modifier = Modifier.size(iconSize)
-                            .rotate(if (isDropdownExpanded) 180f else 0f)
-
-                    )
+                            .rotate(if (isDropdownExpanded) 180f else 0f))
                 }
+                Text(
+                    text = label,
+                    style = AppTheme.typography.bodyMedium(),
+                    color = carTextColor,
+                    minLines=1,
+                    maxLines = 1,
+                    softWrap = true,
+                    overflow = TextOverflow.Ellipsis)
             }
         }
 

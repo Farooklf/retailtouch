@@ -20,7 +20,7 @@ data class PosUIState(
     var isLoading : Boolean = false,
     var searchQuery :String = "",
     var showDialog : Boolean = false,
-    var isDiscountDialog : Boolean = false,
+    var showItemDiscountDialog : Boolean = false,
     var isAppliedDiscountOnTotal : Boolean = false,
     val loginUser: LoginResponse =LoginResponse(),
     var currencySymbol : String = "$",
@@ -58,6 +58,7 @@ data class PosUIState(
     val promoDiscount :Double?=0.0,
 
     //Dialog
+    var showDiscountDialog : Boolean = false,
     val stockList : List<Product> = listOf(),
     val dialogStockList : List<Product> = listOf(),
     var selectedProduct : CRShoppingCartItem = CRShoppingCartItem(),

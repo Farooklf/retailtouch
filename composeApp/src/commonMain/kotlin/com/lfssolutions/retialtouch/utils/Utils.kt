@@ -27,10 +27,12 @@ import retailtouch.composeapp.generated.resources.delivery
 import retailtouch.composeapp.generated.resources.drawer
 import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_back_arrow_circle
+import retailtouch.composeapp.generated.resources.ic_cancel
 import retailtouch.composeapp.generated.resources.ic_cashier
 import retailtouch.composeapp.generated.resources.ic_category
 import retailtouch.composeapp.generated.resources.ic_check
 import retailtouch.composeapp.generated.resources.ic_cross
+import retailtouch.composeapp.generated.resources.ic_discount
 import retailtouch.composeapp.generated.resources.ic_dollar
 import retailtouch.composeapp.generated.resources.ic_down
 import retailtouch.composeapp.generated.resources.ic_drawer
@@ -53,6 +55,7 @@ import retailtouch.composeapp.generated.resources.ic_pin
 import retailtouch.composeapp.generated.resources.ic_plus
 import retailtouch.composeapp.generated.resources.ic_power
 import retailtouch.composeapp.generated.resources.ic_printer
+import retailtouch.composeapp.generated.resources.ic_promotion_discount
 import retailtouch.composeapp.generated.resources.ic_receipt
 import retailtouch.composeapp.generated.resources.ic_search
 import retailtouch.composeapp.generated.resources.ic_settings
@@ -122,11 +125,14 @@ object AppIcons {
     val indianRIcon = Res.drawable.ic_indian_rupee
     val pinIcon = Res.drawable.ic_pin
     val closeIcon = Res.drawable.ic_cross
+    val cancelIcon = Res.drawable.ic_cancel
     val searchIcon = Res.drawable.ic_search
     val removeIcon = Res.drawable.ic_trash
     val applyIcon = Res.drawable.ic_check
     val excelIcon = Res.drawable.ic_file_excel
     val paymentIcon = Res.drawable.ic_payment_card
+    val discountIcon = Res.drawable.ic_discount
+    val promotionIcon = Res.drawable.ic_promotion_discount
     val downArrowIcon = Res.drawable.ic_down
     val calenderIcon = Res.drawable.ic_settings
     val calculatorIcon = Res.drawable.ic_settings

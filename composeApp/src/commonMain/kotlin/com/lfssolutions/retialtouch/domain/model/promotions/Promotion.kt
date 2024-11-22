@@ -1,6 +1,6 @@
 package com.lfssolutions.retialtouch.domain.model.promotions
 
-import kotlinx.datetime.LocalDateTime
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,6 +11,7 @@ data class Promotion(
     @SerialName("name") val name: String = "",
     @SerialName("inventoryCode") val inventoryCode: String = "",
     @SerialName("promotionType") val promotionType: Int = 0,
+    @SerialName("promotionValueType") val promotionValueType: Int = 0,
     @SerialName("promotionTypeName") val promotionTypeName: String? = "",
     @SerialName("qty") val qty: Double = 0.0,
     @SerialName("amount") val amount: Double = 0.0,

@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
@@ -30,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.LocalAppState
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
@@ -99,16 +102,31 @@ fun AppPrimaryButton(
     label: String,
     enabled: Boolean = true,
     rightIcon: DrawableResource? = null,
-    textStyle: TextStyle = AppTheme.typography.bodyMedium(),
     leftIcon: DrawableResource? = null,
     elevation: ButtonElevation? = ButtonDefaults.elevation(),
     backgroundColor: Color = AppTheme.colors.primaryButtonBg,
-    contentColor: Color = AppTheme.colors.primaryButtonContent,
+    contentColor: Color = AppTheme.colors.appWhite,
     disabledBackgroundColor: Color = AppTheme.colors.primaryButtonBg,
     isVisible: Boolean=true,
-    horizontalInnerPadding: Dp = 30.dp,
-    verticalInnerPadding: Dp = 10.dp,
+    isPortrait: Boolean=true,
+
 ) {
+    val appState = LocalAppState.current
+    val (verticalInnerPadding,horizontalInnerPadding)=if(isPortrait)
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding20
+
+    val (space,textStyle)=if(isPortrait)
+        AppTheme.dimensions.padding5 to AppTheme.typography.captionBold()
+    else
+        AppTheme.dimensions.padding20 to AppTheme.typography.titleMedium()
+
+    val iconSize=if(isPortrait)
+        AppTheme.dimensions.smallXIcon
+    else
+        AppTheme.dimensions.smallIcon
+
     BaseButton(
         isVisible = isVisible,
         onClick = onClick,
@@ -127,21 +145,28 @@ fun AppPrimaryButton(
                 Icon(
                     painter = painterResource(leftIcon),
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    tint = contentColor,
+                    modifier = Modifier.size(iconSize)
                 )
+                Spacer(modifier=Modifier.width(space))
             }
-
             Text(
                 text = label,
                 style = textStyle,
+                color = contentColor,
                 textAlign = TextAlign.Center,
+                softWrap = true,
+                minLines=1,
+                maxLines = 1
             )
 
             if (rightIcon != null) {
+                Spacer(modifier=Modifier.width(space))
                 Icon(
                     painter = painterResource(rightIcon),
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    tint = contentColor,
+                    modifier = Modifier.size(iconSize)
                 )
             }
         }

@@ -1,7 +1,6 @@
 package com.lfssolutions.retialtouch.data.sqlDelightDb
 
 
-
 import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
@@ -860,7 +859,7 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override fun getPromotionById(id: Long): Flow<Promotion?> = flow{
+     override fun getPromotionById(id: Long): Flow<Promotion?> = flow{
        retailTouch.promotionsQueries.getPromotionsById(id).executeAsOneOrNull().let { body->
            if(body!=null){
              emit(

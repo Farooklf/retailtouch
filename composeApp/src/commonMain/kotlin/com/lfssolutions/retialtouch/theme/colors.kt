@@ -72,6 +72,7 @@ interface SystemDesignColors {
     val switchCheckedThumbColor: Color
     val switchUncheckedThumbColor: Color
     val primaryDarkColor: Color
+    val appRed: Color
     val displayMasterBackground: Brush
     val screenGradientVerticalBg: Brush
     val screenGradientHorizontalBg: Brush
@@ -100,7 +101,8 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val listBorderColor: Color = Color(0xFF000000)
     override val listDivider: Color = Color(0xFF000000)
     override val greyButtonBg: Color = Color(0xFFc8d0d3)
-    override val appGreen = Color(0xFF4cb050)
+    override val appGreen = Color(0xFF15ae5c)
+    override val appRed = Color(0xFFfe0002)
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
     override val primaryColor= Color(0xFF005ce5)
@@ -193,7 +195,8 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val searchBoxColor: Color = Color(0xFF438afe)
     override val listBorderColor: Color = Color(0xFF000000)
     override val listDivider: Color = Color(0xFF000000)
-    override val appGreen = Color(0xFF4cb050)//#4cb050
+    override val appGreen = Color(0xFF15ae5c)
+    override val appRed = Color(0xFFfe0002)
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
     override val primaryColor= Color(0xFF005ce5)

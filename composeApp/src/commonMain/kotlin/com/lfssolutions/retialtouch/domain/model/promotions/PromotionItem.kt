@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PromotionItem(
     @SerialName("promotionType") val promotionType: Int? = null,
+    @SerialName("promotionValueType") val promotionValueType: Int? = null,
     @SerialName("promotionTypeName") val promotionTypeName: String? = null,
     @SerialName("name") val name: String? = null,
     @SerialName("amount") val amount: Double? = null,

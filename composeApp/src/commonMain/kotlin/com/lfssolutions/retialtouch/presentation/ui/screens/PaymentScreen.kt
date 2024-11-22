@@ -294,10 +294,11 @@ private fun PortraitPaymentScreen(
             icons = AppIcons.addIcon,
             iconSize = AppTheme.dimensions.smallIcon,
             backgroundColor=AppTheme.colors.primaryColor,
-            innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+
             onClick = {
                 viewModel.onPaymentClose()
             }
+            //innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
         )
     }
 }
@@ -349,7 +350,7 @@ fun LandscapePaymentScreen(
                 icons = AppIcons.addIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.primaryColor,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     viewModel.onPaymentClose()
                 }
@@ -879,7 +880,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.settingIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.appGreen,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onScanClick.invoke()
                 }
@@ -891,7 +892,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.settingIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.textError,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onCancelClick.invoke()
                 }
@@ -903,7 +904,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.applyIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.primaryColor,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onTenderClick.invoke()
                 }
@@ -918,7 +919,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.settingIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.appGreen,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onScanClick.invoke()
                 }
@@ -930,7 +931,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.settingIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.textError,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onCancelClick.invoke()
                 }
@@ -942,7 +943,7 @@ fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> U
                 icons = AppIcons.applyIcon,
                 iconSize = AppTheme.dimensions.smallIcon,
                 backgroundColor=AppTheme.colors.primaryColor,
-                innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
+                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
                 onClick = {
                     onTenderClick.invoke()
                 }

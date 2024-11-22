@@ -52,7 +52,8 @@
     <string name="items_value">Items :</string>
     <string name="tax_value">Tax : </string>
     <string name="total_value">Total :</string>
-    <string name="discount_value">Discount : %1$s</string>
+    <string name="discount_value">Discount :</string>
+    <string name="discount_str">Dis: %1$s</string>
 
     <string name="hold_sale">Hold Sale</string>
     <string name="payment">Payment</string>
@@ -144,5 +145,6 @@
     <string name="terminal_code_saved_successfully">Terminal code saved successfully</string>
     <string name="select_bluetooth_device">Select an Bluetooth Device</string>
     <string name="select_usb_device">Select an USB Device</string>
+    <string name="promotion_discounts">Promotion and Discounts</string>
 
 </resources>
