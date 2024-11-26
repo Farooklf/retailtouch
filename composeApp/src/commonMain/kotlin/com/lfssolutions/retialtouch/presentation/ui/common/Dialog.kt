@@ -27,18 +27,20 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonElevation
+import androidx.compose.material3.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheetDefaults.properties
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,11 +61,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
+import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
+import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.presentation.ui.screens.POSTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.DiscountType
+import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.popup.Modal
 import com.outsidesource.oskitcompose.popup.ModalStyles
@@ -72,6 +79,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.add
 import retailtouch.composeapp.generated.resources.alert_cancel
 import retailtouch.composeapp.generated.resources.alert_close
 import retailtouch.composeapp.generated.resources.alert_ok
@@ -84,19 +92,18 @@ import retailtouch.composeapp.generated.resources.delete_payment
 import retailtouch.composeapp.generated.resources.dialog_message
 import retailtouch.composeapp.generated.resources.enter_terminal_code
 import retailtouch.composeapp.generated.resources.error
+import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_success
 import retailtouch.composeapp.generated.resources.network_dialog_hint
 import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
-import retailtouch.composeapp.generated.resources.paper_size
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
 import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
-import retailtouch.composeapp.generated.resources.search
-import retailtouch.composeapp.generated.resources.search_items
+import retailtouch.composeapp.generated.resources.remove
 import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.yes
 
@@ -278,7 +285,7 @@ fun AppDialogButton(
 fun MemberListDialog(
     isVisible: Boolean,
     modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
+    contentMaxWidth: Dp = 600.dp,
     isFullScreen: Boolean = false,
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: () -> Unit,
@@ -295,31 +302,6 @@ fun MemberListDialog(
         dialogBody()
     }
 }
-
-@Composable
-fun HoldSaleDialog(
-    isVisible: Boolean,
-    modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
-    dialogBgColor: Color = Color.Transparent,
-    isFullScreen: Boolean = false,
-    properties: DialogProperties = DialogProperties(),
-    onDismissRequest: () -> Unit,
-    dialogBody: @Composable () -> Unit
-){
-    AppDialog(
-        isVisible = isVisible,
-        properties = properties,
-        onDismissRequest = onDismissRequest,
-        modifier = modifier,
-        contentMaxWidth = contentMaxWidth,
-        isFullScreen = isFullScreen,
-        bgColor = dialogBgColor
-    ){
-        dialogBody()
-    }
-}
-
 
 @Composable
 fun ActionDialog(
@@ -419,16 +401,156 @@ fun CreateMemberDialog(
     }
 }
 
+@Composable
+fun HoldSaleDialog(
+    posState:PosUIState,
+    isVisible: Boolean,
+    isPortrait: Boolean=true,
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxMidWidth,
+    dialogBgColor: Color = AppTheme.colors.backgroundDialog,
+    isFullScreen: Boolean = false,
+    properties: DialogProperties = DialogProperties(),
+    onDismiss: () -> Unit,
+    onItemClick: (CRSaleOnHold) -> Unit,
+    onRemove : (Long) -> Unit,
+){
+    val (vertPadding,horPadding)=if(isPortrait)
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
+
+    val textStyleHeader=if(isPortrait)
+        AppTheme.typography.bodyBold().copy(fontSize = 18.sp)
+    else
+        AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+
+    AppDialog(
+        isVisible = isVisible,
+        properties = properties,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = isFullScreen,
+        bgColor = dialogBgColor
+    ){
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            VectorIcons(
+                icons = AppIcons.cancelIcon,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10),
+                iconSize = AppTheme.dimensions.smallIcon,
+                iconColor=AppTheme.colors.appRed,
+                onClick = {
+                    onDismiss.invoke()
+                })
+
+            Text(
+                text = stringResource(Res.string.held_tickets),
+                color = AppTheme.colors.textBlack,
+                style = textStyleHeader
+            )
+
+            LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10)){
+                itemsIndexed(posState.salesOnHold.toList()
+                ){index, (key, saleOnHold) ->
+
+                    HoldTicketListItem(
+                        index = index,
+                        item = saleOnHold,
+                        symbol = posState.currencySymbol,
+                        isPortrait = isPortrait,
+                        horizontalPadding=horPadding,
+                        verticalPadding=vertPadding,
+                        onRemove = {
+                          onRemove.invoke(key)
+                        },
+                        onAdd = {
+                            onItemClick.invoke(saleOnHold)
+                        }
+                    )
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun HoldTicketListItem(
+    index:Int,
+    item: CRSaleOnHold,
+    symbol: String,
+    isPortrait: Boolean,
+    horizontalPadding:Dp,
+    verticalPadding:Dp,
+    onAdd: (CRSaleOnHold) -> Unit,
+    onRemove: () -> Unit,
+){
+    val (textStyle,headerStyle)=if(isPortrait)
+        AppTheme.typography.bodyMedium() to AppTheme.typography.titleBold().copy(fontSize = 18.sp)
+    else
+        AppTheme.typography.titleMedium() to AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+
+    AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = horizontalPadding, vertical = verticalPadding).clickable { onAdd.invoke(item) },
+            horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), verticalAlignment = Alignment.CenterVertically) {
+
+            Column(modifier = Modifier.weight(1f),Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "${index+1}. $symbol${item.grandTotal.roundTo(2)}",
+                    style = headerStyle,
+                    color = AppTheme.colors.textPrimary
+                )
+
+                item.items.forEachIndexed { index,element->
+                    Text(
+                        text = "${index+1}.${element.stock.name}[${element.stock.inventoryCode}]",
+                        style = textStyle,
+                        color = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.fillMaxWidth().padding(AppTheme.dimensions.padding5)
+                    )
+                }
+            }
+
+            /*AppPrimaryButton(
+                label = stringResource(Res.string.add),
+                modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                rightIcon = AppIcons.addIcon,
+                backgroundColor = AppTheme.colors.appGreen,
+                onClick = {
+                    onAdd.invoke(item)
+                }
+            )*/
+            AppPrimaryButton(
+                label = stringResource(Res.string.remove),
+                modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+                rightIcon = AppIcons.removeIcon,
+                backgroundColor = AppTheme.colors.appRed,
+                onClick = {
+                    onRemove.invoke()
+                }
+            )
+        }
+    }
+}
 
 @Composable
 fun ItemDiscountDialog(
     isVisible: Boolean,
-    modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = 600.dp,
+    inputValue:String,
+    inputError:String?,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxSmallWidth,
     isFullScreen: Boolean = false,
+    isPortrait: Boolean = false,
+    trailingIcon:DrawableResource?=null,
+    selectedDiscountType : DiscountType=DiscountType.FIXED_AMOUNT,
     properties: DialogProperties = DialogProperties(),
-    onDismissRequest: () -> Unit,
-    dialogBody: @Composable () -> Unit
+    onDismissRequest: () -> Unit={},
+    onTabClick: (DiscountType) -> Unit={},
+    onApply: () -> Unit={},
+    onCancel: () -> Unit={},
+    onDiscountChange: (discount: String) -> Unit={},
+    onNumberPadClick: (symbol: String) -> Unit={},
 ){
     AppDialog(
         isVisible = isVisible,
@@ -437,7 +559,45 @@ fun ItemDiscountDialog(
         contentMaxWidth = contentMaxWidth,
         isFullScreen = isFullScreen,
     ){
-        dialogBody()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(AppTheme.colors.appWhite)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ){
+
+            //Tab Selector
+            DiscountTabCard(
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().border(
+                    width = 1.dp, // Border thickness
+                    color = AppTheme.colors.listRowBorderColor
+                ).padding(AppTheme.dimensions.padding10),
+                selectedDiscountType=selectedDiscountType,
+                onTabClick = {
+                    onTabClick.invoke(it)
+                }
+            )
+
+            NumberPad(
+                textValue=inputValue,
+                isPortrait=isPortrait,
+                onValueChange = {discount->
+                    onDiscountChange.invoke(discount)
+                },
+                trailingIcon = trailingIcon,
+                inputError=inputError,
+                onNumberPadClick = {symbol->
+                    onNumberPadClick.invoke(symbol)
+                }, onApplyClick = {
+                    onApply.invoke()
+                }, onCancelClick = {
+                    onCancel.invoke()
+                }
+            )
+        }
     }
 }
 

@@ -107,7 +107,7 @@ fun AppOutlinedTextField(
                         painter = painterResource(trailingIcon),
                         contentDescription = null,
                         tint = primaryText,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(AppTheme.dimensions.smallIcon)
                     )
                 }
             } else null,
@@ -116,7 +116,7 @@ fun AppOutlinedTextField(
                     Icon(
                         painter = painterResource(leadingIcon),
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(AppTheme.dimensions.smallIcon)
                     )
                 }
             } else null,

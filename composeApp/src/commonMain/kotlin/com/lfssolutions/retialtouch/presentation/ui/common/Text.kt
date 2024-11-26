@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.ic_add_24
@@ -242,5 +244,51 @@ fun TexWithClickableBg(
         .padding(PaddingValues(5.dp))) {
 
         content()
+    }
+}
+
+@Composable
+fun SelectableRow(
+    modifier: Modifier = Modifier,
+    text: String,
+    icons: DrawableResource?=null,
+    isSelected: Boolean,
+    shape: Shape =AppTheme.appShape.card,
+    iconSize:Dp=AppTheme.dimensions.small24Icon
+) {
+    val (bgColor,textColor)=if (isSelected)
+        AppTheme.colors.primaryColor to AppTheme.colors.appWhite
+    else
+        AppTheme.colors.textLightGrey to AppTheme.colors.textBlack
+
+    val textStyle = if (isSelected)
+        AppTheme.typography.bodyBold()
+    else
+        AppTheme.typography.bodyMedium()
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .background(
+                color = bgColor,
+                shape = shape // Apply custom shape for rounded corners
+            )
+    ) {
+
+        Text(
+            text = text,
+            color = textColor,
+            style = textStyle,
+            modifier = Modifier.padding(horizontal = 5.dp)
+        )
+
+        if (icons != null) {
+            Icon(
+                imageVector = vectorResource(icons),
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier.size(iconSize))
+        }
     }
 }

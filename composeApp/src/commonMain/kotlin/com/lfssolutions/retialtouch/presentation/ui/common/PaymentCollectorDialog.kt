@@ -43,7 +43,7 @@ import retailtouch.composeapp.generated.resources.ic_tagcross
 @Composable
 fun PaymentCollectorDialog(
     isVisible: Boolean = false,
-    totalValue:Double=0.0,
+    paymentAmount:Double=0.0,
     onDismiss: () -> Unit = {},
     onPayClick: (Double) -> Unit = {},
     paymentName: String,
@@ -51,16 +51,22 @@ fun PaymentCollectorDialog(
 ){
 
     val state by interactor.paymentCollectorState.collectAsStateWithLifecycle()
-
+    //if (isVisible) interactor.initialState()
     LaunchedEffect(Unit){
         if(isVisible)
-         interactor.initialState(totalValue)
+         interactor.initialState()
     }
 
     LaunchedEffect(state.paymentSuccess) {
         if (state.paymentSuccess) {
+            println()
             onPayClick(state.total.toDouble())
         }
+    }
+
+    LaunchedEffect(isVisible) {
+        if (isVisible)
+            interactor.updateInitialAmount(paymentAmount)
     }
 
 
@@ -236,5 +242,6 @@ fun Button(
 
 data class PaymentCollectorDialogState(
     val total: String = "",
-    val paymentSuccess: Boolean = false
+    val paymentSuccess: Boolean = false,
+    val isThisFirstEnter: Boolean = true
 )

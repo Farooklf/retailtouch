@@ -113,9 +113,9 @@ fun AppPrimaryButton(
 ) {
     val appState = LocalAppState.current
     val (verticalInnerPadding,horizontalInnerPadding)=if(isPortrait)
-        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+        AppTheme.dimensions.padding15 to AppTheme.dimensions.padding10
     else
-        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding20
+        AppTheme.dimensions.padding15 to AppTheme.dimensions.padding20
 
     val (space,textStyle)=if(isPortrait)
         AppTheme.dimensions.padding5 to AppTheme.typography.captionBold()
@@ -125,7 +125,7 @@ fun AppPrimaryButton(
     val iconSize=if(isPortrait)
         AppTheme.dimensions.smallXIcon
     else
-        AppTheme.dimensions.smallIcon
+        AppTheme.dimensions.small24Icon
 
     BaseButton(
         isVisible = isVisible,

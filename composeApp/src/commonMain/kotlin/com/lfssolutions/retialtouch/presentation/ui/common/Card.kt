@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,12 +31,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.DiscountType
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.discount
 
 @Composable
 fun AppBaseCard(
@@ -182,7 +190,6 @@ fun ButtonRowCard(
         }else{
             CardDefaults.cardColors(containerColor = disableBgColor)
         }
-
     }
 
     val carTextColor = if (isEnabled) {
@@ -234,4 +241,42 @@ fun ButtonRowCard(
 
     }
 }
+
+@Composable
+fun DiscountTabCard(
+    modifier: Modifier = Modifier,
+    selectedDiscountType:DiscountType=DiscountType.FIXED_AMOUNT,
+    elevation: CardElevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
+    onTabClick: (DiscountType) -> Unit = {}
+){
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.appWhite),
+        elevation = elevation,
+        shape = AppTheme.appShape.card
+    ){
+
+        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()){
+            // Row 1: Rounded corners on the left
+            SelectableRow(
+                modifier = Modifier.weight(1f).height(AppTheme.dimensions.defaultButtonSize).clickable{onTabClick.invoke(DiscountType.FIXED_AMOUNT)},
+                text = stringResource(Res.string.discount),
+                icons = AppIcons.dollarIcon,
+                isSelected = selectedDiscountType==DiscountType.FIXED_AMOUNT,
+                shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp) // Rounded left corners
+            )
+            // Row 2: Rounded corners on the right
+            SelectableRow(
+                modifier = Modifier.weight(1f).height(AppTheme.dimensions.defaultButtonSize).clickable{onTabClick.invoke(DiscountType.PERCENTAGE)},
+                text = stringResource(Res.string.discount),
+                icons = AppIcons.percentageIcon,
+                isSelected = selectedDiscountType==DiscountType.PERCENTAGE,
+                shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp) // Rounded right corners
+            )
+        }
+    }
+}
+
+
+
 

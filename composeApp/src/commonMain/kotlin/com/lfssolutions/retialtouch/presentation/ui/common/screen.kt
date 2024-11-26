@@ -74,7 +74,7 @@ import retailtouch.composeapp.generated.resources.general_back
 @Composable
 fun GradientBackgroundScreen(
     modifier: Modifier = Modifier,
-    blur: Float = .1f,
+    blur : Float = .1f,
     screenBackground: Brush = AppTheme.colors.screenGradientHorizontalBg,
     navBgColor: Color = AppTheme.colors.backgroundNavbar,
     statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
@@ -177,7 +177,6 @@ fun BasicScreen(
     screenBackground: Color = AppTheme.colors.appWhite,
     contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
     contentColor: Color = AppTheme.colors.appBarContent,
-    textStyle: TextStyle = AppTheme.typography.titleMedium(),
     contentAlignment: Alignment = Alignment.Center,
     showBackButton: Boolean = true,
     isTablet: Boolean = false,
@@ -192,7 +191,12 @@ fun BasicScreen(
     )
     var showMenu by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = {
+    val textStyle = if(isTablet)
+        AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+    else
+        AppTheme.typography.bodyBold()
+
+        Scaffold(topBar = {
         TopAppBar(
             modifier = modifier.shadow(elevation = 8.dp),
             backgroundColor=AppTheme.colors.primaryDarkColor,
@@ -226,7 +230,18 @@ fun BasicScreen(
         )
     }) { innerPadding ->
         // screen content.
-        BoxWithConstraints(
+            ResponsiveBox(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = contentMaxWidth)
+                    .fillMaxWidth()
+                    .padding(innerPadding),
+                bgColor = screenBackground
+            ){
+                content()
+            }
+
+        /*BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
                 .widthIn(max = contentMaxWidth)
@@ -248,7 +263,7 @@ fun BasicScreen(
                     )
                 }
             )
-        }
+        }*/
     }
 }
 

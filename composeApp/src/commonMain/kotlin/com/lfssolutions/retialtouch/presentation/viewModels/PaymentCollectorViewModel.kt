@@ -6,7 +6,6 @@ import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.PaymentCollectorButtonType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class PaymentCollectorViewModel : ViewModel() {
@@ -22,11 +21,31 @@ class PaymentCollectorViewModel : ViewModel() {
                 paymentSuccess = false
             )
         }
+    }
 
+    fun initialState() {
+        if (paymentCollectorState.value.paymentSuccess) {
+            resetState()
+        }
+    }
+
+    fun resetState() {
+        _paymentCollectorState.update {
+            it.copy(
+                total = "",
+                paymentSuccess = false,
+                isThisFirstEnter = true
+            )
+        }
+    }
+
+    fun updateInitialAmount(totalAmount:Double){
+        _paymentCollectorState.update { state -> state.copy(total = "${totalAmount.roundTo(2)}", isThisFirstEnter = true) }
     }
 
     fun onButtonClick(buttonType: PaymentCollectorButtonType) {
         if (buttonType == PaymentCollectorButtonType.Pay) {
+            if (paymentCollectorState.value.total.isNotEmpty())
             _paymentCollectorState.update { state -> state.copy(paymentSuccess = true) }
         } else {
             if (buttonType == PaymentCollectorButtonType.Delete) {
@@ -52,7 +71,13 @@ class PaymentCollectorViewModel : ViewModel() {
                     PaymentCollectorButtonType.Hundred -> "100"
                     else -> ""
                 }
-                _paymentCollectorState.update { state -> state.copy(total = state.total + str)  }
+                if (paymentCollectorState.value.isThisFirstEnter) {
+                    _paymentCollectorState.update { state -> state.copy(total = str) }
+                    _paymentCollectorState.update { state -> state.copy(isThisFirstEnter = false) }
+                } else {
+                    _paymentCollectorState.update { state -> state.copy(total = state.total + str) }
+                }
+                //_paymentCollectorState.update { state -> state.copy(total = state.total + str)  }
             }
         }
     }

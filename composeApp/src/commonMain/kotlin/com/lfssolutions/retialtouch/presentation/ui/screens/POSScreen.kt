@@ -1,5 +1,6 @@
 package com.lfssolutions.retialtouch.presentation.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -86,9 +88,9 @@ import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.QtyItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
+import com.lfssolutions.retialtouch.presentation.ui.common.SelectableRow
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
-import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -110,7 +112,9 @@ import retailtouch.composeapp.generated.resources.discount
 import retailtouch.composeapp.generated.resources.discount_str
 import retailtouch.composeapp.generated.resources.discount_value
 import retailtouch.composeapp.generated.resources.hash
+import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.hold_sale
+import retailtouch.composeapp.generated.resources.hold_transaction
 import retailtouch.composeapp.generated.resources.ic_star
 import retailtouch.composeapp.generated.resources.in_stock
 import retailtouch.composeapp.generated.resources.items
@@ -166,6 +170,7 @@ fun Pos(
     BasicScreen(
         modifier = Modifier.systemBarsPadding(),
         title = stringResource(Res.string.cashier),
+        isTablet = appState.isTablet,
         contentMaxWidth = Int.MAX_VALUE.dp,
         onBackClick = {
             navigator.pop()
@@ -192,11 +197,32 @@ fun Pos(
             stringResource(Res.string.discount)
         }
 
+        val (holdSaleText,icon) = if(posUIState.cartList.isEmpty() && posUIState.salesOnHold.isEmpty()){
+            stringResource(Res.string.hold_sale) to AppIcons.pauseIcon
+        }else if(posUIState.cartList.isEmpty() &&  posUIState.salesOnHold.isNotEmpty()){
+            //val grandTotal = posUIState.salesOnHold.entries.sumOf { it.value.grandTotal }
+            //val text = "#${posUIState.salesOnHold.size}."
+            stringResource(Res.string.held_tickets) to null
+        }else if(posUIState.cartList.isNotEmpty() &&  posUIState.salesOnHold.isNotEmpty()){
+            stringResource(Res.string.hold_sale) to AppIcons.pauseIcon
+        }else{
+            stringResource(Res.string.hold_sale)  to AppIcons.pauseIcon
+        }
+
+        val holdSaleClickable= if(posUIState.cartList.isEmpty() && posUIState.salesOnHold.isEmpty()){
+            false
+        }else if(posUIState.cartList.isNotEmpty() && posUIState.salesOnHold.isEmpty()){
+            true
+        }else if(posUIState.cartList.isEmpty() && posUIState.salesOnHold.isNotEmpty()){
+            true
+        }else{
+            true
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .align(Alignment.TopCenter),
+                .fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ){
             //Top scrollable content
@@ -251,7 +277,6 @@ fun Pos(
 
                 itemsIndexed(posUIState.cartList
                 ){index, product ->
-
                     POSTaxItem(
                         index = index,
                         item = product,
@@ -304,7 +329,7 @@ fun Pos(
                         color = AppTheme.colors.appRed)
 
                     BottomTex(
-                        label = posViewModel.formatPriceForUI(posUIState.cartItemsDiscount),
+                        label = posViewModel.formatPriceForUI(posUIState.cartItemsDiscount+posUIState.cartPromotionDiscount),
                         textStyle = textStyleHeader,
                         color = AppTheme.colors.appRed)
                 }
@@ -327,14 +352,14 @@ fun Pos(
                 Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     BottomTex(
                         label = stringResource(Res.string.total_value,":"),
-                        textStyle = AppTheme.typography.h1Bold(),
+                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
                         color = AppTheme.colors.textPrimary
                     )
 
 
                     BottomTex(
                         label = posViewModel.formatPriceForUI(posUIState.grandTotal),
-                        textStyle = AppTheme.typography.h1Bold(),
+                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
                         color = AppTheme.colors.textPrimary)
                 }
 
@@ -346,9 +371,9 @@ fun Pos(
 
                     //Hold Button
                     AppPrimaryButton(
-                        enabled = posUIState.cartList.isNotEmpty(),
-                        label = stringResource(Res.string.hold_sale),
-                        leftIcon = AppIcons.pauseIcon,
+                        enabled = holdSaleClickable,
+                        label = holdSaleText,
+                        leftIcon = icon,
                         backgroundColor = AppTheme.colors.textPrimary,
                         disabledBackgroundColor = AppTheme.colors.textPrimary,
                         isPortrait = appState.isPortrait,
@@ -356,7 +381,11 @@ fun Pos(
                             .weight(1f)
                             .wrapContentHeight(),
                         onClick = {
-                            posViewModel.holdCurrentSale()
+                            if(posUIState.cartList.isNotEmpty())
+                                  posViewModel.holdCurrentSale()
+                            else if(posUIState.cartList.isEmpty() && posUIState.salesOnHold.isNotEmpty())
+                                posViewModel.updateHoldSalePopupState(true)
+
                         }
                     )
 
@@ -397,9 +426,11 @@ fun Pos(
             }
 
         }
+
+        AppCircleProgressIndicator(
+            isVisible=posUIState.isLoading
+        )
     }
-
-
 
 
     /*AppLeftSideMenu(
@@ -485,17 +516,37 @@ fun Pos(
         onItemClick = {promotion->
             posViewModel.updateDiscountDialog(false)
             posViewModel.updateDiscount(promotion)
-
         }
     )
 
     //Cart Item Discount Content
     ItemDiscountDialog(
         isVisible = posUIState.showItemDiscountDialog,
+        inputValue = posUIState.inputDiscount,
+        inputError = posUIState.inputDiscountError,
+        trailingIcon= posViewModel.getDiscountTypeIcon(),
+        isPortrait=appState.isPortrait,
+        selectedDiscountType = posUIState.selectedDiscountType,
         onDismissRequest = {
             posViewModel.dismissDiscountDialog()
         },
-        dialogBody = {
+        onTabClick = {discountType->
+            posViewModel.updateDiscountType(discountType)
+        },
+        onDiscountChange = { discount->
+            posViewModel.updateDiscountValue(discount)
+        },
+        onApply = {
+            posViewModel.onApplyDiscountClick()
+        },
+        onCancel = {
+            posViewModel.dismissDiscountDialog()
+        },
+        onNumberPadClick = {symbol->
+            posViewModel.onNumberPadClick(symbol)
+        }
+
+        /*dialogBody = {
             DiscountContent(
                 inputValue = posUIState.inputDiscount,
                 inputError = posUIState.inputDiscountError,
@@ -517,7 +568,7 @@ fun Pos(
                     posViewModel.updateDiscountType(discountType)
                 }
             )
-        }
+        }*/
     )
 
 
@@ -535,20 +586,26 @@ fun Pos(
                  posViewModel.updateCreateMemberDialogState(true)
                 }
             )
+        })
+
+    HoldSaleDialog(
+        posState=posUIState,
+        isVisible = posUIState.showHoldSalePopup,
+        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+        onDismiss = {
+            posViewModel.updateHoldSalePopupState(false)
+        },
+        onRemove = { id->
+           posViewModel.removeHoldSale(id)
+        },
+        onItemClick = {collection->
+            posViewModel.reCallHoldSale(collection)
+            if(posUIState.salesOnHold.isEmpty()){
+                posViewModel.updateHoldSalePopupState(false)
+            }
         }
     )
 
-    HoldSaleDialog(
-        isVisible = posUIState.isDropdownExpanded,
-        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-        contentMaxWidth = AppTheme.dimensions.holdSaleListDefaultWidth,
-        onDismissRequest = {
-            posViewModel.onToggleChange()
-        },
-        dialogBody={
-            showHoldSaleList(posUIState,posViewModel)
-        }
-    )
 
     ActionDialog(
         isVisible = posUIState.isRemoveDialog,
@@ -660,7 +717,7 @@ fun POSTaxItem(
                     Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                         GreyButtonWithElevation(
                             modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                            label = posViewModel.formatPriceForUI(item.getFinalPrice()),
+                            label = posViewModel.formatPriceForUI(item.price),
                             contentColor = textColor,
                             buttonBgdColor = buttonBgColor,
                             textStyle = AppTheme.typography.bodyNormal(),
@@ -764,7 +821,7 @@ fun POSTaxItem(
                     Row(modifier = Modifier.weight(1.2f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                         GreyButtonWithElevation(
                             modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                            label = posViewModel.formatPriceForUI(item.getFinalPrice()),
+                            label = posViewModel.formatPriceForUI(item.price),
                             contentColor = textColor,
                             buttonBgdColor = buttonBgColor,
                             textStyle = AppTheme.typography.bodyNormal(),
@@ -860,6 +917,44 @@ fun showMemberCard(modifier : Modifier,posUIState: PosUIState, posViewModel: Sha
                 tint = AppTheme.colors.appWhite
             )
 
+        }
+    }
+}
+
+@Composable
+fun HoldSaleCard(
+    posUIState:PosUIState,
+    posViewModel: SharedPosViewModel,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    elevation: CardElevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
+    onHoldClick : () -> Unit
+){
+    val grandTotal=posUIState.salesOnHold.entries.sumOf { it.value.grandTotal }
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.appWhite),
+        border = BorderStroke(width = 1.dp, color = AppTheme.colors.listBorderColor),
+        elevation = elevation,
+        shape = AppTheme.appShape.card
+    ){
+
+        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().clickable{
+            onHoldClick.invoke()
+        }){
+            // Row 1: Rounded corners on the left
+            SelectableRow(
+                modifier = Modifier.weight(1.5f).height(AppTheme.dimensions.defaultButtonSize),
+                text = stringResource(Res.string.hold_transaction),
+                isSelected = false,
+                shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp) // Rounded left corners
+            )
+            // Row 2: Rounded corners on the right
+            SelectableRow(
+                modifier = Modifier.weight(.5f).height(AppTheme.dimensions.defaultButtonSize),
+                text = "#${posUIState.salesOnHold.size} [${posViewModel.formatPriceForUI(grandTotal)}]",
+                isSelected = true,
+                shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp) // Rounded right corners
+            )
         }
     }
 }
@@ -1315,7 +1410,7 @@ fun DiscountContent(
                label = stringResource(Res.string.discount),
                icons = AppIcons.dollarIcon,
                backgroundColor = AppTheme.colors.appGreen,
-               innerPaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+               innerPaddingValues = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                isEnabled=selectedDiscountType!=DiscountType.FIXED_AMOUNT,
                isColorChange = true,
                onClick = {
@@ -1355,6 +1450,21 @@ fun DiscountContent(
        )
    }
 }
+
+
+//Hold Transactions
+/*if(posUIState.salesOnHold.isNotEmpty()){
+    HoldSaleCard(
+        posUIState=posUIState,
+        posViewModel=posViewModel,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(vertical = vertPadding),
+        onHoldClick = {
+
+        })
+}*/
 
 
 

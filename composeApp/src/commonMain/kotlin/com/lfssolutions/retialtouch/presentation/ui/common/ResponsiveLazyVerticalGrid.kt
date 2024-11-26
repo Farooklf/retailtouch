@@ -44,6 +44,7 @@ import com.lfssolutions.retialtouch.domain.model.home.HomeUIState
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import io.kamel.image.KamelImage
@@ -113,7 +114,7 @@ fun HomeItem(
             .padding(vertical = 20.dp)
             .clickable{onClick.invoke()},
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
         Icon( imageVector = vectorResource(icon),
@@ -342,11 +343,8 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean, onClick: () -> Unit) {
 }
 
 fun getGridCell(appState: AppState): Int {
-    return when (appState.isPortrait) {
-        true -> 2
-        false-> 4
-
-        /*DeviceType.SMALL_PHONE -> {
+    return when (appState.deviceType) {
+        DeviceType.SMALL_PHONE -> {
             2
         }
 
@@ -355,11 +353,11 @@ fun getGridCell(appState: AppState): Int {
         }
 
         DeviceType.SMALL_TABLET -> {
-            3
+            4
         }
 
         DeviceType.LARGE_TABLET -> {
-            4
-        }*/
+            5
+        }
     }
 }

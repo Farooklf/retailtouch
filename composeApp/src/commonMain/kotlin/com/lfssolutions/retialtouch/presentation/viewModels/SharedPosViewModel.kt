@@ -45,6 +45,7 @@ import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
 import io.kamel.core.utils.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,7 +85,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         val members: List<MemberDao>,
         val promotionsDetails: List<PromotionDetails>,
         val promotions: List<Promotion>,
-        val location : Location?
+        val location : Location?,
+        val holdSale : List<CRSaleOnHold>,
     )
 
 
@@ -96,22 +98,29 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 dataBaseRepository.getMember(),
                 dataBaseRepository.getPromotionDetails(),
                 dataBaseRepository.getPromotions(),
-                dataBaseRepository.getSelectedLocation()
-            ) { members,details, promotion,location ->
-                LoadData(members,details,promotion,location)
+                dataBaseRepository.getSelectedLocation(),
+                dataBaseRepository.getHoldSales()
+            ) { members,details, promotion,location,holdSale->
+                LoadData(members,details,promotion,location,holdSale)
             }
-                .onStart { _posUIState.update { it.copy(isLoading = true) }}  // Show loader when starting
+                .onStart {
+                    _posUIState.update { it.copy(isLoading = true)}
+                    delay(2000)
+                }  // Show loader when starting
                 .catch { th ->
                     println("exception : ${th.message}")
                     _posUIState.update { it.copy(isLoading = false) }
                 }   // Handle any errors and hide loader
-                .collect { (members,details, promotion,location) ->
-                    println("promotionDetails : $details | promotion : $promotion | location : $location")
+                .collect { (members,details, promotion,location,holdSale) ->
+                    println("promotionDetails : $details | promotion : $promotion | location : $location |holdSale : $holdSale")
+                    val holdMap = holdSale.associateBy { item -> item.collectionId }.toMutableMap()
+                    println("holdMap : $holdMap")
                     _posUIState.update {  it.copy(
                         location=location,
                         memberList = members.map {member-> member.rowItem},
                         promotionDetails = details.toMutableList(),
                         promotions = promotion.toMutableList(),
+                        salesOnHold = holdMap,
                         isLoading = false
                     )
                     }
@@ -891,8 +900,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     salesOnHold=updatedMap,
                     cartList = mutableListOf(),
                     memberItem = MemberItem(),
-                    selectedMember = "Search Member",
-                    isHoldSaleDialog = true
+                    selectedMember = "Search Member"
                 )
 
             }
@@ -916,6 +924,24 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun removeHoldSale(collectionId:Long){
+        viewModelScope.launch {
+            _posUIState.update { currentState->
+                dataBaseRepository.removeHoldSaleItemById(collectionId)
+                val updatedMap= currentState.salesOnHold.toMutableMap()
+                updatedMap.remove(collectionId)
+                currentState.copy(
+                    salesOnHold = updatedMap
+                )
+            }
+        }
+    }
+
+    fun updateHoldSalePopupState(value:Boolean){
+        viewModelScope.launch {
+            _posUIState.update { it.copy(showHoldSalePopup = value) }
+        }
+    }
 
     fun onHoldClicked(){
         viewModelScope.launch(Dispatchers.Default) {

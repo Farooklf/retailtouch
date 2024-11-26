@@ -669,6 +669,9 @@ class DataBaseRepository: KoinComponent {
 
 
     //fetch
+    fun getHoldSales() : Flow<List<CRSaleOnHold>>{
+        return dataBaseRepository.getAllHoldSaleRecord().flowOn(Dispatchers.IO)
+    }
     fun getAllPendingSaleRecordsCount() : Flow<Long>{
         return dataBaseRepository.getAllPendingSalesCount().flowOn(Dispatchers.IO)
     }

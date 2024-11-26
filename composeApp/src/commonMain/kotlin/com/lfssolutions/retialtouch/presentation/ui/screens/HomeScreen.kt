@@ -77,14 +77,13 @@ fun Home(
     val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
 
     LaunchedEffect(isFromSplash) {
-           println("callIsSplash :$isFromSplash")
+          // println("callIsSplash :$isFromSplash")
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
             homeViewModel.initialiseSplash(true)
         }else{
             homeViewModel.isLoggedIn()
         }
     }
-
 
     /*when(homeUIState.hasEmployeeLoggedIn){
         true -> {
@@ -141,7 +140,9 @@ fun Home(
 
                         LazyVerticalGrid(
                             columns = GridCells.Fixed( getGridCell(appState)),
-                            modifier = Modifier.fillMaxSize().padding(vertical = AppTheme.dimensions.verticalItemPadding),
+                            modifier = Modifier.fillMaxSize().padding(vertical = AppTheme.dimensions.padding10),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalArrangement=Arrangement.SpaceEvenly
                             ) {
                              item(span = { GridItemSpan(getGridCell(appState)) }) {
                                  CurrentTimeDisplay(currentTime, showColon)

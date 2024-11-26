@@ -8,12 +8,11 @@ import androidx.compose.ui.graphics.TileMode
 val BrandRed = Color(0xFFED1C24)
 val BrandGrey = Color(0xFF3D312E)
 val BrandDarkBlue= Color(0xFF0e2e3b)
-val APPGradientColor1 = Color(0xFF35a3d6)
+val APPGradientColor1 = Color(0xFF35a3d6) //0xFF35a3d6
 val APPGradientColor2 = Color(0xFF226888)
 val APPGradientColor3 = Color(0xFF0e2e3b)
 val APPGradientColor4 = Color(0xFF0e2e3b)
 val TextWhite = Color(0xFFFFFFFF)
-val TextPrimary = Color(0xFFED1C24)
 val ProgressPrimary = Color(0xFFED1C24)
 
 interface SystemDesignColors {
@@ -177,7 +176,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val backgroundMenu: Color = BrandGrey
     override val backgroundNavbar: Color = BrandDarkBlue
     override val backgroundWindow: Color = BrandGrey
-    override val backgroundDialog: Color = BrandGrey
+    override val backgroundDialog: Color = Color(0xFFFFFFFF)
     override val closeButtonBg: Color = Color(0xFFED1C24)
     override val greyButtonBg: Color = Color(0xFFc8d0d3)
     override val closeButtonContent: Color = Color(0xFFFFFFFF)

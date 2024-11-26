@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -56,7 +59,9 @@ import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.AppLeftSideMenu
+import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
+import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
 import com.lfssolutions.retialtouch.presentation.ui.common.DeletePaymentModeDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ImagePlaceholder
@@ -64,6 +69,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.LazyVerticalGridG
 import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.PaymentCollectorDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.PaymentSuccessDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -82,11 +88,14 @@ import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.add_more
 import retailtouch.composeapp.generated.resources.balance
 import retailtouch.composeapp.generated.resources.cancel
+import retailtouch.composeapp.generated.resources.cashier
 import retailtouch.composeapp.generated.resources.error_title
 import retailtouch.composeapp.generated.resources.grand_total
 import retailtouch.composeapp.generated.resources.order_summary
+import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_total
 import retailtouch.composeapp.generated.resources.scan
+import retailtouch.composeapp.generated.resources.sign_in
 import retailtouch.composeapp.generated.resources.subtotal
 import retailtouch.composeapp.generated.resources.tax
 import retailtouch.composeapp.generated.resources.tender
@@ -147,7 +156,38 @@ fun Payment(
     }
 
 
-    AppLeftSideMenu(
+    BasicScreen(
+        modifier = Modifier.systemBarsPadding(),
+        title = stringResource(Res.string.payment),
+        isTablet = appState.isTablet,
+        contentMaxWidth = Int.MAX_VALUE.dp,
+        onBackClick = {
+            navigator.pop()
+        }
+    ){
+        Column(modifier = Modifier.weight(1f)) {
+            if (!appState.isPortrait) {
+                LandscapePaymentScreen(
+                    state,
+                    viewModel
+                )
+            } else {
+                PortraitPaymentScreen(
+                    state,
+                    viewModel
+                )
+            }
+        }
+        AppCircleProgressIndicator(
+            isVisible=state.isLoading
+        )
+        SnackbarHost(
+            hostState = snackbarHostState.value,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
+
+    /*AppLeftSideMenu(
         syncInProgress = state.isLoading,
         modifier = Modifier.fillMaxSize(),
         content = {
@@ -180,13 +220,13 @@ fun Payment(
                 })
 
         }
-    )
+    )*/
 
     if(state.showPaymentCollectorDialog){
         println("state_remainingBalance:${state.remainingBalance}")
         PaymentCollectorDialog(
             isVisible = state.showPaymentCollectorDialog,
-            totalValue = state.remainingBalance,
+            paymentAmount = state.remainingBalance,
             paymentName = state.availablePayments.find { it.id == state.selectedPaymentTypesId }?.name ?: "Payment Amount",
             onPayClick = {payment->
                 println("dialogAmount:$payment")
@@ -221,8 +261,8 @@ fun Payment(
             //viewModel.printPosPaymentReceipt()
         }
     )
-
 }
+
 @Composable
 fun startPayment(viewModel: SharedPosViewModel, state: PosUIState) {
     viewModel.resetStartPaymentLibState()
@@ -262,14 +302,14 @@ private fun PortraitPaymentScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = AppTheme.dimensions.paddingH)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         PaymentSelectionView(
             modifier = Modifier.weight(1f),
             availablePayments = state.availablePayments,
             onPaymentClick = { selectedPayment ->
-                viewModel.onPaymentClicked(selectedPayment )
+                viewModel.onPaymentClicked(selectedPayment)
             }
         )
 
@@ -288,7 +328,20 @@ private fun PortraitPaymentScreen(
             payments = state.createdPayments
         )
 
-        ButtonRowCard(
+        /*AppPrimaryButton(
+            onClick = {
+                viewModel.onPaymentClose()
+            },
+            backgroundColor = AppTheme.colors.primaryColor,
+            rightIcon = AppIcons.addIcon,
+            label = stringResource(Res.string.add_more),
+            isPortrait = false,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+        )*/
+
+        /*ButtonRowCard(
             modifier = Modifier.fillMaxWidth().height(AppTheme.dimensions.defaultButtonSize).padding(vertical = 10.dp),
             label = stringResource(Res.string.add_more),
             icons = AppIcons.addIcon,
@@ -299,7 +352,7 @@ private fun PortraitPaymentScreen(
                 viewModel.onPaymentClose()
             }
             //innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
-        )
+        )*/
     }
 }
 
@@ -317,8 +370,9 @@ fun LandscapePaymentScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 10.dp)
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+
         ){
 
             PaymentSelectionView(
@@ -344,18 +398,18 @@ fun LandscapePaymentScreen(
                 payments = state.createdPayments
             )
 
-            ButtonRowCard(
-                modifier = Modifier.fillMaxWidth(7f).height(AppTheme.dimensions.defaultButtonSize).padding(vertical = 10.dp),
-                label = stringResource(Res.string.add_more),
-                icons = AppIcons.addIcon,
-                iconSize = AppTheme.dimensions.smallIcon,
-                backgroundColor=AppTheme.colors.primaryColor,
-                /*innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),*/
+            /*AppPrimaryButton(
                 onClick = {
                     viewModel.onPaymentClose()
-                }
-            )
-
+                },
+                backgroundColor = AppTheme.colors.primaryColor,
+                rightIcon = AppIcons.addIcon,
+                label = stringResource(Res.string.add_more) ,
+                isPortrait = false,
+                modifier = Modifier
+                    .fillMaxWidth(7f)
+                    .height(AppTheme.dimensions.defaultButtonSize)
+            )*/
         }
     }
 }
@@ -366,15 +420,11 @@ private fun PaymentSelectionView(
     availablePayments: List<PaymentMethod>,
     onPaymentClick: (PaymentMethod) -> Unit = {},
 ) {
+    val appState = LocalAppState.current
+    val gridCount=getGridCell(appState)
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = modifier.padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        contentPadding = PaddingValues(
-            top = 4.dp,
-            bottom = 60.dp
-        )
+        columns = GridCells.Fixed(gridCount),
+        modifier = modifier
     ) {
         items(availablePayments) { payment ->
             PaymentMethodItem(
@@ -392,27 +442,33 @@ fun PaymentMethodItem(
     payment: PaymentMethod,
     onClick: (PaymentMethod) -> Unit = {},
 ) {
-    val cardColor = if (payment.isSelected) {
-        AppTheme.colors.listItemSelectedCardColor
+    val appState = LocalAppState.current
+    val padding=if(appState.isTablet){
+        AppTheme.dimensions.padding15
+    }else{
+        AppTheme.dimensions.padding10
+    }
+    val (cardColor,contentColor) = if (payment.isSelected) {
+        AppTheme.colors.primaryColor to AppTheme.colors.appWhite
     } else {
-        AppTheme.colors.listItemCardColor
+        AppTheme.colors.textLightGrey to AppTheme.colors.textBlack
     }
 
     Card(
         modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) {
+            .wrapContentWidth()
+            .wrapContentHeight()
+            .padding(padding)
+            .clickable {
                 onClick(payment)
             },
+        elevation = CardDefaults.cardElevation(5.dp),
         colors = CardDefaults.cardColors(containerColor = AppTheme.colors.appWhite),
         shape = AppTheme.appShape.card
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentSize()
         ) {
             KamelImage(
                 resource = asyncPainterResource(""),
@@ -429,13 +485,13 @@ fun PaymentMethodItem(
                 modifier = Modifier
                     .background(cardColor)
                     .fillMaxWidth()
-                    .padding(5.dp),
+                    .padding(AppTheme.dimensions.padding10),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = payment.name?:"",
                     style = AppTheme.typography.bodyNormal(),
-                    color = AppTheme.colors.appWhite,
+                    color = contentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -456,6 +512,12 @@ private fun OrderSummary(
     balance: Double,
     payments: List<PaymentMethod>
 ) {
+    val appState = LocalAppState.current
+    val textStyleHeader=if(appState.isPortrait)
+        AppTheme.typography.bodyBold()
+    else
+        AppTheme.typography.titleBold()
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(2.dp),
         colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cartItemBg),
@@ -463,14 +525,14 @@ private fun OrderSummary(
         shape = AppTheme.appShape.card
     ){
         Column(
-            modifier = Modifier.fillMaxWidth().padding(10.dp)
+            modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
 
             Text(
                 text = stringResource(Res.string.order_summary),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 10.dp),
+                    .padding(bottom = 5.dp),
                 style = AppTheme.typography.h1Medium(),
                 color = AppTheme.colors.textPrimary,
                 textAlign = TextAlign.Center
@@ -479,12 +541,15 @@ private fun OrderSummary(
             OrderSummaryRow(
                 label = stringResource(Res.string.subtotal),
                 value = subTotal,
+                textStyle = textStyleHeader,
                 viewModel=viewModel
             )
             if (appliedDiscountTotal >0.0) {
                 OrderSummaryRow(
                     label = "Discount",
                     value = appliedDiscountTotal,
+                    primaryText=AppTheme.colors.appRed,
+                    textStyle = textStyleHeader,
                     viewModel=viewModel
                 )
             }
@@ -493,18 +558,21 @@ private fun OrderSummary(
             OrderSummaryRow(
                 label = stringResource(Res.string.tax),
                 value = appliedTax,
+                textStyle = textStyleHeader,
                 viewModel=viewModel
             )
 
             OrderSummaryRow(
                 label = stringResource(Res.string.grand_total),
                 value = granTotal,
+                textStyle = textStyleHeader,
                 viewModel=viewModel
             )
 
             OrderSummaryRow(
                 label = stringResource(Res.string.payment_total),
                 value = payment,
+                textStyle = textStyleHeader,
                 viewModel=viewModel
             )
 
@@ -512,14 +580,13 @@ private fun OrderSummary(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = AppTheme.dimensions.paddingV)
                         .horizontalScroll(rememberScrollState()),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ){
                     payments.forEach { payment ->
                         PaymentView(
-                            onDeleteClick = onDeletePaymentClick,
+                            onDeleteClick = {onDeletePaymentClick.invoke(payment.id)},
                             payment = payment
                         )
                     }
@@ -530,8 +597,8 @@ private fun OrderSummary(
             OrderSummaryRow(
                 label = stringResource(Res.string.balance),
                 value = balance,
-                textStyle = AppTheme.typography.h1Medium(),
-                primaryText = AppTheme.colors.textPrimary,
+                textStyle = AppTheme.typography.titleBold().copy(fontSize = 20.sp),
+                primaryText = AppTheme.colors.textBlack,
                 viewModel=viewModel
             )
         }
@@ -544,7 +611,7 @@ fun OrderSummaryRow(
     label: String,
     value: Double,
     textStyle: TextStyle = AppTheme.typography.bodyNormal(),
-    primaryText: Color = AppTheme.colors.primaryText,
+    primaryText: Color = AppTheme.colors.textDarkGrey,
     viewModel:SharedPosViewModel
 ) {
     Row(
@@ -571,40 +638,6 @@ fun OrderSummaryRow(
     }
 }
 
-
-@Composable
-fun NumberPadContent(
-    viewModel: SharedPosViewModel,
-    screenState: PosUIState
-) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(10.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ){
-
-        NumberPad(
-            textValue=screenState.inputDiscount,
-            onValueChange = {amount->
-                viewModel.updateEnterAmountValue(amount)
-            },
-            inputError=screenState.inputDiscountError,
-            onNumberPadClick = {symbol->
-                viewModel.onNumberPadClick(symbol)
-            }, onApplyClick = {
-                //viewModel.applyPaymentValue(payment)
-            }, onCancelClick = {
-                //viewModel.dismissNumberPadDialog()
-            }
-        )
-    }
-}
-
 @Composable
 fun PaymentView(
     onDeleteClick: (Int) -> Unit = {},
@@ -612,17 +645,21 @@ fun PaymentView(
 ) {
     val appState = LocalAppState.current
     Card(
-        modifier = Modifier.height(AppTheme.dimensions.defaultCardMinSize).wrapContentWidth().padding(vertical = if(appState.isTablet) AppTheme.dimensions.tabListVerPadding else AppTheme.dimensions.phoneListVerPadding, horizontal = AppTheme.dimensions.listHorPadding)
-            .clickable{},
-        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.listItemCardColor),
+        modifier = Modifier.height(AppTheme.dimensions.defaultCardMinSize).wrapContentWidth().padding(vertical = if(appState.isTablet) AppTheme.dimensions.padding10
+        else AppTheme.dimensions.padding5, horizontal = AppTheme.dimensions.padding5)
+            .clickable{
+                onDeleteClick.invoke(payment.id)
+            },
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.brand),
         elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
         shape = AppTheme.appShape.cardRound
     ) {
         Row(modifier = Modifier
-            .wrapContentWidth()
-            .padding(vertical = AppTheme.dimensions.paddingV, horizontal = AppTheme.dimensions.paddingH),
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(vertical = AppTheme.dimensions.padding5, horizontal = AppTheme.dimensions.padding5),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spaceBetweenPadded(AppTheme.dimensions.paddingV)
+            horizontalArrangement = Arrangement.spaceBetweenPadded(AppTheme.dimensions.padding5)
         ){
 
             Text(
@@ -632,24 +669,12 @@ fun PaymentView(
                 color = AppTheme.colors.appWhite
             )
 
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(AppTheme.colors.appWhite)
-                    .clickable(
-                        role = Role.Button,
-                    ) {
-                        onDeleteClick(payment.id)
-                    }
-            ) {
-                Icon(
-                    painter = painterResource(AppIcons.removeIcon),
-                    contentDescription = null,
-                    tint = AppTheme.colors.textError,
-                    modifier = Modifier.size(AppTheme.dimensions.smallXIcon).padding(3.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(AppIcons.removeIcon),
+                contentDescription = null,
+                tint = AppTheme.colors.appWhite,
+                modifier = Modifier.size(AppTheme.dimensions.icon16)
+            )
         }
 
     }

@@ -77,7 +77,7 @@ data class PosUIState(
 
     //Hold
     var isHoldSaleDialog : Boolean = false,
-    var isHoldSalePopup : Boolean = false,
+    var showHoldSalePopup : Boolean = false,
     var salesOnHold : MutableMap<Long, CRSaleOnHold> = hashMapOf(),
     // HashMap to hold collections
     var holdSaleCollections : MutableMap<Int, HeldCollection> = hashMapOf(),

@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import org.jetbrains.compose.resources.DrawableResource
@@ -32,108 +33,126 @@ import retailtouch.composeapp.generated.resources.amount_label
 import retailtouch.composeapp.generated.resources.amount_placeholder
 import retailtouch.composeapp.generated.resources.apply
 import retailtouch.composeapp.generated.resources.cancel
+import retailtouch.composeapp.generated.resources.payment
 
 @Composable
 fun NumberPad(
     textValue: String = "",
     trailingIcon: DrawableResource? = null,
     inputError: String?=null,
+    isPortrait: Boolean = false,
     onValueChange: (String) -> Unit,
     onNumberPadClick: (String) -> Unit,
     onApplyClick: () -> Unit,
     onCancelClick: () -> Unit,
 ){
 
-    AppOutlinedTextField(
-        modifier = Modifier
-            .wrapContentHeight()
-            .wrapContentWidth(),
-        value = textValue,
-        onValueChange = { discount ->
-            onValueChange.invoke(discount)
-        },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Next,
-            keyboardType = KeyboardType.Number
-        ),
-        trailingIcon = trailingIcon,
-        placeholder = stringResource(Res.string.amount_placeholder),
-        label = stringResource(Res.string.amount_label),
-        error = inputError,
-        singleLine = true,
-        enabled = true
-    )
-
-    Spacer(modifier = Modifier.height(10.dp))
-
-    // Number Pad
     Column(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        for (row in listOf(
-            listOf("1", "2", "3"),
-            listOf("4", "5", "6"),
-            listOf("7", "8", "9"),
-            listOf(".", "0", "x")
-        )) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+    )
+    {
+        AppOutlinedTextField(
+            modifier = Modifier
+                .wrapContentHeight()
+                .wrapContentWidth(),
+            value = textValue,
+            onValueChange = { discount ->
+                onValueChange.invoke(discount)
+            },
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Number
+            ),
+            trailingIcon = trailingIcon,
+            placeholder = stringResource(Res.string.amount_placeholder),
+            label = stringResource(Res.string.amount_label),
+            error = inputError,
+            singleLine = true,
+            enabled = true
+        )
 
-                ) {
-                row.forEach { symbol ->
-                    Button(
-                        onClick = {
-                            onNumberPadClick.invoke(symbol)
-                        },
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.colors.greyButtonBg,
-                        ),
+      // Number Pad
+        Column(
+            modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            for (row in listOf(
+                listOf("1", "2", "3"),
+                listOf("4", "5", "6"),
+                listOf("7", "8", "9"),
+                listOf(".", "0", "x")
+            )) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.dimensions.padding20),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text(
-                            text = symbol,
-                            color = AppTheme.colors.primaryText,
-                            style = AppTheme.typography.bodyMedium()
-                        )
+                    row.forEach { symbol ->
+                        Button(
+                            onClick = {
+                                onNumberPadClick.invoke(symbol)
+                            },
+                            modifier = Modifier
+                                .size(AppTheme.dimensions.icon60)
+                                .clip(CircleShape),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AppTheme.colors.greyButtonBg,
+                            ),
+                        ) {
+                            Text(
+                                text = symbol,
+                                color = AppTheme.colors.primaryText,
+                                style = AppTheme.typography.bodyMedium()
+                            )
+                        }
                     }
                 }
             }
         }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(AppTheme.dimensions.padding10),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+
+            AppPrimaryButton(
+                enabled = inputError==null,
+                label = stringResource(Res.string.apply),
+                leftIcon = AppIcons.applyIcon,
+                backgroundColor = AppTheme.colors.appGreen,
+                disabledBackgroundColor = AppTheme.colors.appGreen,
+                isPortrait = isPortrait,
+                modifier = Modifier
+                    .weight(1f)
+                    .wrapContentHeight(),
+                onClick = {
+                    onApplyClick.invoke()
+                }
+            )
+
+            AppPrimaryButton(
+                label = stringResource(Res.string.cancel),
+                leftIcon = AppIcons.closeIcon,
+                backgroundColor = AppTheme.colors.appRed,
+                disabledBackgroundColor = AppTheme.colors.appRed,
+                isPortrait = isPortrait,
+                modifier = Modifier
+                    .weight(1f)
+                    .wrapContentHeight(),
+                onClick = {
+                    onCancelClick.invoke()
+                }
+            )
+
+        }
     }
 
-    Spacer(modifier = Modifier.height(10.dp))
 
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ){
+    //Spacer(modifier = Modifier.height(10.dp))
+    //Spacer(modifier = Modifier.height(10.dp))
 
-        ButtonCard(
-            modifier = Modifier.wrapContentHeight().wrapContentWidth().padding(horizontal = 10.dp),
-            label = stringResource(Res.string.apply),
-            icons = AppIcons.applyIcon,
-            backgroundColor = AppTheme.colors.appGreen,
-            innerPaddingValues = PaddingValues(AppTheme.dimensions.buttonSquarePadding),
-            isEnabled = inputError==null ,
-            onClick = {
-                onApplyClick.invoke()
-            }
-        )
 
-        ButtonCard(
-            modifier = Modifier.wrapContentHeight().wrapContentWidth().padding(horizontal = 10.dp),
-            label = stringResource(Res.string.cancel),
-            icons = AppIcons.closeIcon,
-            backgroundColor = AppTheme.colors.textError,
-            innerPaddingValues = PaddingValues(AppTheme.dimensions.buttonSquarePadding),
-            onClick = {
-                onCancelClick.invoke()
-            }
-        )
-    }
 }

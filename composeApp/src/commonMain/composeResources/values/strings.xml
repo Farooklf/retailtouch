@@ -146,5 +146,9 @@
     <string name="select_bluetooth_device">Select an Bluetooth Device</string>
     <string name="select_usb_device">Select an USB Device</string>
     <string name="promotion_discounts">Promotion and Discounts</string>
+    <string name="hold_transaction">%1$sTickets (%2$s)</string>
+    <string name="held_tickets">Held Tickets</string>
+    <string name="remove">Remove</string>
+    <string name="add">Add</string>
 
 </resources>

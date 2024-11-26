@@ -27,6 +27,7 @@ import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
@@ -41,6 +42,7 @@ import retailtouch.composeapp.generated.resources.email
 import retailtouch.composeapp.generated.resources.member_code
 import retailtouch.composeapp.generated.resources.mobile_number
 import retailtouch.composeapp.generated.resources.name
+import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.zip_code
 
 
@@ -55,9 +57,12 @@ fun MemberList(
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.Start
     ){
-
         SearchableTextWithBg(
             value = posUIState.searchMember,
+            leadingIcon=AppIcons.searchIcon,
+            placeholder = stringResource(Res.string.search_items),
+            label = stringResource(Res.string.search_items),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
             onValueChange = {
                 posViewModel.onSearchMember(it)
             }
@@ -88,7 +93,7 @@ fun MemberList(
         )
 
         //Members List
-        LazyColumn(modifier = Modifier.fillMaxWidth()){
+        LazyColumn(modifier = Modifier.weight(1f)){
 
             val searchQuery= posUIState.searchMember
 
