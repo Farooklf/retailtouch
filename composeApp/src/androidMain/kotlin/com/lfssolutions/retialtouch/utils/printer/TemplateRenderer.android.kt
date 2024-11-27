@@ -11,6 +11,7 @@ import com.github.mustachejava.DefaultMustacheFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.PrintWriter
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URL
@@ -27,7 +28,7 @@ actual class TemplateRenderer actual constructor(){
         val preprocessedTemplate = renderTemplateWithImage(template)
 
         // Apply the formatting (e.g., [L], [B], [U])
-        val formattedTemplate = applyFormatted(preprocessedTemplate)
+        val formattedTemplate = applyFormatted(template)
 
         // Create a Mustache factory instance
         val mf = DefaultMustacheFactory()
@@ -37,9 +38,11 @@ actual class TemplateRenderer actual constructor(){
         withContext(Dispatchers.IO) {
             mustache.execute(writer, data).flush()
         }
-        //val writer=mustache.execute(PrintWriter(System.out), data)
-        //  writer.flush()
-        //println("Template: $writer")
+        /*val writer = mustache.execute(PrintWriter(System.out), data)
+        withContext(Dispatchers.IO) {
+            writer.flush()
+        }*/
+         println("Template: $writer")
         // Return the rendered template as a String
         return writer.toString()
     }

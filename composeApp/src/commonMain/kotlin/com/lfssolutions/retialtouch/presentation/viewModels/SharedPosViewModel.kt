@@ -1701,9 +1701,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         updatePaymentInvoiceState(ticket)
 
         val state = posUIState.value
-        if(!state.isPrinterEnable)
-            return
-
         viewModelScope.launch {
             var textToPrint:String=defaultTemplate
             syncPrintTemplate(TemplateType.POSInvoice)

@@ -149,14 +149,14 @@ fun PrinterContent(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
-                PrinterTextField(
+                /*PrinterTextField(
                     value = state.printerTemplates.name?:"",
                     onValueChange = { viewModel.updatePrinterStationName(it) },
                     onClick = { viewModel.updatePrinterTemplateDialogVisibility(true) },
                     label = stringResource(Res.string.select_print_template),
                     fontSize = if (state.isTablet) 18.sp else 14.sp,
                     enabled = false,
-                )
+                )*/
 
                 PaperSizeSelection(
                     selectedSize = state.paperSize,

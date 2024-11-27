@@ -236,10 +236,10 @@ fun Pos(
                         label = stringResource(Res.string.search_items),
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done
+                            imeAction = ImeAction.Go
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = {
+                            onGo = {
                                 // When done is pressed, open the dialog
                                 posViewModel.scanBarcode()
                             }
