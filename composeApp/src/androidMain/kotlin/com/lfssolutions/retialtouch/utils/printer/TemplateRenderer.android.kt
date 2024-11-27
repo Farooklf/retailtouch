@@ -28,7 +28,7 @@ actual class TemplateRenderer actual constructor(){
         val preprocessedTemplate = renderTemplateWithImage(template)
 
         // Apply the formatting (e.g., [L], [B], [U])
-        val formattedTemplate = applyFormatted(template)
+        val formattedTemplate = applyFormatted(preprocessedTemplate)
 
         // Create a Mustache factory instance
         val mf = DefaultMustacheFactory()
