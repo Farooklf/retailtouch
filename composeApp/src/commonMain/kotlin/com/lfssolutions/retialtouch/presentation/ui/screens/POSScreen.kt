@@ -308,7 +308,7 @@ fun Pos(
                     )
                 }
 
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                /*Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     BottomTex(
                         label = stringResource(Res.string.items_value,":"),
                         textStyle = textStyleHeader,
@@ -320,7 +320,7 @@ fun Pos(
                         textStyle = textStyleHeader,
                         color = AppTheme.colors.textDarkGrey,
                     )
-                }
+                }*/
 
                 Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     BottomTex(
@@ -672,7 +672,7 @@ fun POSTaxItem(
             Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
                 verticalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
-                Row(modifier = Modifier.fillMaxWidth().clickable{
+                /*Row(modifier = Modifier.fillMaxWidth().clickable{
                     posViewModel.removedListItem(item)
                 }, horizontalArrangement = Arrangement.End){
                     Image(
@@ -681,7 +681,7 @@ fun POSTaxItem(
                         modifier = Modifier.size(AppTheme.dimensions.smallXIcon),
                         colorFilter = ColorFilter.tint(AppTheme.colors.textError)
                     )
-                }
+                }*/
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     ListText(
                         label = "${index+1}",
@@ -709,6 +709,14 @@ fun POSTaxItem(
                             modifier = Modifier.wrapContentWidth()
                         )
                     }
+
+                    //modifier icons
+                    VectorIcons(icons = AppIcons.cancelIcon,
+                        modifier = Modifier.weight(.5f),
+                        onClick = {
+                            posViewModel.removedListItem(item)
+                        }
+                    )
                 }
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Spacer(modifier = Modifier.weight(1.3f))

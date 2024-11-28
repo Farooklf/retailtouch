@@ -6,15 +6,15 @@ import android.util.Log
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import com.dantsu.escposprinter.textparser.PrinterTextParserImg
 import com.github.mustachejava.DefaultMustacheFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.PrintWriter
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URL
+import android.util.Base64
+
 
 
 actual class TemplateRenderer actual constructor(){
@@ -42,7 +42,7 @@ actual class TemplateRenderer actual constructor(){
         withContext(Dispatchers.IO) {
             writer.flush()
         }*/
-         println("Template: $writer")
+         //println("Template: $writer")
         // Return the rendered template as a String
         return writer.toString()
     }
@@ -55,6 +55,46 @@ actual class TemplateRenderer actual constructor(){
     }
 
 
+    suspend fun processTemplateForImg(template: String): String {
+        val imageUrlRegex = """@@@(http\S+)""".toRegex()
+
+        // Step 1: Find all matches
+        val matches = imageUrlRegex.findAll(template).toList()
+
+        // Step 2: Process each URL asynchronously
+        val replacements = matches.map { match ->
+            val imageUrl = match.groups[1]?.value
+            val replacement = if (imageUrl != null) {
+                try {
+                    val imageBitmap = loadImageFromWeb(imageUrl) // Suspending function
+                    if (imageBitmap != null) {
+                        val hexString = bitmapToHexadecimalString(imageBitmap)
+                        "[C]<img>$hexString</img>\n"
+                    } else {
+                        match.value // Retain original if loading fails
+                    }
+                } catch (e: Exception) {
+                    println("Error processing image URL: $imageUrl - ${e.message}")
+                    match.value // Retain original on error
+                }
+            } else {
+                match.value // Retain original if URL extraction fails
+            }
+            match.range to replacement
+        }
+
+        // Step 3: Replace in the template
+        val resultBuilder = StringBuilder(template)
+        replacements.asReversed().forEach { (range, replacement) ->
+            resultBuilder.replace(range.first, range.last + 1, replacement)
+        }
+
+        println("UpdatedTemplate :-$resultBuilder")
+        return resultBuilder.toString()
+    }
+
+
+
     // Function to extract the image URL from the template and replace it with the <img> tag
     private suspend fun renderTemplateWithImage(template: String): String {
 
@@ -62,14 +102,18 @@ actual class TemplateRenderer actual constructor(){
         val imageUrlRegex = """@@@(http[^\s]+)""".toRegex()
         val matchResult = imageUrlRegex.find(template)
         val imageUrl = matchResult?.groupValues?.get(1)
-        println("imageUrl: $imageUrl")
+         println("imageUrl: $imageUrl")
+         println("matchResult: $matchResult")
 
         imageUrl?.let {
             val imageBitmap = loadImageFromWeb(it) // Load image from URL
-            val hexString = bitmapToHexadecimalString(imageBitmap ?: return template)
-
+             val hexString = bitmapToBase64(imageBitmap ?: return template)
+             println("hexString: $hexString")
+            val replaceCode= "[C]<img>$hexString</img>\n"
+            println("HexStringWith image :- $replaceCode")
             // Replace the image URL with the <img> tag containing the hexadecimal string
-            val updatedTemplate = template.replace(imageUrlRegex, "[C]<img>$hexString</img>\n")
+            val updatedTemplate = template.replaceFirst(imageUrlRegex, replaceCode)
+            println("updatedTemplate $updatedTemplate")
             return updatedTemplate
         }
 
@@ -88,6 +132,13 @@ actual class TemplateRenderer actual constructor(){
         }
     }
 
+    // convert Image bitmap to Base64
+    private fun bitmapToBase64(bm: Bitmap): String? {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray,Base64.DEFAULT)
+    }
 
     private fun bitmapToHexadecimalString(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -125,7 +176,7 @@ actual class TemplateRenderer actual constructor(){
 
                 // Apply styles based on the formatter (L, C, B, U)
                 val style = parseFormatterLine(formatter)
-                println("style:$style")
+                //println("style:$style")
                 processedLines.add(applyStylesToText(style, text))
             } else {
                 processedLines.add(line)
