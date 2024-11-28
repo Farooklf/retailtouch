@@ -1548,8 +1548,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
             }
             val posInvoice=tenderPosInvoice(posState)
-            constructReceiptAndPrint(posInvoice)
-            //executePosPayment(posInvoice)
+            //constructReceiptAndPrint(posInvoice)
+            executePosPayment(posInvoice)
         }
     }
 
