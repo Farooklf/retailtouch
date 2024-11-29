@@ -17,5 +17,6 @@ data class PrinterDao(
     val networkIpAddress: String,
     val selectedBluetoothAddress: String,
     val selectedUsbId: String,
-    val templateId:Long
+    val templateId:Long,
+    val printerId:Long =0,
 )

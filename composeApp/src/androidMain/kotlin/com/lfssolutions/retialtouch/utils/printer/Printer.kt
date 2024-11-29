@@ -33,6 +33,7 @@ import com.lfssolutions.retialtouch.AndroidApp
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.utils.PrinterType
 import comlfssolutionsretialtouch.Printers
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -456,6 +457,7 @@ class Printer(val receiptWidth: Int = 1600) {
     }
 
 
+     @OptIn(DelicateCoroutinesApi::class)
      fun connectPrinter(
          printers: Printers,
          printerType: PrinterType,
@@ -501,7 +503,7 @@ class Printer(val receiptWidth: Int = 1600) {
                     }
 
                     PrinterType.USB -> {
-                        var connections =
+                        val connections =
                             getUSBConnections(AndroidApp.getApplicationContext())?.let { return@let it.size }
                                 ?: kotlin.run { return@run 0 }
                         if (connections > 0) {

@@ -118,9 +118,9 @@ fun AppPrimaryButton(
         AppTheme.dimensions.padding15 to AppTheme.dimensions.padding20
 
     val (space,textStyle)=if(isPortrait)
-        AppTheme.dimensions.padding5 to AppTheme.typography.captionBold()
+        AppTheme.dimensions.padding5 to AppTheme.typography.bodyBold()
     else
-        AppTheme.dimensions.padding20 to AppTheme.typography.titleMedium()
+        AppTheme.dimensions.padding20 to AppTheme.typography.titleBold()
 
     val iconSize=if(isPortrait)
         AppTheme.dimensions.smallXIcon

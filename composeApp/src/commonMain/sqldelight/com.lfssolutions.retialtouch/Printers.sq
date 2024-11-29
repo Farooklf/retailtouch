@@ -22,6 +22,10 @@ INSERT INTO Printers(bluetoothAddress,
     printerType, printerStationName, isReceipts, isRefund, isOrders,templateId
 ) VALUES (?,?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?);
 
+updatePrinter:
+UPDATE Printers
+SET bluetoothAddress = :bluetoothAddress ,networkAddress = :networkAddress ,usbId =:usbId , paperSize =:paperSize ,noOfCopies =:noOfCopies ,printerType =:printerType,printerName =:printerName ,printerStationName =:printerStationName ,isReceipts =:isReceipt ,isOrders =:isOrders ,isRefund =:isRefund, templateId =:templateId
+WHERE printerId = :id;
 
 getAllPrinters:
 SELECT * FROM Printers;

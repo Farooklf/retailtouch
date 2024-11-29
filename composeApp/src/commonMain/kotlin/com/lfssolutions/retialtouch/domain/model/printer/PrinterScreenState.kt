@@ -6,10 +6,13 @@ import com.lfssolutions.retialtouch.utils.defaultTemplate
 
 data class PrinterScreenState(
     val isTablet: Boolean = false,
+    val isLoading: Boolean = false,
     val isEditMode: Boolean = false,
+    val title: String = "",
     val printerType: PrinterType = PrinterType.USB,
     val printerStationName: String = "",
-    val numbersOfCopies: Int = 1,
+    val printerId: Long = 0,
+    val numbersOfCopies: Long = 1,
     val paperSize: PaperSize = PaperSize.Size58mm,
     val printerName: String? = null,
     val isReceipts: Boolean = true,
@@ -35,4 +38,5 @@ data class PrinterScreenState(
     val showNetworkDialog: Boolean = false,
     val showUsbDeviceSelectionDialog: Boolean = false,
     val showBluetoothSelectionDialog: Boolean = false,
+    val showMessage: Boolean = false,
 )

@@ -182,7 +182,8 @@ interface SqlPreference {
 
     //Printer
     suspend fun insertPrinter(printerDao: PrinterDao)
-    fun getAllPrinterList():Flow<List<Printers>>
+    suspend fun updatePrinter(printerDao: PrinterDao)
+    fun getPrinter():Flow<Printers?>
     suspend fun deleteAllPrinters()
 
     //Sync

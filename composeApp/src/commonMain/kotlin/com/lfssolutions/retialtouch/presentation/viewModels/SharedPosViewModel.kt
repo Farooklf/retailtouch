@@ -1750,8 +1750,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun connectAndPrint(textToPrint: String) {
         viewModelScope.launch {
-            dataBaseRepository.getAllPrinterList().collect { printerList ->
-                printerList.forEach { printer ->
+            dataBaseRepository.getPrinter().collect { printer ->
+                if(printer!=null){
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,
                         printerType = when (printer.printerType) {
@@ -1773,6 +1773,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         },
                         textToPrint = textToPrint
                     )
+                }else{
+                   //Show Message that your device is not connected
+                    _posUIState.update { it.copy(isError = true,errorMsg = "add printer setting") }
                 }
             }
         }

@@ -3,9 +3,6 @@ package com.lfssolutions.retialtouch.utils.printer
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 import com.github.mustachejava.DefaultMustacheFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,6 +25,7 @@ actual class TemplateRenderer actual constructor(){
         val preprocessedTemplate = renderTemplateWithImage(template)
 
         // Apply the formatting (e.g., [L], [B], [U])
+        //val formattedTemplate = applyFormatted(preprocessedTemplate)
         val formattedTemplate = applyFormatted(preprocessedTemplate)
 
         // Create a Mustache factory instance
@@ -94,7 +92,6 @@ actual class TemplateRenderer actual constructor(){
     }
 
 
-
     // Function to extract the image URL from the template and replace it with the <img> tag
     private suspend fun renderTemplateWithImage(template: String): String {
 
@@ -153,7 +150,12 @@ actual class TemplateRenderer actual constructor(){
         return stringBuilder.toString()
     }
 
+    private fun isLineStartsWithFormatterDescriptor(line: String): Boolean {
+        return line.length > 3 && line[0] == '[' && line.contains(']')
+    }
+
     private fun applyFormatted(template: String): String {
+
         var formattedTemplate = template
 
         // Extract formatting codes and apply styles
@@ -168,14 +170,14 @@ actual class TemplateRenderer actual constructor(){
             val rowSpecs = isTableRow(line)
             if (rowSpecs != null) {
                 val rowContent = line.substring(line.indexOf('}') + 1)
-                println("rowContent:$rowContent")
+                //println("rowContent:$rowContent")
                 processedLines.add(processTableRow(rowSpecs, rowContent))
             } else if (line.isNotEmpty() && line.startsWith("[")) {
                 val formatter = line.substring(1, line.indexOf(']'))
                 val text = line.substring(line.indexOf(']') + 1)
 
                 // Apply styles based on the formatter (L, C, B, U)
-                val style = parseFormatterLine(formatter)
+                val style = computeLineStyles(formatter)
                 //println("style:$style")
                 processedLines.add(applyStylesToText(style, text))
             } else {
@@ -187,32 +189,72 @@ actual class TemplateRenderer actual constructor(){
         return formattedTemplate
     }
 
-    private fun parseFormatterLine(formatter: String): PosStyles {
+    private fun formatTemplate(template: String) : String {
+        val generator=Generator(PaperSize.Mm80)
+        val formattedLines = mutableListOf<String>()
+       // Extract formatting codes and apply styles
+        val linesArray = template.split("\n")
+        for (line in linesArray){
+            // Process each line and generate formatted content
+            processLineAsString(cpl = 54,generator=generator, line=line, formattedLines = formattedLines)
+        }
+
+        // Combine all lines into one final formatted string
+        return formattedLines.joinToString("\n")
+    }
+
+    private fun processLineAsString(
+        cpl: Int,
+        formattedLines: MutableList<String>,
+        generator: Generator,
+        line: String,
+    ){
+        val rowSpecs = isTableRow(line)
+
+        if(rowSpecs != null){
+            val rowFormatted = processTableRow(cpl = cpl,generator=generator, rowSpecs=rowSpecs,
+                rowContent = line.substring(line.indexOf('}') + 1))
+            formattedLines.add(rowFormatted)
+        }else if (isLineStartsWithFormatterDescriptor(line)) {
+            val formatter = line.substring(1, line.indexOf(']'))
+            val text = line.substring(line.indexOf(']') + 1)
+            // Apply styles based on the formatter (L, C, B, U)
+            val style = computeLineStyles(formatter)
+            //println("style:$style")
+            formattedLines.add(applyStylesToText(style, text))
+            // applyFormatted(cpl, generator, buffer, formatter, text)
+        }else{
+            formattedLines.add(line)
+        }
+    }
+
+    private fun computeLineStyles(formatter: String): PosStyles {
         var bold = false
         var underline = false
         var reverse = false
-        var alignment = TextAlign.Start
-        var fontSize = 14.sp
+        var alignment = PosAlign.LEFT
+        var textSize = PosTextSize.size1
 
         for (ctl in formatter) {
             when (ctl) {
-                'L', 'l' -> alignment = TextAlign.Left
-                'C', 'c' -> alignment = TextAlign.Center
-                'R', 'r' -> alignment = TextAlign.Right
+                'L', 'l' -> alignment = PosAlign.LEFT
+                'C', 'c' -> alignment = PosAlign.CENTER
+                'R', 'r' -> alignment = PosAlign.RIGHT
                 'B', 'b' -> bold = true
                 'U', 'u' -> underline = true
                 'I', 'i' -> reverse = true
-                'a' ->  fontSize =14.sp
-                'A' ->  fontSize =18.sp
+                'a' ->  textSize =PosTextSize.size1
+                'A' ->  textSize =PosTextSize.size2
             }
         }
 
         return PosStyles(
             bold = bold,
-            alignment = alignment,
+            align = alignment,
             underline = underline,
             reverse = reverse,
-            fontSize = fontSize,
+            width = textSize,
+            height = textSize
         )
     }
 
@@ -231,13 +273,10 @@ actual class TemplateRenderer actual constructor(){
         }
 
         // Align text based on style.align
-        return when (style.alignment) {
-            TextAlign.Start -> "[L]$styledText"
-            TextAlign.Center -> "[C]$styledText" //"<div style=\"text-align:center;\">$styledText</div>"
-            TextAlign.Right -> "[R]$styledText" //"<div style=\"text-align:right;\">$styledText</div>"
-            else -> {
-                "[L]$styledText"
-            }
+        return when (style.align) {
+            PosAlign.LEFT-> "[L]$styledText"
+            PosAlign.CENTER -> "[C]$styledText"
+            PosAlign.RIGHT -> "[R]$styledText"
         }
     }
 
@@ -278,7 +317,6 @@ actual class TemplateRenderer actual constructor(){
         return null // Return null if the format is incorrect
     }
 
-
     private fun processTableRow(
         rowSpecs: List<Int>,
         rowContent: String
@@ -287,35 +325,94 @@ actual class TemplateRenderer actual constructor(){
         if (columns.size != rowSpecs.size) {
             return "!!! Error: columns != table specs !!!"
         }
-
+         var styles = PosStyles()
         val rowBuilder = StringBuilder()
         columns.forEachIndexed { index, column ->
-            val spec = rowSpecs[index]
+            val width = rowSpecs[index]
             var columnText = column.trim()
 
             // Apply formatting if the column starts with a formatter
             if (columnText.startsWith("[")) {
                 val formatter = columnText.substring(1, columnText.indexOf(']'))
                 val text = columnText.substring(columnText.indexOf(']') + 1)
-                val style = parseFormatterLine(formatter)
-                columnText = applyStylesToText(style, text)
+                styles = computeLineStyles(formatter)
+                columnText = applyStylesToText(styles, text)
             }
 
-            // Add column with spec width
-            rowBuilder.append("[W$spec]$columnText")
-        }
+            // Determine the padding based on the alignment
+            /*columnText = when (styles.align) {
+                PosAlign.LEFT -> columnText.padEnd(width) // Left alignment: pad right
+                PosAlign.RIGHT -> columnText.padStart(width) // Right alignment: pad left
+                PosAlign.CENTER -> {
+                    // Center alignment: pad both sides
+                    val padLeft = (width - columnText.length) / 2
+                    val padRight = width - columnText.length - padLeft
+                    " ".repeat(padLeft) + columnText + " ".repeat(padRight)
+                }
+                else -> columnText.padEnd(width) // Default to left alignment if no align tag
+            }*/
 
+            // Add the formatted column to the row builder
+            rowBuilder.append(columnText)
+        }
+        //println("columnText $rowBuilder")
         return rowBuilder.toString()
     }
 
+    private fun getAlignmentType(columnText: String): String {
+        // Extract the alignment type from the columnText (if it starts with [L], [R], [C])
+        return when {
+            columnText.startsWith("[L]") -> "L"
+            columnText.startsWith("[R]") -> "R"
+            columnText.startsWith("[C]") -> "C"
+            else -> "L" // Default alignment is left
+        }
+    }
+
+    private fun processTableRow(
+        cpl: Int,
+        generator: Generator,
+        rowSpecs: List<Int>,
+        rowContent: String
+    ): String {
+        val columns = rowContent.split("|")
+
+//        if (columns.size != rowSpecs.size) {
+//            //buffer.addAll(generator.text("!!! Error: columns != table specs !!!"))
+//            return
+//        }
+
+        val row = mutableListOf<PosColumn>()
+
+        for ((textIndex, spec) in rowSpecs.withIndex()) {
+            var columnText = columns[textIndex]
+            var columnStyles = PosStyles()
+
+            if (isLineStartsWithFormatterDescriptor(columnText)) {
+                columnStyles = computeLineStyles(
+                    columnText.substring(1, columnText.indexOf(']'))
+                )
+                columnText = columnText.substring(columnText.indexOf(']') + 1)
+            }
+
+            row.add(PosColumn(text = columnText, width = spec, styles = columnStyles))
+        }
+
+        val formattedRow = generator.calculateRow(row)
+        println("formattedRow | $formattedRow")
+        return formattedRow.toString()
+    }
+
+
+    fun processRow(
+        columnText : String,
+        width:Int,
+        style:PosStyles
+    ){
+        //processRow(columnText=columnText, width = spec, style = columnStyles)
+
+    }
 
 }
 
-data class PosStyles(
-    val bold: Boolean = false,
-    val reverse: Boolean = false,
-    val underline: Boolean = false,
-    val alignment: TextAlign = TextAlign.Start,
-    val fontSize: TextUnit = 14.sp
-)
 

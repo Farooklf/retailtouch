@@ -1152,8 +1152,26 @@ import kotlinx.coroutines.flow.flow
          )
      }
 
-     override fun getAllPrinterList(): Flow<List<Printers>> = flow {
-         emit(retailTouch.printersQueries.getAllPrinters().executeAsList())
+     override suspend fun updatePrinter(printerDao: PrinterDao) {
+         retailTouch.printersQueries.updatePrinter(
+             id = printerDao.printerId,
+             printerStationName = printerDao.printerStationName,
+             printerName = printerDao.printerName,
+             printerType =  printerDao.printerType,
+             usbId = printerDao.selectedUsbId,
+             paperSize = printerDao.paperSize,
+             noOfCopies = printerDao.numbersOfCopies,
+             networkAddress = printerDao.networkIpAddress,
+             bluetoothAddress = printerDao.selectedBluetoothAddress,
+             isRefund = printerDao.isRefund,
+             isReceipt = printerDao.isReceipts,
+             isOrders = printerDao.isOrders,
+             templateId = printerDao.templateId,
+         )
+     }
+
+     override fun getPrinter(): Flow<Printers?> = flow {
+         emit(retailTouch.printersQueries.getAllPrinters().executeAsOneOrNull())
      }
 
      override suspend fun deleteAllPrinters() {

@@ -609,10 +609,10 @@ class DataBaseRepository: KoinComponent {
         }
         }
 
-    suspend  fun insertPrinter(printer: PrinterScreenState) {
+    suspend  fun insertOrUpdatePrinter(printer: PrinterScreenState) {
         withContext(Dispatchers.IO){
-            dataBaseRepository.insertPrinter(
-                PrinterDao(
+            val requestDao=PrinterDao(
+                printerId = printer.printerId,
                 printerStationName = printer.printerStationName,
                 printerName = printer.printerName?:"",
                 numbersOfCopies = printer.numbersOfCopies.toLong(),
@@ -632,8 +632,13 @@ class DataBaseRepository: KoinComponent {
                 networkIpAddress = printer.networkIpAddress,
                 selectedBluetoothAddress = printer.selectedBluetoothAddress,
                 selectedUsbId = printer.selectedUsbId,
-                    templateId=printer.printerTemplates.id?:0L
-            ))
+                templateId=printer.printerTemplates.id?:0L
+            )
+            if(printer.printerId==0L){
+                dataBaseRepository.insertPrinter(requestDao)
+            }else{
+                dataBaseRepository.updatePrinter(requestDao)
+            }
         }
     }
 
@@ -787,8 +792,8 @@ class DataBaseRepository: KoinComponent {
             }
         }
 
-    fun getAllPrinterList() : Flow<List<Printers>>{
-        return dataBaseRepository.getAllPrinterList().flowOn(Dispatchers.IO)
+    fun getPrinter() : Flow<Printers?>{
+        return dataBaseRepository.getPrinter().flowOn(Dispatchers.IO)
     }
 
     //Delete

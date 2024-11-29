@@ -6,6 +6,7 @@ import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,57 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
     private val _screenState = MutableStateFlow(PrinterScreenState())
     val screenState: StateFlow<PrinterScreenState> = _screenState.asStateFlow()
 
+
+    fun initialisePrinter(){
+        viewModelScope.launch {
+            dataBaseRepository.getPrinter().collect{printer->
+                if(printer!=null){
+                    _screenState.update { state->
+                       state.copy(
+                           isEditMode=true,
+                           printerId = printer.printerId,
+                           printerType = when(printer.printerType){
+                                1L-> PrinterType.Ethernet
+                                2L-> PrinterType.USB
+                                3L-> PrinterType.Bluetooth
+                               else -> {
+                                   PrinterType.USB
+                               }
+                           },
+                           printerStationName = printer.printerStationName,
+                           numbersOfCopies = printer.noOfCopies?:1,
+                           paperSize = when(printer.paperSize){
+                               58L-> PaperSize.Size58mm
+                               80L-> PaperSize.Size80mm
+                               else -> {
+                                   PaperSize.Size58mm
+                               }
+                           },
+                           selectedBluetoothAddress=printer.bluetoothAddress?:"",
+                           selectedUsbId =printer.usbId?:"",
+                           networkIpAddress=printer.networkAddress?:"",
+                           printerName=printer.printerName,
+                           isReceipts = printer.isReceipts?:true,
+                           isOrders = printer.isOrders?:true,
+                           isRefund = printer.isRefund?:true
+                       )
+                    }
+                }
+            }
+        }
+    }
+
+    fun resetScreenState(){
+        viewModelScope.launch {
+            _screenState.update { PrinterScreenState() }
+        }
+    }
+
+    fun updateDialog(loader:Boolean) {
+        viewModelScope.launch {
+            _screenState.update { state -> state.copy(isLoading = loader) }
+        }
+    }
 
     fun setPrinter(tablet: Boolean) {
         viewModelScope.launch {
@@ -39,7 +91,7 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
 
     fun updateNumbersOfCopies(value: String) {
         viewModelScope.launch {
-            _screenState.update { state -> state.copy(numbersOfCopies = value.toInt()) }
+            _screenState.update { state -> state.copy(numbersOfCopies = value.toLong()) }
         }
     }
 
@@ -168,10 +220,21 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
         }
     }
 
+    fun dismissMessage() {
+        viewModelScope.launch {
+            _screenState.update { state -> state.copy(showMessage = false) }
+            delay(1000)
+            _screenState.update { state -> state.copy(backToScreen = true) }
+        }
+    }
+
     fun createPrinter() {
         viewModelScope.launch {
-            dataBaseRepository.insertPrinter(screenState.value)
-            _screenState.update { state->state.copy(backToScreen=true) }
+            updateDialog(true)
+            delay(2000)
+            dataBaseRepository.insertOrUpdatePrinter(screenState.value)
+            updateDialog(false)
+            _screenState.update { state->state.copy(showMessage=true) }
         }
     }
 

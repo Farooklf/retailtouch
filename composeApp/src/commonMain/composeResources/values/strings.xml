@@ -114,10 +114,13 @@
     <string name="phone_receipts">Phone Receipts</string>
     <string name="print_receipts">Print Receipts</string>
     <string name="error_title">Retail POS</string>
+    <string name="success_title">Success</string>
+    <string name="success_message">%1$s successfully!!</string>
     <string name="new_order">New Order</string>
 
     //Printer
     <string name="create_printer">Create Printer</string>
+    <string name="update_printer">Update Printer</string>
     <string name="printer_type">Printer Type</string>
     <string name="ethernet">Ethernet</string>
     <string name="usb">USB</string>

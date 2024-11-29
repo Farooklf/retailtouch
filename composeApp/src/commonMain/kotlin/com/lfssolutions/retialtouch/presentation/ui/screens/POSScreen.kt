@@ -26,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -99,6 +101,7 @@ import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
@@ -129,6 +132,7 @@ import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.sku
 import retailtouch.composeapp.generated.resources.sub_total
+import retailtouch.composeapp.generated.resources.success_message
 import retailtouch.composeapp.generated.resources.tax_value
 import retailtouch.composeapp.generated.resources.total_value
 
@@ -147,7 +151,7 @@ fun Pos(
     val posUIState by posViewModel.posUIState.collectAsStateWithLifecycle()
     val authUser by posViewModel.authUser.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
-
+    val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
     LaunchedEffect(Unit){
        posViewModel.initialState()
@@ -165,6 +169,13 @@ fun Pos(
 
     LaunchedEffect(posUIState.cartList) {
         posViewModel.recomputeSale()
+    }
+
+    LaunchedEffect(posUIState.isError) {
+        if (posUIState.isError) {
+            //val success=getString(Res.string.success_title)
+            snackbarHostState.value.showSnackbar(posUIState.errorMsg)
+        }
     }
 
     BasicScreen(
@@ -427,56 +438,15 @@ fun Pos(
 
         }
 
+        SnackbarHost(
+            hostState = snackbarHostState.value,
+            modifier = Modifier
+                .align(Alignment.TopCenter))
+
         AppCircleProgressIndicator(
             isVisible=posUIState.isLoading
         )
     }
-
-
-    /*AppLeftSideMenu(
-        syncInProgress = posUIState.syncInProgress,
-        exchangeActive = posUIState.globalExchangeActivator,
-        printerEnabled = posUIState.isPrinterEnable,
-        modifier = Modifier.fillMaxSize(),
-        onActivateExchange = {
-          posViewModel.updateGlobalExchangeActivator(!posUIState.globalExchangeActivator)
-        },
-        onActivatePrinter={
-            posViewModel.updatePrinterValue(!posUIState.isPrinterEnable)
-        },
-        onCategoryClick = {
-            NavigatorActions.navigateBackToHomeScreen(navigator,false)
-        },
-        onSyncClick = {
-            posViewModel.syncPendingSales()
-        },
-        content = {
-            //for POS Screen
-            AppScreenPadding(
-                content = { horizontalPadding, verticalPadding ->
-                    Box(modifier = Modifier.fillMaxSize().padding(horizontal = horizontalPadding, vertical = verticalPadding)){
-                        Column {
-                            PosTopContent(modifier = Modifier.weight(1f),posUIState,posViewModel)
-
-                            //Bottom Row Calculation
-                            BottomContent(modifier  = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                                posUIState=posUIState,
-                                posViewModel=posViewModel,
-                                onPaymentClick = {
-                                    NavigatorActions.navigateToPaymentScreen(navigator)
-                                }
-                            )
-                        }
-                        AppCircleProgressIndicator(
-                            isVisible=posUIState.isLoading
-                        )
-                    }
-                }
-            )
-        }
-    )*/
 
 
     SearchableTextField(

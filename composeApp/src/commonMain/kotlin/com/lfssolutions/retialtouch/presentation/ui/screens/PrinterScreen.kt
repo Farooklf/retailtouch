@@ -19,6 +19,7 @@ import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCheckBox
+import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogChoiceFromList
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppRadioButton
@@ -52,6 +54,7 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -59,9 +62,11 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.add_printer
+import retailtouch.composeapp.generated.resources.create_printer
 import retailtouch.composeapp.generated.resources.edit_printer
 import retailtouch.composeapp.generated.resources.enable_this_printer
 import retailtouch.composeapp.generated.resources.enter_terminal_code
+import retailtouch.composeapp.generated.resources.error_title
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.no_printer_selected
 import retailtouch.composeapp.generated.resources.no_usb_devices
@@ -75,9 +80,13 @@ import retailtouch.composeapp.generated.resources.select_bluetooth_device
 import retailtouch.composeapp.generated.resources.select_print_template
 import retailtouch.composeapp.generated.resources.select_usb_device
 import retailtouch.composeapp.generated.resources.settings
+import retailtouch.composeapp.generated.resources.success_message
+import retailtouch.composeapp.generated.resources.success_title
 import retailtouch.composeapp.generated.resources.terminal_code_saved_successfully
+import retailtouch.composeapp.generated.resources.update_printer
 
 data object PrinterScreen: Screen {
+
     @Composable
     override fun Content() {
         PrinterContent()
@@ -88,21 +97,46 @@ data object PrinterScreen: Screen {
 fun PrinterContent(
     viewModel: PrinterViewModel = koinInject()
 ){
-    val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
+
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.currentOrThrow
     val appState = LocalAppState.current
     val state by viewModel.screenState.collectAsStateWithLifecycle()
 
+    val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
+
     LaunchedEffect(Unit){
+        viewModel.initialisePrinter()
         viewModel.setPrinter(appState.isTablet)
     }
+
+    DisposableEffect(key1 = viewModel) {
+        onDispose {
+            viewModel.resetScreenState()
+        }
+    }
+
+    LaunchedEffect(state.backToScreen){
+        if(state.backToScreen){
+            NavigatorActions.navigateBack(navigator)
+        }
+    }
+
+    LaunchedEffect(state.showMessage) {
+        if (state.showMessage) {
+            //val success=getString(Res.string.success_title)
+            val message=getString(Res.string.success_message,if(!state.isEditMode) "Printer Added" else "Printer Updated")
+            snackbarHostState.value.showSnackbar(message)
+            viewModel.dismissMessage()
+        }
+    }
+
 
     BackgroundScreen(
         modifier = Modifier.systemBarsPadding(),
         appToolbarContent = {
             TopAppBarContent(
-                title = stringResource(Res.string.settings),
+                title = if(!state.isEditMode) stringResource(Res.string.create_printer) else stringResource(Res.string.update_printer),
                 showBackButton = true,
                 isTablet = appState.isTablet,
                 onBackClick = {navigator.pop()}
@@ -203,14 +237,18 @@ fun PrinterContent(
                     label = stringResource(if (state.isEditMode) Res.string.edit_printer else Res.string.add_printer),
                     onClick = {
                         viewModel.createPrinter()
-                        NavigatorActions.navigateBack(navigator)
-                              },
+                        //NavigatorActions.navigateBack(navigator)
+                        },
+                    isPortrait = appState.isPortrait,
                     modifier = Modifier.height(if (state.isTablet) 60.dp else 50.dp).fillMaxWidth()
                 )
             }
 
         }
 
+        AppCircleProgressIndicator(
+            isVisible=state.isLoading
+        )
 
         SnackbarHost(
             hostState = snackbarHostState.value,
