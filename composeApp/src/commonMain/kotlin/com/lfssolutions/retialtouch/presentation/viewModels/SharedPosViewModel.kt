@@ -1679,10 +1679,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 ))
                 //update qty
                 //dataBaseRepository.updateProductStockQuantity(posInvoice)
-                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
+                /*dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
                     updateUnSyncedInvoices(pendingCount)
                 }
-                syncSales()
+                syncSales()*/
                 constructReceiptAndPrint(posInvoice)
                 syncStockQuantity()
                 syncInventory()

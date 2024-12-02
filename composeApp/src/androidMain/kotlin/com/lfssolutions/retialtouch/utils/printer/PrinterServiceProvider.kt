@@ -29,7 +29,6 @@ actual class PrinterServiceProvider actual constructor(){
         textToPrint: String,
     ){
         printer.connectPrinter(printers, printerType, textToPrint)
-
     }
 
     actual fun getPrintTextForReceiptTemplate(
