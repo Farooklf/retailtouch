@@ -1,5 +1,6 @@
 package com.lfssolutions.retialtouch.utils.printer
 
+import ObjectToReceiptTemplateV1
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
@@ -464,7 +465,7 @@ class Printer(val receiptWidth: Int = 1600) {
          textToPrint: String
      ) {
          println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
                 when (printerType) {
                     PrinterType.Ethernet -> {
@@ -597,14 +598,6 @@ class Printer(val receiptWidth: Int = 1600) {
                                 )
                             ) {
                                 printReceiptNormal("$textToPrint")
-//                                printerOrdersAndReceipts(
-//                                    printerItem,
-//                                    ticketRequest,
-//                                    receipt,
-//                                    currentCartItems,
-//                                    departmentName,
-//                                    true
-//                                )
                             } else {
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(
@@ -625,6 +618,6 @@ class Printer(val receiptWidth: Int = 1600) {
     }
 
     fun applyDynamicReceiptTemplate(ticket: PosInvoice, template:String):String{
-        return ObjectToTemplate.applyTemplate(template,ticket)
+        return ObjectToReceiptTemplateV1.processTemplate(template,ticket)
     }
 }

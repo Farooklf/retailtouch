@@ -36,6 +36,7 @@ import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.defaultTemplate
+import com.lfssolutions.retialtouch.utils.defaultTemplate2
 import com.lfssolutions.retialtouch.utils.formatAmountForPrint
 import com.lfssolutions.retialtouch.utils.payment.PaymentLibTypes
 import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
@@ -1679,11 +1680,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 ))
                 //update qty
                 //dataBaseRepository.updateProductStockQuantity(posInvoice)
-                /*dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
+                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
                     updateUnSyncedInvoices(pendingCount)
                 }
-                syncSales()*/
-                constructReceiptAndPrint(posInvoice)
+                syncSales()
+//                constructReceiptAndPrint(posInvoice)
+                constructReceiptAndPrintTemplate(posInvoice)
                 syncStockQuantity()
                 syncInventory()
                 clearSale()
@@ -1714,6 +1716,16 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                  println("Receipt_Template : $renderedTemplate")
                 connectAndPrint(renderedTemplate)
             }
+        }
+    }
+
+    private fun constructReceiptAndPrintTemplate(ticket: PosInvoice){
+        updatePaymentInvoiceState(ticket)
+
+        val state = posUIState.value
+        viewModelScope.launch {
+           connectAndPrintTemplate(ticket)
+
         }
     }
 
@@ -1772,6 +1784,41 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                             }
                         },
                         textToPrint = textToPrint
+                    )
+                }else{
+                   //Show Message that your device is not connected
+                    _posUIState.update { it.copy(isError = true,errorMsg = "add printer setting") }
+                }
+            }
+        }
+    }
+
+    private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
+        val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+        println("finalText $finalTextToPrint")
+        viewModelScope.launch {
+            dataBaseRepository.getPrinter().collect { printer ->
+                if(printer!=null){
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+                    PrinterServiceProvider().connectPrinterAndPrint(
+                        printers = printer,
+                        printerType = when (printer.printerType) {
+                            1L -> {
+                                PrinterType.Ethernet
+                            }
+
+                            2L -> {
+                                PrinterType.USB
+                            }
+
+                            3L -> {
+                                PrinterType.Bluetooth
+                            }
+                            else -> {
+                                PrinterType.Bluetooth
+                            }
+                        },
+                        textToPrint = finalTextToPrint
                     )
                 }else{
                    //Show Message that your device is not connected

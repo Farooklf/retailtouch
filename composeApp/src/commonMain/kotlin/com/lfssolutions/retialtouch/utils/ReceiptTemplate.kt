@@ -52,3 +52,52 @@ val defaultTemplate = """
 {6,6}-------------         |[R]--------------
 ###{{invoice.qrUrl}}
 """
+
+val defaultTemplate2 = """
+@@@http://tajmahal.rtlconnect.net/common/upload/Taj2.bmp@@@
+
+[L]TAJ MAHAL FOOD PTE LTD
+[L]UEN NO- 201705269N
+[L]8A ADMIRALTY ST
+[L]#07-26, FOOD XCHANGE@ADMIRALITY
+[L]Singapore 757437
+[L]Customer Care- 8585 8584 / 8485 8585
+
+[[Line]]
+[C]TAX INVOICE
+[[Line]]
+
+[L]Invoice No: {{invoiceNo}}
+[L]Date: {{invoiceDate}}
+[L]Terms: {{terms}}
+[[{4,8}:Customer|{{customerName}}]]
+[[{4,8}:Address|{{address1}}]]
+[[{4,8}: |{{address2}}]]
+[[Line]]
+[[{8,4}:Description|Amount]]
+[[Line]]
+{posInvoiceDetails}
+[[Line]]
+[[{4,8}:Qty|{{qty}}]]
+[[Line]]
+[[{8,4}:Sub Total |{{invoiceSubTotal}}]]
+[[{8,4}:Gst |{{tax}}]]
+[[{8,4}:Net Total |{{netTotal}}]]
+[[Line]]
+[[{8,4}:Outstanding Amt |{{balanceAmount}}]]
+[[Line]]
+[[{8,4}:Received By|Delivered By]]
+{6,6}[L]        |[R] 
+
+@@{{&invoice.signature}}@@
+
+{6,6}-------------         |[R]--------------
+###{{invoice.qrUrl}}
+
+
+<!-- posInvoiceDetails Table -->
+<ListItem>
+[L]{{inventoryName}}
+[[{6,6}:{{qty}} X PCS {{price}} |[R]{{netTotal}}]]
+</ListItem>
+"""
