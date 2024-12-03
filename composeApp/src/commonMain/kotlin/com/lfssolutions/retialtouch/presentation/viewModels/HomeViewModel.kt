@@ -17,6 +17,7 @@ import com.lfssolutions.retialtouch.utils.AppStrings.settings
 import com.lfssolutions.retialtouch.utils.AppStrings.settlement
 import com.lfssolutions.retialtouch.utils.AppStrings.stock
 import com.lfssolutions.retialtouch.utils.AppStrings.sync
+import com.lfssolutions.retialtouch.utils.HomeItemId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -64,57 +65,57 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     private fun prepareHomeScreenItems() {
         val iconItems = listOf(
             HomeScreenItem(
-                homeItemId = 1,
+                homeItemId = HomeItemId.CASHIER_ID,
                 icon = AppIcons.cashierIcon,
                 labelResId = cashier
             ),
             HomeScreenItem(
-                2,
+                HomeItemId.MEMBER_ID,
                 AppIcons.membershipIcon,
                 labelResId = members
             ),
             HomeScreenItem(
-                3,
+                HomeItemId.STOCK_ID,
                 AppIcons.stockIcon,
                 labelResId = stock
             ),
             HomeScreenItem(
-                4,
+                HomeItemId.RECEIPT_ID,
                 AppIcons.receiptIcon,
                 labelResId = receipt
             ),
             HomeScreenItem(
-                5,
+                HomeItemId.SYNC_ID,
                 AppIcons.syncIcon,
                 labelResId = sync
             ),
             HomeScreenItem(
-                6,
+                HomeItemId.SETTLEMENT_ID,
                 AppIcons.settlementIcon,
                 labelResId = settlement
             ),
             HomeScreenItem(
-                7,
+                HomeItemId.PAYOUT_ID,
                 AppIcons.payoutIcon,
                 labelResId = payout
             ),
             HomeScreenItem(
-                8,
+                HomeItemId.PRINTER_ID,
                 AppIcons.printerIcon,
                 labelResId = printer
             ),
             HomeScreenItem(
-                9,
+                HomeItemId.DRAWER_ID,
                 AppIcons.drawerIcon,
                 labelResId = drawer
             ),
             HomeScreenItem(
-                10,
+                HomeItemId.SETTING_ID,
                 AppIcons.settingIcon,
                 labelResId = settings
             ),
             HomeScreenItem(
-                11,
+                HomeItemId.LOGOUT_ID,
                 AppIcons.logoutIcon,
                 labelResId = logout
             )

@@ -636,11 +636,11 @@ fun ClickableAppOutlinedTextField(
     onClick: () -> Unit, // Callback for click events
     modifier: Modifier,
     enabled: Boolean = false,
-    textStyle: TextStyle = LocalTextStyle.current,
-    primaryText : Color = AppTheme.colors.primaryText,
+    textStyle: TextStyle  = AppTheme.typography.bodyMedium(),
+    textColor : Color = AppTheme.colors.textPrimary,
     errorColor: Color =AppTheme.colors.textError,
-    focusedColor: Color =AppTheme.colors.primaryColor,
-    unfocusedColor: Color =AppTheme.colors.primaryColor.copy(alpha = 0.8f),
+    focusedColor: Color =AppTheme.colors.textDarkGrey,
+    unfocusedColor: Color =AppTheme.colors.textDarkGrey,
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
@@ -670,7 +670,8 @@ fun ClickableAppOutlinedTextField(
             label = {
                 label?.let {
                     Text(
-                        text = it
+                        text = it,
+                        style = AppTheme.typography.captionBold()
                     )
                 }
             },
@@ -686,8 +687,7 @@ fun ClickableAppOutlinedTextField(
                     Icon(
                         painter = painterResource(trailingIcon),
                         contentDescription = null,
-                        tint = primaryText,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(AppTheme.dimensions.small24Icon)
                     )
                 }
             } else null,
@@ -696,7 +696,7 @@ fun ClickableAppOutlinedTextField(
                     Icon(
                         painter = painterResource(leadingIcon),
                         contentDescription = null,
-                        modifier = Modifier.size(AppTheme.dimensions.smallIcon)
+                        modifier = Modifier.size(AppTheme.dimensions.small24Icon)
                     )
                 }
             } else null,
@@ -709,19 +709,20 @@ fun ClickableAppOutlinedTextField(
             minLines = minLines,
             shape = AppTheme.appShape.textField,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = primaryText,
+                textColor = textColor,
                 focusedBorderColor = focusedColor,
                 focusedLabelColor = focusedColor,
-                cursorColor = focusedColor,
-                unfocusedLabelColor = primaryText.copy(alpha = 0.7f),
+                unfocusedLabelColor = unfocusedColor,
                 unfocusedBorderColor = unfocusedColor,
-                placeholderColor = primaryText.copy(alpha = 0.7f),
+                placeholderColor = unfocusedColor,
                 errorLabelColor = errorColor,
                 trailingIconColor = focusedColor,
-                leadingIconColor = primaryText.copy(alpha = 0.7f),
-                disabledTrailingIconColor=primaryText.copy(alpha = 0.7f)
-
-            )
+                leadingIconColor = focusedColor,
+                cursorColor = focusedColor,
+                disabledTextColor = textColor,
+                disabledBorderColor = focusedColor,
+                disabledLabelColor = focusedColor
+                )
         )
 
         error?.let {

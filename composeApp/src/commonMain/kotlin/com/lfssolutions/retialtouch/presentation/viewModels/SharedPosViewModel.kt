@@ -1,7 +1,6 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.location.Location
@@ -10,7 +9,6 @@ import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleRecordDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
@@ -38,12 +36,9 @@ import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.defaultTemplate
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
 import com.lfssolutions.retialtouch.utils.formatAmountForPrint
-import com.lfssolutions.retialtouch.utils.payment.PaymentLibTypes
-import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
 import com.lfssolutions.retialtouch.utils.printer.ItemData
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
-import io.kamel.core.utils.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
@@ -1057,8 +1052,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
       return  "${_posUIState.value.currencySymbol}${amount?.roundTo(2)}"
     }
 
-
-
     fun updateDiscountType(discountType: DiscountType) {
         viewModelScope.launch {
             _posUIState.update { it.copy(selectedDiscountType = discountType) }
@@ -1680,11 +1673,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 ))
                 //update qty
                 //dataBaseRepository.updateProductStockQuantity(posInvoice)
-                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
+                /*dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
                     updateUnSyncedInvoices(pendingCount)
-                }
+                }*/
+                //constructReceiptAndPrint(posInvoice)
                 syncSales()
-//                constructReceiptAndPrint(posInvoice)
+//               constructReceiptAndPrint(posInvoice)
                 constructReceiptAndPrintTemplate(posInvoice)
                 syncStockQuantity()
                 syncInventory()

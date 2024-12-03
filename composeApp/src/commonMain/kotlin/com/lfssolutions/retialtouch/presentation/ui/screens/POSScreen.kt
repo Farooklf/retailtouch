@@ -141,7 +141,6 @@ object PosScreen:Screen{
     override fun Content() {
         Pos()
     }
-
 }
 @Composable
 fun Pos(
@@ -151,6 +150,7 @@ fun Pos(
     val posUIState by posViewModel.posUIState.collectAsStateWithLifecycle()
     val authUser by posViewModel.authUser.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
+
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
     LaunchedEffect(Unit){

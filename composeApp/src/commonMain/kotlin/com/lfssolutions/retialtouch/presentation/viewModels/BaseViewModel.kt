@@ -26,8 +26,8 @@ import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
-import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceRequest
-import com.lfssolutions.retialtouch.domain.model.sales.GetPosInvoiceResult
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
 import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
@@ -83,8 +83,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -115,8 +113,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     val employeeDoa = MutableStateFlow<EmployeeDao?>(null)
 
-
-
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
 
     private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
@@ -140,6 +136,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val _lastSyncTs = MutableStateFlow(0L)
     val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
+
+    private val saleCount = MutableStateFlow(0L)
 
     // Expose the login state as a Flow<Boolean?>, with null indicating loading
     val isUserLoggedIn: StateFlow<Boolean?> = preferences.getUserLoggedIn()
@@ -533,16 +531,55 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         try {
             if(_syncInProgress.value)
                 return
-
             updateSyncStatus("Syncing Sales History")
-            networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=10, skipCount = 0, sorting = "Id")).collectLatest { apiResponse->
-                observeLatestSales(apiResponse)
-            }
+            updateSales()
+
         }catch (e: Exception){
             val error="${e.message}"
             handleError(true,SYNC_SALES_ERROR_TITLE,error)
             updateSyncProgress(false)
         }
+    }
+
+   private suspend fun updateSales(){
+        getSalesTotalCount()
+
+       networkRepository.getLatestSales(
+           POSInvoiceRequest(
+               locationId = getLocationId(),
+               maxResultCount=10,
+               skipCount = (saleCount.value-5).toInt(),
+               sorting = "Id")
+       ).collectLatest { apiResponse->
+           observeLatestSales(apiResponse)
+       }
+   }
+
+    private suspend fun getSalesTotalCount(){
+       try {
+           networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id")).collectLatest { apiResponse->
+               when(apiResponse){
+                   is RequestState.Error -> {
+                       updateSyncProgress(false)
+                   }
+                   is RequestState.Idle -> {
+
+                   }
+                   is RequestState.Loading -> {
+
+                   }
+                   is RequestState.Success -> {
+                       if(apiResponse.data.success){
+                           saleCount.value=apiResponse.data.result?.totalCount?:0
+                       }
+                   }
+               }
+           }
+       }catch (e: Exception){
+           val error="${e.message}"
+           handleError(true,SYNC_SALES_ERROR_TITLE,error)
+           updateSyncProgress(false)
+       }
     }
 
     suspend fun syncPrintTemplate(templateType: TemplateType){

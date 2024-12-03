@@ -27,10 +27,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
-import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
-import com.lfssolutions.retialtouch.utils.PaperSize
-import com.lfssolutions.retialtouch.utils.PrinterType
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
 
@@ -96,7 +94,7 @@ interface SqlPreference {
     fun getNextPosSaleCount():Flow<Int>
 
 
-    //Latest POS Invoice
+    //Latest POS Invoice Sales
     suspend fun insertLatestSales(saleRecord: SaleRecord)
     fun getLatestSalesById(id: Long): Flow<SaleRecord?>
     fun getLatestSales(): Flow<List<SaleRecord>>

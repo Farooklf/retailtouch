@@ -22,7 +22,7 @@ data class PosUIState(
     var showDialog : Boolean = false,
     var showItemDiscountDialog : Boolean = false,
     var isAppliedDiscountOnTotal : Boolean = false,
-    val loginUser: LoginResponse =LoginResponse(),
+    val loginUser: LoginResponse = LoginResponse(),
     var currencySymbol : String = "$",
     var inputDiscount : String = "",
     var inputDiscountError : String? =null,

@@ -154,4 +154,9 @@
     <string name="remove">Remove</string>
     <string name="add">Add</string>
 
+    //transactions
+    <string name="transaction">Sale Transactions</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+
 </resources>

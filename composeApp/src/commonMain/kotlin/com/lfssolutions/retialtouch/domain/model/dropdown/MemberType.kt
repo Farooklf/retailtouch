@@ -1,9 +1,7 @@
 package com.lfssolutions.retialtouch.domain.model.dropdown
 
-
-
-
-data class DeliveryType(
+data class MemberType(
     val id:Int=0,
-    val name : String=""
+    val memberId:Int=0,
+    val name : String ="",
 )

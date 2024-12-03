@@ -1,12 +1,13 @@
 CREATE TABLE InvoiceSales (
     posInvoiceId INTEGER NOT NULL PRIMARY KEY,
     totalCount INTEGER NOT NULL,
-    salesRecord TEXT NOT NULL
+    salesRecord TEXT NOT NULL,
+    saleDetals TEXT NOT NULL
 );
 
 insert:
-INSERT OR REPLACE INTO InvoiceSales(posInvoiceId,totalCount,salesRecord)
-VALUES(?,?,?);
+INSERT OR REPLACE INTO InvoiceSales(posInvoiceId,totalCount,salesRecord,saleDetals)
+VALUES(?,?,?,?);
 
 getRowById:
 SELECT * FROM InvoiceSales

@@ -17,6 +17,7 @@ import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentCollectorViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.SaleTransactionViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.retailTouchDB
 import com.russhwolf.settings.Settings
@@ -86,4 +87,5 @@ fun appModule() = module {
     viewModelDefinition { DashBoardViewmodel() }
     viewModelDefinition { EmployeeViewModel() }
     viewModelDefinition { PaymentTypeViewModel() }
+    viewModelDefinition { SaleTransactionViewModel() }
 }

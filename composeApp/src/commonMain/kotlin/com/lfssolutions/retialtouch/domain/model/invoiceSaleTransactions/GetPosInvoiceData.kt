@@ -1,4 +1,4 @@
-package com.lfssolutions.retialtouch.domain.model.sales
+package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
 
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice

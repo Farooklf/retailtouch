@@ -11,4 +11,5 @@ sealed class Route {
     data object POSScreen: Route()
     data object PaymentType : Route()
     data object Printer : Route()
+    data object Transaction : Route()
 }

@@ -42,4 +42,8 @@ object NavigatorActions {
     fun navigateToPrinterScreen(navigator: Navigator) {
         navigator.push(Route.Printer.toVoyagerScreen())
     }
+
+    fun navigateToTransactionScreen(navigator: Navigator) {
+        navigator.push(Route.Transaction.toVoyagerScreen())
+    }
 }

@@ -27,10 +27,9 @@ import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
-import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
-import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.serializers.db.toEmployeeDao
 import com.lfssolutions.retialtouch.utils.serializers.db.toHoldSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
@@ -41,12 +40,14 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toMenuCategoryItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
+import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoice
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceDetailRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoicePendingSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosPaymentConfigRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toProductLocationItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotion
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotionDetails
+import com.lfssolutions.retialtouch.utils.serializers.db.toSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toSyncItem
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
@@ -407,11 +408,14 @@ import kotlinx.coroutines.flow.flow
     }
 
     override suspend fun insertLatestSales(saleRecord: SaleRecord) {
-        retailTouch.invoiceSalesQueries.insert(
-            posInvoiceId = saleRecord.id,
-            totalCount = saleRecord.count?:0,
-            salesRecord = saleRecord.toJson()
-        )
+        saleRecord.items?.let {
+            retailTouch.invoiceSalesQueries.insert(
+                posInvoiceId = saleRecord.id,
+                totalCount = saleRecord.count?:0,
+                salesRecord = saleRecord.toJson(),
+                saleDetals = it.toJson()
+            )
+        }
     }
 
     override fun getLatestSalesById(id: Long): Flow<SaleRecord?> = flow{
@@ -435,10 +439,26 @@ import kotlinx.coroutines.flow.flow
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
+                        val sale= body.salesRecord.toSaleRecord()
                         SaleRecord(
-                            id = body.posInvoiceId,
-                            count  = body.totalCount
-                        )
+                            id = sale.id,
+                            count  = sale.count,
+                            receiptNumber = sale.receiptNumber,
+                            amount = sale.amount,
+                            date = sale.date,
+                            creationDate = sale.creationDate,
+                            remarks = sale.remarks,
+                            memberId = sale.memberId,
+                            deliveryDate = sale.deliveryDate,
+                            delivery = sale.delivery,
+                            delivered = sale.delivered,
+                            rental = sale.rental,
+                            rentalCollected  = sale.rentalCollected,
+                            type = sale.type,
+                            status = sale.status,
+                            selfCollection = sale.selfCollection,
+                            items = body.saleDetals.toPosInvoice()
+                            )
                     }
 
                 )

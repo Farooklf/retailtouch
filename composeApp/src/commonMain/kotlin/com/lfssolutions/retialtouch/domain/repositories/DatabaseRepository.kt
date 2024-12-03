@@ -30,7 +30,7 @@ import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterScreenState
-import com.lfssolutions.retialtouch.domain.model.sales.GetPosInvoiceResult
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productBarCode.BarcodeDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
@@ -48,9 +48,11 @@ import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
-import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTime.formatDateTimeFromApiString
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTime.getDateFromApi
 import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
 import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiStringUTC
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
@@ -447,14 +449,15 @@ class DataBaseRepository: KoinComponent {
     ) {
         try {
             withContext(Dispatchers.IO) {
+                clearedPOSSales()
                 response.result?.items?.forEach { item ->
                     val dao = SaleRecord(
                         id = item.id,
                         count  = response.result.totalCount ?: 0,
                         receiptNumber = item.invoiceNo?:"",
                         amount = item.invoiceNetTotal?:0.0,
-                        date  = item.invoiceDate.parseDateFromApiString(),
-                        deliveryDate  = item.deliveryDateTime.parseDateFromApiString(),
+                        date  = formatDateTimeFromApiString(item.invoiceDate),
+                        deliveryDate  = item.deliveryDateTime.getDateFromApi(),
                         creationDate  = item.creationTime.parseDateFromApiStringUTC(),
                         remarks = item.remarks?:"",
                         delivered = item.isDelivered?:false,
@@ -464,7 +467,9 @@ class DataBaseRepository: KoinComponent {
                         selfCollection=item.selfCollection?:false,
                         type = item.type?:0,
                         status= if (item.isCancelled == true) 666 else item.status,
-                        memberId = item.memberId?:0
+                        memberId = item.memberId?:0,
+                        items = item
+
                     )
                     dataBaseRepository.insertLatestSales(dao)
                 }
@@ -741,6 +746,11 @@ class DataBaseRepository: KoinComponent {
             .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
     }
 
+    fun getSaleTransaction(): Flow<List<SaleRecord>> {
+        return dataBaseRepository.getLatestSales()
+            .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
+    }
+
     suspend fun getStocks(): MutableList<Stock> {
         val stockList = mutableListOf<Stock>()
         dataBaseRepository.getStocks().toList()
@@ -864,6 +874,10 @@ class DataBaseRepository: KoinComponent {
         withContext(Dispatchers.IO) {
             dataBaseRepository.deleteHoldSaleById(id)
         }
+    }
+
+    private suspend fun clearedPOSSales(){
+        dataBaseRepository.deletePosSales()
     }
 
     //local preference

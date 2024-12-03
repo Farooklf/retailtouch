@@ -1,5 +1,6 @@
-package com.lfssolutions.retialtouch.domain.model.sales
+package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,6 +20,7 @@ data class SaleRecord(
     val rentalCollected: Boolean? = false,
     val type: Int? = 0,
     val status: Int? = 0,
-    val selfCollection: Boolean? = false
+    val selfCollection: Boolean? = false,
+    val items: PosInvoice? = PosInvoice()
 )
 

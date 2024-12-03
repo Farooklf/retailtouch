@@ -38,6 +38,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
+import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
@@ -156,14 +157,22 @@ fun Home(
                             }
                             ListGridItems(homeUIState.homeItemList,syncInProgress){id->
                                 when(id){
-                                    1->{ //Cashier
+                                    HomeItemId.CASHIER_ID->{ //Cashier
                                         NavigatorActions.navigateToPOSScreen(navigator)
                                     }
-                                    5->{ //Sync
+                                    HomeItemId.MEMBER_ID->{
+
+                                    }
+                                    HomeItemId.STOCK_ID->{
+
+                                    }
+                                    HomeItemId.RECEIPT_ID->{
+                                        NavigatorActions.navigateToTransactionScreen(navigator)
+                                    }
+                                    HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
                                     }
-
-                                    8->{
+                                    HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)
                                     }
                                 }

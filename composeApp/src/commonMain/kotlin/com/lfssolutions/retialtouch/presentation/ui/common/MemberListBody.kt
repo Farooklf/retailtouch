@@ -164,11 +164,11 @@ fun CreateMemberForm(
         )
 
 
-        AppOutlinedDropDown(
+        AppFilledDropDown(
             selectedValue = posUIState.selectedMemberGroup,
             options = posUIState.memberGroupList,
             label = "",
-            labelExtractor = { it.name ?: "" },  // Extract name from MemberGroupItem
+            labelExtractor = { it.name ?: "" },
             modifier = Modifier.fillMaxWidth(),
             onValueChangedEvent = {selectedValue ->
                 posViewModel.onSelectedMemberGroup(selectedValue)

@@ -1,4 +1,4 @@
-package com.lfssolutions.retialtouch.domain.model.sales
+package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
 
 import kotlinx.serialization.SerialName

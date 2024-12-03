@@ -9,23 +9,25 @@ import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
-import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceItem
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationItem
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.promotions.PriceBreakPromotionAttribute
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
-import com.lfssolutions.retialtouch.domain.model.sales.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
 import com.lfssolutions.retialtouch.utils.JsonObj
-import comlfssolutionsretialtouch.HoldSaleRecord
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+fun PosInvoice.toJson(): String = JsonObj.encodeToString(this)
 
 fun SaleRecord.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toSaleRecord(): SaleRecord = JsonObj.decodeFromString(this)
+fun String.toPosInvoice(): PosInvoice = JsonObj.decodeFromString(this)
 
 fun Product.toJson(): String = JsonObj.encodeToString(this)
 

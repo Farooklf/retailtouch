@@ -46,19 +46,18 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             // Set loading to true at the start
             updateLoader(true)
-            //delay(2000)
             try {
                 // Load data from multiple databases concurrently
                 val data1Deferred = async { getCurrencySymbol() }
                 //val data2Deferred = async { sqlPreference.getAllPaymentType()}
-                //val data3Deferred = async { getDeliveryType() }
-                //val data4Deferred = async { getStatusType() }
+                val data3Deferred = async { getDeliveryType() }
+                val data4Deferred = async { getStatusType() }
 
                 // Await all results
                 val currencySymbol = data1Deferred.await()
                 //val paymentTypeDao = data2Deferred.await()
-                //val deliveryType = data3Deferred.await()
-                //val statusType = data4Deferred.await()
+                val deliveryType = data3Deferred.await()
+                val statusType = data4Deferred.await()
 
                 // Update your state directly with responses
 
@@ -73,7 +72,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     }
                 }*/
 
-                /*deliveryType.collectLatest { deliveryList ->
+                deliveryType.collectLatest { deliveryList ->
                     _screenUIState.update {
                         it.copy(deliveryTypeList = deliveryList, selectedDeliveryType = deliveryList[0])
                     }
@@ -83,7 +82,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
                     _screenUIState.update {
                         it.copy(statusTypeList = statusList , selectedStatusType = statusList[0])
                     }
-                }*/
+                }
 
                 _screenUIState.update {
                     it.copy(/*posUIState = posUIState,*/ remainingBalance = posUIState.grandTotal, grandTotal = posUIState.grandTotal)

@@ -9,6 +9,7 @@ import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -85,7 +86,6 @@ import kotlin.math.pow
 import kotlin.math.round
 
 val JsonObj = Json { encodeDefaults = true }
-
 // Define the LocalAppState CompositionLocal
 val LocalAppState = compositionLocalOf<AppState> {
     error("No AppState provided")
@@ -139,6 +139,20 @@ object AppIcons {
     val scanIcon = Res.drawable.ic_settings
     val starIcon = Res.drawable.ic_star
     val backIcon by lazy { Res.drawable.ic_back_arrow_circle }
+}
+
+object HomeItemId{
+    const val CASHIER_ID = 1
+    const val MEMBER_ID = 2
+    const val STOCK_ID = 3
+    const val RECEIPT_ID = 4
+    const val SYNC_ID = 5
+    const val SETTLEMENT_ID = 6
+    const val PAYOUT_ID = 7
+    const val PRINTER_ID = 8
+    const val DRAWER_ID = 9
+    const val SETTING_ID = 10
+    const val LOGOUT_ID = 11
 }
 
 object AppStrings{
@@ -290,7 +304,7 @@ object DateTime{
     }
 
     // Helper function to format LocalDateTime to "yyyy-MM-dd HH:mm:ss".
-    fun LocalDateTime.toFormattedString(): String {
+    private fun LocalDateTime.toFormattedString(): String {
         val year = this.year.toString().padStart(4, '0')
         val month = this.monthNumber.toString().padStart(2, '0')
         val day = this.dayOfMonth.toString().padStart(2, '0')
@@ -317,6 +331,153 @@ object DateTime{
 
         return "-".repeat(lineLength)
     }
+
+
+    fun String?.getDateFromApi(): String {
+        return try {
+            // Check if the string is not null or empty
+            if (this.isNullOrEmpty()) {
+                "1970-01-01 00:00:00"  // Return Epoch as string if input is null or empty
+            } else {
+                // Remove the "Z" and parse the date-time string
+                val newStr = this.substring(0, 10) + " " + this.substring(11, 19)
+                val dateTime = LocalDateTime.parse(newStr.replace(" ", "T"))
+
+                // Extract day, month, and year from the LocalDateTime
+                val day = dateTime.dayOfMonth.toString().padStart(2, '0')  // Ensures two digits
+                val month = dateTime.monthNumber.toString().padStart(2, '0') // Ensures two digits
+                val year = dateTime.year.toString() // Four digits
+
+                // Return the formatted string in "dd.MM.yyyy" format
+                return "$day.$month.$year"
+            }
+        } catch (e: Exception) {
+            // In case of error, return the current date in "dd.MM.yyyy" format
+            val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val day = currentDate.dayOfMonth.toString().padStart(2, '0')
+            val month = currentDate.monthNumber.toString().padStart(2, '0')
+            val year = currentDate.year.toString()
+            return "$day.$month.$year"
+        }
+    }
+
+    fun getCurrentDateForUIWithoutTime(): String {
+        // Get the current date in the system's default time zone
+        val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        // Extract day, month, and year
+        val day = currentDate.dayOfMonth.toString().padStart(2, '0')      // Ensures two digits
+        val month = currentDate.monthNumber.toString().padStart(2, '0')  // Ensures two digits
+        val year = currentDate.year.toString()
+
+        // Construct the formatted date string
+        return "$day-$month-$year"
+    }
+
+    fun formatDateForUIWithoutTime(selectedDateMillis: Long): String {
+        // Convert milliseconds to Instant
+        val instant = Instant.fromEpochMilliseconds(selectedDateMillis)
+
+        // Convert to LocalDateTime in the system's time zone
+        val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        // Format as dd.MM.yyyy
+        return "${localDate.dayOfMonth.toString().padStart(2, '0')}.${localDate.monthNumber.toString().padStart(2, '0')}.${localDate.year}"
+    }
+
+    fun parseDateStringToMillis(dateString: String?): Long? {
+        // Ensure the date is in the "dd-MM-yyyy HH:mm.000" format
+        if(dateString==null){
+            return null
+        }
+        val parts = dateString.split(" ")
+        val dateParts = parts[0].split("-")
+        val timeParts = parts[1].split(":")
+
+        val day = dateParts[0].toInt()
+        val month = dateParts[1].toInt()
+        val year = dateParts[2].toInt()
+
+        val hour = timeParts[0].toInt()
+        val minute = timeParts[1].toInt()
+
+        // Create and return the LocalDateTime
+        val localDateTime = LocalDateTime(year, month, day, hour, minute)
+        // Convert LocalDateTime to Instant using the system's default time zone
+        val instant = localDateTime.toInstant(TimeZone.currentSystemDefault())
+
+        // Return the milliseconds since the epoch
+
+        return instant.toEpochMilliseconds()
+    }
+
+    fun parseDateFromApiString(apiDate: String?): LocalDateTime {
+        return try {
+            if (apiDate.isNullOrEmpty()) {
+                // Return Epoch time as LocalDateTime
+                Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            } else {
+                // Reformat the string
+                val newStr = apiDate.substring(0, 10) + "T" + apiDate.substring(11, 19)
+                // Parse the date string
+                LocalDateTime.parse(newStr)
+            }
+        } catch (e: Exception) {
+            // Return the current time in case of parsing failure
+            Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        }
+    }
+
+    fun formatDateTimeFromApiString(apiDate: String?): String {
+        return try {
+            if (apiDate.isNullOrEmpty()) {
+                // Return the current date and time formatted as "dd.MM.yyyy HH:mm"
+                val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                "${currentDateTime.dayOfMonth.toString().padStart(2, '0')}." +
+                        "${currentDateTime.monthNumber.toString().padStart(2, '0')}." +
+                        "${currentDateTime.year} " +
+                        "${currentDateTime.hour.toString().padStart(2, '0')}:" +
+                        currentDateTime.minute.toString().padStart(2, '0')
+            } else {
+                // Reformat the input string
+                val newStr = apiDate.substring(0, 10) + "T" + apiDate.substring(11, 19)
+                // Parse the date and time
+                val parsedDateTime = LocalDateTime.parse(newStr)
+                // Format the parsed date and time as "dd.MM.yyyy HH:mm"
+                "${parsedDateTime.dayOfMonth.toString().padStart(2, '0')}." +
+                        "${parsedDateTime.monthNumber.toString().padStart(2, '0')}." +
+                        "${parsedDateTime.year} " +
+                        "${parsedDateTime.hour.toString().padStart(2, '0')}:" +
+                        parsedDateTime.minute.toString().padStart(2, '0')
+            }
+        } catch (e: Exception) {
+            // Return the current date and time in case of error
+            val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            "${currentDateTime.dayOfMonth.toString().padStart(2, '0')}." +
+                    "${currentDateTime.monthNumber.toString().padStart(2, '0')}." +
+                    "${currentDateTime.year} " +
+                    "${currentDateTime.hour.toString().padStart(2, '0')}:" +
+                    currentDateTime.minute.toString().padStart(2, '0')
+        }
+    }
+
+    fun getCurrentDateTimeInPreferredFormat(): String {
+        // Get the current date and time in the system's default time zone
+        val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+        // Format it as "yyyy-MM-dd HH:mm:ss.000"
+        val year = currentDateTime.year
+        val month = currentDateTime.monthNumber.toString().padStart(2, '0')
+        val day = currentDateTime.dayOfMonth.toString().padStart(2, '0')
+        val hour = currentDateTime.hour.toString().padStart(2, '0')
+        val minute = currentDateTime.minute.toString().padStart(2, '0')
+        //val second = currentDateTime.second.toString().padStart(2, '0')
+
+        return "$day-$month-$year $hour:$minute.000"
+    }
+
+    // Function to parse date string into Instant
+
 }
 
 object DoubleExtension{
@@ -356,6 +517,9 @@ fun formatAmountForPrint(amount: Double?, currencySymbol: String) :String{
     return  "${currencySymbol}${amount?.roundTo(2)}"
 }
 
+fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
+    return  "${currencySymbol}${amount?.roundTo(2)}"
+}
 
 expect inline fun <reified T : ViewModel> Module.viewModelDefinition(
     qualifier: Qualifier? = null,

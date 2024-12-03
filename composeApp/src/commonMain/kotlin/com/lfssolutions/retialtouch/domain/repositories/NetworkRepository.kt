@@ -4,7 +4,7 @@ import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
-import com.lfssolutions.retialtouch.domain.model.sales.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import org.koin.core.component.KoinComponent
