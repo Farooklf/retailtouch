@@ -192,10 +192,11 @@ fun Pos(
         else
             AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
 
-        val textStyleHeader=if(appState.isPortrait)
-             AppTheme.typography.bodyBold()
+
+        val (textStyleHeader,btnStyle)=if(appState.isPortrait)
+            AppTheme.typography.bodyBold() to AppTheme.typography.captionBold()
         else
-            AppTheme.typography.titleBold()
+            AppTheme.typography.titleBold() to AppTheme.typography.bodyBold()
 
         val space=if(appState.isPortrait)
             AppTheme.dimensions.padding3
@@ -387,7 +388,7 @@ fun Pos(
                         leftIcon = icon,
                         backgroundColor = AppTheme.colors.textPrimary,
                         disabledBackgroundColor = AppTheme.colors.textPrimary,
-                        isPortrait = appState.isPortrait,
+                        style = btnStyle,
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentHeight(),
@@ -407,7 +408,7 @@ fun Pos(
                         leftIcon = AppIcons.discountIcon,
                         backgroundColor = AppTheme.colors.appRed,
                         disabledBackgroundColor = AppTheme.colors.appRed,
-                        isPortrait = appState.isPortrait,
+                        style = btnStyle,
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentHeight(),
@@ -424,7 +425,7 @@ fun Pos(
                         leftIcon = AppIcons.paymentIcon,
                         backgroundColor = AppTheme.colors.appGreen,
                         disabledBackgroundColor = AppTheme.colors.appGreen,
-                        isPortrait = appState.isPortrait,
+                        style = btnStyle,
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentHeight(),
@@ -515,30 +516,6 @@ fun Pos(
         onNumberPadClick = {symbol->
             posViewModel.onNumberPadClick(symbol)
         }
-
-        /*dialogBody = {
-            DiscountContent(
-                inputValue = posUIState.inputDiscount,
-                inputError = posUIState.inputDiscountError,
-                trailingIcon = posViewModel.getDiscountTypeIcon(),
-                selectedDiscountType = posUIState.selectedDiscountType,
-                onDiscountChange = { discount->
-                    posViewModel.updateDiscountValue(discount)
-                },
-                onNumberPadClick = {symbol->
-                    posViewModel.onNumberPadClick(symbol)
-                },
-                onCancel = {
-                    posViewModel.dismissDiscountDialog()
-                },
-                onApply = {
-                    posViewModel.onApplyDiscountClick()
-                },
-                onClick = {discountType->
-                    posViewModel.updateDiscountType(discountType)
-                }
-            )
-        }*/
     )
 
 
@@ -642,16 +619,6 @@ fun POSTaxItem(
             Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
                 verticalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
-                /*Row(modifier = Modifier.fillMaxWidth().clickable{
-                    posViewModel.removedListItem(item)
-                }, horizontalArrangement = Arrangement.End){
-                    Image(
-                        imageVector = vectorResource(AppIcons.cancelIcon),
-                        contentDescription = "",
-                        modifier = Modifier.size(AppTheme.dimensions.smallXIcon),
-                        colorFilter = ColorFilter.tint(AppTheme.colors.textError)
-                    )
-                }*/
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     ListText(
                         label = "${index+1}",

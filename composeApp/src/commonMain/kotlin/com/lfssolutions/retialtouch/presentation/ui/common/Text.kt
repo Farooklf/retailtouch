@@ -120,7 +120,7 @@ fun ListText(
         text = label,
         style = textStyle,
         color = color,
-        minLines=minLines,
+        minLines = minLines,
         maxLines = maxLines,
         softWrap = true,
         overflow = TextOverflow.Ellipsis,

@@ -8,7 +8,7 @@ import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleRecordDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
@@ -1472,50 +1472,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         _posUIState.update { state -> state.copy(unSyncInvoices = value) }
     }
 
-    fun syncPendingSales() {
-        viewModelScope.launch {
-            posUIState.value.let { state->
-                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
-                    if(pendingCount>0){
-                        updateSyncInProgress(!state.syncInProgress)
-                        dataBaseRepository.getPosPendingSales().collect{ response->
-                            response.forEach { data->
-                                val posInvoice=PosInvoice(
-                                    id = data.id,
-                                    tenantId = data.tenantId,
-                                    employeeId = data.employeeId,
-                                    locationId=data.locationId,
-                                    locationCode = data.locationCode,
-                                    terminalId = data.locationId,
-                                    terminalName = data.terminalName,
-                                    isRetailWebRequest=data.isRetailWebRequest,
-                                    invoiceNo = data.invoiceNo,
-                                    invoiceDate= data.invoiceDate,
-                                    invoiceTotal = data.invoiceTotal, //before Tax
-                                    invoiceItemDiscount = data.invoiceItemDiscount,
-                                    invoiceTotalValue= data.invoiceTotalValue,
-                                    invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
-                                    invoiceNetDiscount= data.invoiceNetDiscount,
-                                    invoiceTotalAmount=data.invoiceTotalAmount,
-                                    invoiceSubTotal= data.invoiceSubTotal,
-                                    invoiceTax= data.globalTax,
-                                    invoiceRoundingAmount=data.invoiceRoundingAmount,
-                                    invoiceNetTotal= data.invoiceNetTotal,
-                                    invoiceNetCost= data.invoiceNetCost,
-                                    paid= data.paid, //netCost
-                                    memberId = data.memberId,
-                                    posInvoiceDetails = data.posInvoiceDetailRecord,
-                                    posPayments = data.posPaymentConfigRecord,
-                                    pendingInvoices = pendingCount
-                                )
-                                executePosPayment(posInvoice)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+
 
     private fun createTicketRequest() {
         if (employeeId.value== 0 || posUIState.value.location==null) {
@@ -1656,7 +1613,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         name = payment.name?:""
                     )
                 }.toList(),
-
+                qty = cartList.size,
+                customerName = if(selectedMemberId==0) "N/A" else selectedMember,
+                address1 = location?.address1?:"" ,
+                address2 = location?.address2?:"" ,
             )
 
             return posInvoice
@@ -1666,7 +1626,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     private fun holdCurrentSync(posInvoice: PosInvoice, isSync: Boolean) {
         viewModelScope.launch {
             try {
-                dataBaseRepository.addNewPendingSales(PendingSaleRecordDao(
+                dataBaseRepository.addNewPendingSales(PendingSaleDao(
                     posInvoice = posInvoice,
                     isDbUpdate = posInvoice.pendingInvoices>0,
                     isSynced = isSync
@@ -1677,11 +1637,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     updateUnSyncedInvoices(pendingCount)
                 }*/
                 //constructReceiptAndPrint(posInvoice)
-                syncSales()
-//               constructReceiptAndPrint(posInvoice)
                 constructReceiptAndPrintTemplate(posInvoice)
-                syncStockQuantity()
-                syncInventory()
+                //constructReceiptAndPrint(posInvoice)
+                updateSales()
+                //syncStockQuantity()
+                //syncInventory()
                 clearSale()
 
             }catch (ex:Exception){
@@ -1794,6 +1754,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+                    println("finalTextToPrint :$finalTextToPrint")
+
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,
                         printerType = when (printer.printerType) {

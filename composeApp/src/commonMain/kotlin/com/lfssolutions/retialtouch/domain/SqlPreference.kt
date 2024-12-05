@@ -3,9 +3,9 @@ package com.lfssolutions.retialtouch.domain
 
 
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
@@ -163,19 +163,19 @@ interface SqlPreference {
     suspend fun deletePaymentType()
 
     //posInvoiceDetails
-    suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord)
-    suspend fun updatePosSales(posPaymentRecordDao: PosInvoicePendingSaleRecord)
-    fun getAllPosSale(): Flow<List<PosInvoicePendingSaleRecord>>
-    fun getPendingSaleRecords(): Flow<List<PosInvoicePendingSaleRecord>>
+    suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PendingSale)
+    suspend fun updatePosSales(posPaymentRecordDao: PendingSale)
+    fun getAllPosSale(): Flow<List<PendingSale>>
+    fun getPendingSaleRecords(): Flow<List<PendingSale>>
     suspend fun deletePosPendingSaleRecord()
     fun getAllPendingSalesCount():Flow<Long>
 
-    suspend fun insertPosDetailsRecord(posInvoice: PosInvoiceDetailRecord)
-    fun getPosDetailsRecord(): Flow<List<PosInvoiceDetailRecord>>
+    suspend fun insertPosDetailsRecord(posInvoice: PosSaleDetails)
+    fun getPosDetailsRecord(): Flow<List<PosSaleDetails>>
     suspend fun deletePosDetailsRecord()
 
-    suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosConfiguredPaymentRecord)
-    fun getPosConfiguredPaymentRecord(): Flow<List<PosConfiguredPaymentRecord>>
+    suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosSalePayment)
+    fun getPosConfiguredPaymentRecord(): Flow<List<PosSalePayment>>
     suspend fun deletePosConfiguredPaymentRecord()
 
     //Printer

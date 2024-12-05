@@ -137,7 +137,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private val _lastSyncTs = MutableStateFlow(0L)
     val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
 
-    private val saleCount = MutableStateFlow(0L)
+    private val _uiUpdateStatus = MutableStateFlow(false)
+    val uiUpdateStatus: StateFlow<Boolean> = _uiUpdateStatus.asStateFlow()
 
     // Expose the login state as a Flow<Boolean?>, with null indicating loading
     val isUserLoggedIn: StateFlow<Boolean?> = preferences.getUserLoggedIn()
@@ -227,7 +228,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncErrorInfo.update {  "$errorTitle \n $errorMsg" }
     }
 
-
+    private fun updateUIStatus(syncStatus: Boolean) {
+        _uiUpdateStatus.update { syncStatus }
+    }
     //check if user logged in or not
     suspend fun isLoggedIn() : Boolean {
         val tokenTime : Long = getLastTokenTime()
@@ -362,6 +365,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
              syncMembers()
              syncMemberGroup()
+             syncSales()
              syncStockQuantity()
              syncInventory()
              syncCategories()
@@ -370,6 +374,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              println("All Sync Operations Completed Successfully")
              updateSyncStatus("All Sync Operations have been Completed Successfully")
              updateSyncProgress(false)
+             preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
          }
        }catch (e: Exception){
            val error = "failed during sync: ${e.message}"
@@ -463,6 +468,66 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
+    private suspend fun syncSales(){
+        try {
+            updateLoaderMsg("Syncing Sales History")
+            println("API CALL : ${count++}")
+            getLatestSale(skipCount = 0, maxResultCount = 1).collect{sale->
+                when(sale){
+                    is RequestState.Error -> {
+                        handleApiError(SYNC_SALES_ERROR_TITLE,sale.message)
+                    }
+                    is RequestState.Idle -> {
+
+                    }
+                    is RequestState.Loading -> {
+
+                    }
+                    is RequestState.Success -> {
+                        val totalCount = sale.data.result?.totalCount
+                        if(totalCount!=null && totalCount>=1000){
+                            getLatestSale(skipCount = totalCount-600, maxResultCount = 1000).collect { response->
+                                SaveSyncSales(response)
+                            }
+                        }else{
+                            SaveSyncSales(sale)
+                        }
+                    }
+                }
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            handleApiError(SYNC_SALES_ERROR_TITLE,error)
+        }
+    }
+
+    private fun SaveSyncSales(apiResponse: RequestState<GetPosInvoiceResult>) {
+        observeResponseNew(apiResponse,
+            onLoading = {
+                updateSyncProgress(true)
+            },
+            onSuccess = { apiData ->
+                if(apiData.success){
+                    viewModelScope.launch {
+                        dataBaseRepository.insertNewLatestSales(apiData)
+                        updateSyncGrid(INVOICE)
+                        //set
+                        updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
+                        updateSyncProgress(false)
+                        updateSyncStatus("")
+                        handleError(false,"","")
+                    }
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
+                updateSyncProgress(false)
+            }
+        )
+
+    }
+
     private suspend fun syncCategories(){
         try {
             updateLoaderMsg("Syncing Categories")
@@ -527,50 +592,24 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun syncSales(){
-        try {
-            if(_syncInProgress.value)
-                return
-            updateSyncStatus("Syncing Sales History")
-            updateSales()
-
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleError(true,SYNC_SALES_ERROR_TITLE,error)
-            updateSyncProgress(false)
-        }
-    }
-
-   private suspend fun updateSales(){
-        getSalesTotalCount()
-
-       networkRepository.getLatestSales(
-           POSInvoiceRequest(
-               locationId = getLocationId(),
-               maxResultCount=10,
-               skipCount = (saleCount.value-5).toInt(),
-               sorting = "Id")
-       ).collectLatest { apiResponse->
-           observeLatestSales(apiResponse)
-       }
-   }
-
-    private suspend fun getSalesTotalCount(){
+    fun updateSales(){
        try {
-           networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id")).collectLatest { apiResponse->
-               when(apiResponse){
-                   is RequestState.Error -> {
-                       updateSyncProgress(false)
-                   }
-                   is RequestState.Idle -> {
-
-                   }
-                   is RequestState.Loading -> {
-
-                   }
-                   is RequestState.Success -> {
-                       if(apiResponse.data.success){
-                           saleCount.value=apiResponse.data.result?.totalCount?:0
+           if(_syncInProgress.value)
+               return
+           updateSyncStatus("Syncing Sales History")
+           viewModelScope.launch {
+               val job = async { getSalesTotalCount() }
+               val saleRecord = job.await()
+               saleRecord.collectLatest { sale->
+                   when(sale){
+                       is RequestState.Error -> {}
+                       is RequestState.Idle -> {}
+                       is RequestState.Loading -> {}
+                       is RequestState.Success -> {
+                           val saleCount=sale.data.result?.totalCount?:1000
+                           getLatestSale(skipCount = saleCount-5, maxResultCount = 10).collect {
+                               observeLatestSales(it)
+                           }
                        }
                    }
                }
@@ -580,6 +619,21 @@ open class BaseViewModel: ViewModel(), KoinComponent {
            handleError(true,SYNC_SALES_ERROR_TITLE,error)
            updateSyncProgress(false)
        }
+
+   }
+
+    private suspend fun getSalesTotalCount(): Flow<RequestState<GetPosInvoiceResult>> {
+        return networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id"))
+    }
+
+    private suspend fun getLatestSale(skipCount: Long?, maxResultCount:Int?): Flow<RequestState<GetPosInvoiceResult>> {
+       return networkRepository.getLatestSales(
+           POSInvoiceRequest(
+               locationId = getLocationId(),
+               maxResultCount=maxResultCount?:1000,
+               skipCount = skipCount?.toInt()?:0,
+               sorting = "Id")
+       )
     }
 
     suspend fun syncPrintTemplate(templateType: TemplateType){
@@ -658,16 +712,18 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         updateSyncGrid(INVOICE)
                         //set
                         updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
+                        updateSyncProgress(false)
+                        updateSyncStatus("")
+                        handleError(false,"","")
+                        updateUIStatus(true)
                     }
-                    updateSyncProgress(false)
-                    updateSyncStatus("")
-                    handleError(false,"","")
                 }
             },
             onError = {
                     errorMsg ->
                 handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
                 updateSyncProgress(false)
+                updateUIStatus(true)
             }
         )
 

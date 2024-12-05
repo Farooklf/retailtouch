@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.LocalAppState
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
@@ -636,8 +637,7 @@ fun ClickableAppOutlinedTextField(
     onClick: () -> Unit, // Callback for click events
     modifier: Modifier,
     enabled: Boolean = false,
-    textStyle: TextStyle  = AppTheme.typography.bodyMedium(),
-    textColor : Color = AppTheme.colors.textPrimary,
+    textColor : Color = AppTheme.colors.textBlack,
     errorColor: Color =AppTheme.colors.textError,
     focusedColor: Color =AppTheme.colors.textDarkGrey,
     unfocusedColor: Color =AppTheme.colors.textDarkGrey,
@@ -653,6 +653,11 @@ fun ClickableAppOutlinedTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
+    val appState = LocalAppState.current
+    val (labelStyle,textStyle)=if(appState.isPortrait){
+        AppTheme.typography.captionMedium() to AppTheme.typography.bodyMedium()
+    }else
+        AppTheme.typography.bodyMedium() to AppTheme.typography.titleMedium()
 
     Column(
         modifier = modifier.clickable{
@@ -671,7 +676,7 @@ fun ClickableAppOutlinedTextField(
                 label?.let {
                     Text(
                         text = it,
-                        style = AppTheme.typography.captionBold()
+                        style = labelStyle
                     )
                 }
             },

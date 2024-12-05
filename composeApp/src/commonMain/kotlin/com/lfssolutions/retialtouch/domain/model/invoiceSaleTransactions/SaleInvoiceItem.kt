@@ -1,11 +1,12 @@
-package com.lfssolutions.retialtouch.domain.model.products
+package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
-
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
+import com.lfssolutions.retialtouch.domain.model.products.PosPayment
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PosInvoice(
+data class SaleInvoiceItem(
     @SerialName("deliveryDateTime")
     val deliveryDateTime: String? = null,
     @SerialName("employeeId")
@@ -55,7 +56,9 @@ data class PosInvoice(
     @SerialName("locationId")
     val locationId: Long? = 0,
     @SerialName("memberId")
-    val memberId: Int? = 0,
+    val memberId: Double? = null,
+    @SerialName("memberName")
+    val memberName: String? = null,
     @SerialName("paid")
     val paid: Double = 0.0,
     @SerialName("posInvoiceDetails")
@@ -76,10 +79,4 @@ data class PosInvoice(
     val terminalName: String? = null,
     @SerialName("type")
     val type: Int? = 0,
-
-    val pendingInvoices :Long = 0,
-    val qty :Int = 0,
-    val customerName :String = "",
-    val address1 :String = "",
-    val address2 :String = "",
 )

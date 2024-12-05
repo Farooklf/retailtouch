@@ -181,7 +181,6 @@ fun Login(
                     loginViewModel.onLoginClick()
                 },
                 label = stringResource(Res.string.sign_in) ,
-                isPortrait = appState.isPortrait,
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()

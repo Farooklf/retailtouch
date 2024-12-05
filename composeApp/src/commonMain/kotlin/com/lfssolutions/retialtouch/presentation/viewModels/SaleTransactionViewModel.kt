@@ -1,12 +1,14 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateStringToMillis
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
+import com.lfssolutions.retialtouch.utils.NumberFormatting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
@@ -21,10 +23,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.koin.core.component.KoinComponent
 
 
-class   SaleTransactionViewModel : BaseViewModel(), KoinComponent {
+
+class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
 
     private val _screenState = MutableStateFlow(SaleTransactionState())
     val screenState: StateFlow<SaleTransactionState> = _screenState.asStateFlow()
@@ -131,66 +135,97 @@ class   SaleTransactionViewModel : BaseViewModel(), KoinComponent {
 
     fun getSales(){
       viewModelScope.launch {
-          dataBaseRepository.getSaleTransaction().collect{sale->
-              _screenState.update { it.copy(saleTransaction = sale) }
-              println("SaleList : $sale")
-              filterSales()
+          dataBaseRepository.getSaleTransaction().collectLatest{sale->
+              val sortedSales = sale.sortedByDescending { sale -> sale.creationDate }
+              _screenState.update { it.copy(transactionSales = sortedSales) }
+              println("SaleList : $sortedSales")
           }
       }
     }
 
-    fun filterSales() {
+    fun getPendingSales(){
         viewModelScope.launch {
-            _screenState.update { state->
-                // Parse start date and end date if they exist
-                //var filteredSales = state.saleTransaction
-
-                val startMillis = parseDateStringToMillis(state.startDate)
-                val endMillis = parseDateStringToMillis(state.endDate)
-
-                /*if (startMillis != null) {
-                    filteredSales = filteredSales.filter { sale ->
-                        !sale.date.isNullOrEmpty() && parseDateStringToMillis(sale.date)!! > startMillis - 86400000 // Subtract one day in milliseconds
-                    }
-                }
-
-                if (endMillis != null) {
-                    filteredSales = filteredSales.filter { sale ->
-                        !sale.date.isNullOrEmpty() && parseDateStringToMillis(sale.date)!! < endMillis + 86400000 // Subtract one day in milliseconds
-                    }
-                }*/
-
-                // Filter the sales based on the date range and other conditions
-                val filteredSales = state.saleTransaction.filter { sale ->
-                    val saleMillis = parseDateStringToMillis(sale.date)
-
-                    // Apply any condition with OR logic
-                    val isDateValid = saleMillis != null && saleMillis in (startMillis ?: Long.MIN_VALUE)..(endMillis ?: Long.MAX_VALUE)
-                    val isMemberValid = sale.memberId == state.member.memberId
-                    val isTypeValid = sale.type == state.type.id
-                    val isStatusValid = sale.status == state.status.id
-
-                    // Include the sale if any one of the conditions is met
-                    isDateValid || isMemberValid || isTypeValid || isStatusValid
-                }
-
-                // If filtered list is empty, return the entire sales list
-                val resultSales = filteredSales.ifEmpty {
-                    state.saleTransaction  // return all sales if no filter conditions match
-                }
-                val sortedSales = resultSales.sortedByDescending { sale -> parseDateStringToMillis(sale.date) }
-                println("sortedSales : $sortedSales")
-                // Sort the filtered list by date (descending order)
-                state.copy(saleTransaction = sortedSales)
+            dataBaseRepository.getPosPendingSales().collectLatest{sale->
+                val sortedSales = sale.sortedByDescending { sale -> sale.invoiceDate }
+                _screenState.update { it.copy(pendingSales = sortedSales) }
+                println("PendingSaleList : $sortedSales")
             }
         }
     }
 
-
-
-    private fun updateLoader(value:Boolean){
+    fun syncTransaction(){
         viewModelScope.launch {
-            _screenState.update { it.copy(isLoading = value) }
+            updateTransactionLoading(true)
+            updateLoader(true)
+            updateSales()
+        }
+    }
+
+    fun syncPendingSales() {
+        viewModelScope.launch {
+            screenState.value.let { state->
+                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
+                    if(pendingCount>0){
+                        updatePendingLoading(!state.isSalePendingSync)
+                        dataBaseRepository.getPosPendingSales().collect{ response->
+                            response.forEach { data->
+                                val posInvoice= PosInvoice(
+                                    id = data.id,
+                                    tenantId = data.tenantId,
+                                    employeeId = data.employeeId,
+                                    locationId=data.locationId,
+                                    locationCode = data.locationCode,
+                                    terminalId = data.locationId,
+                                    terminalName = data.terminalName,
+                                    isRetailWebRequest=data.isRetailWebRequest,
+                                    invoiceNo = data.invoiceNo,
+                                    invoiceDate= data.invoiceDate,
+                                    invoiceTotal = data.invoiceTotal, //before Tax
+                                    invoiceItemDiscount = data.invoiceItemDiscount,
+                                    invoiceTotalValue= data.invoiceTotalValue,
+                                    invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
+                                    invoiceNetDiscount= data.invoiceNetDiscount,
+                                    invoiceTotalAmount=data.invoiceTotalAmount,
+                                    invoiceSubTotal= data.invoiceSubTotal,
+                                    invoiceTax= data.globalTax,
+                                    invoiceRoundingAmount = data.invoiceRoundingAmount,
+                                    invoiceNetTotal= data.invoiceNetTotal,
+                                    invoiceNetCost= data.invoiceNetCost,
+                                    paid= data.paid, //netCost
+                                    memberId = data.memberId,
+                                    posInvoiceDetails = data.posInvoiceDetailRecord,
+                                    posPayments = data.posPaymentConfigRecord,
+                                    pendingInvoices = pendingCount
+                                )
+                                //executePosPayment(posInvoice)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateLoader(value:Boolean){
+        _screenState.update { it.copy(isLoading = value) }
+
+    }
+
+     fun updateTransactionLoading(value:Boolean){
+        viewModelScope.launch {
+            _screenState.update { it.copy(isSaleTransactionSync = value) }
+        }
+    }
+
+    fun updatePendingLoading(value:Boolean){
+        viewModelScope.launch {
+            _screenState.update { it.copy(isSalePendingSync = value) }
+        }
+    }
+
+    fun updatePendingSalePopupState(value:Boolean){
+        viewModelScope.launch {
+            _screenState.update { it.copy(showPendingSalePopup = value) }
         }
     }
 
@@ -222,23 +257,43 @@ class   SaleTransactionViewModel : BaseViewModel(), KoinComponent {
 
     fun onSelectedType(type: DeliveryType){
         viewModelScope.launch {
-            _screenState.update { it.copy(type = type)}
+            _screenState.update { it.copy(deliveryType = type, type = type.id,isTypeFilter=true)}
         }
     }
 
     fun onSelectedStatus(status: StatusType){
         viewModelScope.launch {
-            _screenState.update { it.copy(status = status)}
+            _screenState.update { it.copy(statusType = status, status = status.id, isStatusFilter = true)}
         }
     }
 
     fun onSelectedMember(member: MemberType){
         viewModelScope.launch {
-            _screenState.update { it.copy(member = member)}
+            _screenState.update { it.copy(member = member, memberId = member.memberId ,isMemberFilter=true)}
+        }
+    }
+
+    fun updateStartDate(newVal: LocalDate){
+        viewModelScope.launch {
+            println("selectedDate $newVal")
+            _screenState.update { state->state.copy(startDate = newVal.toString(), isFromDateFilter = true) }
+        }
+    }
+
+    fun updateEndDate(newVal: LocalDate){
+        viewModelScope.launch {
+            _screenState.update { state->state.copy(endDate = newVal.toString(), isEndDateFilter = true) }
         }
     }
 
     fun updateDatePickerDialog(newValue:Boolean,isFromDateValue:Boolean){
-        _screenState.update { state->state.copy(isDatePickerDialog = newValue, isFromDate = isFromDateValue) }
+        viewModelScope.launch {
+            _screenState.update { state->state.copy(isDatePickerDialog = newValue, isFromDate = isFromDateValue) }
+        }
     }
+    fun formatPriceForUI(amount: Double?) :String{
+        return  "${_screenState.value.currencySymbol}${NumberFormatting().format(amount?:0.0,2)}"
+    }
+
+
 }

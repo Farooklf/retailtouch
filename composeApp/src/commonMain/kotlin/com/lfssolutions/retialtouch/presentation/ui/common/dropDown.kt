@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
@@ -218,7 +219,6 @@ fun <T> AppDropdownMenu(
     selectedIndex: Int = -1,
     onItemSelected: (index: Int, item: T) -> Unit,
     labelExtractor: @Composable (T) -> String,
-    selectedItemToString: (T) -> String = { it.toString() },
     drawItem: @Composable (String, Boolean, Boolean, () -> Unit) -> Unit = { item, selected, itemEnabled, onClick ->
         AppDropdownMenuItem(
             text = item,
@@ -228,12 +228,17 @@ fun <T> AppDropdownMenu(
         )
     },
 ) {
-
+    val appState = LocalAppState.current
     var expanded by remember { mutableStateOf(false) }
     val tint =if(selectedIndex>-1) AppTheme.colors.textDarkGrey else AppTheme.colors.textLightGrey
+    val (labelStyle,textStyle)=if(appState.isPortrait){
+        AppTheme.typography.captionMedium() to AppTheme.typography.bodyMedium()
+    }else
+        AppTheme.typography.bodyMedium() to AppTheme.typography.titleMedium()
+
     Box(modifier = modifier.height(IntrinsicSize.Min)) {
         OutlinedTextField(
-            label = { Text(text = label, color = tint , style = AppTheme.typography.captionBold()) },
+            label = { Text(text = label, color = tint , style = labelStyle) },
             value = items.getOrNull(selectedIndex)?.let { labelExtractor(it) } ?: "",
             enabled = enabled,
             modifier = Modifier.fillMaxWidth(),
@@ -246,9 +251,10 @@ fun <T> AppDropdownMenu(
             readOnly = true,
             maxLines = 1,
             minLines = 1,
-            textStyle = AppTheme.typography.bodyMedium(),
+            textStyle = textStyle,
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedTextColor = AppTheme.colors.primaryColor,
+                focusedTextColor = AppTheme.colors.textBlack,
+                unfocusedTextColor = AppTheme.colors.textBlack,
                 focusedLabelColor = AppTheme.colors.primaryColor,
                 unfocusedLabelColor = AppTheme.colors.textDarkGrey,
                 focusedBorderColor = AppTheme.colors.primaryColor,

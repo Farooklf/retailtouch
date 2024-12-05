@@ -5,10 +5,10 @@ import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleRecordDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.Location
@@ -50,11 +50,11 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.DateTime.formatDateTimeFromApiString
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.getDateFromApi
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiStringUTC
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApi
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiUTC
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateTimeFromApiStringUTC
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
@@ -391,8 +391,8 @@ class DataBaseRepository: KoinComponent {
                                 promotionTypeName = item.promotionTypeName,
                                 qty = item.qty?:0.0,
                                 amount = item.amount?:0.0,
-                                startDate = item.startDate.parseDateFromApiString(),
-                                endDate = item.endDate.parseDateFromApiString(),
+                                startDate = item.startDate.parseDateFromApi(),
+                                endDate = item.endDate.parseDateFromApi(),
                                 startHour1 = item.startHour1?:0,
                                 startHour2 = item.startHour2?:0,
                                 endHour1 = item.endHour1?:0,
@@ -449,25 +449,26 @@ class DataBaseRepository: KoinComponent {
     ) {
         try {
             withContext(Dispatchers.IO) {
-                clearedPOSSales()
+                //clearedPOSSales()
                 response.result?.items?.forEach { item ->
                     val dao = SaleRecord(
                         id = item.id,
                         count  = response.result.totalCount ?: 0,
                         receiptNumber = item.invoiceNo?:"",
                         amount = item.invoiceNetTotal?:0.0,
-                        date  = formatDateTimeFromApiString(item.invoiceDate),
-                        deliveryDate  = item.deliveryDateTime.getDateFromApi(),
-                        creationDate  = item.creationTime.parseDateFromApiStringUTC(),
+                        date = parseDateFromApiUTC(item.invoiceDate),
+                        deliveryDate = item.deliveryDateTime.getDateFromApi(),
+                        creationDate = parseDateTimeFromApiStringUTC(item.creationTime),
                         remarks = item.remarks?:"",
                         delivered = item.isDelivered?:false,
                         delivery = item.deliveryDateTime!=null,
                         rental = item.isRental?:false,
-                        rentalCollected= item.isRentalCollected?:false,
-                        selfCollection=item.selfCollection?:false,
+                        rentalCollected = item.isRentalCollected?:false,
+                        selfCollection = item.selfCollection?:false,
                         type = item.type?:0,
-                        status= if (item.isCancelled == true) 666 else item.status,
-                        memberId = item.memberId?:0,
+                        status = if (item.isCancelled == true) 666 else item.status?:0,
+                        memberId = item.memberId?.toInt()?:0,
+                        memberName = item.memberName?:"",
                         items = item
 
                     )
@@ -537,12 +538,12 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
-    suspend fun addNewPendingSales(data: PendingSaleRecordDao){
+    suspend fun addNewPendingSales(data: PendingSaleDao){
         withContext(Dispatchers.IO) {
             val posInvoice=data.posInvoice
              val id =  if(data.isDbUpdate) posInvoice.id else getCurrentDateAndTimeInEpochMilliSeconds()
              println("posInvoicesId : $id")
-             val pendingSaleRecord=PosInvoicePendingSaleRecord(
+             val pendingSaleRecord=PendingSale(
                  id=id,
                  locationId = posInvoice.locationId?:0,
                  tenantId = posInvoice.tenantId?:0,
@@ -581,7 +582,7 @@ class DataBaseRepository: KoinComponent {
                 dataBaseRepository.updatePosSales(pendingSaleRecord)
             }
             posInvoice.posPayments?.map { payment ->
-                val paymentRecord  = PosConfiguredPaymentRecord(
+                val paymentRecord  = PosSalePayment(
                     posPaymentRecordId = id,
                     posInvoiceId = payment.posInvoiceId,
                     paymentTypeId = payment.paymentTypeId,
@@ -591,7 +592,7 @@ class DataBaseRepository: KoinComponent {
             }
 
             posInvoice.posInvoiceDetails?.forEach { invoice->
-              val posInvoiceDetails= PosInvoiceDetailRecord(
+              val posInvoiceDetails= PosSaleDetails(
                   posPaymentRecordId = id, 
                   productId=invoice.productId,
                  inventoryCode=invoice.inventoryCode,
@@ -686,7 +687,7 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getAllPendingSalesCount().flowOn(Dispatchers.IO)
     }
 
-    fun getPosPendingSales() :Flow<List<PosInvoicePendingSaleRecord>>{
+    fun getPosPendingSales() :Flow<List<PendingSale>>{
         return dataBaseRepository.getPendingSaleRecords().flowOn(Dispatchers.IO)
     }
 

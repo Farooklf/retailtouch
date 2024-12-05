@@ -2,9 +2,10 @@ package com.lfssolutions.retialtouch.utils.serializers.db
 
 
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleInvoiceItem
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
@@ -12,7 +13,6 @@ import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationItem
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
-import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.promotions.PriceBreakPromotionAttribute
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
@@ -22,12 +22,12 @@ import com.lfssolutions.retialtouch.utils.JsonObj
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-fun PosInvoice.toJson(): String = JsonObj.encodeToString(this)
+fun SaleInvoiceItem.toJson(): String = JsonObj.encodeToString(this)
 
 fun SaleRecord.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toSaleRecord(): SaleRecord = JsonObj.decodeFromString(this)
-fun String.toPosInvoice(): PosInvoice = JsonObj.decodeFromString(this)
+fun String.toSaleInvoiceItem(): SaleInvoiceItem = JsonObj.decodeFromString(this)
 
 fun Product.toJson(): String = JsonObj.encodeToString(this)
 
@@ -69,17 +69,17 @@ fun EmployeeDao.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toEmployeeDao(): EmployeeDao = JsonObj.decodeFromString(this)
 
-fun PosInvoicePendingSaleRecord.toJson(): String = JsonObj.encodeToString(this)
+fun PendingSale.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toPosInvoicePendingSaleRecord(): PosInvoicePendingSaleRecord = JsonObj.decodeFromString(this)
+fun String.toPosInvoicePendingSaleRecord(): PendingSale = JsonObj.decodeFromString(this)
 
-fun PosConfiguredPaymentRecord.toJson(): String = JsonObj.encodeToString(this)
+fun PosSalePayment.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toPosPaymentConfigRecord(): PosConfiguredPaymentRecord = JsonObj.decodeFromString(this)
+fun String.toPosPaymentConfigRecord(): PosSalePayment = JsonObj.decodeFromString(this)
 
-fun PosInvoiceDetailRecord.toJson(): String = JsonObj.encodeToString(this)
+fun PosSaleDetails.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toPosInvoiceDetailRecord(): PosInvoiceDetailRecord = JsonObj.decodeFromString(this)
+fun String.toPosInvoiceDetailRecord(): PosSaleDetails = JsonObj.decodeFromString(this)
 
 fun CRSaleOnHold.toJson(): String = JsonObj.encodeToString(this)
 

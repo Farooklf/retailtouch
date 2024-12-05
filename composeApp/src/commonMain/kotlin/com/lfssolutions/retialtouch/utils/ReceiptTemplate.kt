@@ -69,7 +69,7 @@ val defaultTemplate2 = """
 
 [L]Invoice No: {{invoiceNo}}
 [L]Date: {{invoiceDate}}
-[L]Terms: {{terms}}
+{posPayments}
 [[{4,8}:Customer|{{customerName}}]]
 [[{4,8}:Address|{{address1}}]]
 [[{4,8}: |{{address2}}]]
@@ -81,19 +81,23 @@ val defaultTemplate2 = """
 [[{4,8}:Qty|{{qty}}]]
 [[Line]]
 [[{8,4}:Sub Total |{{invoiceSubTotal}}]]
-[[{8,4}:Gst |{{tax}}]]
-[[{8,4}:Net Total |{{netTotal}}]]
+[[{8,4}:Gst |{{invoiceTax}}]]
+[[{8,4}:Net Total |{{invoiceNetTotal}}]]
 [[Line]]
-[[{8,4}:Outstanding Amt |{{balanceAmount}}]]
+[[{8,4}:Outstanding Amt |{{invoiceNetTotal}}]]
 [[Line]]
 [[{8,4}:Received By|Delivered By]]
-{6,6}[L]        |[R] 
+[[{6,6}:[L] | [R]]]
 
 @@{{&invoice.signature}}@@
 
-{6,6}-------------         |[R]--------------
+[[{6,6}:-------------|--------------]]
 ###{{invoice.qrUrl}}
 
+<!-- posPayments Table -->
+<ListItem>
+[L]Terms: {{name}}
+</ListItem>
 
 <!-- posInvoiceDetails Table -->
 <ListItem>

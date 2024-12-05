@@ -3,7 +3,7 @@ package com.lfssolutions.retialtouch.domain.model.posInvoices
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PosInvoiceDetailRecord(
+data class PosSaleDetails(
     val id: Int = 0,
     val productId: Long = 0,
     val inventoryCode: String = "",

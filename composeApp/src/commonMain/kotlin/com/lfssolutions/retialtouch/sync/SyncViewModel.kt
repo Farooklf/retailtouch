@@ -23,6 +23,7 @@ import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE
 import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApi
 import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -240,7 +241,7 @@ class SyncViewModel : ViewModel() , KoinComponent {
                         //val updatedItem= item.copy(joinDate = item.joinDate.parseDateFromApiString())
                         val dao= MemberDao(
                             memberId = item.id.toLong(),
-                            rowItem = item.copy(joinDate = item.joinDate.parseDateFromApiString()),
+                            rowItem = item.copy(joinDate = item.joinDate.parseDateFromApi()),
                         )
                         sqlPreference.insertMembers(dao)
                     }

@@ -1,6 +1,9 @@
 package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
-import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
+import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
+import com.lfssolutions.retialtouch.utils.DateTime.getCurrentLocalDate
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,18 +12,19 @@ data class SaleRecord(
     val count: Long? = 0,
     val receiptNumber: String? = "",
     val amount: Double? = 0.0,
-    val date: String? = "",
-    val creationDate: String? = "",
+    val date: LocalDate = getCurrentLocalDate(),
+    val creationDate: LocalDateTime? = null,
     val remarks: String? = "",
-    val memberId: Int? = 0,
+    val memberId: Int = 0,
+    val memberName: String? = "",
     val deliveryDate: String? = "",
     val delivery: Boolean? = false,
     val delivered: Boolean? = false,
     val rental: Boolean? = false,
     val rentalCollected: Boolean? = false,
-    val type: Int? = 0,
-    val status: Int? = 0,
+    val type: Int = 0,
+    val status: Int = 0,
     val selfCollection: Boolean? = false,
-    val items: PosInvoice? = PosInvoice()
+    val items: SaleInvoiceItem? = SaleInvoiceItem()
 )
 

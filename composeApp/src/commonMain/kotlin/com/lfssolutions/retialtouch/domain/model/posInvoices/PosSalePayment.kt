@@ -3,7 +3,7 @@ package com.lfssolutions.retialtouch.domain.model.posInvoices
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PosConfiguredPaymentRecord(
+data class PosSalePayment(
     val id: Int = 0,
     val posInvoiceId: Int = 0,
     val paymentTypeId: Int = 0,

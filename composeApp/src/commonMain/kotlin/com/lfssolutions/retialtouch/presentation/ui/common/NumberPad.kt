@@ -124,7 +124,6 @@ fun NumberPad(
                 leftIcon = AppIcons.applyIcon,
                 backgroundColor = AppTheme.colors.appGreen,
                 disabledBackgroundColor = AppTheme.colors.appGreen,
-                isPortrait = isPortrait,
                 modifier = Modifier
                     .weight(1f)
                     .wrapContentHeight(),
@@ -138,7 +137,6 @@ fun NumberPad(
                 leftIcon = AppIcons.closeIcon,
                 backgroundColor = AppTheme.colors.appRed,
                 disabledBackgroundColor = AppTheme.colors.appRed,
-                isPortrait = isPortrait,
                 modifier = Modifier
                     .weight(1f)
                     .wrapContentHeight(),

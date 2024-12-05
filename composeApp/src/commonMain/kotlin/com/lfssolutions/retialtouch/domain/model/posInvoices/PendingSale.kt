@@ -5,7 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.products.PosPayment
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PosInvoicePendingSaleRecord(
+data class PendingSale(
     val id: Long = 0,
     val locationId: Long = 0,
     val locationCode: String = "",

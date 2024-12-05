@@ -239,7 +239,6 @@ fun PrinterContent(
                         viewModel.createPrinter()
                         //NavigatorActions.navigateBack(navigator)
                         },
-                    isPortrait = appState.isPortrait,
                     modifier = Modifier.height(if (state.isTablet) 60.dp else 50.dp).fillMaxWidth()
                 )
             }

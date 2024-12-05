@@ -4,9 +4,9 @@ package com.lfssolutions.retialtouch.data.sqlDelightDb
 import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosConfiguredPaymentRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoiceDetailRecord
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosInvoicePendingSaleRecord
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
@@ -40,13 +40,13 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toMenuCategoryItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoice
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceDetailRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoicePendingSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosPaymentConfigRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toProductLocationItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotion
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotionDetails
+import com.lfssolutions.retialtouch.utils.serializers.db.toSaleInvoiceItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toSyncItem
 import comlfssolutionsretialtouch.Printers
@@ -449,6 +449,7 @@ import kotlinx.coroutines.flow.flow
                             creationDate = sale.creationDate,
                             remarks = sale.remarks,
                             memberId = sale.memberId,
+                            memberName = sale.memberName,
                             deliveryDate = sale.deliveryDate,
                             delivery = sale.delivery,
                             delivered = sale.delivered,
@@ -457,7 +458,7 @@ import kotlinx.coroutines.flow.flow
                             type = sale.type,
                             status = sale.status,
                             selfCollection = sale.selfCollection,
-                            items = body.saleDetals.toPosInvoice()
+                            items = body.saleDetals.toSaleInvoiceItem()
                             )
                     }
 
@@ -1028,7 +1029,7 @@ import kotlinx.coroutines.flow.flow
         retailTouch.paymentTypeQueries.delete()
     }
 
-     override suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PosInvoicePendingSaleRecord) {
+     override suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PendingSale) {
         retailTouch.posInvoicePendingSaleRecordQueries.insert(
             id = posPaymentRecordDao.id,
             isSync = posPaymentRecordDao.isSynced,
@@ -1036,7 +1037,7 @@ import kotlinx.coroutines.flow.flow
         )
      }
 
-     override suspend fun updatePosSales(posPaymentRecordDao: PosInvoicePendingSaleRecord) {
+     override suspend fun updatePosSales(posPaymentRecordDao: PendingSale) {
          println("posPaymentRecordDao :$posPaymentRecordDao")
          retailTouch.posInvoicePendingSaleRecordQueries.updatePosSale(
              ticketId = posPaymentRecordDao.id,
@@ -1045,13 +1046,13 @@ import kotlinx.coroutines.flow.flow
          )
      }
 
-     override fun getAllPosSale(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
+     override fun getAllPosSale(): Flow<List<PendingSale>> = flow{
          retailTouch.posInvoicePendingSaleRecordQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
                      list.map { body ->
                          val data= body.posInvoice.toPosInvoicePendingSaleRecord()
-                         PosInvoicePendingSaleRecord(
+                         PendingSale(
                              id = data.id,
                              isSynced = data.isSynced,
                              locationId = data.locationId,
@@ -1066,7 +1067,7 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
-     override fun getPendingSaleRecords(): Flow<List<PosInvoicePendingSaleRecord>> = flow{
+     override fun getPendingSaleRecords(): Flow<List<PendingSale>> = flow{
          retailTouch.posInvoicePendingSaleRecordQueries.getPendingSale().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
@@ -1091,20 +1092,20 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
-     override suspend fun insertPosDetailsRecord(posInvoice: PosInvoiceDetailRecord) {
+     override suspend fun insertPosDetailsRecord(posInvoice: PosSaleDetails) {
          retailTouch.posInvoiceDetailRecordQueries.insert(
              id = null,
              posInvoiceDetails = posInvoice.toJson()
          )
      }
 
-     override fun getPosDetailsRecord(): Flow<List<PosInvoiceDetailRecord>> = flow{
+     override fun getPosDetailsRecord(): Flow<List<PosSaleDetails>> = flow{
          retailTouch.posInvoiceDetailRecordQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
                      list.map { body ->
                          val data= body.posInvoiceDetails.toPosInvoiceDetailRecord()
-                         PosInvoiceDetailRecord(
+                         PosSaleDetails(
                              id = data.id,
                              productId = data.productId,
                              posPaymentRecordId = data.posPaymentRecordId
@@ -1122,20 +1123,20 @@ import kotlinx.coroutines.flow.flow
          retailTouch.posInvoiceDetailRecordQueries.delete()
      }
 
-     override suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosConfiguredPaymentRecord) {
+     override suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosSalePayment) {
          retailTouch.posInvoiceConfiguredPaymentQueries.insert(
              id = null,
              posInvoiceConfiguredPayment = posInvoice.toJson()
          )
      }
 
-     override fun getPosConfiguredPaymentRecord(): Flow<List<PosConfiguredPaymentRecord>> =flow{
+     override fun getPosConfiguredPaymentRecord(): Flow<List<PosSalePayment>> =flow{
          retailTouch.posInvoiceConfiguredPaymentQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
                      list.map { body ->
                         val data= body.posInvoiceConfiguredPayment.toPosPaymentConfigRecord()
-                         PosConfiguredPaymentRecord(
+                         PosSalePayment(
                              id = data.id,
                              paymentTypeId = data.paymentTypeId,
                              posInvoiceId = data.posInvoiceId,

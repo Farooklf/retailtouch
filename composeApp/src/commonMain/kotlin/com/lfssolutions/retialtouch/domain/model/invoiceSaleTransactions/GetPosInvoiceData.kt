@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GetPosInvoiceData(
     @SerialName("items")
-    val items: List<PosInvoice>? = listOf(),
+    val items: List<SaleInvoiceItem>? = listOf(),
     @SerialName("totalCount")
     val totalCount: Long? = 0
 )

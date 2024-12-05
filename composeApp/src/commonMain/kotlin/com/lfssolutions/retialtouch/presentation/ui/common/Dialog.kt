@@ -41,7 +41,13 @@ import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lfssolutions.retialtouch.App
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
@@ -67,6 +74,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.presentation.ui.screens.POSTaxItem
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.DateTime.getDateTimeFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.DateTime.getEpochTimestamp
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.LocalAppState
@@ -74,6 +83,7 @@ import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.popup.Modal
 import com.outsidesource.oskitcompose.popup.ModalStyles
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -88,6 +98,7 @@ import retailtouch.composeapp.generated.resources.alert_yes
 import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.choose_printer_template
 import retailtouch.composeapp.generated.resources.close
+import retailtouch.composeapp.generated.resources.confirm
 import retailtouch.composeapp.generated.resources.delete_payment
 import retailtouch.composeapp.generated.resources.dialog_message
 import retailtouch.composeapp.generated.resources.enter_terminal_code
@@ -101,6 +112,8 @@ import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
+import retailtouch.composeapp.generated.resources.pending
+import retailtouch.composeapp.generated.resources.pending_sales
 import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.remove
@@ -532,6 +545,81 @@ fun HoldTicketListItem(
             )
         }
     }
+}
+
+@Composable
+fun PendingSaleDialog(
+    state: SaleTransactionState,
+    isVisible: Boolean,
+    isPortrait: Boolean=true,
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxMidWidth,
+    dialogBgColor: Color = AppTheme.colors.backgroundDialog,
+    isFullScreen: Boolean = false,
+    properties: DialogProperties = DialogProperties(),
+    onDismiss: () -> Unit,
+    onRemove : (Long) -> Unit={},
+    syncAll : () -> Unit={},
+){
+    val (vertPadding,horPadding)=if(isPortrait)
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
+
+    val textStyleHeader=if(isPortrait)
+        AppTheme.typography.bodyBold().copy(fontSize = 18.sp)
+    else
+        AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+
+    AppDialog(
+        isVisible = isVisible,
+        properties = properties,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = isFullScreen,
+        bgColor = dialogBgColor
+    ){
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            VectorIcons(
+                icons = AppIcons.cancelIcon,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10),
+                iconSize = AppTheme.dimensions.smallIcon,
+                iconColor=AppTheme.colors.appRed,
+                onClick = {
+                    onDismiss.invoke()
+                })
+
+            Text(
+                text = stringResource(Res.string.pending_sales,1),
+                color = AppTheme.colors.textBlack,
+                style = textStyleHeader
+            )
+
+            /*LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10)){
+                itemsIndexed(posState.salesOnHold.toList()
+                ){index, (key, saleOnHold) ->
+
+                    HoldTicketListItem(
+                        index = index,
+                        item = saleOnHold,
+                        symbol = posState.currencySymbol,
+                        isPortrait = isPortrait,
+                        horizontalPadding=horPadding,
+                        verticalPadding=vertPadding,
+                        onRemove = {
+                            onRemove.invoke(key)
+                        },
+                        onAdd = {
+                            onItemClick.invoke(saleOnHold)
+                        }
+                    )
+                }*/
+
+            }
+
+        }
+
 }
 
 @Composable
@@ -1094,7 +1182,7 @@ fun AppDialogChoiceFromList(
     modifier: Modifier = Modifier,
     properties: DialogProperties = DialogProperties(),
     titleTextStyle: TextStyle = AppTheme.typography.titleNormal(),
-    contentMaxWidth: Dp = 1000.dp,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxSmallWidth,
 ) {
     var displayedIndex by remember(selectedIndex) {
         mutableStateOf(selectedIndex)
@@ -1132,5 +1220,79 @@ fun AppDialogChoiceFromList(
                 )
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowDateRangePicker(onDismiss: () -> Unit, onConfirmClicked: (LocalDate) -> Unit) {
+    val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+            return utcTimeMillis <= getEpochTimestamp()
+        }
+    })
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        getDateTimeFromEpochMillSeconds(it)
+    }
+
+    DatePickerDialog(
+        colors = DatePickerDefaults.colors(containerColor = AppTheme.colors.backgroundDialog),
+        shape = AppTheme.appShape.dialog,
+        modifier = Modifier.wrapContentHeight().wrapContentWidth().widthIn(AppTheme.dimensions.contentMaxSmallWidth),
+        onDismissRequest = {
+            onDismiss()
+        },
+        confirmButton = {
+            TextButton(modifier = Modifier.wrapContentWidth().padding(horizontal = 5.dp, vertical = 10.dp), onClick = {
+                if (selectedDate != null) {
+                    onConfirmClicked(selectedDate)
+                }
+                onDismiss()
+            }, shape = AppTheme.appShape.button, colors = ButtonDefaults.textButtonColors(
+                backgroundColor = AppTheme.colors.primaryColor,
+                contentColor = AppTheme.colors.appWhite
+            )) {
+                Text(text = stringResource(Res.string.confirm), style = AppTheme.typography.bodyNormal())
+            }
+        },
+        dismissButton = {
+            TextButton(modifier = Modifier.wrapContentWidth().padding(horizontal = 5.dp, vertical = 10.dp),onClick = {
+                onDismiss()
+            },shape = AppTheme.appShape.button, colors = ButtonDefaults.textButtonColors(
+                backgroundColor = AppTheme.colors.appRed,
+                contentColor = AppTheme.colors.appWhite
+            )) {
+                Text(text = stringResource(Res.string.cancel),style = AppTheme.typography.bodyNormal())
+            }
+        }
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().background(AppTheme.colors.primaryColor)) {
+            DatePicker(
+                state = datePickerState,
+                title = null,
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = AppTheme.colors.primaryColor,
+                    headlineContentColor=AppTheme.colors.appWhite,
+                    navigationContentColor=AppTheme.colors.appWhite,
+                    subheadContentColor=AppTheme.colors.appWhite,
+                    weekdayContentColor=AppTheme.colors.appWhite,
+
+                    yearContentColor=AppTheme.colors.appWhite,
+                    currentYearContentColor=AppTheme.colors.appWhite,
+                    selectedYearContentColor=AppTheme.colors.textPrimary,
+                    selectedYearContainerColor = AppTheme.colors.appWhite,
+
+                    dayContentColor = AppTheme.colors.appWhite,
+                    disabledDayContentColor = AppTheme.colors.appWhite.copy(.5f),
+                    todayDateBorderColor = AppTheme.colors.appWhite,
+                    todayContentColor = AppTheme.colors.appWhite,
+                    selectedDayContainerColor = AppTheme.colors.appWhite,
+                    selectedDayContentColor = AppTheme.colors.textPrimary,
+                ),
+                modifier = Modifier.wrapContentHeight()
+                    .fillMaxWidth().padding(10.dp) // Adjust weight as needed
+            )
+        }
     }
 }

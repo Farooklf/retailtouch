@@ -1,5 +1,10 @@
 package com.lfssolutions.retialtouch.presentation.ui.common
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,9 +26,12 @@ import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.Text
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
@@ -33,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
@@ -99,6 +108,7 @@ fun BaseOutlineButton(
 fun AppPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    style:TextStyle?=null,
     label: String,
     enabled: Boolean = true,
     rightIcon: DrawableResource? = null,
@@ -108,24 +118,49 @@ fun AppPrimaryButton(
     contentColor: Color = AppTheme.colors.appWhite,
     disabledBackgroundColor: Color = AppTheme.colors.primaryButtonBg,
     isVisible: Boolean=true,
-    isPortrait: Boolean=true,
+    syncInProgress: Boolean=false,
 
 ) {
     val appState = LocalAppState.current
-    val (verticalInnerPadding,horizontalInnerPadding)=if(isPortrait)
+    val (verticalInnerPadding,horizontalInnerPadding)=if(appState.isPortrait)
         AppTheme.dimensions.padding15 to AppTheme.dimensions.padding10
     else
         AppTheme.dimensions.padding15 to AppTheme.dimensions.padding20
 
-    val (space,textStyle)=if(isPortrait)
-        AppTheme.dimensions.padding5 to AppTheme.typography.bodyBold()
-    else
-        AppTheme.dimensions.padding20 to AppTheme.typography.titleBold()
+    val portraitStyle=style ?:AppTheme.typography.bodyBold()
+    val landScapeStyle=style ?:AppTheme.typography.titleBold()
 
-    val iconSize=if(isPortrait)
+    val (space,textStyle)=if(appState.isPortrait)
+        AppTheme.dimensions.padding5 to portraitStyle
+    else
+        AppTheme.dimensions.padding20 to landScapeStyle
+
+    val iconSize=if(appState.isPortrait)
         AppTheme.dimensions.smallXIcon
     else
         AppTheme.dimensions.small24Icon
+
+    // Create an Animatable to control rotation angle
+    val rotation = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(syncInProgress) {
+        if (syncInProgress) {
+            scope.launch {
+                // Infinite rotation loop
+                rotation.animateTo(
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    )
+                )
+            }
+        } else {
+            // Reset rotation when stopped
+            rotation.snapTo(0f)
+        }
+    }
 
     BaseButton(
         isVisible = isVisible,
@@ -146,7 +181,7 @@ fun AppPrimaryButton(
                     painter = painterResource(leftIcon),
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(iconSize)
+                    modifier = Modifier.size(iconSize).rotate(rotation.value) // Apply rotation
                 )
                 Spacer(modifier=Modifier.width(space))
             }
