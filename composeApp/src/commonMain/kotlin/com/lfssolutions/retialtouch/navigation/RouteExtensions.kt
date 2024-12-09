@@ -7,6 +7,7 @@ import com.lfssolutions.retialtouch.presentation.ui.screens.PaymentTypeScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.PosScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.PrinterScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.SplashScreen
+import com.lfssolutions.retialtouch.presentation.ui.screens.TransactionDetailsScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.TransactionScreen
 
 fun Route.toVoyagerScreen(): Screen = when (this) {
@@ -17,4 +18,5 @@ fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.PaymentType -> PaymentTypeScreen
     is Route.Printer -> PrinterScreen
     is Route.Transaction -> TransactionScreen
+    is Route.TransactionDetails-> TransactionDetailsScreen(mSaleRecord)
 }

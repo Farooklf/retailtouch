@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.presentation.ui.screens
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +34,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
-import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.AppDropdownMenu
@@ -41,16 +41,16 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ClickableAppOutlinedTextField
-import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ShowDateRangePicker
-import com.lfssolutions.retialtouch.presentation.viewModels.SaleTransactionViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DateTime.formatDateForUI
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
+import kotlinx.coroutines.delay
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -82,7 +82,7 @@ object TransactionScreen : Screen {
 
 @Composable
 fun TransactionUI(
-    viewModel: SaleTransactionViewModel = koinInject()
+    viewModel: TransactionViewModel = koinInject()
 ){
 
     val navigator = LocalNavigator.currentOrThrow
@@ -106,6 +106,14 @@ fun TransactionUI(
         viewModel.loadFilterData()
         viewModel.getSales()
         viewModel.getPendingSales()
+    }
+
+    LaunchedEffect(screenState.isError){
+        if(screenState.isError){
+            snackbarHostState.value.showSnackbar(screenState.errorMessage)
+            delay(2000)
+            viewModel.updateError("",false)
+        }
     }
 
     BasicScreen(
@@ -142,7 +150,7 @@ fun TransactionUI(
                     Column(modifier = Modifier.fillParentMaxWidth(),verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         if(appState.isPortrait){
                             //Filter first row
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),verticalAlignment = Alignment.CenterVertically,) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),verticalAlignment = Alignment.CenterVertically) {
 
                                 //Type
                                 AppDropdownMenu(
@@ -273,7 +281,7 @@ fun TransactionUI(
                     }
                 }
 
-                var filteredSales=screenState.saleTransaction
+                var filteredSales=screenState.transactionSales
 
                 if(screenState.isTypeFilter){
                     filteredSales  = filteredSales.filter {it.type == screenState.type}.toMutableList()
@@ -306,6 +314,9 @@ fun TransactionUI(
                         isPortrait = true,
                         horizontalPadding=horPadding,
                         verticalPadding=vertPadding,
+                        onItemClick = {
+                            NavigatorActions.navigateToTransactionDetailsScreen(navigator,it)
+                        }
                     )
                 }
             }
@@ -326,7 +337,7 @@ fun TransactionUI(
                         .wrapContentHeight(),
                     syncInProgress = screenState.isSalePendingSync,
                     onClick = {
-
+                        viewModel.updatePendingSalePopupState(true)
                     }
                 )
 
@@ -379,13 +390,11 @@ fun TransactionUI(
 
     PendingSaleDialog(
         state = screenState,
+        viewModel=viewModel,
         isVisible = screenState.showPendingSalePopup,
         modifier = Modifier.wrapContentWidth().wrapContentHeight(),
         onDismiss = {
             viewModel.updatePendingSalePopupState(false)
-        },
-        onRemove = { id->
-            //viewModel.removeHoldSale(id)
         }
     )
 }
@@ -400,7 +409,8 @@ fun SaleListItem(
     isPortrait:Boolean,
     horizontalPadding: Dp,
     verticalPadding: Dp,
-    viewModel: SaleTransactionViewModel
+    viewModel: TransactionViewModel,
+    onItemClick:(SaleRecord)->Unit={}
 ){
 
     val (borderColor,rowBgColor)=when(index%2 == 0){
@@ -419,7 +429,7 @@ fun SaleListItem(
         AppTheme.typography.titleMedium()
 
     if(isPortrait){
-        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite).clickable { onItemClick.invoke(item) }){
             Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
                 verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
@@ -491,8 +501,80 @@ fun SaleListItem(
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
         }
-    }else{
+    }
+    else{
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite).clickable { onItemClick.invoke(item)}){
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
+                verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    ListText(
+                        label = "${index+1}",
+                        textStyle = AppTheme.typography.captionMedium(),
+                        color = AppTheme.colors.textBlack,
+                        modifier = Modifier.wrapContentWidth()
+                    )
+                    //Items total
+                    Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spaceBetweenPadded(1.dp), verticalAlignment = Alignment.CenterVertically) {
+                        //Items name
+                        ListText(
+                            label = item.receiptNumber?:"N/A",
+                            textStyle = AppTheme.typography.captionBold(),
+                            color = AppTheme.colors.textBlack,
+                            modifier = Modifier.wrapContentWidth()
+                        )
 
+                        ListText(
+                            label = viewModel.formatPriceForUI(item.amount),
+                            textStyle = textStyle,
+                            color = AppTheme.colors.appRed,
+                            modifier = Modifier.wrapContentWidth()
+                        )
+                    }
+                }
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Spacer(modifier = Modifier.weight(.5f))
+
+                    //Date
+                    ListText(
+                        label = formatDateForUI(item.creationDate),
+                        textStyle = AppTheme.typography.captionBold(),
+                        color = AppTheme.colors.textPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ListText(
+                        label = item.memberName?:"",
+                        textStyle = AppTheme.typography.captionMedium(),
+                        color = AppTheme.colors.textBlack,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                if(item.type>0 || item.status>0){
+                    Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        if(item.type>0){
+                            ListText(
+                                label = "Type : ${typeList.firstOrNull{it.id==item.type}?.name}",
+                                textStyle = AppTheme.typography.captionBold(),
+                                color = AppTheme.colors.appRed,
+                                modifier = Modifier.wrapContentWidth()
+                            )
+                        }
+                        if(item.status >0){
+                            ListText(
+                                label = "Status : ${statusList.firstOrNull{it.id==item.status}?.name}",
+                                textStyle = AppTheme.typography.captionBold(),
+                                color = AppTheme.colors.appGreen,
+                                modifier = Modifier.wrapContentWidth()
+                            )
+                        }
+                    }
+                }
+
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
     }
 }
 

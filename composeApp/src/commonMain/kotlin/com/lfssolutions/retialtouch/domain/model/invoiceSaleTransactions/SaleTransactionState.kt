@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
 
 
@@ -13,6 +14,8 @@ data class SaleTransactionState(
     var isLoading: Boolean = false,
     val loginUser: LoginResponse = LoginResponse(),
     var currencySymbol : String = "$",
+    val isError:Boolean=false,
+    val errorMessage:String="",
 
     val transactionSales: List<SaleRecord> = mutableListOf(),
     val pendingSales: List<PendingSale> = mutableListOf(),
@@ -20,6 +23,9 @@ data class SaleTransactionState(
     var isSaleTransactionSync: Boolean = false,
     var isSalePendingSync: Boolean = false,
     var showPendingSalePopup: Boolean = false,
+
+    val posInvoice: PosInvoice=PosInvoice(),
+
     //filter
     var isTypeFilter: Boolean = false,
     var isStatusFilter: Boolean = false,

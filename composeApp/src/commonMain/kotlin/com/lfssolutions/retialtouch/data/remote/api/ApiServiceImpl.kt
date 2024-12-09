@@ -25,6 +25,8 @@ import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
+import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
+import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
@@ -335,6 +337,16 @@ import kotlinx.coroutines.withContext
              requestBody = mBasicApiRequest
          ) { response ->
              handleApiResponse<GetPrintTemplateResult>(response)
+         }
+     }
+
+     override fun getPosInvoiceForEdit(mBasicApiRequest: GetPosInvoiceForEditRequest): Flow<RequestState<GetPosInvoiceForEditResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.POS_INVOICE_EDIT_API,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<GetPosInvoiceForEditResult>(response)
          }
      }
  }

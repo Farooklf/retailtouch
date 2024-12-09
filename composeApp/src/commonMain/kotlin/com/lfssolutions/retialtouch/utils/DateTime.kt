@@ -12,6 +12,7 @@ import kotlinx.datetime.toLocalDateTime
 
 object DateTime{
     private val systemTZ = TimeZone.currentSystemDefault()
+
     fun getCurrentFormattedDate(): String {
         val currentMoment: Instant = Clock.System.now()
         val dateTime: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.UTC)
@@ -25,6 +26,11 @@ object DateTime{
     }
     fun getCurrentLocalDate() : LocalDate {
         val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        // Format the date as "YYYY-MM-DD"
+        return currentDate
+    }
+    fun getCurrentLocalDateTime() : LocalDateTime {
+        val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         // Format the date as "YYYY-MM-DD"
         return currentDate
     }

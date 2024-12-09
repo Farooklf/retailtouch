@@ -538,7 +538,7 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
-    suspend fun addNewPendingSales(data: PendingSaleDao){
+    suspend fun addUpdatePendingSales(data: PendingSaleDao){
         withContext(Dispatchers.IO) {
             val posInvoice=data.posInvoice
              val id =  if(data.isDbUpdate) posInvoice.id else getCurrentDateAndTimeInEpochMilliSeconds()
@@ -571,7 +571,11 @@ class DataBaseRepository: KoinComponent {
                  globalDiscount = posInvoice.invoiceNetDiscount,
                  invoiceRoundingAmount = posInvoice.invoiceRoundingAmount,
                  status = posInvoice.status?:0,
+                 qty = posInvoice.qty,
                  memberId = posInvoice.memberId?:0,
+                 memberName = posInvoice.customerName,
+                 address1 = posInvoice.address1,
+                 address2 = posInvoice.address2,
                  posPaymentConfigRecord = posInvoice.posPayments?: emptyList(),
                  posInvoiceDetailRecord = posInvoice.posInvoiceDetails?: emptyList(),
                  isSynced = data.isSynced
@@ -621,7 +625,7 @@ class DataBaseRepository: KoinComponent {
                 printerId = printer.printerId,
                 printerStationName = printer.printerStationName,
                 printerName = printer.printerName?:"",
-                numbersOfCopies = printer.numbersOfCopies.toLong(),
+                numbersOfCopies = printer.numbersOfCopies,
                 paperSize =  when (printer.paperSize) {
                     PaperSize.Size58mm -> 58
                     PaperSize.Size80mm -> 80

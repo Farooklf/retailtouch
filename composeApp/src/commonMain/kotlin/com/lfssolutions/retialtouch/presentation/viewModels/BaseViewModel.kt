@@ -28,6 +28,7 @@ import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
+import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
 import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
@@ -397,7 +398,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-     suspend fun syncStockQuantity(lastSyncTime:String?=null){
+     private suspend fun syncStockQuantity(lastSyncTime:String?=null){
         try {
             println("API CALL : ${count++}")
             updateLoaderMsg("Syncing Inventory Count")
@@ -513,16 +514,12 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         updateSyncGrid(INVOICE)
                         //set
                         updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
-                        updateSyncProgress(false)
-                        updateSyncStatus("")
-                        handleError(false,"","")
                     }
                 }
             },
             onError = {
                     errorMsg ->
                 handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
-                updateSyncProgress(false)
             }
         )
 
@@ -653,6 +650,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             println("Syncing Print Template: $error")
         }
     }
+
+
+    /*------Api Call End--------*/
 
     private fun observePrintTemplate(apiResponse: RequestState<GetPrintTemplateResult>) {
         observeResponseNew(apiResponse,

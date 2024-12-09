@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 
 
 object NavigatorActions {
@@ -45,5 +46,9 @@ object NavigatorActions {
 
     fun navigateToTransactionScreen(navigator: Navigator) {
         navigator.push(Route.Transaction.toVoyagerScreen())
+    }
+
+    fun navigateToTransactionDetailsScreen(navigator: Navigator, mSaleRecord: SaleRecord) {
+        navigator.push(Route.TransactionDetails(mSaleRecord).toVoyagerScreen())
     }
 }

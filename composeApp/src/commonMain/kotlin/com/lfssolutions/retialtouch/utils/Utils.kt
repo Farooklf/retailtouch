@@ -30,6 +30,8 @@ import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_back_arrow_circle
 import retailtouch.composeapp.generated.resources.ic_calendar
 import retailtouch.composeapp.generated.resources.ic_cancel
+import retailtouch.composeapp.generated.resources.ic_card
+import retailtouch.composeapp.generated.resources.ic_cash
 import retailtouch.composeapp.generated.resources.ic_cashier
 import retailtouch.composeapp.generated.resources.ic_category
 import retailtouch.composeapp.generated.resources.ic_check
@@ -39,6 +41,7 @@ import retailtouch.composeapp.generated.resources.ic_dollar
 import retailtouch.composeapp.generated.resources.ic_down
 import retailtouch.composeapp.generated.resources.ic_drawer
 import retailtouch.composeapp.generated.resources.ic_e_exchange
+import retailtouch.composeapp.generated.resources.ic_edit
 import retailtouch.composeapp.generated.resources.ic_error
 import retailtouch.composeapp.generated.resources.ic_file_excel
 import retailtouch.composeapp.generated.resources.ic_indian_rupee
@@ -140,6 +143,9 @@ object AppIcons {
     val scanIcon by lazy {  Res.drawable.ic_settings }
     val starIcon by lazy {  Res.drawable.ic_star }
     val backIcon by lazy { Res.drawable.ic_back_arrow_circle }
+    val cardIcon by lazy { Res.drawable.ic_card}
+    val cashIcon by lazy { Res.drawable.ic_cash}
+    val editIcon by lazy { Res.drawable.ic_edit}
 }
 
 object HomeItemId{

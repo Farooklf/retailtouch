@@ -166,6 +166,9 @@
     <string name="sync_pending">Sync Pending </string>
     <string name="sync_transaction">Sync Transaction</string>
     <string name="sync_trans">Sync Sales</string>
+    <string name="sync_all">Sync All</string>
+    <string name="re_print">Reprint</string>
+    <string name="save">Save</string>
     <string name="pending_sales">Pending Sales [%1$s]</string>
 
 </resources>

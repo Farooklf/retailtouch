@@ -1,14 +1,19 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
+import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.utils.NumberFormatting
+import com.lfssolutions.retialtouch.utils.getDeliveryType
+import com.lfssolutions.retialtouch.utils.getStatusType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
@@ -28,7 +33,7 @@ import org.koin.core.component.KoinComponent
 
 
 
-class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
+class TransactionViewModel : BaseViewModel(), KoinComponent {
 
     private val _screenState = MutableStateFlow(SaleTransactionState())
     val screenState: StateFlow<SaleTransactionState> = _screenState.asStateFlow()
@@ -93,37 +98,6 @@ class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
                     )
                     }
                 }
-            /*try {
-                // Load data from multiple databases concurrently
-                //val data1Deferred = async { getCurrencySymbol() }
-                val data3Deferred = async { getDeliveryType() }
-                val data4Deferred = async { getStatusType() }
-                val data4Deferred = async {  dataBaseRepository.getMember()}
-
-                // Await all results
-                //val currencySymbol = data1Deferred.await()
-                val deliveryType = data3Deferred.await()
-                val statusType = data4Deferred.await()
-
-                // Update your state directly with responses
-                deliveryType.collectLatest { deliveryList ->
-                    _screenState.update {
-                        it.copy(typeList = deliveryList, type = deliveryList[0])
-                    }
-                }
-
-                statusType.collectLatest { statusList ->
-                    _screenState.update {
-                        it.copy(statusList = statusList , status = statusList[0])
-                    }
-                }
-
-                updateLoader(false)
-
-            } catch (e: Exception) {
-                // Handle errors, ensuring loading state is false
-                updateLoader(false)
-            }*/
         }
     }
 
@@ -148,67 +122,14 @@ class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
             dataBaseRepository.getPosPendingSales().collectLatest{sale->
                 val sortedSales = sale.sortedByDescending { sale -> sale.invoiceDate }
                 _screenState.update { it.copy(pendingSales = sortedSales) }
-                println("PendingSaleList : $sortedSales")
+                 println("PendingSaleList : $sortedSales")
             }
         }
     }
 
-    fun syncTransaction(){
-        viewModelScope.launch {
-            updateTransactionLoading(true)
-            updateLoader(true)
-            updateSales()
-        }
-    }
-
-    fun syncPendingSales() {
-        viewModelScope.launch {
-            screenState.value.let { state->
-                dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
-                    if(pendingCount>0){
-                        updatePendingLoading(!state.isSalePendingSync)
-                        dataBaseRepository.getPosPendingSales().collect{ response->
-                            response.forEach { data->
-                                val posInvoice= PosInvoice(
-                                    id = data.id,
-                                    tenantId = data.tenantId,
-                                    employeeId = data.employeeId,
-                                    locationId=data.locationId,
-                                    locationCode = data.locationCode,
-                                    terminalId = data.locationId,
-                                    terminalName = data.terminalName,
-                                    isRetailWebRequest=data.isRetailWebRequest,
-                                    invoiceNo = data.invoiceNo,
-                                    invoiceDate= data.invoiceDate,
-                                    invoiceTotal = data.invoiceTotal, //before Tax
-                                    invoiceItemDiscount = data.invoiceItemDiscount,
-                                    invoiceTotalValue= data.invoiceTotalValue,
-                                    invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
-                                    invoiceNetDiscount= data.invoiceNetDiscount,
-                                    invoiceTotalAmount=data.invoiceTotalAmount,
-                                    invoiceSubTotal= data.invoiceSubTotal,
-                                    invoiceTax= data.globalTax,
-                                    invoiceRoundingAmount = data.invoiceRoundingAmount,
-                                    invoiceNetTotal= data.invoiceNetTotal,
-                                    invoiceNetCost= data.invoiceNetCost,
-                                    paid= data.paid, //netCost
-                                    memberId = data.memberId,
-                                    posInvoiceDetails = data.posInvoiceDetailRecord,
-                                    posPayments = data.posPaymentConfigRecord,
-                                    pendingInvoices = pendingCount
-                                )
-                                //executePosPayment(posInvoice)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     fun updateLoader(value:Boolean){
         _screenState.update { it.copy(isLoading = value) }
-
     }
 
      fun updateTransactionLoading(value:Boolean){
@@ -229,31 +150,12 @@ class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private suspend fun getDeliveryType() : Flow<List<DeliveryType>> {
-        return flow {
-            val deliveryTypes = listOf(
-                DeliveryType(id = 0, name = "All"),
-                DeliveryType(id = 1, name = "Delivery"),
-                DeliveryType(id = 2, name = "Self Collection"),
-                DeliveryType(id = 3, name = "Rental Delivery"),
-                DeliveryType(id = 4, name = "Rental Collection")
-            )
-            emit(deliveryTypes)  // Emit the list as a Flow
+    fun updatePOSSale(value: PosInvoice){
+        viewModelScope.launch {
+            _screenState.update { it.copy(posInvoice = value) }
         }
     }
 
-    private suspend fun getStatusType() : Flow<List<StatusType>> {
-        return flow {
-            val statusType = listOf(
-                StatusType(id = 0, name = "All"),
-                StatusType(id = 1, name = "Pending"),
-                StatusType(id = 2, name = "Delivered"),
-                StatusType(id = 3, name = "Self Connected"),
-                StatusType(id = 4, name = "Returned")
-            )
-            emit(statusType)  // Emit the list as a Flow
-        }
-    }
 
     fun onSelectedType(type: DeliveryType){
         viewModelScope.launch {
@@ -275,7 +177,7 @@ class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
 
     fun updateStartDate(newVal: LocalDate){
         viewModelScope.launch {
-            println("selectedDate $newVal")
+            //println("selectedDate $newVal")
             _screenState.update { state->state.copy(startDate = newVal.toString(), isFromDateFilter = true) }
         }
     }
@@ -295,5 +197,100 @@ class SaleTransactionViewModel : BaseViewModel(), KoinComponent {
         return  "${_screenState.value.currencySymbol}${NumberFormatting().format(amount?:0.0,2)}"
     }
 
+    fun updateError(error: String,isError: Boolean){
+        viewModelScope.launch {
+            _screenState.update { state->state.copy(errorMessage = error, isError = isError) }
+        }
+    }
 
+    fun syncTransaction(){
+        viewModelScope.launch {
+            updateTransactionLoading(true)
+            updateLoader(true)
+            updateSales()
+        }
+    }
+
+    fun syncPendingSales() {
+        try {
+            viewModelScope.launch {
+                updatePendingLoading(true)
+                //val posInvoiceRequest : MutableList<CreatePOSInvoiceRequest> = mutableListOf()
+                screenState.value.let { state->
+                    state.pendingSales.forEach { pendingSale->
+                        val posInvoice = deClassifyPendingRecord(pendingSale)
+                        updatePOSSale(posInvoice)
+                        networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
+                            observeResponseNew(apiResponse,
+                                onLoading = {
+                                    updateLoader(true)
+                                },
+                                onSuccess = { apiData ->
+                                    if(apiData.success && apiData.result?.posInvoiceNo != null){
+                                        viewModelScope.launch {
+                                            dataBaseRepository.addUpdatePendingSales(
+                                                PendingSaleDao(
+                                                    posInvoice = posInvoice,
+                                                    isDbUpdate = true,
+                                                    isSynced = true
+                                                ))
+                                            updateLoader(false)
+                                            updateSales()
+                                        }
+                                    }
+                                },
+                                onError = { errorMsg ->
+                                    println(errorMsg)
+                                    updateError("Error saving invoice \n ${errorMsg}",true)
+                                    updateLoader(false)
+                                    updatePendingLoading(false)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }catch (ex:Exception){
+            updateError("Error saving invoice \n ${ex.message}",true)
+            updateLoader(false)
+            updatePendingLoading(false)
+        }
+    }
+
+    private fun deClassifyPendingRecord(data: PendingSale):PosInvoice{
+        val state=screenState.value
+        val posInvoice= PosInvoice(
+            id = data.id,
+            tenantId = state.loginUser.tenantId,
+            employeeId = data.employeeId,
+            locationId=state.loginUser.defaultLocationId?.toLong(),
+            locationCode = state.loginUser.locationCode,
+            terminalId = state.loginUser.defaultLocationId?.toLong(),
+            terminalName = data.terminalName,
+            isRetailWebRequest=data.isRetailWebRequest,
+            invoiceNo = data.invoiceNo,
+            invoiceDate= data.invoiceDate,
+            invoiceTotal = data.invoiceTotal, //before Tax
+            invoiceItemDiscount = data.invoiceItemDiscount,
+            invoiceTotalValue= data.invoiceTotalValue,
+            invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
+            invoiceNetDiscount= data.invoiceNetDiscount,
+            invoiceTotalAmount=data.invoiceTotalAmount,
+            invoiceSubTotal= data.invoiceSubTotal,
+            invoiceTax= data.globalTax,
+            invoiceRoundingAmount = data.invoiceRoundingAmount,
+            invoiceNetTotal= data.invoiceNetTotal,
+            invoiceNetCost= data.invoiceNetCost,
+            paid= data.paid, //netCost
+            memberId = data.memberId,
+            posInvoiceDetails = data.posInvoiceDetailRecord,
+            posPayments = data.posPaymentConfigRecord,
+            qty = data.qty,
+            customerName = data.memberName,
+            address1 = data.address1 ,
+            address2 = data.address2 ,
+        )
+
+        return posInvoice
+    }
 }

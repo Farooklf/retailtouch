@@ -35,12 +35,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonElevation
-import androidx.compose.material3.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -56,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -63,15 +62,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.TransactionDetailsState
+import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
-import com.lfssolutions.retialtouch.presentation.ui.screens.POSTaxItem
+import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DateTime.getDateTimeFromEpochMillSeconds
@@ -79,7 +79,6 @@ import com.lfssolutions.retialtouch.utils.DateTime.getEpochTimestamp
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.popup.Modal
 import com.outsidesource.oskitcompose.popup.ModalStyles
@@ -89,7 +88,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
-import retailtouch.composeapp.generated.resources.add
 import retailtouch.composeapp.generated.resources.alert_cancel
 import retailtouch.composeapp.generated.resources.alert_close
 import retailtouch.composeapp.generated.resources.alert_ok
@@ -107,16 +105,17 @@ import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_success
+import retailtouch.composeapp.generated.resources.items
 import retailtouch.composeapp.generated.resources.network_dialog_hint
 import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
-import retailtouch.composeapp.generated.resources.pending
 import retailtouch.composeapp.generated.resources.pending_sales
 import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.remove
+import retailtouch.composeapp.generated.resources.sync_all
 import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.yes
 
@@ -550,6 +549,7 @@ fun HoldTicketListItem(
 @Composable
 fun PendingSaleDialog(
     state: SaleTransactionState,
+    viewModel: TransactionViewModel,
     isVisible: Boolean,
     isPortrait: Boolean=true,
     modifier: Modifier = Modifier,
@@ -571,6 +571,8 @@ fun PendingSaleDialog(
     else
         AppTheme.typography.titleBold().copy(fontSize = 20.sp)
 
+    val pendingCount=state.pendingSales.size
+
     AppDialog(
         isVisible = isVisible,
         properties = properties,
@@ -580,10 +582,10 @@ fun PendingSaleDialog(
         isFullScreen = isFullScreen,
         bgColor = dialogBgColor
     ){
-        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), horizontalAlignment = Alignment.CenterHorizontally) {
             VectorIcons(
                 icons = AppIcons.cancelIcon,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10),
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding5),
                 iconSize = AppTheme.dimensions.smallIcon,
                 iconColor=AppTheme.colors.appRed,
                 onClick = {
@@ -591,35 +593,190 @@ fun PendingSaleDialog(
                 })
 
             Text(
-                text = stringResource(Res.string.pending_sales,1),
+                text = stringResource(Res.string.pending_sales,pendingCount),
                 color = AppTheme.colors.textBlack,
                 style = textStyleHeader
             )
 
-            /*LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10)){
-                itemsIndexed(posState.salesOnHold.toList()
-                ){index, (key, saleOnHold) ->
+            LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding5)) {
+                itemsIndexed(
+                    state.pendingSales
+                ) { index,pendingSale  ->
 
-                    HoldTicketListItem(
+                    PendingTicketListItem(
                         index = index,
-                        item = saleOnHold,
-                        symbol = posState.currencySymbol,
+                        item = pendingSale,
+                        viewModel = viewModel,
                         isPortrait = isPortrait,
-                        horizontalPadding=horPadding,
-                        verticalPadding=vertPadding,
+                        horizontalPadding = horPadding,
+                        verticalPadding = vertPadding,
                         onRemove = {
-                            onRemove.invoke(key)
-                        },
-                        onAdd = {
-                            onItemClick.invoke(saleOnHold)
+
                         }
                     )
-                }*/
-
+                }
             }
 
+            AppPrimaryButton(
+                label = stringResource(Res.string.sync_all),
+                leftIcon = AppIcons.syncIcon,
+                backgroundColor = AppTheme.colors.primaryColor,
+                disabledBackgroundColor = AppTheme.colors.primaryColor,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(AppTheme.dimensions.padding10),
+                syncInProgress = state.isSalePendingSync,
+                onClick = {
+                    viewModel.syncPendingSales()
+                }
+            )
         }
 
+        }
+}
+
+@Composable
+fun PendingTicketListItem(
+    index:Int,
+    item: PendingSale,
+    viewModel: TransactionViewModel,
+    isPortrait: Boolean,
+    horizontalPadding:Dp,
+    verticalPadding:Dp,
+    onRemove: () -> Unit,
+){
+    val (textStyle,amountStyle)=if(isPortrait)
+        AppTheme.typography.captionMedium() to AppTheme.typography.bodyBold()
+    else
+        AppTheme.typography.bodyMedium() to AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+
+    AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding3)) {
+        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = horizontalPadding, vertical = verticalPadding),
+            horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)) {
+
+            Column(modifier = Modifier.weight(1f),Arrangement.spacedBy(AppTheme.dimensions.padding5)) {
+
+                ListText(label = "${index+1}. ${item.invoiceNo}", textStyle = textStyle, color  = AppTheme.colors.textBlack, modifier = Modifier.wrapContentWidth())
+                ListText(label = item.invoiceDate, textStyle = textStyle, color  = AppTheme.colors.textPrimary, modifier = Modifier.wrapContentWidth().padding(horizontal = AppTheme.dimensions.padding5))
+
+
+                ListText(label = stringResource(Res.string.items), textStyle = amountStyle, color  = AppTheme.colors.textBlack, modifier = Modifier.wrapContentWidth().padding(horizontal = AppTheme.dimensions.padding5, vertical = AppTheme.dimensions.padding5))
+
+                Column(modifier = Modifier.fillMaxWidth().background(AppTheme.colors.listRowBgColor).padding(horizontal = horizontalPadding)) {
+                    AppHorizontalDivider(color = AppTheme.colors.listRowBorderColor, modifier = Modifier.fillMaxWidth())
+                    item.posInvoiceDetailRecord?.forEachIndexed { index,element->
+                        ListText(
+                            label = "${index+1}.${element.inventoryName}[${element.inventoryCode}]",
+                            textStyle = textStyle,
+                            color = AppTheme.colors.textDarkGrey,
+                            modifier = Modifier.fillMaxWidth().padding(AppTheme.dimensions.padding2)
+                        )
+                    }
+                    AppHorizontalDivider(color = AppTheme.colors.listRowBorderColor, modifier = Modifier.fillMaxWidth())
+                }
+
+                ListText(label = stringResource(Res.string.payment), textStyle = amountStyle, color  = AppTheme.colors.textBlack, modifier = Modifier.wrapContentWidth().padding(horizontal = AppTheme.dimensions.padding5, vertical = AppTheme.dimensions.padding5))
+
+                Column(modifier = Modifier.fillMaxWidth().background(AppTheme.colors.listRowBgColor).padding(horizontal = horizontalPadding)) {
+                    AppHorizontalDivider(color = AppTheme.colors.listRowBorderColor, modifier = Modifier.fillMaxWidth())
+                    item.posPaymentConfigRecord?.forEachIndexed { index,element->
+                        ListText(
+                            label = "${index+1}.${element.name}",
+                            textStyle = textStyle,
+                            color = AppTheme.colors.textDarkGrey,
+                            modifier = Modifier.fillMaxWidth().padding(AppTheme.dimensions.padding2)
+                        )
+                    }
+                    AppHorizontalDivider(color = AppTheme.colors.listRowBorderColor, modifier = Modifier.fillMaxWidth())
+                }
+            }
+            ListText(label = viewModel.formatPriceForUI(item.grandTotal), textStyle = amountStyle, color  = AppTheme.colors.appRed, modifier = Modifier.wrapContentWidth())
+
+        }
+    }
+}
+
+@Composable
+fun PaymentModeDialog(
+    state: TransactionDetailsState,
+    isVisible: Boolean,
+    isPortrait: Boolean=true,
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxMidWidth,
+    dialogBgColor: Color = AppTheme.colors.backgroundDialog,
+    isFullScreen: Boolean = false,
+    properties: DialogProperties = DialogProperties(),
+    onDismiss: () -> Unit,
+    onItemClick : (PaymentMethod) -> Unit={},
+){
+    val (vertPadding,horPadding)=if(isPortrait)
+        AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
+
+    AppDialog(
+        isVisible = isVisible,
+        properties = properties,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        contentMaxWidth = contentMaxWidth,
+        isFullScreen = isFullScreen,
+        bgColor = dialogBgColor
+    ){
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), horizontalAlignment = Alignment.CenterHorizontally) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
+                itemsIndexed(
+                    state.paymentModes
+                ) { index,paymentMode  ->
+
+                    PaymentModeListItem(
+                        index = index,
+                        item = paymentMode,
+                        isPortrait = isPortrait,
+                        horizontalPadding = horPadding,
+                        verticalPadding = vertPadding,
+                        onItemClick = {
+                          onItemClick.invoke(paymentMode)
+                        }
+                    )
+                    if(index < state.paymentModes.lastIndex)
+                        AppHorizontalDivider(color = AppTheme.colors.listRowBorderColor, modifier = Modifier.fillMaxWidth())
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun PaymentModeListItem(
+    index:Int,
+    item: PaymentMethod,
+    isPortrait: Boolean,
+    horizontalPadding:Dp,
+    verticalPadding:Dp,
+    onItemClick: () -> Unit,
+){
+    val textStyle=if(isPortrait)
+        AppTheme.typography.bodyMedium()
+    else
+        AppTheme.typography.titleMedium()
+
+    Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding)
+        .clickable { onItemClick.invoke() },
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceEvenly) {
+       Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = verticalPadding), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+
+           val icon=if(item.name?.uppercase()=="CASH")AppIcons.cashIcon else AppIcons.cardIcon
+           Image(painter = painterResource(icon),
+               contentDescription = item.name,
+               colorFilter = ColorFilter.tint(AppTheme.colors.textDarkGrey),
+               modifier = Modifier.size(AppTheme.dimensions.standerIcon)
+           )
+           ListText(label = item.name?:"", textStyle = textStyle, color  = AppTheme.colors.textDarkGrey, modifier = Modifier.wrapContentWidth().padding(AppTheme.dimensions.padding10))
+       }
+    }
 }
 
 @Composable

@@ -1,6 +1,6 @@
 package com.lfssolutions.retialtouch.navigation
 
-
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 
 
 sealed class Route {
@@ -12,4 +12,5 @@ sealed class Route {
     data object PaymentType : Route()
     data object Printer : Route()
     data object Transaction : Route()
+    data class TransactionDetails(val mSaleRecord: SaleRecord) : Route()
 }

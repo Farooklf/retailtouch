@@ -24,6 +24,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantit
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantityItem
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
+import com.lfssolutions.retialtouch.utils.AppBasicsDetails
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
@@ -193,14 +194,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun loadAllProducts() {
         viewModelScope.launch {
             updateLoader(true)
-            dataBaseRepository.getProduct().collectLatest { productList ->
+            dataBaseRepository.getProduct().collect { productList ->
                 if(productList.isNotEmpty()){
                     _posUIState.update { it.copy(stockList=productList, isLoading = false)}
-
                 }
             }
         }
-
     }
 
     fun scanBarcode(){
@@ -1549,7 +1548,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 locationId=location?.locationId?:0,
                 locationCode = location?.code?:"",
                 terminalId = location?.locationId?:0,
-                terminalName = "RetailTouch",
+                terminalName = AppBasicsDetails().getAppName(),
                 invoiceNo = "${location?.code}-C${getCurrentDateTime()}",
                 isRetailWebRequest=true,
                 invoiceDate= getCurrentDate(),
@@ -1626,7 +1625,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     private fun holdCurrentSync(posInvoice: PosInvoice, isSync: Boolean) {
         viewModelScope.launch {
             try {
-                dataBaseRepository.addNewPendingSales(PendingSaleDao(
+                dataBaseRepository.addUpdatePendingSales(PendingSaleDao(
                     posInvoice = posInvoice,
                     isDbUpdate = posInvoice.pendingInvoices>0,
                     isSynced = isSync

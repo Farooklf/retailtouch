@@ -19,6 +19,7 @@ data class DesignDimensions internal constructor(
     val progressWidth: Dp = 5.dp,
     val standerIcon: Dp = 24.dp,
     val smallXIcon: Dp = 20.dp,
+    val smallXXIcon: Dp = 16.dp,
     val small24Icon: Dp = 24.dp,
     val smallIcon: Dp = 28.dp,
     val mediumIcon: Dp = 40.dp,
@@ -54,6 +55,7 @@ data class DesignDimensions internal constructor(
     val paddingH: Dp = 10.dp,
     val holdSaleListDefaultWidth: Dp = 100.dp,
 
+    val padding2: Dp = 2.dp,
     val padding3: Dp = 3.dp,
     val padding5: Dp = 5.dp,
     val padding10: Dp = 10.dp,

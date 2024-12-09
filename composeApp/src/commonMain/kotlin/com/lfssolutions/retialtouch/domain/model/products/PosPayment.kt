@@ -13,7 +13,7 @@ data class PosPayment(
     @SerialName("name")
     val name: String = "",
     @SerialName("paymentTypeId")
-    val paymentTypeId: Int = 0,
+    var paymentTypeId: Int = 0,
     @SerialName("paymentTypeName")
     val paymentTypeName: String? = null,
     @SerialName("posInvoiceId")
