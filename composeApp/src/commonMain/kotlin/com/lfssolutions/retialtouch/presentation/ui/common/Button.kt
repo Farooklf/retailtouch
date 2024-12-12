@@ -117,8 +117,8 @@ fun AppPrimaryButton(
     backgroundColor: Color = AppTheme.colors.primaryButtonBg,
     contentColor: Color = AppTheme.colors.appWhite,
     disabledBackgroundColor: Color = AppTheme.colors.primaryButtonBg,
-    isVisible: Boolean=true,
-    syncInProgress: Boolean=false,
+    isVisible: Boolean = true,
+    syncInProgress: Boolean = false,
 
 ) {
     val appState = LocalAppState.current

@@ -1,5 +1,15 @@
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -13,7 +23,7 @@ class ObjectToReceiptTemplateV1 {
         /**
          * Process HTML template by replacing placeholders with values from any data class
          */
-        fun processTemplate(
+         fun processTemplate(
             template: String = defaultTemplate2,
             data: Any?,
             printerWidth: Float = 80f,
@@ -28,6 +38,7 @@ class ObjectToReceiptTemplateV1 {
                     if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()
+
                         if (datePlaceHolder.containsMatchIn(processedText)) {
                             processedText = applyDateFormat(
                                 processedText,
@@ -66,8 +77,28 @@ class ObjectToReceiptTemplateV1 {
                             }
                         }
                     }
+
                 }
-                Log.e("Netemplate", "before table processedtext $processedText")
+                Log.e("Netemplate", "before table processed text $processedText")
+                //Apply image
+                val imageRegex = "@@@(.*?)@@@".toRegex()
+                if(imageRegex.containsMatchIn(processedText)){
+                    val match = imageRegex.find(processedText) // Finds the first match
+                    val matchResults = match?.groupValues?.get(1)
+                    println("ExtractUrl :$matchResults")
+                    matchResults?.let {imageUrl ->
+                        runBlocking {
+                            val imageBitmap = loadImageFromUrl(imageUrl) // Load image from URL
+                            imageBitmap?.let { image->
+                                val hexString=processUrlImage(image)
+                                processedText=processedText.replace(
+                                    imageRegex,
+                                    hexString
+                                )
+                            }
+                        }
+                    }
+                }
                 //Apply weight to columns
                 val tableWeightRegex = Regex("\\[\\[(.*?):(.*)\\]\\]")
                 val matchResults = tableWeightRegex.findAll(processedText)
@@ -100,6 +131,7 @@ class ObjectToReceiptTemplateV1 {
             return processedText
         }
 
+
         /**
          * Process each item in a list using the item template, including nested lists
          */
@@ -111,6 +143,7 @@ class ObjectToReceiptTemplateV1 {
         ): String {
             return items.mapNotNull { item ->
                 item?.let { nonNullItem ->
+
                     var processedItem = itemTemplate
                     kotlin.runCatching {
                         // Process regular properties
@@ -171,6 +204,34 @@ class ObjectToReceiptTemplateV1 {
             }.joinToString("\n")
         }
 
+        /*
+        * Load image bitmap and convert into hexadecimal
+        * */
+        private suspend fun loadImageFromUrl(imageUrlPrint: String): Bitmap? = withContext(Dispatchers.IO) {
+            try {
+                val url = URL(imageUrlPrint)
+                BitmapFactory.decodeStream(url.openConnection().getInputStream())
+            } catch (e: Exception) {
+                Log.e("loadImageFromWebEx", e.toString())
+                e.printStackTrace()
+                null
+            }
+        }
+        private  fun processUrlImage(imageBitmap: Bitmap):String {
+            val hexString = bitmapToBase64(imageBitmap)
+            val replaceCode= "[C]<img>$hexString</img>\n"
+            println("HexStringWith image :- $replaceCode")
+            return replaceCode
+        }
+
+        // convert Image bitmap to Base64
+        private fun bitmapToBase64(bm: Bitmap): String? {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+            val byteArray = byteArrayOutputStream.toByteArray()
+            return Base64.encodeToString(byteArray, Base64.DEFAULT)
+        }
+
         /**
          * Extract template section for list items
          */
@@ -212,11 +273,16 @@ class ObjectToReceiptTemplateV1 {
         /**
          * Check if a value is a List type
          */
-        fun Any?.isListType(): Boolean {
+        private fun Any?.isListType(): Boolean {
             return this is List<*>
         }
 
 
+        /*CHECK IF A VALUE IS IMAGE */
+        private fun hasImageUrl(template:String):Boolean{
+            val imageRegex = "@@@(.*?)@@@".toRegex() // Regular expression for matching image URLs
+            return imageRegex.containsMatchIn(template)
+        }
         private fun calculateTotalWidth(
             paperWidthMm: Float,
             dpi: Int,

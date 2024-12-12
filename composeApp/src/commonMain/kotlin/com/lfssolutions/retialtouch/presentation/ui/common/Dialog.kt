@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
-import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.TransactionDetailsState
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionDetailsState
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
@@ -699,7 +699,7 @@ fun PendingTicketListItem(
 
 @Composable
 fun PaymentModeDialog(
-    state: TransactionDetailsState,
+    state: SaleTransactionDetailsState,
     isVisible: Boolean,
     isPortrait: Boolean=true,
     modifier: Modifier = Modifier,
@@ -724,7 +724,9 @@ fun PaymentModeDialog(
         isFullScreen = isFullScreen,
         bgColor = dialogBgColor
     ){
-        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(),
+            verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5),
+            horizontalAlignment = Alignment.CenterHorizontally) {
             LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
                 itemsIndexed(
                     state.paymentModes
@@ -765,8 +767,11 @@ fun PaymentModeListItem(
 
     Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding)
         .clickable { onItemClick.invoke() },
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceEvenly) {
-       Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = verticalPadding), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly) {
+       Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = verticalPadding),
+           verticalAlignment = Alignment.CenterVertically,
+           horizontalArrangement = Arrangement.Center) {
 
            val icon=if(item.name?.uppercase()=="CASH")AppIcons.cashIcon else AppIcons.cardIcon
            Image(painter = painterResource(icon),

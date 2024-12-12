@@ -125,8 +125,8 @@ import kotlinx.coroutines.flow.flow
             address1 = locationDao.address1,
             address2 = locationDao.address2,
             country = locationDao.country,
-            isSelected = locationDao.isSelected
-        )
+            isSelected = locationDao.isSelected,
+            menuId = locationDao.menuId)
     }
 
      override fun getSelectedLocation(): Flow<Location?> = flow{
@@ -140,6 +140,7 @@ import kotlinx.coroutines.flow.flow
                          address1 = body.address1,
                          address2= body.address2,
                          country = body.country,
+                         menuId = body.menuId,
                          isSelected = body.isSelected ?: false
                      )
                  )

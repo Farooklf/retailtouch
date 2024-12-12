@@ -169,6 +169,8 @@
     <string name="sync_all">Sync All</string>
     <string name="re_print">Reprint</string>
     <string name="save">Save</string>
+    <string name="no_pending_sales">There is no pending sales</string>
+    <string name="transaction_details">Transaction Details</string>
     <string name="pending_sales">Pending Sales [%1$s]</string>
 
 </resources>

@@ -668,7 +668,7 @@ fun ClickableAppOutlinedTextField(
         OutlinedTextField(
             value = value,
             onValueChange = {},
-            modifier = Modifier.wrapContentWidth(),
+            modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             textStyle = textStyle,
             visualTransformation = visualTransformation,

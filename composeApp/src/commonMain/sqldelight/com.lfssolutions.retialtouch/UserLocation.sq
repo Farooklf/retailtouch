@@ -7,12 +7,13 @@ CREATE TABLE Location (
     address1 TEXT NOT NULL ,
     address2 TEXT NOT NULL ,
     country TEXT NOT NULL ,
-    isSelected INTEGER AS Boolean DEFAULT 0
+    isSelected INTEGER AS Boolean DEFAULT 0,
+    menuId INTEGER NOT NULL
 );
 
 insertLocation:
-INSERT OR REPLACE INTO Location(locationId,name,code,address1,address2,country,isSelected)
-VALUES(?,?,?,?,?,?,?);
+INSERT OR REPLACE INTO Location(locationId,name,code,address1,address2,country,isSelected,menuId)
+VALUES(?,?,?,?,?,?,?,?);
 
 getAllLocation:
 SELECT * FROM Location;

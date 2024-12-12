@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
@@ -41,6 +42,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ClickableAppOutlinedTextField
+import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ShowDateRangePicker
@@ -63,6 +65,7 @@ import retailtouch.composeapp.generated.resources.end_date
 import retailtouch.composeapp.generated.resources.hash
 import retailtouch.composeapp.generated.resources.member
 import retailtouch.composeapp.generated.resources.members
+import retailtouch.composeapp.generated.resources.no_pending_sales
 import retailtouch.composeapp.generated.resources.receipt_no
 import retailtouch.composeapp.generated.resources.start_date
 import retailtouch.composeapp.generated.resources.status
@@ -140,6 +143,8 @@ fun TransactionUI(
             stringResource(Res.string.sync_trans)
         else
             stringResource(Res.string.sync_transaction)
+
+        val pendingSalesError=stringResource(Res.string.no_pending_sales)
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -268,15 +273,53 @@ fun TransactionUI(
 
                         //List of transactions
                         //List UI Header
-                        Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = vertPadding),
+                        Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding15),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ){
-                            ListText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.weight(.2f))
-                            ListText(label = stringResource(Res.string.receipt_no), textStyle = textStyleHeader,modifier = Modifier.weight(1f))
-                            ListText(label = stringResource(Res.string.date),textStyle = textStyleHeader, modifier = Modifier.weight(1f))
-                            ListText(label = stringResource(Res.string.member),textStyle = textStyleHeader, modifier = Modifier.weight(1f))
-                            ListText(label = stringResource(Res.string.total), textStyle = textStyleHeader,modifier = Modifier.weight(.5f))
+                            if(appState.isPortrait){
+                                ListCenterText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.wrapContentWidth().padding(end = AppTheme.dimensions.padding5))
+                                ListCenterText(label = stringResource(Res.string.receipt_no), textStyle = textStyleHeader,modifier = Modifier.weight(1f))
+                                ListCenterText(label = stringResource(Res.string.date),textStyle = textStyleHeader, modifier = Modifier.weight(1f))
+                                ListCenterText(label = stringResource(Res.string.member),textStyle = textStyleHeader, modifier = Modifier.weight(1f))
+                                ListCenterText(label = stringResource(Res.string.total), textStyle = textStyleHeader,modifier = Modifier.weight(.5f))
+                            }else{
+                                ListCenterText(
+                                    label = stringResource(Res.string.hash),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.wrapContentWidth().padding(end = AppTheme.dimensions.padding5))
+                                ListCenterText(
+                                    label = stringResource(Res.string.receipt_no),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(1f),
+                                    arrangement = Arrangement.Start
+                                    )
+
+                                ListCenterText(
+                                    label = stringResource(Res.string.date),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(1f))
+                                ListCenterText(
+                                    label = stringResource(Res.string.member),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(1f))
+                                ListCenterText(
+                                    label = stringResource(Res.string.total),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(.5f)
+                                )
+                                ListCenterText(
+                                    label = stringResource(Res.string.type),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(.5f)
+                                )
+                                ListCenterText(
+                                    label = stringResource(Res.string.status),
+                                    textStyle = textStyleHeader,
+                                    modifier = Modifier.weight(.5f),
+                                    arrangement=Arrangement.End
+                                )
+                            }
                         }
                     }
                 }
@@ -289,7 +332,7 @@ fun TransactionUI(
                 if(screenState.isStatusFilter){
                     filteredSales  = filteredSales.filter {it.status == screenState.status}.toMutableList()
                 }
-                if(screenState.isMemberFilter){
+                if(screenState.isMemberFilter && screenState.memberId>0){
                     filteredSales  = filteredSales.filter {it.memberId == screenState.memberId}.toMutableList()
                 }
 
@@ -311,9 +354,8 @@ fun TransactionUI(
                         typeList=screenState.typeList,
                         statusList=screenState.statusList,
                         viewModel=viewModel,
-                        isPortrait = true,
+                        isPortrait = appState.isPortrait,
                         horizontalPadding=horPadding,
-                        verticalPadding=vertPadding,
                         onItemClick = {
                             NavigatorActions.navigateToTransactionDetailsScreen(navigator,it)
                         }
@@ -326,7 +368,6 @@ fun TransactionUI(
 
                 //Sync Pending
                 AppPrimaryButton(
-                    enabled = screenState.pendingSales.isNotEmpty(),
                     label = stringResource(Res.string.sync_pending),
                     leftIcon = AppIcons.syncIcon,
                     backgroundColor = AppTheme.colors.primaryColor,
@@ -337,7 +378,11 @@ fun TransactionUI(
                         .wrapContentHeight(),
                     syncInProgress = screenState.isSalePendingSync,
                     onClick = {
-                        viewModel.updatePendingSalePopupState(true)
+                        if(screenState.pendingSales.isEmpty()){
+                            viewModel.updateError(pendingSalesError,true)
+                        }else{
+                            viewModel.updatePendingSalePopupState(true)
+                        }
                     }
                 )
 
@@ -408,7 +453,6 @@ fun SaleListItem(
     statusList: List<StatusType>,
     isPortrait:Boolean,
     horizontalPadding: Dp,
-    verticalPadding: Dp,
     viewModel: TransactionViewModel,
     onItemClick:(SaleRecord)->Unit={}
 ){
@@ -418,10 +462,6 @@ fun SaleListItem(
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 
-    val (buttonBgColor,textColor)=when(index%2 == 0){
-        true->   AppTheme.colors.primaryColor to AppTheme.colors.appWhite
-        false -> AppTheme.colors.listRowBgColor to AppTheme.colors.textPrimary
-    }
 
     val textStyle=if(isPortrait)
         AppTheme.typography.bodyMedium()
@@ -501,77 +541,77 @@ fun SaleListItem(
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
         }
-    }
-    else{
+    } else{
         Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite).clickable { onItemClick.invoke(item)}){
             Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
                 verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    ListText(
+                Row(modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    ListCenterText(
                         label = "${index+1}",
-                        textStyle = AppTheme.typography.captionMedium(),
+                        textStyle = textStyle,
                         color = AppTheme.colors.textBlack,
-                        modifier = Modifier.wrapContentWidth()
+                        modifier = Modifier.wrapContentWidth().padding(end = AppTheme.dimensions.padding5)
                     )
-                    //Items total
-                    Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spaceBetweenPadded(1.dp), verticalAlignment = Alignment.CenterVertically) {
-                        //Items name
-                        ListText(
-                            label = item.receiptNumber?:"N/A",
-                            textStyle = AppTheme.typography.captionBold(),
-                            color = AppTheme.colors.textBlack,
-                            modifier = Modifier.wrapContentWidth()
-                        )
 
-                        ListText(
-                            label = viewModel.formatPriceForUI(item.amount),
-                            textStyle = textStyle,
-                            color = AppTheme.colors.appRed,
-                            modifier = Modifier.wrapContentWidth()
-                        )
-                    }
-                }
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Spacer(modifier = Modifier.weight(.5f))
+                    //Items name
+                    ListCenterText(
+                        label = item.receiptNumber,
+                        textStyle = textStyle,
+                        color = AppTheme.colors.textBlack,
+                        modifier = Modifier.weight(1f),
+                        arrangement = Arrangement.Start
+                    )
 
                     //Date
-                    ListText(
+                    ListCenterText(
                         label = formatDateForUI(item.creationDate),
-                        textStyle = AppTheme.typography.captionBold(),
+                        textStyle = textStyle,
                         color = AppTheme.colors.textPrimary,
                         modifier = Modifier.weight(1f)
                     )
 
-                    ListText(
+                    ListCenterText(
                         label = item.memberName?:"",
-                        textStyle = AppTheme.typography.captionMedium(),
+                        textStyle = textStyle,
                         color = AppTheme.colors.textBlack,
                         modifier = Modifier.weight(1f)
                     )
-                }
+                    //Items total
+                    ListCenterText(
+                        label = viewModel.formatPriceForUI(item.amount),
+                        textStyle = textStyle,
+                        color = AppTheme.colors.appRed,
+                        modifier = Modifier.weight(.5f)
+                    )
+                    val type=if(item.type >0)
+                        statusList.firstOrNull{it.id==item.type}?.name?:"N/A"
+                    else
+                        "N/A"
 
-                if(item.type>0 || item.status>0){
-                    Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        if(item.type>0){
-                            ListText(
-                                label = "Type : ${typeList.firstOrNull{it.id==item.type}?.name}",
-                                textStyle = AppTheme.typography.captionBold(),
-                                color = AppTheme.colors.appRed,
-                                modifier = Modifier.wrapContentWidth()
-                            )
-                        }
-                        if(item.status >0){
-                            ListText(
-                                label = "Status : ${statusList.firstOrNull{it.id==item.status}?.name}",
-                                textStyle = AppTheme.typography.captionBold(),
-                                color = AppTheme.colors.appGreen,
-                                modifier = Modifier.wrapContentWidth()
-                            )
-                        }
-                    }
-                }
+                    ListCenterText(
+                        label = type,
+                        textStyle = AppTheme.typography.bodyBold(),
+                        color = AppTheme.colors.appRed,
+                        modifier = Modifier.weight(.5f)
+                    )
 
+                    val status=if(item.status >0)
+                        statusList.firstOrNull{it.id==item.status}?.name?:"N/A"
+                    else
+                        "N/A"
+
+                    ListCenterText(
+                        label = status,
+                        textStyle = AppTheme.typography.bodyBold(),
+                        color = AppTheme.colors.appGreen,
+                        modifier = Modifier.weight(.5f),
+                        arrangement=Arrangement.End
+                    )
+                }
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
         }

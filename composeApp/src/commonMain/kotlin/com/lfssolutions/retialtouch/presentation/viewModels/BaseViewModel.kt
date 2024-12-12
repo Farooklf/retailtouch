@@ -591,8 +591,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     fun updateSales(){
        try {
-           if(_syncInProgress.value)
-               return
            updateSyncStatus("Syncing Sales History")
            viewModelScope.launch {
                val job = async { getSalesTotalCount() }

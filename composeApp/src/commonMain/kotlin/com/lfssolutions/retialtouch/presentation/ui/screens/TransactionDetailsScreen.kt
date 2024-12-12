@@ -41,7 +41,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
-import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.TransactionDetailsState
+import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionDetailsState
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
@@ -70,6 +70,7 @@ import retailtouch.composeapp.generated.resources.re_print
 import retailtouch.composeapp.generated.resources.save
 import retailtouch.composeapp.generated.resources.status
 import retailtouch.composeapp.generated.resources.transaction
+import retailtouch.composeapp.generated.resources.transaction_details
 import retailtouch.composeapp.generated.resources.type
 
 data class TransactionDetailsScreen(val mSaleRecord: SaleRecord):Screen{
@@ -88,11 +89,19 @@ fun TransactionDetailsUI(
     val appState = LocalAppState.current
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
     val screenState by viewModel.screenState.collectAsStateWithLifecycle()
+    val uiUpdateStatus by viewModel.uiUpdateStatus.collectAsStateWithLifecycle()
 
 
     LaunchedEffect(Unit){
-        viewModel.getPosInvoiceForEdit(mSaleRecord.id?:0)
+        viewModel.getPosInvoiceForEdit(mSaleRecord)
     }
+    LaunchedEffect(uiUpdateStatus){
+        if(uiUpdateStatus){
+            viewModel.updateLoader(false)
+            NavigatorActions.navigateBack(navigator)
+        }
+    }
+
     val (vertPadding,horPadding)=if(appState.isPortrait)
         AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
     else
@@ -106,7 +115,7 @@ fun TransactionDetailsUI(
 
     BasicScreen(
         modifier = Modifier.systemBarsPadding(),
-        title = stringResource(Res.string.transaction),
+        title = stringResource(Res.string.transaction_details),
         isTablet = appState.isTablet,
         contentMaxWidth = Int.MAX_VALUE.dp,
         onBackClick = {
@@ -114,13 +123,14 @@ fun TransactionDetailsUI(
         }
     ){
 
-
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10),
         ){
             //Filter Status,Type row
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10),verticalAlignment = Alignment.CenterVertically,) {
+            Row(modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10),
+                verticalAlignment = Alignment.CenterVertically,) {
 
                 //Type
                 AppDropdownMenu(
@@ -174,8 +184,7 @@ fun TransactionDetailsUI(
                         buildPosPaymentContent(
                             modifier  = Modifier.fillMaxWidth().wrapContentHeight(),
                             screenState=screenState,
-                            viewModel=viewModel,
-                            alignment = Alignment.Start
+                            viewModel=viewModel
                         )
 
                         //PosInvoice Details
@@ -198,10 +207,9 @@ fun TransactionDetailsUI(
             }
 
             //Bottom Button
-
             Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
 
-                //Sync Pending
+                //reprint
                 AppPrimaryButton(
                     label = stringResource(Res.string.re_print),
                     leftIcon = AppIcons.printerIcon,
@@ -212,12 +220,13 @@ fun TransactionDetailsUI(
                         .weight(1f)
                         .wrapContentHeight(),
                     onClick = {
-                        //viewModel.updatePendingSalePopupState(true)
+                        viewModel.rePrintAndCloseReceipt()
                     }
                 )
 
+                //save
                 AppPrimaryButton(
-                    enabled = screenState.isFilterApplied,
+                    isVisible = screenState.isFilterApplied,
                     label = stringResource(Res.string.save),
                     leftIcon = AppIcons.paymentIcon,
                     backgroundColor = AppTheme.colors.appGreen,
@@ -227,7 +236,7 @@ fun TransactionDetailsUI(
                         .weight(1f)
                         .wrapContentHeight(),
                     onClick = {
-                        //viewModel.syncTransaction()
+                        viewModel.saveAndCloseReceipt()
                     }
                 )
 
@@ -242,7 +251,7 @@ fun TransactionDetailsUI(
                         .weight(1f)
                         .wrapContentHeight(),
                     onClick = {
-                        //viewModel.syncTransaction()
+                        NavigatorActions.navigateBack(navigator)
                     }
                 )
 
@@ -276,9 +285,8 @@ fun TransactionDetailsUI(
 @Composable
 fun buildPosPaymentContent(
     modifier: Modifier,
-    screenState: TransactionDetailsState,
+    screenState: SaleTransactionDetailsState,
     viewModel: TransactionDetailsViewModel,
-    alignment:Alignment.Horizontal=Alignment.End
 ){
     val appState = LocalAppState.current
     if(!screenState.posInvoice?.posPayments.isNullOrEmpty()){
@@ -341,7 +349,7 @@ fun buildPosPaymentContent(
 @Composable
 fun buildBodyContent(
     modifier: Modifier,
-    screenState: TransactionDetailsState,
+    screenState: SaleTransactionDetailsState,
     mSaleRecord: SaleRecord,
     viewModel: TransactionDetailsViewModel
 ){
@@ -361,7 +369,7 @@ fun buildBodyContent(
             modifier = Modifier.wrapContentWidth())
 
         //date
-        ListText(label = formatDateForUI(parseDateTimeFromApiStringUTC(screenState.posInvoice?.deliveryDateTime)),
+        ListText(label = formatDateForUI(parseDateTimeFromApiStringUTC(screenState.posInvoice?.creationTime)),
             textStyle = textStyleHeader,
             color = AppTheme.colors.textPrimary,
             modifier = Modifier.wrapContentWidth())

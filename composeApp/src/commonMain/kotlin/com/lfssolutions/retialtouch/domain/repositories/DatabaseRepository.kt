@@ -125,6 +125,7 @@ class DataBaseRepository: KoinComponent {
                     val mLocationDao =
                         Location(
                             locationId = location.id ?: 0,
+                            menuId = location.menuId?:0,
                             name = location.name ?: "",
                             code = location.code ?: "",
                             country = location.country ?: "",

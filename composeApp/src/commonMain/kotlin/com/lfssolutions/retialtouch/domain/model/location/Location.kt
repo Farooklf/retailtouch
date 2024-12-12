@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Location(
     val locationId: Long = 0,
+    val menuId: Long = 0,
     val name: String = "",
     val code: String = "",
     val address1: String = "",

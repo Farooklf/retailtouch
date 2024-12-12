@@ -3,17 +3,20 @@ package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
 import com.lfssolutions.retialtouch.domain.model.products.PosPayment
 
-data class TransactionDetailsState(
+data class SaleTransactionDetailsState(
     var isLoading: Boolean = false,
     val isError:Boolean=false,
     val errorMessage:String="",
     var currencySymbol : String = "$",
-
+    val saleRecord:SaleRecord=SaleRecord(),
+    //location
+    val location : Location? = Location(),
     val typeList: List<DeliveryType> = mutableListOf(),
     val statusList: List<StatusType> = mutableListOf(),
     val member: MemberType = MemberType(),

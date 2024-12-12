@@ -129,6 +129,30 @@ fun ListText(
 }
 
 @Composable
+fun ListCenterText(
+    label:String,
+    textStyle: TextStyle = AppTheme.typography.bodyBold(),
+    color: Color = AppTheme.colors.primaryText,
+    modifier: Modifier = Modifier.wrapContentHeight(),
+    singleLine:Boolean=true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
+    arrangement: Arrangement.Horizontal=Arrangement.Center
+){
+    Row(modifier=modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = arrangement) {
+        Text(
+            text = label,
+            style = textStyle,
+            color = color,
+            minLines = minLines,
+            maxLines = maxLines,
+            softWrap = true,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
 fun QtyItemText(
     label:String,
     textStyle: TextStyle = AppTheme.typography.bodyMedium(),

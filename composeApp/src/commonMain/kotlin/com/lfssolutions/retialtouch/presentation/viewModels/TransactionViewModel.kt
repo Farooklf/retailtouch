@@ -67,7 +67,6 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
             }
                 .onStart {
                     _screenState.update { it.copy(isLoading = true)}
-                    delay(2000)
                 }  // Show loader when starting
                 .catch { th ->
                     println("exception : ${th.message}")
@@ -177,7 +176,6 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
 
     fun updateStartDate(newVal: LocalDate){
         viewModelScope.launch {
-            //println("selectedDate $newVal")
             _screenState.update { state->state.copy(startDate = newVal.toString(), isFromDateFilter = true) }
         }
     }

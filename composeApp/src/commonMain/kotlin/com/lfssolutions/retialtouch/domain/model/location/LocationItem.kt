@@ -25,5 +25,8 @@ data class LocationItem(
     @SerialName("id")
     val id: Long? = null,
     @SerialName("state")
-    val state: String? = null
+    val state: String? = null,
+    @SerialName("menuId")
+    val menuId: Long? = null,
+
 )

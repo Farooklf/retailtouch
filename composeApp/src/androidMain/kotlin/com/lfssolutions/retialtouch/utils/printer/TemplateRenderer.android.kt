@@ -103,7 +103,7 @@ actual class TemplateRenderer actual constructor(){
          println("matchResult: $matchResult")
 
         imageUrl?.let {
-            val imageBitmap = loadImageFromWeb(it) // Load image from URL
+             val imageBitmap = loadImageFromWeb(it) // Load image from URL
              val hexString = bitmapToBase64(imageBitmap ?: return template)
              println("hexString: $hexString")
             val replaceCode= "[C]<img>$hexString</img>\n"

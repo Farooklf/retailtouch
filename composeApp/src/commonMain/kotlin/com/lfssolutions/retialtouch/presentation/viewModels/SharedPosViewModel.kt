@@ -641,7 +641,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun tryApplyPromo(promo: PromotionDetails, item: CRShoppingCartItem) {
-        println("Matched promo")
+        //println("Matched promo")
         when (promo.promotionTypeName) {
             "PromotionByQty" -> tryApplyPromoByQty(promo, item)
             "PromotionByPrice" -> tryApplyPromoByPrice(promo, item)
@@ -938,71 +938,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun onHoldClicked(){
-        viewModelScope.launch(Dispatchers.Default) {
-
-            _posUIState.update { currentState->
-
-                // Create a new HeldCollection
-                val newCollection = HeldCollection(
-                    collectionId = currentState.currentCollectionId,
-                    items = currentState.shoppingCart,
-                    grandTotal = currentState.grandTotal
-                )
-
-                // Create a new map by copying the old map and adding the new collection
-                val updatedMap = currentState.holdSaleCollections.toMutableMap().apply {
-                    put(currentState.currentCollectionId, newCollection)
-                }
-
-
-                // Check if the current items are the same as the last held collection
-                //val isSameAsLastHeld = updatedMap.values.lastOrNull()?.items == currentState.shoppingCart
-
-                val newCollectionId = if(updatedMap.isNotEmpty()) currentState.currentCollectionId+1 else currentState.currentCollectionId
-
-
-                // Reset shoppingCart for new entries
-                currentState.copy(
-                    holdSaleCollections = updatedMap,
-                    currentCollectionId = newCollectionId,
-                    shoppingCart = listOf(), // Reset after holding
-                    isHoldSaleDialog = true
-                )
-            }
-        }
-    }
-
-    fun getListFromHoldSale(collection: HeldCollection) {
-        viewModelScope.launch {
-            _posUIState.update { currentState->
-
-                // Update shoppingCart with the selected collection's items
-                val updatedCollections = currentState.holdSaleCollections.toMutableMap()
-
-                updatedCollections.remove(collection.collectionId) // Remove the selected collection
-
-                // Merge the existing items in shoppingCart with the items from the selected collection
-                val updatedUiPosList = currentState.shoppingCart + collection.items
-
-
-                currentState.copy(
-                    shoppingCart = updatedUiPosList,
-                    holdSaleCollections = updatedCollections,
-                    currentCollectionId = if (updatedCollections.isEmpty()) 1 else currentState.currentCollectionId-1
-                )
-
-            }
-        }
-    }
-
     private fun updateLoader(value:Boolean){
         viewModelScope.launch {
             _posUIState.update { it.copy(isLoading = value) }
         }
     }
-
-
 
     fun dismissErrorDialog(){
         viewModelScope.launch {
@@ -1039,13 +979,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updateEmailReceiptsDialogVisibility(value: Boolean) {
-        _posUIState.update { state -> state.copy(showEmailReceiptsDialog = value) }
-    }
-
-    fun updatePhoneReceiptsDialogVisibility(value: Boolean) {
-        _posUIState.update { state -> state.copy(showPhoneReceiptsDialog = value) }
-    }
 
     fun formatPriceForUI(amount: Double?) :String{
       return  "${_posUIState.value.currencySymbol}${amount?.roundTo(2)}"
@@ -1674,11 +1607,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun constructReceiptAndPrintTemplate(ticket: PosInvoice){
         updatePaymentInvoiceState(ticket)
-
-        val state = posUIState.value
         viewModelScope.launch {
            connectAndPrintTemplate(ticket)
-
         }
     }
 
@@ -1783,7 +1713,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-
     private fun updatePaymentInvoiceState(transaction: PosInvoice) {
         _posInvoice.update { transaction }
     }
@@ -1797,31 +1726,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
      fun clearSale(){
-        //resetCategoryFilter()
         _posInvoice.update { PosInvoice() }
          _posUIState.update { PosUIState() }
-        /*_posUIState.update {
-            it.copy(
-                createdPayments = it.createdPayments.apply { clear() },
-                cartList = it.cartList.apply { clear() },
-                memberItem=MemberItem(),
-                selectedMember="Select Member",
-                selectedMemberId = 0,
-                selectedMemberGroupId = 0,
-                inputDiscount = "",
-                inputDiscountError = null,
-                globalDiscount = 0.0,
-                promotionDiscount = 0.0,
-                globalDiscountIsInPercent = false,
-                globalTax = 0.0,
-                cartTotal = 0.0,
-                cartTotalWithoutDiscount = 0.0,
-                remainingBalance = 0.0,
-                isExecutePosSaving = false,
-                grandTotal = 0.0,
-                paymentTotal = 0.0
-                )
-        }*/
          onPaymentClose()
     }
 
@@ -1838,23 +1744,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
             if (filteredList.isNotEmpty()) {
                 insertPosListItem(filteredList[0]) // Add only the first matched item
-            }
-        }
-    }
-
-    fun calculateBottomValues(){
-        viewModelScope.launch {
-            _posUIState.update { currentState ->
-                val totalQty = currentState.shoppingCart.sumOf { it.qtyOnHand }
-                val totalTax = currentState.shoppingCart.sumOf { it.taxValue ?: 0.0 }
-                val itemSubTotal = currentState.shoppingCart.sumOf { it.cartTotal?:0.0 }
-                val itemDiscount = currentState.shoppingCart.sumOf { it.itemDiscount }
-                val grandTotal = currentState.shoppingCart.sumOf {
-                    val subtotal = it.cartTotal ?: 0.0
-                    val taxAmount = (it.taxPercentage?.div(100.0)?.times(subtotal)) ?: 0.0
-                    subtotal + taxAmount
-                }
-                currentState.copy(quantityTotal =totalQty, globalTax = totalTax, cartTotal = itemSubTotal, grandTotal = grandTotal , originalTotal = grandTotal,itemDiscount=itemDiscount)
             }
         }
     }
