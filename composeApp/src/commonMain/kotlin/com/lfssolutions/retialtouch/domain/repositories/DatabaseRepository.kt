@@ -49,6 +49,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTime.getDateFromApi
@@ -273,12 +274,24 @@ class DataBaseRepository: KoinComponent {
     ) {
         withContext(Dispatchers.IO) {
             clearCategory()
-            response.result.items.forEach { item ->
+            response.result.items.forEach { cat ->
                 val dao = CategoryDao(
-                    categoryId = item.id.toLong(),
-                    categoryItem = item.copy(categoryRowCount = item.categoryRowCount ?: 1)
-                )
-                dataBaseRepository.insertMenuCategories(dao)
+                    categoryId = cat.id?.toLong()?:0,
+                    stockCategory = StockCategory(
+                        id=cat.id?:0,
+                        menuId = cat.menuId?:0,
+                        sortOrder = cat.sortOrder?:0,
+                        name = cat.name?:"",
+                        fgColor = cat.foreColor?:"",
+                        bgColor = cat.backColor?:"",
+                        itemFgColor = cat.itemForeColor?:"",
+                        itemBgColor = cat.itemBackColor?:"",
+                        categoryRowCount=cat.categoryRowCount?:0,
+                        itemColumnCount =cat.itemColumCount?:0,
+                        itemRowCount =cat.itemRowCount?:0,
+                        ))
+                //= cat.copy(categoryRowCount = cat.categoryRowCount ?: 1)
+                dataBaseRepository.insertStockCategories(dao)
             }
         }
     }
@@ -315,26 +328,17 @@ class DataBaseRepository: KoinComponent {
                 clearStocks()
                 newStock.map { item ->
                     if (item.id != null && item.id != 0L) {
-                         //var product = getProductById(item.productId ?: 0)
-                         getProductByCode(item.inventoryCode.orEmpty()).collectLatest { product->
-                             product?.let {
-                                 item.stockPrice = it.price
-                                 if (it.image?.isNotEmpty() == true && item.icon.isNullOrEmpty()) {
-                                     item.icon = it.image
-                                 }
+                         println("InventoryCode: ${item.inventoryCode}")
+                         getProductByCode(item.inventoryCode?:"").collect{ product->
+                             product?.let { product->
+                                 item.price = product.price
+                                 item.imagePath="${preferences.getBaseURL()}${product.image}".replace("\\", "/")
                              }
-                        }
-
-                        item.icon = if (!item.icon.isNullOrEmpty()) {
-                            "${preferences.getBaseURL()}${item.icon}".replace("\\", "/")
-                        } else {
-                            ""
                         }
                         val dao = MenuDao(
                             productId = item.id.toLong(),
                             menuProductItem = item
                         )
-
                         dataBaseRepository.insertStocks(dao)
                     }
                 }
@@ -732,15 +736,10 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getProductByCode(code)
     }
 
-    fun getCategories(): Flow<CategoryItem> =
-        dataBaseRepository.getAllCategories()
-            .flatMapConcat { categoryDao ->
-                flow {
-                    categoryDao.forEach { cat ->
-                        emit(cat.categoryItem)
-                    }
-                }
-            }
+    fun getStockCategories(): Flow<List<StockCategory>> {
+        return dataBaseRepository.getAllCategories().flowOn(Dispatchers.IO)
+    }
+
 
     fun getMember(): Flow<List<MemberDao>> {
         return dataBaseRepository.getAllMembers()
@@ -757,16 +756,21 @@ class DataBaseRepository: KoinComponent {
             .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
     }
 
-    suspend fun getStocks(): MutableList<Stock> {
+     fun getStocks(): Flow<List<Stock>> {
+        return dataBaseRepository.getStocks()
+            .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
+    }
+
+    suspend fun getStocks1(): MutableList<Stock> {
         val stockList = mutableListOf<Stock>()
         dataBaseRepository.getStocks().toList()
         dataBaseRepository.getStocks().collectLatest { itemDao ->
             val updatedList = itemDao.map { item ->
-                val inventory = getProductById(item.menuProductItem.id ?: 0).first()
+                val inventory = getProductById(item.id ?: 0).first()
                 if (inventory != null) {
-                    item.menuProductItem.copy(tax = inventory.tax)
+                    item.copy(tax = inventory.tax)
                 } else {
-                    item.menuProductItem
+                    item
                 }
             }
             stockList.addAll(updatedList.sortedBy { it.sortOrder })

@@ -282,7 +282,7 @@ fun Pos(
                         ListText(label = stringResource(Res.string.qty), textStyle = textStyleHeader,modifier = Modifier.weight(1.2f))
                         ListText(label = stringResource(Res.string.sub_total),textStyle = textStyleHeader, modifier = Modifier.weight(1.2f))
                         VectorIcons(icons = AppIcons.removeIcon, modifier = Modifier.weight(.5f), onClick = {
-                            posViewModel.updateRemoveDialogState(posUIState.cartList.isNotEmpty())
+                            posViewModel.updateClearCartDialogVisibility(posUIState.cartList.isNotEmpty())
                         })
                     }
                 }
@@ -472,7 +472,6 @@ fun Pos(
                     posViewModel.updateSearchQuery(newQuery)
                 },
             )
-
         }
     )
 
@@ -559,10 +558,10 @@ fun Pos(
         dialogTitle = stringResource(Res.string.retail_pos),
         dialogMessage = stringResource(Res.string.clear_scanned_message),
         onDismissRequest = {
-            posViewModel.updateRemoveDialogState(false)
+            posViewModel.updateClearCartDialogVisibility(false)
         },
         onCancel = {
-            posViewModel.updateRemoveDialogState(false)
+            posViewModel.updateClearCartDialogVisibility(false)
         },
         onYes = {
             posViewModel.removedScannedItem()

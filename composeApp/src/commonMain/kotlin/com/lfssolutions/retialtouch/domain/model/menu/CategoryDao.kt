@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CategoryDao(
     val categoryId:Long =0,
-    val categoryItem: CategoryItem = CategoryItem(),
+    val stockCategory: StockCategory = StockCategory(),
 )
 
 

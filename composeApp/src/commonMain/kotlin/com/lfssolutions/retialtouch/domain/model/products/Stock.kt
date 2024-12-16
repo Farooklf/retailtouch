@@ -9,12 +9,12 @@ data class Stock(
     val categoryId: Int? = null,
     val productId: Long? = null,
     val sortOrder: Int? = null,
-    var stockPrice: Double? = null,
+    var price: Double? = null,
     val tax: Double? = null,
     val inventoryCode: String? = null,
     val fgColor: String? = null,
     val bgColor: String? = null,
-    var icon: String? = null,
+    var imagePath: String? = null,
     val barcode: String? = null
 ) {
     fun matches(searchText: String): Boolean {

@@ -28,6 +28,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
+import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
 import com.lfssolutions.retialtouch.utils.serializers.db.toEmployeeDao
@@ -36,7 +38,6 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toMenuCategoryItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
@@ -48,6 +49,7 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toPromotion
 import com.lfssolutions.retialtouch.utils.serializers.db.toPromotionDetails
 import com.lfssolutions.retialtouch.utils.serializers.db.toSaleInvoiceItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toSaleRecord
+import com.lfssolutions.retialtouch.utils.serializers.db.toStockCategory
 import com.lfssolutions.retialtouch.utils.serializers.db.toSyncItem
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
@@ -256,10 +258,10 @@ import kotlinx.coroutines.flow.flow
        retailTouch.employeeRightsQueries.delete()
     }
 
-    override suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao) {
+    override suspend fun insertStockCategories(menuCategoriesDao: CategoryDao) {
         retailTouch.menuCategoryQueries.insertMenuCategory(
             categoryId = menuCategoriesDao.categoryId,
-            categoryItem = menuCategoriesDao.categoryItem.toJson()
+            categoryItem = menuCategoriesDao.stockCategory.toJson()
         )
     }
 
@@ -270,7 +272,7 @@ import kotlinx.coroutines.flow.flow
                 emit(
                     CategoryDao(
                         categoryId = body.categoryId,
-                        categoryItem = body.categoryItem.toMenuCategoryItem()
+                        stockCategory = body.categoryItem.toStockCategory()
                     )
                 )
             }else{
@@ -279,21 +281,12 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override fun getAllCategories(): Flow<List<CategoryDao>> = flow{
+    override fun getAllCategories(): Flow<List<StockCategory>> = flow{
         retailTouch.menuCategoryQueries.getAllMenuCategory().executeAsList().let { list ->
-            if(list.isNotEmpty()) {
-                emit(
-                    list.map { body ->
-                        CategoryDao(
-                            categoryId = body.categoryId,
-                            categoryItem = body.categoryItem.toMenuCategoryItem()
-                        )
-                    }
-
-                )
-            }else{
-                emit(emptyList())
-            }
+            emit(
+                list.map { body ->
+                     body.categoryItem.toStockCategory()
+                })
         }
     }
 
@@ -330,18 +323,13 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override fun getStocks(): Flow<List<MenuDao>> = flow{
+    override fun getStocks(): Flow<List<Stock>> = flow{
         retailTouch.menuProductQueries.getAllMenuProduct().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        MenuDao(
-                            productId = body.productId,
-                            menuProductItem = body.productItem.toMenuProductItem()
-                        )
-                    }
-
-                )
+                        body.productItem.toMenuProductItem()
+                    })
             }else{
                 emit(emptyList())
             }

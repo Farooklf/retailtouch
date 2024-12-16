@@ -28,6 +28,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
+import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
@@ -70,9 +72,9 @@ interface SqlPreference {
     suspend fun deleteMemberGroup()
 
     //Menu Category
-    suspend fun insertMenuCategories(menuCategoriesDao: CategoryDao)
+    suspend fun insertStockCategories(menuCategoriesDao: CategoryDao)
     fun selectCategoryById(id: Long): Flow<CategoryDao?>
-    fun getAllCategories(): Flow<List<CategoryDao>>
+    fun getAllCategories(): Flow<List<StockCategory>>
     suspend fun deleteCategories()
     fun getMenuCategoriesCount():Flow<Int>
 
@@ -80,7 +82,7 @@ interface SqlPreference {
     //Menu Products
     suspend fun insertStocks(menuProductsDao: MenuDao)
     fun selectProductsById(id: Long): Flow<MenuDao?>
-    fun getStocks(): Flow<List<MenuDao>>
+    fun getStocks(): Flow<List<Stock>>
     suspend fun deleteStocks()
     fun getMenuCProductsCount():Flow<Int>
 

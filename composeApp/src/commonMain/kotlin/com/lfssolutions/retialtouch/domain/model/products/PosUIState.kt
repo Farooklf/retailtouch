@@ -6,6 +6,7 @@ import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
+import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByPriceBreak
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantity
@@ -28,6 +29,22 @@ data class PosUIState(
     var inputDiscountError : String? =null,
     var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
     var selectedDiscountApplied : DiscountApplied = DiscountApplied.GLOBAL,
+
+
+    //CATEGORY AND MENU
+    val isList: Boolean = false,
+    val isRtl: Boolean = false,
+    val gridColumnCount: Int = 3,
+    val selectedCategoryId: Int = -1,
+    val cartValue: Double = 0.0,
+    val cartSize: Int = 0,
+    val categories: List<StockCategory> = emptyList(),
+    val menuProducts: List<Stock> = emptyList(),
+    val currentCategory:StockCategory=StockCategory(),
+    val menuItemIndex: MutableMap<Int, Int> = mutableMapOf(),
+    val loadingProductContent: Boolean = true,
+    val animatedProductCard: AnimatedProductCard? = null,
+
 
     //auth
     val isDiscountGranted :Boolean=false,

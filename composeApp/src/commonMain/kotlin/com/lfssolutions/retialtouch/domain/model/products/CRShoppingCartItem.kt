@@ -28,7 +28,7 @@ data class CRShoppingCartItem(
     val stock: Stock = Stock(),
     var promotion: PromotionDetails? = null,
     var promotionName: String? = null,
-    var price: Double = stock.stockPrice ?: 0.0,
+    var price: Double = stock.price ?: 0.0,
     var oldPrice: Double = 0.0,
     var amount: Double? = 0.0,
     var qty: Double = 1.0,

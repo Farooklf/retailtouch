@@ -200,7 +200,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             isTablet = deviceType == DeviceType.SMALL_TABLET || deviceType == DeviceType.LARGE_TABLET,
             screenWidth = width,
             deviceType = deviceType,
-            isPortrait = height > width
+            isPortrait = height > width,
+            isLandScape = width>height
         )
         }
     }
@@ -289,7 +290,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     suspend fun getLocations(){
         try {
             //updateLoaderMsg("Fetching location data...")
-            println("location calling api : ${count++}")
+            println("location Calling api : ${count++}")
             val loginApiResponse=networkRepository.getLocationForUser(getBasicRequest())
             observeLocation(loginApiResponse)
         }catch (e:Exception){
@@ -369,7 +370,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncSales()
              syncStockQuantity()
              syncInventory()
-             syncCategories()
+             //syncCategories()
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
@@ -404,7 +405,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             updateLoaderMsg("Syncing Inventory Count")
             networkRepository.getProductLocation(getBasicRequest()).collectLatest {stockAvailResponse->
                 observeStock(stockAvailResponse,lastSyncTime)
-                println("QtyMap: $stockQtyMap")
+                //println("QtyMap: $stockQtyMap")
             }
         }catch (e: Exception){
             val error="${e.message}"
@@ -415,7 +416,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
      suspend fun syncInventory(lastSyncTime:String?=null){
         try {
             updateLoaderMsg("Syncing Inventory")
-            println("API CALL : ${count++}")
+            println("Inventory API CALL : ${count++}")
             val inventoryResponse=networkRepository.getProductsWithTax(getBasicRequest())
             val barcodesResponse=networkRepository.getProductBarCode(getBasicRequest())
             if(lastSyncTime!=null){
@@ -433,7 +434,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private suspend fun syncMembers(){
         try {
-            println("API CALL : ${count++}")
+            println("Members API CALL : ${count++}")
             updateLoaderMsg("Syncing Member")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMembers(apiResponse)
@@ -459,7 +460,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private suspend fun syncMemberGroup(){
         try {
             updateLoaderMsg("Syncing Member Group")
-            println("API CALL : ${count++}")
+            println("MemberGroup API CALL : ${count++}")
             networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMemberGroup(apiResponse)
             }
@@ -541,13 +542,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         val newStock : MutableList<MenuItem> = mutableListOf()
         categoryResponse.value.forEach { cat->
             println("Menu products api : ${cat.id}")
-            networkRepository.getMenuProducts(getBasicRequest(cat.id)).collectLatest {response->
+            networkRepository.getMenuProducts(getBasicRequest(cat.id?:0)).collectLatest {response->
                 observeResponseNew(response,
                     onLoading = {  },
                     onSuccess = { menuData ->
                         if(menuData.success){
                             menuData.result.items.forEach { menu->
-                                val updatedMenu=menu.copy(menuCategoryId=cat.id, id = if(menu.id==0L) menu.productId else menu.id)
+                                val updatedMenu=menu.copy(menuCategoryId=cat.id?:0, id = if(menu.id==0L) menu.productId else menu.id)
                                 newStock.add(updatedMenu)
                             }
                             viewModelScope.launch {
@@ -555,7 +556,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                                     Stock(
                                         id = mnu.id,
                                         name = mnu.name,
-                                        icon = mnu.imagePath ?: "",
+                                        imagePath = mnu.imagePath ?: "",
                                         categoryId = mnu.menuCategoryId,
                                         productId = mnu.productId,
                                         sortOrder = mnu.sortOrder,
@@ -813,12 +814,14 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private fun observeMemberGroup(apiResponse: RequestState<MemberGroupResponse>) {
         observeResponseNew(apiResponse,
-            onLoading = {  },
+            onLoading = {
+
+            },
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
                         dataBaseRepository.insertMemberGroup(apiData)
-                        println("API CALL : ${count++}")
+                        println("MemberGroup Insertion : ${count++}")
                     }
                 }
             },
@@ -839,9 +842,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             onSuccess = { apiData ->
                 viewModelScope.launch {
                     if(apiData.success){
-                        dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime,
-                            stockQtyMap)
+                        dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap)
                         updateSyncGrid(PRODUCT)
+                        syncCategories()
                     }
                 }
             },
@@ -864,7 +867,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 if (apiData.success) {
                     viewModelScope.launch {
                         dataBaseRepository.insertUpdateProductQuantity(apiData,lastSyncTime)
-                        println("Product quantity insertion: ${count++}")
+                        println("Product Quantity insertion: ${count++}")
                     }
                     apiData.result?.items?.forEach { stock ->
                         updatedStockQtyMap[stock.productId]=stock.qtyOnHand

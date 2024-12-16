@@ -95,6 +95,12 @@ val LocalAppState = compositionLocalOf<AppState> {
     error("No AppState provided")
 }
 
+fun String?.capitalizeFirstChar(): String {
+    return this?.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase() else it.toString()
+    } ?: ""
+}
+
 object AppIcons {
 
     //Home screen icons

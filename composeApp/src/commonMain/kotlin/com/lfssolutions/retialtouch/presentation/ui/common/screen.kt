@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -70,6 +71,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.general_back
+
+
 
 @Composable
 fun GradientBackgroundScreen(
@@ -96,6 +99,69 @@ fun GradientBackgroundScreen(
             .alpha(if(isBlur) blur else 1f)
     ) {
         content(maxHeight)
+    }
+}
+
+
+@Composable
+fun CashierBasicScreen(
+    modifier: Modifier = Modifier,
+    appToolbarContent: @Composable () -> Unit = {},
+    statusBarColor: Color = AppTheme.colors.activeColor,
+    statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
+    navigationBarColor: Color = Color.Transparent,
+    screenBackground: Color = AppTheme.colors.screenBackground,
+    contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = 0.dp,
+        vertical = 0.dp,
+    ),
+    contentAlignment: Alignment = Alignment.Center,
+    isScrollable: Boolean = true,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val density = LocalDensity.current
+    val defaultTableWidth = AppTheme.dimensions.tabletDefaultWidth
+
+    SystemBarColorEffect(
+        statusBarColor = statusBarColor,
+        navigationBarColor = navigationBarColor,
+        statusBarIconColor = statusBarIconColor,
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(screenBackground),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        appToolbarContent()
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(max = contentMaxWidth)
+                .fillMaxWidth(),
+        ) {
+            val screenHeight = maxHeight - contentPadding.verticalPadding()
+
+            CompositionLocalProvider(
+                LocalScreenHeight provides screenHeight,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (isScrollable)
+                                Modifier.verticalScroll(state = rememberScrollState())
+                            else
+                                Modifier
+                        )
+                        .padding(contentPadding),
+                    contentAlignment = contentAlignment,
+                    content = content,
+                )
+            }
+        }
     }
 }
 

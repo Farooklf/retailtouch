@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
@@ -39,12 +42,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.ic_shopping_cart
 
 @Composable
 fun BaseButton(
@@ -133,7 +139,7 @@ fun AppPrimaryButton(
     val (space,textStyle)=if(appState.isPortrait)
         AppTheme.dimensions.padding5 to portraitStyle
     else
-        AppTheme.dimensions.padding20 to landScapeStyle
+        AppTheme.dimensions.padding5 to landScapeStyle
 
     val iconSize=if(appState.isPortrait)
         AppTheme.dimensions.smallXIcon
@@ -396,4 +402,39 @@ fun RowButtonWithIcons(
             overflow = TextOverflow.Ellipsis
             )
     }
+}
+
+
+@Composable
+fun AppCartButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    text: String
+) {
+    BaseButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(50.dp),
+        enabled = enabled,
+        interactionSource = remember { MutableInteractionSource() },
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = AppTheme.colors.primaryColor,
+            contentColor = AppTheme.colors.primaryButtonContent
+        ),
+        shape = RoundedCornerShape(100.dp),
+        content = {
+            Icon(
+                painter = painterResource(Res.drawable.ic_shopping_cart),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Text(
+                text = text,
+                style = AppTheme.typography.bodyMedium().copy(fontSize = 14.sp),
+                modifier = Modifier.weight(1f).padding(end = 20.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
+    )
 }

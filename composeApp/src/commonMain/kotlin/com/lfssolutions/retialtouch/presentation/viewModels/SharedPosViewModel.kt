@@ -7,8 +7,10 @@ import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
+import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
+import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
@@ -42,6 +44,8 @@ import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +53,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
@@ -85,6 +90,28 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         val location : Location?,
         val holdSale : List<CRSaleOnHold>,
     )
+
+    //Load data from DataBase
+    fun loadCategoryAndMenuItems() {
+        viewModelScope.launch {
+            val category = async { dataBaseRepository.getStockCategories() }.await()
+            val menuProducts= async { dataBaseRepository.getStocks() }.await()
+
+            category.collect { category ->
+                if(category.isNotEmpty()){
+                    updateCategories(category.sortedBy { it.name }.sortedBy { it.sortOrder })
+                    menuProducts.collect { stock ->
+                        updateMenuProducts(stock.sortedBy { it.sortOrder })
+                        //updateSelectedCategoryProducts(category.sortedBy { it.sortOrder }.first().id)
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadTotal() {
+        //mainViewModel.loadTotalPrice()
+    }
 
 
     // Function to load both details and promotions
@@ -307,8 +334,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             categoryId = 0,
             productId = product.id?:0,
             sortOrder = 0,
-            icon = product.image ?: "",
-            stockPrice = product.price ?: 0.0,
+            imagePath = product.image ?: "",
+            price = product.price ?: 0.0,
             tax = product.tax ?: 0.0,
             barcode = product.barcode ?: "",
             inventoryCode = product.productCode ?: ""
@@ -365,8 +392,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             categoryId = 0,
             productId = product.id,
             sortOrder = 0,
-            icon = product.image ?: "",
-            stockPrice = product.price ?: 0.0,
+            imagePath = product.image ?: "",
+            price = product.price ?: 0.0,
             tax = product.tax ?: 0.0,
             barcode = product.barcode ?: "",
             inventoryCode = product.productCode ?: ""
@@ -537,11 +564,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     else -> item
                 }
             }.toMutableList()
-
             updateSaleItem(updatedCartList)
-
+        }else{
+            updateSaleItem(cartList)
         }
-
     }
 
     private fun applyQuantityPromotion(item: CRShoppingCartItem, promotion: PromotionDetails?) {
@@ -973,6 +999,83 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun updateScreenDirection(isRtl: Boolean) {
+        viewModelScope.launch {
+            _posUIState.update {
+                it.copy(isRtl = isRtl)
+            }
+        }
+    }
+
+    fun updateMenuDisplayFormat(isList: Boolean) {
+        viewModelScope.launch {
+            _posUIState.update {
+                it.copy(isList = isList)
+            }
+        }
+    }
+
+    fun selectCategory(categoryId: Int) {
+        println("clicked_category:$categoryId")
+        _posUIState.update {state->
+            state.copy(
+                selectedCategoryId = categoryId
+            )
+        }
+        //updateSelectedCategoryProducts(categoryId)
+    }
+
+    private fun updateSelectedCategoryProducts(categoryId: Int) {
+        viewModelScope.launch {
+            val selectedCatProducts = mutableListOf<Stock>()
+            _posUIState.update { state ->
+                selectedCatProducts.addAll(state.menuProducts.filter { it.categoryId == categoryId })
+                println("selectedCatProducts:$selectedCatProducts")
+                updateMenuProducts(selectedCatProducts.sortedBy { it.sortOrder })
+                state.copy(
+                    selectedCategoryId = categoryId
+                )
+            }
+        }
+    }
+
+    private fun updateCategories(categories: List<StockCategory>) {
+        viewModelScope.launch{
+            _posUIState.update {
+                it.copy(
+                    categories = categories.distinct(),
+                    selectedCategoryId = categories.first().id
+                )
+            }
+        }
+    }
+
+    private fun updateMenuProducts(products: List<Stock>) {
+        viewModelScope.launch {
+            _posUIState.update {
+                it.copy(
+                    menuProducts = products.distinct()
+                )
+            }
+        } }
+
+    fun onProductItemClick(animatedProductCard: AnimatedProductCard) {
+        viewModelScope.launch {
+            val stock = animatedProductCard.product
+            println("clicked_menu:$stock")
+            addSaleItem(stock=stock, qty = 1.0)
+        }
+    }
+
+     fun showAnimatedProductCard(card: AnimatedProductCard?) {
+        viewModelScope.launch {
+            _posUIState.update { state -> state.copy(animatedProductCard = card) }
+            delay(150)
+            _posUIState.update { state -> state.copy(animatedProductCard = null) }
+        }
+    }
+
+
     fun updateMemberDialogState(value:Boolean){
         viewModelScope.launch {
             _posUIState.update { it.copy(isMemberDialog = value) }
@@ -1153,7 +1256,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun updateRemoveDialogState(value:Boolean){
+    fun updateClearCartDialogVisibility(value:Boolean){
         viewModelScope.launch {
             _posUIState.update { it.copy(isRemoveDialog = value) }
         }

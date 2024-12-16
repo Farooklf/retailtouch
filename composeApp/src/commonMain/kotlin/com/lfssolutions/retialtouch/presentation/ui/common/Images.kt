@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -51,6 +52,16 @@ fun ImagePlaceholder() {
         painter = painterResource(Res.drawable.app_logo),
         contentDescription = null,
         modifier = Modifier.size(AppTheme.dimensions.mediumIcon),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+fun ImagePlaceholderWithUrl() {
+    Image(
+        painter = painterResource(Res.drawable.app_logo),
+        contentDescription = null,
+        modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.Crop
     )
 }
