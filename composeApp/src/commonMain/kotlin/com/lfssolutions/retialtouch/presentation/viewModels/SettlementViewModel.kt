@@ -4,6 +4,7 @@ package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
 import com.lfssolutions.retialtouch.domain.model.settlement.PosLocation
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentTypeSummary
@@ -32,15 +33,21 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
             updateLoader(true)
             try {
                 val paymentTypes = async { dataBaseRepository.getPaymentMode()}.await()
-                val location = location.value
-                println("location: $location")
+                val location = async { dataBaseRepository.getSelectedLocation()}.await()
                 paymentTypes.collect{payment->
                     val localList = payment.map {element->
                         PosPaymentTypeSummary(paymentTypeId = element.id, paymentType = element.name, amount = 0.0)
                     }
                     println("localList: $localList")
-                    _settlementState.update { state->state.copy(localSettlement = localList, isLoading = false) }
+                    _settlementState.update { state->state.copy(localSettlement = localList) }
                 }
+                location.collect{ location->
+                    println("location: $location")
+                    _settlementState.update { state->state.copy(location = location?:Location(), isLoading = false) }
+
+                    getPosPaymentSummary(location)
+                }
+
             } catch (e: Exception) {
                 // Handle any other exceptions and set loading to false
                 println("UnexpectedError: ${e.message}")
@@ -63,11 +70,11 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun getPosPaymentSummary(){
+    fun getPosPaymentSummary(location:Location?){
         viewModelScope.launch {
             try {
-                val state = settlementState.value
-                val location = location.value
+                /*val state = settlementState.value
+                val location = location.value*/
               networkRepository.getPosPaymentSummary(
                   GetPOSPaymentSummaryRequest(
                       locations = listOf(PosLocation(id =location?.locationId.toString(), name = location?.name, code = location?.code)),
@@ -87,17 +94,15 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
 
                                   if (floatMoney != 0.0) {
                                       itemDate.items?.forEach { item ->
-                                          if (item.paymentType.equals("cash", ignoreCase = true)) {
+                                          if (item.paymentType.equals("CASH", ignoreCase = true)) {
                                               item.amount = item.amount?.minus(floatMoney)
                                           }
                                       }
                                   }
-                                 println("itemDate : $itemDate")
+                                    println("itemDate : $itemDate")
+                                    _settlementState.update { it.copy(remoteSettlement=stats.itemDates.first()) }
                               }
-                              _settlementState.update { it.copy(remoteSettlement=stats?.itemDates?.first()) }
-
-                               println("itemDate : ${stats?.itemDates?.first()}")
-                              updateLoader(false)
+                               updateLoader(false)
                           }else{
                               updateLoader(false)
                           }

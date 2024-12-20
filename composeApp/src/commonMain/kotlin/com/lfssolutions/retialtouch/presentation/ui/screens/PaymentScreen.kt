@@ -146,7 +146,7 @@ fun Payment(
     LaunchedEffect(state.isPaymentClose){
         if(state.isPaymentClose){
             viewModel.resetScreenState()
-            NavigatorActions.navigateBack(navigator)
+            NavigatorActions.navigateToPOSScreen(navigator)
         }
     }
 
@@ -283,7 +283,7 @@ fun startPayment(viewModel: SharedPosViewModel, state: PosUIState) {
             PaymentProvider().launchExternalApp(
                 paymentTotal,
                 PaymentLibTypes.ASCAN,
-                paymentName//processorName
+                "dbs"//processorName
             )
         }else if (paymentName.equals("Paytm", ignoreCase = true)) {
             //PaymentProvider().launchApi(PaymentLibTypes.PAYTM, httpClient = httpClient)

@@ -31,9 +31,9 @@ class AndroidApp : Application() {
             return INSTANCE.applicationContext
         }
     }
-    /*init {
+    init {
         INSTANCE=this
-    }*/
+    }
     var currentActiveActivity: Activity? = null
         private set
 

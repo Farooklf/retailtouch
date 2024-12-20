@@ -82,10 +82,11 @@ object SettlementScreen : Screen {
         val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
         val navigator = LocalNavigator.currentOrThrow
         val appState = LocalAppState.current
+        //val location by viewModel.location.collectAsState()
 
        LaunchedEffect(Unit){
            viewModel.loadDataFromDb()
-           //viewModel.getPosPaymentSummary()
+           //viewModel.getPosPaymentSummary(location)
        }
 
         LaunchedEffect(screenState.isError) {
