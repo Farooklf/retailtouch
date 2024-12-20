@@ -28,7 +28,7 @@ import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
-import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
 import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
@@ -62,9 +62,10 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
-import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
+import com.lfssolutions.retialtouch.utils.NumberFormatting
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
@@ -149,6 +150,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
+    val currencySymbol: StateFlow<String> = preferences.getCurrencySymbol()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(1000),
+            initialValue = ""
+        )
+
     val authUser: StateFlow<AuthenticateDao?> = dataBaseRepository.getAuthUser()
         .stateIn(
             scope = viewModelScope,
@@ -171,8 +179,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             scope = viewModelScope,  // Use viewModelScope
             started = SharingStarted.WhileSubscribed(5000),  // Keeps the flow alive for 5 seconds after subscription
             initialValue = null  // Initial state of the flow
-        )
 
+    )
+
+    val location: StateFlow<Location?> = flow {
+       emit( dataBaseRepository.getSelectedLocation().firstOrNull())
+    }.stateIn(
+        scope = viewModelScope,  // Use viewModelScope
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null  // Initial state of the flow
+
+    )
 
 
     suspend fun isDiscountEnabledTaxInclusiveName():Boolean{
@@ -205,6 +222,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
         }
     }
+
+
 
      fun updatePrinterValue(isPrinter: Boolean) {
         viewModelScope.launch {
@@ -370,7 +389,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncSales()
              syncStockQuantity()
              syncInventory()
-             //syncCategories()
+             syncCategories()
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
@@ -554,16 +573,16 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                             viewModelScope.launch {
                                 dataBaseRepository.insertNewStock(newStock.map{mnu->
                                     Stock(
-                                        id = mnu.id,
-                                        name = mnu.name,
+                                        id = mnu.id?:0,
+                                        name = mnu.name?:"",
                                         imagePath = mnu.imagePath ?: "",
-                                        categoryId = mnu.menuCategoryId,
-                                        productId = mnu.productId,
-                                        sortOrder = mnu.sortOrder,
-                                        inventoryCode = mnu.inventoryCode,
+                                        categoryId = mnu.menuCategoryId?:0,
+                                        productId = mnu.productId?:0,
+                                        sortOrder = mnu.sortOrder?:0,
+                                        inventoryCode = mnu.inventoryCode?:"",
                                         fgColor = mnu.foreColor ?: "",
                                         bgColor = mnu.backColor ?: "",
-                                        barcode = mnu.barCode
+                                        barcode = mnu.barCode?:""
                                     )
                                 })
                             }
@@ -844,7 +863,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                     if(apiData.success){
                         dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap)
                         updateSyncGrid(PRODUCT)
-                        syncCategories()
                     }
                 }
             },

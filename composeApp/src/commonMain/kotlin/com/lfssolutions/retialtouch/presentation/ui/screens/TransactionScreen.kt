@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lfssolutions.retialtouch.App
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
@@ -49,7 +48,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ShowDateRangePicker
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
-import com.lfssolutions.retialtouch.utils.DateTime.formatDateForUI
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatDateForUI
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import kotlinx.coroutines.delay
@@ -458,7 +457,7 @@ fun SaleListItem(
 ){
 
     val (borderColor,rowBgColor)=when(index%2 == 0){
-        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 

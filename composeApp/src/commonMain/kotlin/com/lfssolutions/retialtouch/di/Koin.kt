@@ -18,6 +18,7 @@ import com.lfssolutions.retialtouch.presentation.viewModels.PaymentCollectorView
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PayoutViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
+import com.lfssolutions.retialtouch.presentation.viewModels.SettlementViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionDetailsViewModel
@@ -92,4 +93,5 @@ fun appModule() = module {
     viewModelDefinition { TransactionViewModel() }
     viewModelDefinition { TransactionDetailsViewModel() }
     viewModelDefinition { PayoutViewModel() }
+    viewModelDefinition { SettlementViewModel() }
 }

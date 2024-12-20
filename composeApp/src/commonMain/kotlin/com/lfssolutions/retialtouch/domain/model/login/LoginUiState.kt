@@ -10,7 +10,7 @@ data class LoginUiState(
     val password: String = "",
     val locationId: String = "",
     val tenant: String = "fb",
-    val server: String = "http://develop.rtlconnect.net",
+    val server: String = "http://testrelease.rtlconnect.net",
 
     val serverError: String? = null,
     val tenantError: String? = null,

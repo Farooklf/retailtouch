@@ -56,8 +56,8 @@ import com.lfssolutions.retialtouch.presentation.ui.common.PaymentModeDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionDetailsViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
-import com.lfssolutions.retialtouch.utils.DateTime.formatDateForUI
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateTimeFromApiStringUTC
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatDateForUI
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.parseDateTimeFromApiStringUTC
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.painterResource
@@ -69,7 +69,6 @@ import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.re_print
 import retailtouch.composeapp.generated.resources.save
 import retailtouch.composeapp.generated.resources.status
-import retailtouch.composeapp.generated.resources.transaction
 import retailtouch.composeapp.generated.resources.transaction_details
 import retailtouch.composeapp.generated.resources.type
 
@@ -402,7 +401,7 @@ fun PosDetailsItem(
 ){
 
     val (borderColor,rowBgColor)=when(index%2 == 0){
-        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 

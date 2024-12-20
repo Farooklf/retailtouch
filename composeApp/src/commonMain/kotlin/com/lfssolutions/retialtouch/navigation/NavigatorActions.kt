@@ -55,4 +55,12 @@ object NavigatorActions {
     fun navigateToPayoutScreen(navigator: Navigator) {
         navigator.push(Route.Payout.toVoyagerScreen())
     }
+
+    fun navigateToCartScreen(navigator: Navigator) {
+        navigator.push(Route.CartScreen.toVoyagerScreen())
+    }
+
+    fun navigateToSettlementScreen(navigator: Navigator) {
+        navigator.push(Route.Settlement.toVoyagerScreen())
+    }
 }

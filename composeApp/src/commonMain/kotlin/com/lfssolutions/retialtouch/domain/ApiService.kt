@@ -28,6 +28,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyRe
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
+import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
+import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentSummaryResult
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import kotlinx.coroutines.flow.Flow
@@ -57,4 +59,5 @@ interface ApiService {
     fun createUpdatePosInvoice(mBasicApiRequest: CreatePOSInvoiceRequest): Flow<RequestState<PosInvoiceResponse>>
     fun getPrintTemplate(mBasicApiRequest: GetPrintTemplateRequest): Flow<RequestState<GetPrintTemplateResult>>
     fun getPosInvoiceForEdit(mBasicApiRequest: GetPosInvoiceForEditRequest): Flow<RequestState<GetPosInvoiceForEditResult>>
+    fun getPosPaymentSummary(mBasicApiRequest: GetPOSPaymentSummaryRequest): Flow<RequestState<PosPaymentSummaryResult>>
 }

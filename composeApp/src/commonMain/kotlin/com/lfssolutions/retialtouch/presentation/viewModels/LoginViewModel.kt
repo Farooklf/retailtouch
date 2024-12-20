@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
-import com.lfssolutions.retialtouch.utils.DateTime.getLastSyncDateTime
 import com.lfssolutions.retialtouch.utils.TemplateType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -13,8 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
 import org.koin.core.component.KoinComponent
 
 

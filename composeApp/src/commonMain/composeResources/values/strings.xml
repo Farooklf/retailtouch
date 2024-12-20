@@ -174,7 +174,8 @@
     <string name="transaction_details">Transaction Details</string>
     <string name="pending_sales">Pending Sales [%1$s]</string>
     <string name="review_cart">Review Cart</string>
-
+    <string name="selected_member">Member : </string>
     <string name="no_products_added">No Products Added</string>
+    <string name="print">Print</string>
 
 </resources>

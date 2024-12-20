@@ -2,7 +2,7 @@ package com.lfssolutions.retialtouch.domain.model.products
 
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import kotlinx.serialization.Serializable
 
@@ -63,9 +63,9 @@ data class CRShoppingCartItem(
             return discountAmount.roundTo(2)
         } else {
             return if (discountIsInPercent) {
-                ((currentPrice * discount / 100) * qty).roundTo(2)
+                ((currentPrice * discount / 100) * qty)
             } else {
-                discount.roundTo(2) //*qty
+                discount
             }
         }
     }

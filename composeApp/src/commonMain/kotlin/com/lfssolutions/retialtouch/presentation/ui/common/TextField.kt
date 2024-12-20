@@ -442,6 +442,7 @@ fun SearchableTextWithBg(
     enabled: Boolean = true,
     textStyle: TextStyle = LocalTextStyle.current,
     errorColor: Color =AppTheme.colors.textError,
+    backgroundColor:Color = AppTheme.colors.searchBoxColor,
     label: String? = null,
     placeholder: String? = null,
     error: String? = null,
@@ -461,9 +462,9 @@ fun SearchableTextWithBg(
         TextField(
           value=value,
             onValueChange=onValueChange,
-            modifier = Modifier.fillMaxWidth().border(BorderStroke(width = 1.dp, color = AppTheme.colors.listRowBorderColor)),
+            modifier = Modifier.fillMaxWidth().border(BorderStroke(width = 1.dp, color = AppTheme.colors.borderColor)),
             colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = AppTheme.colors.listRowBgColor,
+                backgroundColor = backgroundColor,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 textColor = AppTheme.colors.textBlack,

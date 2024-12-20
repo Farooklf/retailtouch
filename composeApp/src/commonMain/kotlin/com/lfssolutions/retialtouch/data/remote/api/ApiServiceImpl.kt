@@ -36,10 +36,12 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
+import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
+import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentSummaryResult
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
-import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import io.ktor.client.HttpClient
 import io.ktor.client.request.headers
@@ -347,6 +349,16 @@ import kotlinx.coroutines.withContext
              requestBody = mBasicApiRequest
          ) { response ->
              handleApiResponse<GetPosInvoiceForEditResult>(response)
+         }
+     }
+
+     override fun getPosPaymentSummary(mBasicApiRequest: GetPOSPaymentSummaryRequest): Flow<RequestState<PosPaymentSummaryResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.GET_POS_PAYMENT_SUMMARY,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<PosPaymentSummaryResult>(response)
          }
      }
  }

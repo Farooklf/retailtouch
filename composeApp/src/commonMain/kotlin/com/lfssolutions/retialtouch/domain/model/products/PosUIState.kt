@@ -32,6 +32,7 @@ data class PosUIState(
 
 
     //CATEGORY AND MENU
+    val showCartLoader: Boolean = false,
     val isList: Boolean = false,
     val isRtl: Boolean = false,
     val gridColumnCount: Int = 3,

@@ -1,8 +1,7 @@
 package com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions
 
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentLocalDate
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentLocalDateTime
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentLocalDate
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentLocalDateTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

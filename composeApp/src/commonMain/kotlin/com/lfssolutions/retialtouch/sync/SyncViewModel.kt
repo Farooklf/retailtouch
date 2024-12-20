@@ -23,8 +23,7 @@ import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE
 import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApi
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiString
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.parseDateFromApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job

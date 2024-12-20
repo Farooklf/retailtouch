@@ -2,7 +2,7 @@ package com.lfssolutions.retialtouch.data.local
 
 
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
-import com.lfssolutions.retialtouch.utils.DateTime
+import com.lfssolutions.retialtouch.utils.DateFormatter
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENCY_SYMBOL
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENT_TENANT_URL
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_CODE
@@ -54,7 +54,7 @@ class PreferencesImpl(
         )
     }
 
-    @OptIn(ExperimentalSettingsApi::class)
+
     override suspend fun setBaseURL(result: String) {
         flowSettings.putString(
             key = CURRENT_TENANT_URL,
@@ -119,7 +119,7 @@ class PreferencesImpl(
 
         flowSettings.putLong(
             key = TOKEN_TIME,
-            value = DateTime.getCurrentDateAndTimeInEpochMilliSeconds()
+            value = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds()
         )
     }
 

@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -62,19 +63,25 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
+import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCartButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.CartListItem
+import com.lfssolutions.retialtouch.presentation.ui.common.CartLoader
 import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.CategoryListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.CustomSwitch
+import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.ItemDiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
-import com.lfssolutions.retialtouch.presentation.ui.common.ListText
+import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
+import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductItemAnimation
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
-import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
+import com.lfssolutions.retialtouch.presentation.ui.common.StockDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -83,31 +90,32 @@ import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.lib.rememberValRef
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.discount_value
-import retailtouch.composeapp.generated.resources.hash
 import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.hold_sale
-import retailtouch.composeapp.generated.resources.ic_add_member
 import retailtouch.composeapp.generated.resources.ic_grid
 import retailtouch.composeapp.generated.resources.ic_list
-import retailtouch.composeapp.generated.resources.ic_promotion
-import retailtouch.composeapp.generated.resources.ic_resetcart
 import retailtouch.composeapp.generated.resources.img_empty_cart
 import retailtouch.composeapp.generated.resources.items
+import retailtouch.composeapp.generated.resources.members
 import retailtouch.composeapp.generated.resources.no_products_added
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.price
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
+import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.review_cart
 import retailtouch.composeapp.generated.resources.rtl
 import retailtouch.composeapp.generated.resources.search_items
+import retailtouch.composeapp.generated.resources.selected_member
 import retailtouch.composeapp.generated.resources.sub_total
 import retailtouch.composeapp.generated.resources.tax_value
 import retailtouch.composeapp.generated.resources.total_value
@@ -122,16 +130,32 @@ object CashierScreen: Screen {
 
 @Composable
 fun CashierUI(
-    posViewModel: SharedPosViewModel = koinInject()
+    viewModel: SharedPosViewModel = koinInject()
 ){
-    val navigator = LocalNavigator.currentOrThrow
     val appState = LocalAppState.current
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
-    val state by posViewModel.posUIState.collectAsStateWithLifecycle()
+    val state by viewModel.posUIState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit){
-        posViewModel.loadCategoryAndMenuItems()
+        viewModel.loadCategoryAndMenuItems()
+        viewModel.loadDbData()
     }
+
+    LaunchedEffect(state.cartList) {
+        viewModel.recomputeSale()
+    }
+
+    LaunchedEffect(state.isError) {
+        if (state.isError) {
+            snackbarHostState.value.showSnackbar(state.errorMsg)
+            delay(2000)
+            viewModel.dismissErrorDialog()
+        }
+    }
+
+    CartLoader(
+        isVisible = state.showCartLoader
+    )
 
     CashierBasicScreen(
         modifier = Modifier.systemBarsPadding(),
@@ -141,17 +165,17 @@ fun CashierUI(
         if(appState.isTablet || appState.isLandScape){
             CompositionLocalProvider(LocalLayoutDirection provides if (state.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                 LandscapeCashierScreen(
-                    interactorRef = rememberValRef(posViewModel),
+                    interactorRef = rememberValRef(viewModel),
                 )
             }
         }else{
             PortraitCashierScreen(
-                interactorRef = rememberValRef(posViewModel),
+                interactorRef = rememberValRef(viewModel),
             )
          }
 
         state.animatedProductCard?.let {
-            ProductItemAnimation(card = it, viewModel = posViewModel)
+            ProductItemAnimation(card = it, viewModel = viewModel)
         }
 
         SnackbarHost(
@@ -161,6 +185,102 @@ fun CashierUI(
 
         )
     }
+
+    StockDialog(
+        isVisible = state.showDialog,
+        interactorRef = rememberValRef(viewModel),
+        onDismiss = {
+            viewModel.updateDialogState(false)
+        },
+        onItemClick = {selectedItem->
+            viewModel.updateDialogState(false)
+            viewModel.clearSearch()
+            viewModel.addSearchProduct(selectedItem)
+        }
+    )
+
+    ActionDialog(
+        isVisible = state.isRemoveDialog,
+        dialogTitle = stringResource(Res.string.retail_pos),
+        dialogMessage = stringResource(Res.string.clear_scanned_message),
+        onDismissRequest = {
+            viewModel.updateClearCartDialogVisibility(false)
+        },
+        onCancel = {
+            viewModel.updateClearCartDialogVisibility(false)
+        },
+        onYes = {
+            viewModel.removedScannedItem()
+        }
+    )
+
+    MemberListDialog(
+        isVisible = state.isMemberDialog,
+        interactorRef = rememberValRef(viewModel),
+        onDismissRequest = {
+            viewModel.updateMemberDialogState(false)
+        })
+
+    //Discount Content
+    DiscountDialog(
+        isVisible = state.showDiscountDialog,
+        promotions=state.promotions,
+        isPortrait=appState.isPortrait,
+        onDismiss = {
+            viewModel.updateDiscountDialog(false)
+        },
+        onItemClick = {promotion->
+            viewModel.updateDiscountDialog(false)
+            viewModel.updateDiscount(promotion)
+        }
+    )
+
+    //Cart Item Discount Content
+    ItemDiscountDialog(
+        isVisible = state.showItemDiscountDialog,
+        inputValue = state.inputDiscount,
+        inputError = state.inputDiscountError,
+        trailingIcon= viewModel.getDiscountTypeIcon(),
+        isPortrait=appState.isPortrait,
+        selectedDiscountType = state.selectedDiscountType,
+        onDismissRequest = {
+            viewModel.dismissDiscountDialog()
+        },
+        onTabClick = {discountType->
+            viewModel.updateDiscountType(discountType)
+        },
+        onDiscountChange = { discount->
+            viewModel.updateDiscountValue(discount)
+        },
+        onApply = {
+            viewModel.onApplyDiscountClick()
+        },
+        onCancel = {
+            viewModel.dismissDiscountDialog()
+        },
+        onNumberPadClick = {symbol->
+            viewModel.onNumberPadClick(symbol)
+        }
+    )
+
+
+    HoldSaleDialog(
+        posState=state,
+        isVisible = state.showHoldSalePopup,
+        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+        onDismiss = {
+            viewModel.updateHoldSalePopupState(false)
+        },
+        onRemove = { id->
+            viewModel.removeHoldSale(id)
+        },
+        onItemClick = {collection->
+            viewModel.reCallHoldSale(collection)
+            if(state.salesOnHold.isEmpty()){
+                viewModel.updateHoldSalePopupState(false)
+            }
+        }
+    )
 }
 
 @Composable
@@ -292,225 +412,128 @@ fun LandscapeCashierScreen(interactorRef: ValRef<SharedPosViewModel>) {
 }
 
 @Composable
-fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
-    val state by interactorRef.value.posUIState.collectAsStateWithLifecycle()
+private fun PortraitCashierScreen(
+    interactorRef: ValRef<SharedPosViewModel>,
+) {
     val viewModel =interactorRef.value
+    val state by viewModel.posUIState.collectAsStateWithLifecycle()
+    var selectedCatId by remember { mutableStateOf(state.selectedCategoryId) }
+    val categoryListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.currentOrThrow
-    val appState = LocalAppState.current
 
-    val (holdSaleText,icon) = if(state.cartList.isEmpty() && state.salesOnHold.isEmpty()){
-        stringResource(Res.string.hold_sale) to AppIcons.pauseIcon
-    }else if(state.cartList.isEmpty() &&  state.salesOnHold.isNotEmpty()){
-        //val grandTotal = posUIState.salesOnHold.entries.sumOf { it.value.grandTotal }
-        //val text = "#${posUIState.salesOnHold.size}."
-        stringResource(Res.string.held_tickets) to null
-    }else if(state.cartList.isNotEmpty() &&  state.salesOnHold.isNotEmpty()){
-        stringResource(Res.string.hold_sale) to AppIcons.pauseIcon
-    }else{
-        stringResource(Res.string.hold_sale)  to AppIcons.pauseIcon
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTotal()
     }
 
-    val holdSaleClickable= if(state.cartList.isEmpty() && state.salesOnHold.isEmpty()){
-        false
-    }else if(state.cartList.isNotEmpty() && state.salesOnHold.isEmpty()){
-        true
-    }else if(state.cartList.isEmpty() && state.salesOnHold.isNotEmpty()){
-        true
-    }else{
-        true
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(AppTheme.colors.secondaryBg)
-            .padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
-        verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10)
-    ){
-
-        Row(modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding15)
-        ){
-
-            Text(
-                text = stringResource(Res.string.review_cart),
+    Box(
+        modifier = Modifier.fillMaxWidth()
+            .fillScreenHeight()
+            .padding(
+                start = 10.dp,
+                top = 10.dp,
+                end = 10.dp
+            )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(start = AppTheme.dimensions.padding15),
-                style = AppTheme.typography.header().copy(fontSize = 20.sp),
-                color = AppTheme.colors.primaryText
-            )
-
-            CartHeaderImageButton(
-                icon = Res.drawable.ic_resetcart,
-                onClick = {
-                    viewModel.updateClearCartDialogVisibility(state.cartList.isNotEmpty())
-                }
-            )
-
-            CartHeaderImageButton(
-                icon = Res.drawable.ic_promotion,
-                isPrimary = true,
-                onClick = {
-
-                }
-            )
-
-            CartHeaderImageButton(
-                icon = Res.drawable.ic_add_member,
-                onClick = {
-
-                }
-            )
-
-        }
-
-        if (state.cartList.isEmpty()) {
-            EmptyCartForm(modifier = Modifier.weight(1f))
-        }else{
-           val textStyleHeader=AppTheme.typography.bodyBold()
-           val btnStyle=AppTheme.typography.captionBold()
-
-            //List UI Header
-            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding20),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
-            ){
-                //ListCenterText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.weight(.2f))
-                ListCenterText(label = stringResource(Res.string.items).uppercase(), textStyle = textStyleHeader, arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
-                ListCenterText(label = stringResource(Res.string.price).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
-                ListCenterText(label = stringResource(Res.string.qty).uppercase(), textStyle = textStyleHeader,arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
-                ListCenterText(label = stringResource(Res.string.sub_total).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
-            }
-
-            LazyColumn(modifier = Modifier.weight(1f)){
-                itemsIndexed(state.cartList
-                ){index, product ->
-                    CartListItem(
-                        index = index,
-                        item = product,
-                        isPortrait = true,
-                        horizontalPadding=AppTheme.dimensions.padding10,
-                        verticalPadding=AppTheme.dimensions.padding10,
-                        posViewModel=viewModel
-                    )
-                }
-            }
-
-            //Bottom fix content
-            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)){
-
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
-                    BottomTex(
-                        label = stringResource(Res.string.qty_value,":"),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.textDarkGrey,
-                        isPortrait = true,
-                        modifier = Modifier.wrapContentWidth()
-                    )
-
-                    BottomTex(
-                        label = "${state.quantityTotal}",
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.textDarkGrey,
-                        modifier = Modifier.wrapContentWidth()
-                    )
-                }
-
-
-
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    BottomTex(
-                        label = stringResource(Res.string.discount_value,":"),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appRed)
-
-                    BottomTex(
-                        label = viewModel.formatPriceForUI(state.cartItemsDiscount+state.cartPromotionDiscount),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appRed)
-                }
-
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    BottomTex(
-                        label = stringResource(Res.string.tax_value,":"),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.textDarkGrey)
-
-                    BottomTex(
-                        label = viewModel.formatPriceForUI(state.globalTax),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.textDarkGrey)
-                }
-
-                //Total Value
-
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding10),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    BottomTex(
-                        label = stringResource(Res.string.total_value,":"),
-                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
-                        color = AppTheme.colors.textPrimary
-                    )
-
-
-                    BottomTex(
-                        label = viewModel.formatPriceForUI(state.grandTotal),
-                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
-                        color = AppTheme.colors.textPrimary)
-                }
-
-                Row(modifier = Modifier
-                    .wrapContentHeight()
                     .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
 
-                    //Hold Button
-                    AppPrimaryButton(
-                        isVisible = state.cartList.isNotEmpty(),
-                        enabled = holdSaleClickable,
-                        label = holdSaleText,
-                        leftIcon = icon,
-                        backgroundColor = AppTheme.colors.appRed,
-                        disabledBackgroundColor = AppTheme.colors.appRed,
-                        style = btnStyle,
-                        modifier = Modifier
-                            .weight(1f)
-                            .wrapContentHeight(),
-                        onClick = {
-                            if(state.cartList.isNotEmpty())
-                                viewModel.holdCurrentSale()
-                            else if(state.cartList.isEmpty() && state.salesOnHold.isNotEmpty())
-                                viewModel.updateHoldSalePopupState(true)
+                    //Top Search Bar
+                    SearchableTextWithBg(
+                        value = state.searchQuery,
+                        leadingIcon = AppIcons.searchIcon,
+                        placeholder = stringResource(Res.string.search_items),
+                        label = stringResource(Res.string.search_items),
+                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                // When done is pressed, open the dialog
+                                viewModel.scanBarcode()
+                            }
+                        ),
+                        onValueChange = {
+                            viewModel.updateSearchQuery(it)
+                        })
+                }
 
+                LazyRow(
+                    state=categoryListState,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = AppTheme.dimensions.padding10),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+
+                    itemsIndexed(state.categories, key = { index,item -> item.id }) {index, category ->
+                        CategoryListItem(
+                            name = category.name,
+                            isSelected = if (selectedCatId ==-1) {index==0} else {
+                                category.id == selectedCatId
+                            },
+                            onClick = {
+                                selectedCatId = category.id
+                                viewModel.selectCategory(category.id)
+                                coroutineScope.launch {
+                                    categoryListState.animateScrollToItem(index)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.padding(vertical = 5.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(
+                    top = 4.dp,
+                    bottom = 60.dp
+                )
+            ) {
+                val updatedMenus=state.menuProducts.filter {it.categoryId==state.selectedCategoryId }
+                items(updatedMenus,key = { item -> item.id }) { product ->
+                    ProductListItem(
+                        product = product,
+                        viewModel = viewModel,
+                        onClick = { product: AnimatedProductCard ->
+                            viewModel.showAnimatedProductCard(product)
+                            viewModel.onProductItemClick(product)
                         }
                     )
-
-
-                    //Payment Button
-                    AppPrimaryButton(
-                        isVisible = state.cartList.isNotEmpty(),
-                        label = stringResource(Res.string.payment),
-                        leftIcon = AppIcons.paymentIcon,
-                        backgroundColor = AppTheme.colors.appGreen,
-                        disabledBackgroundColor = AppTheme.colors.appGreen,
-                        style = btnStyle,
-                        modifier = Modifier
-                            .weight(1f)
-                            .wrapContentHeight(),
-                        onClick = {
-                            NavigatorActions.navigateToPaymentScreen(navigator)
-                        }
-                    )
-
                 }
             }
         }
+
+        AppCartButton(
+            onClick = {
+                NavigatorActions.navigateToCartScreen(navigator)
+            } ,
+            enabled = state.cartList.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(10.dp),
+            text = "VIEW CART: ${viewModel.formatPriceForUI(state.cartValue)}",
+        )
     }
 }
+
 
 
 @Composable
@@ -612,181 +635,3 @@ private fun ListGridSwitch(
 }
 
 
-@Composable
-private fun PortraitCashierScreen(
-    interactorRef: ValRef<SharedPosViewModel>,
-) {
-    val state by interactorRef.value.posUIState.collectAsStateWithLifecycle()
-    val viewModel =interactorRef.value
-    var selectedCatId by remember { mutableStateOf(state.selectedCategoryId) }
-    val categoryListState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadTotal()
-    }
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-            .fillScreenHeight()
-            .padding(
-                start = 5.dp,
-                top = 8.dp,
-                end = 5.dp
-            )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-
-                    //Top Search Bar
-                    SearchableTextWithBg(
-                        value = state.searchQuery,
-                        leadingIcon = AppIcons.searchIcon,
-                        placeholder = stringResource(Res.string.search_items),
-                        label = stringResource(Res.string.search_items),
-                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                // When done is pressed, open the dialog
-                                viewModel.scanBarcode()
-                            }
-                        ),
-                        onValueChange = {
-                            viewModel.updateSearchQuery(it)
-                        })
-                }
-
-                LazyRow(
-                    state=categoryListState,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = AppTheme.dimensions.padding10, horizontal = AppTheme.dimensions.padding5),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-
-                    itemsIndexed(state.categories, key = { index,item -> item.id }) {index, category ->
-                        CategoryListItem(
-                            name = category.name,
-                            isSelected = if (selectedCatId ==-1) {index==0} else {
-                                category.id == selectedCatId
-                            },
-                            onClick = {
-                                selectedCatId = category.id
-                                viewModel.selectCategory(category.id)
-                                coroutineScope.launch {
-                                    categoryListState.animateScrollToItem(index)
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.padding(vertical = 5.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(
-                    top = 4.dp,
-                    bottom = 60.dp
-                )
-            ) {
-                val updatedMenus=state.menuProducts.filter {it.categoryId==state.selectedCategoryId }
-                items(updatedMenus,key = { item -> item.id!! }) { product ->
-                    ProductListItem(
-                        product = product,
-                        viewModel = viewModel,
-                        onClick = { product: AnimatedProductCard ->
-                            viewModel.showAnimatedProductCard(product)
-                            viewModel.onProductItemClick(product)
-                        }
-                    )
-                }
-            }
-        }
-
-        AppCartButton(
-            onClick = {
-                //viewModel.showCartScreen()
-            } ,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(10.dp),
-            text = "VIEW CART: $${state.cartValue}",
-        )
-    }
-}
-
-
-@Composable
-private fun CartHeaderImageButton(
-    icon: DrawableResource,
-    isPrimary:Boolean=false,
-    onClick: () -> Unit = {}
-) {
-    Card(modifier = Modifier.size(40.dp).clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = null,
-        onClick = onClick),
-        colors = CardDefaults.cardColors(if(isPrimary)AppTheme.colors.textPrimary else AppTheme.colors.textLightGrey),
-        elevation = CardDefaults.cardElevation(2.dp),
-        shape = AppTheme.appShape.card
-
-    )
-    {
-        Column(modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(AppTheme.dimensions.smallXIcon)
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun EmptyCartForm(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Image(
-                painter = painterResource(Res.drawable.img_empty_cart),
-                contentDescription = null,
-                modifier = Modifier.size(200.dp)
-            )
-
-            Text(
-                text = stringResource(Res.string.no_products_added),
-                style = AppTheme.typography.h1Bold(),
-                color = AppTheme.colors.secondaryText,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}

@@ -27,7 +27,7 @@ fun VectorIcons(
     modifier: Modifier = Modifier.wrapContentHeight(),
     icons: DrawableResource,
     iconSize: Dp =AppTheme.dimensions.smallXIcon,
-    iconColor : Color =AppTheme.colors.textError,
+    iconColor : Color =AppTheme.colors.appRed,
     alignment: Arrangement.Horizontal = Arrangement.End,
     onClick: ()-> Unit
 )

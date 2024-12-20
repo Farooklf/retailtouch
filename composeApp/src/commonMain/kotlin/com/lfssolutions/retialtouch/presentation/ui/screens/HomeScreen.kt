@@ -169,6 +169,9 @@ fun Home(
                                     HomeItemId.RECEIPT_ID->{
                                         NavigatorActions.navigateToTransactionScreen(navigator)
                                     }
+                                    HomeItemId.SETTLEMENT_ID->{
+                                        NavigatorActions.navigateToSettlementScreen(navigator)
+                                    }
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
                                     }

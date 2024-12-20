@@ -52,7 +52,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.Stock
+import com.lfssolutions.retialtouch.presentation.ui.screens.CommonListRow
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -72,41 +74,44 @@ fun CategoryListItem(
     onClick: () -> Unit = {}
 ) {
     val appState = LocalAppState.current
-    val (textSty,btnStyle)=if(appState.isPortrait)
-        AppTheme.typography.captionBold() to AppTheme.typography.captionBold()
+    val textSty=if(appState.isPortrait)
+        AppTheme.typography.captionBold()
     else
-        AppTheme.typography.bodyBold() to AppTheme.typography.bodyBold()
+        AppTheme.typography.bodyBold()
 
-    Row(
-        modifier = Modifier
-            .clip(AppTheme.appShape.card)
-            .background(if (isSelected) AppTheme.colors.primaryColor else AppTheme.colors.secondaryBg)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
+    val boxColor= if (isSelected) AppTheme.colors.cardSelectedBgColor else AppTheme.colors.cardBgColor
+
+    Card(modifier = Modifier.wrapContentWidth().wrapContentHeight()
+        .clickable(interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = onClick)
+        .padding(horizontal = AppTheme.dimensions.padding2),
+        colors = CardDefaults.cardColors(containerColor = boxColor),
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = AppTheme.appShape.card) {
+        Row(
+            modifier = Modifier.wrapContentWidth().padding(horizontal = 5.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            /*SubcomposeAsyncImage(
+                model = image,
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(40.dp),
+                contentScale = ContentScale.Crop,
+                error = { ImagePlaceholder() }
+            )*/
+
+            Text(
+                modifier = Modifier.defaultMinSize(100.dp).wrapContentWidth().padding(horizontal = 10.dp, vertical = 5.dp),
+                text = name.capitalizeFirstChar(),
+                style = textSty,
+                color = if (isSelected) AppTheme.colors.appWhite else AppTheme.colors.primaryText,
             )
-            .padding(5.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        /*SubcomposeAsyncImage(
-            model = image,
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .size(40.dp),
-            contentScale = ContentScale.Crop,
-            error = { ImagePlaceholder() }
-        )*/
-
-        Text(
-            modifier = Modifier.defaultMinSize(100.dp).wrapContentWidth().padding(horizontal = 10.dp, vertical = 5.dp),
-            text = name.capitalizeFirstChar(),
-            style = textSty,
-            color = if (isSelected) AppTheme.colors.appWhite else AppTheme.colors.primaryText,
-        )
+        }   
     }
 }
 
@@ -145,80 +150,78 @@ private fun GridProductItem(
     var card by remember(product) { mutableStateOf(AnimatedProductCard(product)) }
 
     val textStyle=if(appState.isPortrait)
-        AppTheme.typography.captionBold()
+        AppTheme.typography.captionMedium()
     else
         AppTheme.typography.bodyMedium()
 
-    Card(modifier = Modifier.wrapContentWidth().wrapContentHeight().padding(horizontal = AppTheme.dimensions.padding5,
-        vertical = AppTheme.dimensions.padding5), elevation = CardDefaults.cardElevation(2.dp)) {
-        Column(
-            modifier = modifier
-                .heightIn(min = 180.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { onClick(card) }
-                )
-                .onGloballyPositioned {
-                    with(density) {
-                        card = card.copy(
-                            width = it.size.width.toDp(),
-                            height = it.size.height.toDp(),
-                            xOffset = it.positionInWindow().x.toDp(),
-                            yOffset = it.positionInWindow().y.toDp()
-                        )
-                    }
-                }
-                .background(AppTheme.colors.primaryCardBg),
-            verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)
-        ) {
-
-            SubcomposeAsyncImage(
-                modifier = Modifier
-                    .weight(0.7f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(10.dp)),
-                model = "${product.imagePath}",
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-                clipToBounds = true,
-                error = { ImagePlaceholderWithUrl() }
+    Column(
+        modifier = modifier
+            .heightIn(min = 180.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onClick(card) }
             )
-
-            Column(
-                modifier = Modifier.weight(0.3f).padding(5.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically)
-                {
-                    Text(
-                        text = product.name.uppercase(),
-                        modifier = Modifier
-                            .weight(1.5f),
-                        style = textStyle,
-                        color = AppTheme.colors.textDarkGrey,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = viewModel.formatPriceForUI(product.price),
-                        modifier = Modifier
-                            .weight(.5f),
-                        style = textStyle,
-                        color = AppTheme.colors.textPrimary,
-                        textAlign = TextAlign.End
+            .onGloballyPositioned {
+                with(density) {
+                    card = card.copy(
+                        width = it.size.width.toDp(),
+                        height = it.size.height.toDp(),
+                        xOffset = it.positionInWindow().x.toDp(),
+                        yOffset = it.positionInWindow().y.toDp()
                     )
                 }
-                /*Text(
-                    text =  product.aliasName,
-                    modifier = Modifier.padding(horizontal = 10.dp),
-                    style = AppTheme.typography.captionMedium(),
-                    color = AppTheme.colors.primaryText,
-                )*/
             }
+            .background(AppTheme.colors.cardBgColor)
+            .padding(AppTheme.dimensions.padding5),
+        verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)
+    ) {
+
+        SubcomposeAsyncImage(
+            modifier = Modifier
+                .weight(0.7f)
+                .fillMaxSize()
+                .clip(RoundedCornerShape(10.dp)),
+            model = "${product.imagePath}",
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            clipToBounds = true,
+            error = { ImagePlaceholderWithUrl() }
+        )
+
+        Column(
+            modifier = Modifier.weight(0.3f).padding(5.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically)
+            {
+                Text(
+                    text = product.name.uppercase(),
+                    modifier = Modifier
+                        .weight(1.5f),
+                    style = textStyle,
+                    color = AppTheme.colors.textDarkGrey,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 3
+                )
+
+                Text(
+                    text = viewModel.formatPriceForUI(product.price?:0.0),
+                    modifier = Modifier.wrapContentWidth(),
+                    style = textStyle,
+                    color = AppTheme.colors.textPrimary,
+                    textAlign = TextAlign.End
+                )
+            }
+            /*Text(
+                text =  product.aliasName,
+                modifier = Modifier.padding(horizontal = 10.dp),
+                style = AppTheme.typography.captionMedium(),
+                color = AppTheme.colors.primaryText,
+            )*/
         }
     }
 }
@@ -239,7 +242,7 @@ private fun ListProductItem(
                     indication = null,
                     onClick = { onClick(AnimatedProductCard(product)) }
                 )
-                .background(AppTheme.colors.primaryCardBg)
+                .background(AppTheme.colors.cardBgColor)
                 .padding(6.dp),
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -278,7 +281,7 @@ private fun ListProductItem(
                 }
 
                 Text(
-                    text = viewModel.formatPriceForUI(product.price),
+                    text = viewModel.formatPriceForUI(product.price?:0.0),
                     modifier = Modifier
                         .padding(end = 10.dp),
                     style = AppTheme.typography.bodyBold(),
@@ -375,7 +378,7 @@ fun CartListItem(
     }
 
     val (borderColor,rowBgColor)=when(index%2 == 0){
-        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 
@@ -384,14 +387,17 @@ fun CartListItem(
         false -> AppTheme.colors.listRowBgColor to AppTheme.colors.textPrimary
     }
 
+    val textStyle = AppTheme.typography.captionMedium()
+
     Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
         Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
             verticalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
             AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+
                 ListCenterText(
                     label = "${index+1}.",
-                    textStyle = AppTheme.typography.bodyMedium(),
+                    textStyle = textStyle,
                     color = AppTheme.colors.textBlack,
                     modifier = Modifier.wrapContentWidth(),
                     arrangement = Arrangement.Start
@@ -413,7 +419,7 @@ fun CartListItem(
                     //Items name
                     ListText(
                         label = "${item.stock.name} [${item.stock.inventoryCode?:""}]",
-                        textStyle = AppTheme.typography.bodyMedium(),
+                        textStyle =textStyle,
                         color = AppTheme.colors.textBlack,
                         modifier = Modifier.wrapContentWidth()
                     )
@@ -437,7 +443,7 @@ fun CartListItem(
                         label = posViewModel.formatPriceForUI(item.price),
                         contentColor = textColor,
                         buttonBgdColor = buttonBgColor,
-                        textStyle = AppTheme.typography.bodyNormal(),
+                        textStyle =textStyle,
                         onClick = {posViewModel.onPriceItemClick(item,index)}
                     )
                 }
@@ -446,7 +452,7 @@ fun CartListItem(
                 Row(modifier = Modifier.weight(1f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)){
                     QtyItemText(
                         label = "${item.qty}",
-                        textStyle = AppTheme.typography.bodyMedium(),
+                        textStyle = textStyle,
                         color = AppTheme.colors.textPrimary,
                         modifier = Modifier.wrapContentWidth().wrapContentHeight(),
                         isEven=index%2 == 0,
@@ -474,7 +480,7 @@ fun CartListItem(
                         ListText(
                             modifier = Modifier.wrapContentWidth().wrapContentHeight(),
                             label = "(${posViewModel.calculateDiscount(item)})",
-                            textStyle = AppTheme.typography.captionMedium(),
+                            textStyle = textStyle,
                             color = AppTheme.colors.textError
                         )
                     }
@@ -486,4 +492,48 @@ fun CartListItem(
     }
 }
 
+@Composable
+fun StokesListItem(position :Int, product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+    val appState = LocalAppState.current
+    val (borderColor,rowBgColor)=when(position%2 != 0){
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
+        false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
+    }
 
+    val horizontalPadding=if(appState.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    if(appState.isPortrait){
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor).clickable{onClick(product)},
+                verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                CommonListRow(product=product, currencySymbol=currencySymbol)
+                ListText(
+                    label = product.name?:"",
+                    textStyle = AppTheme.typography.bodyMedium(),
+                    color = AppTheme.colors.textBlack,
+                    modifier = Modifier.wrapContentWidth().padding(start = horizontalPadding)
+                )
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+    else{
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(rowBgColor)
+                .clickable{onClick(product)},
+                verticalArrangement =Arrangement.spaceBetweenPadded(10.dp)
+            ) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                CommonListRow(product=product,currencySymbol=currencySymbol)
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+}

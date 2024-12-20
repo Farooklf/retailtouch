@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
+import io.kamel.core.utils.File
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -91,6 +92,8 @@ import kotlin.math.round
 
 val JsonObj = Json { encodeDefaults = true }
 // Define the LocalAppState CompositionLocal
+
+
 val LocalAppState = compositionLocalOf<AppState> {
     error("No AppState provided")
 }
@@ -123,7 +126,7 @@ object AppIcons {
     val memberIcon = Res.drawable.ic_member
     val locationIcon = Res.drawable.ic_locations
     val wifiIcon = Res.drawable.ic_wifi
-    val useAddIcon = Res.drawable.ic_user_add
+    val addCustomer = Res.drawable.ic_user_add
     val empRoleIcon = Res.drawable.ic_person
     val minusIcon = Res.drawable.ic_minus
     val minusCircleIcon = Res.drawable.ic_minus_circle
@@ -268,6 +271,10 @@ fun formatAmountForPrint(amount: Double?, currencySymbol: String) :String{
 
 fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
     return  "${currencySymbol}${amount?.roundTo(2)}"
+}
+
+fun formatPrice(amount: Double?,currencySymbol:String) : String {
+    return "${NumberFormatting().format(amount?:0.0)}$currencySymbol"
 }
 
 expect inline fun <reified T : ViewModel> Module.viewModelDefinition(

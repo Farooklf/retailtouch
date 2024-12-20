@@ -240,7 +240,7 @@ fun BasicScreen(
     statusBarColor: Color = AppTheme.colors.primaryDarkColor,
     statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
     navigationBarColor: Color = Color.Transparent,
-    screenBackground: Color = AppTheme.colors.appWhite,
+    screenBackground: Color = AppTheme.colors.secondaryBg,
     contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
     contentColor: Color = AppTheme.colors.appBarContent,
     contentAlignment: Alignment = Alignment.Center,

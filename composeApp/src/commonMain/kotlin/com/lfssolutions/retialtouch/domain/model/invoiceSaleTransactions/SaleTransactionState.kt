@@ -6,7 +6,7 @@ import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDate
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDate
 
 
 

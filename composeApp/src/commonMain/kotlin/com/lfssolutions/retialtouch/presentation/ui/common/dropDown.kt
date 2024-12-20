@@ -173,7 +173,7 @@ fun <T> AppFilledDropDown(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .border(BorderStroke(width = 1.dp, color = AppTheme.colors.listRowBorderColor))
+                .border(BorderStroke(width = 1.dp, color = AppTheme.colors.borderColor))
                 .menuAnchor()
                 .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused

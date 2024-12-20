@@ -20,7 +20,6 @@ import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
-import com.lfssolutions.retialtouch.domain.model.menu.CategoryItem
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
@@ -51,11 +50,11 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
-import com.lfssolutions.retialtouch.utils.DateTime.getDateFromApi
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApi
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateFromApiUTC
-import com.lfssolutions.retialtouch.utils.DateTime.parseDateTimeFromApiStringUTC
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getDateFromApi
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.parseDateFromApi
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.parseDateFromApiUTC
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.parseDateTimeFromApiStringUTC
 import com.lfssolutions.retialtouch.utils.DoubleExtension.calculatePercentage
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
@@ -63,23 +62,19 @@ import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotio
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
+
 class DataBaseRepository: KoinComponent {
     private val dataBaseRepository: SqlPreference by inject()
     private val preferences: PreferencesRepository by inject()
@@ -243,16 +238,16 @@ class DataBaseRepository: KoinComponent {
                         productId = item.id.toLong(),
                         product = Product(
                             id = item.id.toLong(),
-                            name = item.name,
-                            productCode = item.inventoryCode,
+                            name = item.name?:"",
+                            productCode = item.inventoryCode?:"",
                             tax = item.taxPercentage?:0.0,
-                            barcode = item.barCode,
-                            price = if (item.specialPrice == 0.0) item.price else item.specialPrice,
+                            barcode = item.barCode?:"",
+                            price = if (item.specialPrice== 0.0) item.price?:0.0 else item.specialPrice?:0.0,
                             qtyOnHand = stockQtyMap[item.id] ?: 0.0,
                             image = if (!item.image.isNullOrEmpty()) "${getBaseUrl()}${item.image}".replace(
                                 "\\",
                                 "/"
-                            ) else ""
+                            ) else getBaseUrl()
                         )
                     )
                     if (lastSyncDateTime == null) {
@@ -327,20 +322,12 @@ class DataBaseRepository: KoinComponent {
             withContext(Dispatchers.IO) {
                 clearStocks()
                 newStock.map { item ->
-                    if (item.id != null && item.id != 0L) {
-                         println("InventoryCode: ${item.inventoryCode}")
-                         getProductByCode(item.inventoryCode?:"").collect{ product->
-                             product?.let { product->
-                                 item.price = product.price
-                                 item.imagePath="${preferences.getBaseURL()}${product.image}".replace("\\", "/")
-                             }
-                        }
-                        val dao = MenuDao(
-                            productId = item.id.toLong(),
-                            menuProductItem = item
-                        )
-                        dataBaseRepository.insertStocks(dao)
-                    }
+                    println("InventoryCode: ${item.inventoryCode}")
+                    val dao = MenuDao(
+                        productId = item.id,
+                        menuProductItem = item
+                    )
+                    dataBaseRepository.insertStocks(dao)
                 }
             }
         } catch (ex: Exception) {
@@ -606,7 +593,7 @@ class DataBaseRepository: KoinComponent {
                   productId=invoice.productId,
                  inventoryCode=invoice.inventoryCode,
                  inventoryName=invoice.inventoryName,
-                 qty=invoice.qty,
+                 qty=invoice.qty.toDouble(),
                  price=invoice.price,
                  total=invoice.total,
                 totalAmount=invoice.totalAmount,
@@ -708,6 +695,10 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.selectUserByUserId(id).first()
     }
 
+    fun getLocation(): Flow<Location?> {
+        return dataBaseRepository.getSelectedLocation()
+    }
+
     fun getSelectedLocation(): Flow<Location?> {
         return dataBaseRepository.getSelectedLocation().flowOn(Dispatchers.IO)
     }
@@ -756,27 +747,21 @@ class DataBaseRepository: KoinComponent {
             .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
     }
 
-     fun getStocks(): Flow<List<Stock>> {
-        return dataBaseRepository.getStocks()
-            .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
+     suspend fun getStocks() = flow {
+          dataBaseRepository.getStocks().collect{stock->
+              val product = stock.map { item->
+                 val product= dataBaseRepository.getProductByCode(item.inventoryCode).first()
+                 println("product_stock : $product")
+                 val updatedProduct=if(product!=null){
+                     item.copy(price = product.price, tax = product.tax, barcode = product.barcode?:"", imagePath = product.image)
+                 }else
+                     item
+                 updatedProduct
+             }
+             emit(product.sortedBy { it.sortOrder })
+         }
     }
 
-    suspend fun getStocks1(): MutableList<Stock> {
-        val stockList = mutableListOf<Stock>()
-        dataBaseRepository.getStocks().toList()
-        dataBaseRepository.getStocks().collectLatest { itemDao ->
-            val updatedList = itemDao.map { item ->
-                val inventory = getProductById(item.id ?: 0).first()
-                if (inventory != null) {
-                    item.copy(tax = inventory.tax)
-                } else {
-                    item
-                }
-            }
-            stockList.addAll(updatedList.sortedBy { it.sortOrder })
-        }
-        return stockList
-    }
 
     fun getScannedProduct(): Flow<List<ProductItem>> =
         dataBaseRepository.fetchAllScannedProduct().map { productDao ->
@@ -811,6 +796,15 @@ class DataBaseRepository: KoinComponent {
                 it.rowItem
             }
         }
+
+    fun getPaymentMode(): Flow<List<PaymentMethod>> {
+        return dataBaseRepository.getAllPaymentType().map { paymentDao ->
+            paymentDao.map {
+                it.rowItem
+            }
+        }.flowOn(Dispatchers.IO)
+    }
+
 
     fun getPrinter() : Flow<Printers?>{
         return dataBaseRepository.getPrinter().flowOn(Dispatchers.IO)

@@ -10,9 +10,34 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-object DateTime{
-    private val systemTZ = TimeZone.currentSystemDefault()
+object DateTimeUtils{
+    val localDateTime by lazy  { Clock.System.now().toLocalDateTime(TimeZone.UTC) }
 
+    fun getStartLocalDateTime():LocalDateTime{
+        val startOfDay = LocalDateTime(
+            year = localDateTime.year,
+            month = localDateTime.month,
+            dayOfMonth = localDateTime.dayOfMonth,
+            hour = 0,
+            minute = 0,
+            second = 0,
+            nanosecond = 0
+        )
+        return startOfDay
+    }
+
+    fun getEndLocalDateTime():LocalDateTime{
+        val endOfDay = LocalDateTime(
+            year = localDateTime.year,
+            month = localDateTime.month,
+            dayOfMonth = localDateTime.dayOfMonth,
+            hour = 23,
+            minute = 59,
+            second = 59,
+            nanosecond = 999999999
+        )
+        return endOfDay
+    }
     fun getCurrentFormattedDate(): String {
         val currentMoment: Instant = Clock.System.now()
         val dateTime: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.UTC)
@@ -29,6 +54,7 @@ object DateTime{
         // Format the date as "YYYY-MM-DD"
         return currentDate
     }
+
     fun getCurrentLocalDateTime() : LocalDateTime {
         val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         // Format the date as "YYYY-MM-DD"
@@ -42,9 +68,13 @@ object DateTime{
         return "$hours $minutes"
     }
 
-    fun getCurrentDateAndTimeInEpochMilliSeconds(): Long {
+    /*fun getCurrentDateAndTimeInEpochMilliSeconds(): Long {
         return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toInstant(
             TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    }*/
+
+    fun getCurrentDateAndTimeInEpochMilliSeconds(): Long {
+        return Clock.System.now().toEpochMilliseconds() // Directly get epoch milliseconds
     }
 
     fun getHoursDifferenceFromEpochMillSeconds(startTime: Long, currentTime: Long): Long {
@@ -52,6 +82,10 @@ object DateTime{
         val currentInstant = Instant.fromEpochMilliseconds(currentTime)
         val durationDiff = currentInstant.minus(startInstant).inWholeHours
         return durationDiff
+    }
+
+    fun getHoursDifferenceFromEpochMilliseconds(startTime: Long, currentTime: Long): Long {
+        return (currentTime - startTime) / (1000 * 60 * 60) // Convert milliseconds to hours
     }
 
 
@@ -408,11 +442,11 @@ object DateTime{
     }
 
     fun getEpochTimestamp(): Long {
-        return Clock.System.now().toLocalDateTime(systemTZ).toInstant(systemTZ).toEpochMilliseconds()
+        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     }
     fun getDateTimeFromEpochMillSeconds(epochTime: Long): LocalDate {
         val epochInstant = Instant.fromEpochMilliseconds(epochTime)
-        return epochInstant.toLocalDateTime(systemTZ).date
+        return epochInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
 
 }

@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.presentation.ui.common
 
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -39,6 +42,7 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DiscountType
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
@@ -59,8 +63,8 @@ fun AppBaseCard(
                 onClick = onClick,
             )
             .padding(paddingValues),
-        border = BorderStroke(width = 1.4.dp, color = AppTheme.colors.primaryCardBorder),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.primaryCardBg),
+        border = BorderStroke(width = 1.4.dp, color = AppTheme.colors.borderColor),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBgColor),
         elevation = CardDefaults.cardElevation(AppTheme.dimensions.cardElevation),
         shape = AppTheme.appShape.card
     ) {
@@ -277,6 +281,34 @@ fun DiscountTabCard(
     }
 }
 
+
+@Composable
+fun CartHeaderImageButton(
+    icon: DrawableResource,
+    isVisible:Boolean=true,
+    boxColor: Color =AppTheme.colors.textPrimary,
+    onClick: () -> Unit = {}
+) {
+    if(isVisible){
+        Card(modifier = Modifier.size(40.dp).clickable{onClick.invoke()},
+            colors = CardDefaults.cardColors(boxColor),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = AppTheme.appShape.card)
+        {
+            Column(modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(AppTheme.colors.appWhite),
+                    modifier = Modifier
+                        .size(AppTheme.dimensions.smallXIcon)
+                )
+            }
+        }
+    }
+}
 
 
 

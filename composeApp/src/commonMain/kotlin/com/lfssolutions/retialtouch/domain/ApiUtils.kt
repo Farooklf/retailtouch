@@ -2,8 +2,7 @@ package com.lfssolutions.retialtouch.domain
 
 
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
-import com.lfssolutions.retialtouch.utils.DateTime.getCurrentDateAndTimeInEpochMilliSeconds
-import com.lfssolutions.retialtouch.utils.DateTime.getHoursDifferenceFromEpochMillSeconds
+import com.lfssolutions.retialtouch.utils.DateFormatter
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -52,8 +51,8 @@ object ApiUtils : KoinComponent {
 
     suspend fun isLoggedIn() : Boolean {
         val tokenTime : Long = preferences.getTokenTime().first()
-        val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
-        val hoursPassed = getHoursDifferenceFromEpochMillSeconds(tokenTime, currentTime)
+        val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
+        val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
     }
 

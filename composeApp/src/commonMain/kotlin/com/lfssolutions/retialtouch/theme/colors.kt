@@ -58,7 +58,8 @@ interface SystemDesignColors {
     val buttonGreenDisableBgColor: Color
     val appBarBg: Color
     val appBarContent: Color
-    val primaryCardBg: Color
+    val cardBgColor: Color
+    val cardSelectedBgColor: Color
     val secondaryCardBg: Color
     val primaryCardBorder: Color
     val brandText: Color
@@ -67,7 +68,7 @@ interface SystemDesignColors {
     val textBlack: Color
     val textDarkGrey: Color
     val listRowBgColor: Color
-    val listRowBorderColor: Color
+    val borderColor: Color
     val mintGreenColor: Color
     val switchCheckedThumbColor: Color
     val switchUncheckedThumbColor: Color
@@ -83,6 +84,9 @@ interface SystemDesignColors {
 }
 
 fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
+    override val primaryColor= Color(0xFF005ce5)
+    override val primaryDarkColor= Color(0xFF1954a0)
+    override val secondaryColor= Color(0xFFbcdffb)
     override val backgroundMenu: Color = BrandGrey
     override val backgroundNavbar: Color = BrandDarkBlue
     override val backgroundWindow: Color = Color(0xFFFFFFFF)
@@ -101,7 +105,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val activeColor: Color = Color(0xFF1954a0)//35a3d6
     override val inactiveColor: Color = Color(0xFF35a3d6)
     override val screenBackground = Color(0xFFF1F1F1)
-    override val searchBoxColor: Color = Color(0xFF438afe)
+    override val searchBoxColor: Color = Color(0xFFFFFFFF)
     override val listBorderColor: Color = Color(0xFF000000)
     override val listDivider: Color = Color(0xFF000000)
     override val greyButtonBg: Color = Color(0xFFc8d0d3)
@@ -109,15 +113,13 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val appRed = Color(0xFFfe0002)
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
-    override val primaryColor= Color(0xFF005ce5)
-    override val primaryDarkColor= Color(0xFF1954a0)
-    override val secondaryColor= Color(0xFFbcdffb)
     override val listItemCardColor= Color(0xFF607d8b)
     override val cartItemBg = Color(0xFFF8F8F8)
     override val listItemSelectedCardColor= Color(0xFF8bc34a)
     override val appBarBg= Color(0xFF2596be)
     override val appBarContent= Color(0xFFFFFFFF)
-    override val primaryCardBg = Color(0xFFFFFFFF)
+    override val cardBgColor = Color(0xFFFFFFFF)
+    override val cardSelectedBgColor = Color(0xFF005ce5)
     override val secondaryCardBg = Color(0xFFF8F8F8)
     override val primaryCardBorder = Color(0xFFD9D9D9)
     override val primaryText: Color = Color(0xFF000000)
@@ -132,7 +134,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val brandText = Color(0xFF2596be)
     override val brand = Color(0xFF005ce5)
     override val listRowBgColor = Color(0xFFf4f4f4)
-    override val listRowBorderColor = Color(0xFFe1e1e1)
+    override val borderColor = Color(0xFFe1e1e1)
     override val mintGreenColor = Color(0xFF76c29c)
     override val cardBorder = Color(0xFFD7D7D7)
 
@@ -182,6 +184,9 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
 fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val backgroundMenu: Color = BrandGrey
     override val backgroundNavbar: Color = BrandDarkBlue
+    override val primaryColor= Color(0xFF005ce5)
+    override val primaryDarkColor= Color(0xFF1954a0)
+    override val secondaryColor= Color(0xFFbcdffb)
     override val backgroundWindow: Color = Color(0xFFFFFFFF)
     override val secondaryBg = Color(0xFFFFFFFF)
     override val backgroundDialog: Color = Color(0xFFFFFFFF)
@@ -199,22 +204,20 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val activeColor: Color = Color(0xFF1954a0)
     override val inactiveColor: Color = Color(0xFF35a3d6)
     override val screenBackground: Color = Color(0xFFF1F1F1)
-    override val searchBoxColor: Color = Color(0xFF438afe)
+    override val searchBoxColor: Color = Color(0xFFFFFFFF)
     override val listBorderColor: Color = Color(0xFF000000)
     override val listDivider: Color = Color(0xFF000000)
     override val appGreen = Color(0xFF15ae5c)
     override val appRed = Color(0xFFfe0002)
     override val greyDarkButtonBg= Color(0xFF626465)
     override val progressBlue= Color(0xFF226888)
-    override val primaryColor= Color(0xFF005ce5)
-    override val primaryDarkColor= Color(0xFF1954a0)
-    override val secondaryColor= Color(0xFFbcdffb)
     override val listItemCardColor= Color(0xFF607d8b)
     override val cartItemBg = Color(0xFF383A3D)
     override val listItemSelectedCardColor= Color(0xFF8bc34a)
     override val appBarBg= Color(0xFF2596be)
     override val appBarContent= Color(0xFFFFFFFF)
-    override val primaryCardBg = Color(0xFFFFFFFF)
+    override val cardBgColor = Color(0xFFFFFFFF)
+    override val cardSelectedBgColor = Color(0xFF005ce5)
     override val secondaryCardBg = Color(0xFFF8F8F8)
     override val primaryCardBorder = Color(0xFFD9D9D9)
     override val primaryText: Color = Color(0xFF000000)
@@ -229,7 +232,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val brandText = Color(0xFF2596be)
     override val brand = Color(0xFF005ce5)
     override val listRowBgColor = Color(0xFFf4f4f4)
-    override val listRowBorderColor = Color(0xFFe1e1e1)
+    override val borderColor = Color(0xFFe1e1e1)
     override val mintGreenColor = Color(0xFF76c29c)
     override val cardBorder = Color(0xFFD7D7D7)
 

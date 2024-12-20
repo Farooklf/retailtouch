@@ -301,72 +301,7 @@ class PaymentTypeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun onTenderClick(){
-        viewModelScope.launch(Dispatchers.IO) {
 
-
-        }
-    }
-
-    private fun createStockList(list: List<ProductItem>) {
-        val posInvoiceDetails: MutableList<PosInvoiceDetail> = mutableListOf()
-        list.forEach { item->
-           val appliedStock = PosInvoiceDetail(
-                productId = item.id.toLong(),
-                inventoryCode=item.inventoryCode?:"",
-                inventoryName=item.name?:"",
-                qty=item.qtyOnHand,
-                price=item.price?:0.0,
-                total=item.originalSubTotal,
-                itemDiscountPerc=item.itemDiscountPerc,
-                itemDiscount=item.itemDiscount,
-                totalValue=item.originalSubTotal,
-                netDiscount=item.itemDiscount,
-                totalAmount=item.originalSubTotal,
-                subTotal=item.cartTotal?:0.0,
-                tax=item.taxValue?:0.0,
-                netTotal=item.originalSubTotal,
-                averageCost =item.originalSubTotal,
-                netCost=item.originalSubTotal,
-                taxPercentage=item.taxPercentage?:0.0,
-
-            )
-            posInvoiceDetails.toMutableList().add(appliedStock)
-        }
-        _screenUIState.update {
-            it.copy(
-               // posInvoiceDetails = posInvoiceDetails
-            )
-        }
-    }
-
-    private suspend fun createOrUpdatePosInvoice(createPOSInvoiceRequest: CreatePOSInvoiceRequest) {
-        try {
-            println("calling api : ${count++}")
-            networkRepository.createUpdatePosInvoice(createPOSInvoiceRequest).collectLatest { apiResponse->
-                observeResponseNew(apiResponse,
-                    onLoading = {
-
-                    },
-                    onSuccess = { apiData ->
-                        if(apiData.success){
-                            resetScreenState()
-                        }
-                        updateLoader(false)
-                    },
-                    onError = {
-                            errorMsg ->
-                        _screenUIState.update { it.copy(errorMsg=errorMsg) }
-                        updateLoader(false)
-                    }
-                )
-            }
-        }catch (e: Exception){
-            val errorMsg="${e.message}"
-            _screenUIState.update { it.copy(errorMsg=errorMsg) }
-            updateLoader(false)
-        }
-    }
 
     private fun resetScreenState() {
         viewModelScope.launch {

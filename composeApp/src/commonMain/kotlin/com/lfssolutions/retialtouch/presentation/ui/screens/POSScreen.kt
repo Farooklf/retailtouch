@@ -38,22 +38,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -76,6 +68,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
+import com.lfssolutions.retialtouch.presentation.ui.common.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
 import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
@@ -88,9 +81,10 @@ import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.QtyItemText
-import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.SelectableRow
+import com.lfssolutions.retialtouch.presentation.ui.common.StockDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.StokesListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -100,6 +94,7 @@ import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
+import com.outsidesource.oskitcompose.lib.rememberValRef
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -158,7 +153,7 @@ fun Pos(
     }
 
     LaunchedEffect(authUser){
-        posViewModel.getPrinterEnable()
+        //posViewModel.getPrinterEnable()
         posViewModel.getAuthDetails()
         posViewModel.loadDbData()
     }
@@ -180,7 +175,7 @@ fun Pos(
 
     BasicScreen(
         modifier = Modifier.systemBarsPadding(),
-        title = stringResource(Res.string.cashier),
+        title = stringResource(Res.string.cashier).uppercase(),
         isTablet = appState.isTablet,
         contentMaxWidth = Int.MAX_VALUE.dp,
         onBackClick = {
@@ -450,28 +445,16 @@ fun Pos(
     }
 
 
-    SearchableTextField(
+    StockDialog(
         isVisible = posUIState.showDialog,
+        interactorRef = rememberValRef(posViewModel),
         onDismiss = {
             posViewModel.updateDialogState(false)
         },
-        content = {
-            if(posUIState.stockList.isEmpty())
-                posViewModel.loadAllProducts()
-
-            DialogStockScreen(
-                state = posUIState,
-                searchQuery = posUIState.searchQuery,
-                currencySymbol = posUIState.currencySymbol,
-                onClick = {selectedItem->
-                    posViewModel.updateDialogState(false)
-                    posViewModel.clearSearch()
-                    posViewModel.addSearchProduct(selectedItem)
-                },
-                onQueryChange = { newQuery ->
-                    posViewModel.updateSearchQuery(newQuery)
-                },
-            )
+        onItemClick = {selectedItem->
+            posViewModel.updateDialogState(false)
+            posViewModel.clearSearch()
+            posViewModel.addSearchProduct(selectedItem)
         }
     )
 
@@ -520,19 +503,11 @@ fun Pos(
 
     MemberListDialog(
         isVisible = posUIState.isMemberDialog,
+        interactorRef = rememberValRef(posViewModel),
         onDismissRequest = {
             posViewModel.updateMemberDialogState(false)
-        },
-        dialogBody={
-            MemberList(
-                posUIState=posUIState,
-                posViewModel=posViewModel,
-                onMemberCreate = {
-                   //create Member dialog
-                 posViewModel.updateCreateMemberDialogState(true)
-                }
-            )
-        })
+        }
+    )
 
     HoldSaleDialog(
         posState=posUIState,
@@ -604,7 +579,7 @@ fun POSTaxItem(
     }
 
     val (borderColor,rowBgColor)=when(index%2 == 0){
-        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 
@@ -1153,7 +1128,7 @@ fun DialogStockScreen(
             // Filter the product tax list based on the search query
             val filteredProducts = state.stockList.filter { it.matches(searchQuery) }.toMutableList()
             itemsIndexed(filteredProducts){ index, product ->
-                DialogListItem(position=index,product=product,currencySymbol=currencySymbol, onClick = { selectedItem->
+                StokesListItem(position=index,product=product,currencySymbol=currencySymbol, onClick = { selectedItem->
                     onClick(selectedItem)
                 })
             }
@@ -1161,64 +1136,13 @@ fun DialogStockScreen(
     }
 }
 
-@Composable
-fun CommonListHeader(){
-    val appState = LocalAppState.current
-    val textStyle=if(appState.isPortrait)
-        AppTheme.typography.bodyBold()
-    else
-        AppTheme.typography.titleBold()
 
-    val horizontalPadding=if(appState.isPortrait)
-        AppTheme.dimensions.padding10
-    else
-        AppTheme.dimensions.padding20
-
-    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-
-    ){
-        //SKU
-        // Adjust the weight proportions
-        ListText(
-            label = stringResource(Res.string.sku).uppercase(),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1.2f)
-        )
-        ListText(
-            label = stringResource(Res.string.barcode),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1.2f))
-        ListText(
-            label = stringResource(Res.string.price),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1f))
-        ListText(
-            label = stringResource(Res.string.in_stock),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1f))
-
-        if(!appState.isPortrait)
-        {
-            ListText(
-                label = stringResource(Res.string.description),
-                color = AppTheme.colors.textBlack,
-                textStyle = textStyle,
-                modifier = Modifier.weight(1.5f))
-        }
-    }
-}
 
 @Composable
 fun DialogListItem(position :Int,product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
     val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
-        true->  AppTheme.colors.listRowBorderColor to AppTheme.colors.listRowBgColor
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
         false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
     }
 

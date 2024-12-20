@@ -34,6 +34,7 @@ import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,6 +81,7 @@ import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -143,14 +145,17 @@ fun Payment(
 
     LaunchedEffect(state.isPaymentClose){
         if(state.isPaymentClose){
+            viewModel.resetScreenState()
             NavigatorActions.navigateBack(navigator)
         }
     }
+
 
     LaunchedEffect(state.isError) {
         if (state.isError) {
             val errorTitle=getString(Res.string.error_title)
             snackbarHostState.value.showSnackbar("$errorTitle ${state.errorMsg}")
+            delay(1000)
             viewModel.dismissErrorDialog()
         }
     }
@@ -254,6 +259,7 @@ fun Payment(
             viewModel.updatePaymentSuccessDialog(false)
             viewModel.clearSale()
         },
+
         appliedPayments =abs(state.paymentTotal),
         balance = abs(state.remainingBalance),
         onPrinting = {
