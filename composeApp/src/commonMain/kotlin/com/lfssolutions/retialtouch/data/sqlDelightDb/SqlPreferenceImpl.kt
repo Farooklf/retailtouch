@@ -1035,6 +1035,10 @@ import kotlinx.coroutines.flow.flow
          )
      }
 
+     override suspend fun updateSynced(id: Long) {
+         retailTouch.posInvoicePendingSaleRecordQueries.updateSynced(isSynced = true, ticketId =id)
+     }
+
      override fun getAllPosSale(): Flow<List<PendingSale>> = flow{
          retailTouch.posInvoicePendingSaleRecordQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
@@ -1073,6 +1077,10 @@ import kotlinx.coroutines.flow.flow
 
      override suspend fun deletePosPendingSaleRecord() {
          retailTouch.posInvoicePendingSaleRecordQueries.delete()
+     }
+
+     override suspend fun deleteSaleById(id: Long) {
+         retailTouch.posInvoicePendingSaleRecordQueries.deleteById(id)
      }
 
      override fun getAllPendingSalesCount(): Flow<Long> = flow{

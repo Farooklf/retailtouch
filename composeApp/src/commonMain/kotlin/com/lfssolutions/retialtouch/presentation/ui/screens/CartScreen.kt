@@ -57,6 +57,10 @@ fun CartUI(
         }
     }
 
+    LaunchedEffect(state.cartList) {
+        viewModel.recomputeSale()
+    }
+
     CashierBasicScreen(
         modifier = Modifier
             .systemBarsPadding(),
@@ -95,7 +99,7 @@ fun CartUI(
         onCancel = {
             viewModel.updateClearCartDialogVisibility(false)
         },
-        onYes = {
+        onConfirm = {
             viewModel.removedScannedItem()
         }
     )

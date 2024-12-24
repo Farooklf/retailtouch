@@ -24,15 +24,18 @@ object NavigatorActions {
         navigator.push(Route.LoginScreen.toVoyagerScreen())
     }
 
-    @Composable
-    fun navigateToHomeScreen(isSplash : Boolean) {
-        val navigator = LocalNavigator.currentOrThrow
+    fun navigateToHomeScreen(navigator: Navigator,isSplash : Boolean) {
+        //val navigator = LocalNavigator.currentOrThrow
         navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
 
     fun navigateToPOSScreen(navigator: Navigator) {
         navigator.push(Route.POSScreen.toVoyagerScreen())
+    }
+
+    fun navigateToCashierScreen(navigator: Navigator) {
+        navigator.replace(Route.POSScreen.toVoyagerScreen())
     }
 
 

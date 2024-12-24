@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class PendingSaleDao(
     val isSynced : Boolean = false,
     val isDbUpdate : Boolean = false,
+    val posSaleId : Long = 0,
     val posInvoice: PosInvoice = PosInvoice()
 )

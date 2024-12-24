@@ -124,7 +124,6 @@ fun PrinterContent(
 
     LaunchedEffect(state.showMessage) {
         if (state.showMessage) {
-            //val success=getString(Res.string.success_title)
             val message=getString(Res.string.success_message,if(!state.isEditMode) "Printer Added" else "Printer Updated")
             snackbarHostState.value.showSnackbar(message)
             viewModel.dismissMessage()

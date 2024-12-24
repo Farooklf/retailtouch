@@ -487,8 +487,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun recomputeSale(){
         viewModelScope.launch {
-            //calculateCartTotals()
-            loadCartTotals()
+            calculateCartTotals()
+            //loadCartTotals()
         }
     }
 
@@ -1450,7 +1450,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     //Payment
 
     fun updatePaymentStatus(transactionAmount: Double) {
-        //  println("transactionAmount $transactionAmount")
+          println("transactionAmount $transactionAmount")
         _posUIState.update {
             it.copy(
                 paymentFromLib = true,
@@ -1505,7 +1505,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updateEnterAmountValue(value:String){
+    private fun updateEnterAmountValue(value:String){
         viewModelScope.launch {
             _posUIState.update {
                 // Convert input value to a number (e.g., Double for decimal numbers)
@@ -1531,7 +1531,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun applyPaymentValue(tenderAmount: Double) {
-        println("callApplyPayment: $tenderAmount")
+        println("tenderAmount: $tenderAmount")
         val state=_posUIState.value
         if(tenderAmount!=0.0){
             //val paymentAmount=state.inputDiscount.toDouble()
@@ -1565,12 +1565,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
 
                 val remaining = ((it.grandTotal - (it.paymentTotal + tenderAmount))).roundTo(2)
+                println("remaining : $remaining")
                 it.copy(
                     paymentTotal = ((it.paymentTotal + tenderAmount)).roundTo(2),
                     remainingBalance = remaining,
                     createdPayments = updatedPayments,
                     availablePayments = updatedPayment,
-                    /*showPaymentCollectorDialog = false,*/
                     isExecutePosSaving = remaining<=0.0
                 )
             }
@@ -1741,7 +1741,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         name = payment.name?:""
                     )
                 }.toList(),
-                qty = quantityTotal.toInt() ,
+                qty = cartList.sumOf { it.qty }.toInt() ,
                 customerName = if(selectedMemberId==0) "N/A" else selectedMember,
                 address1 = location?.address1?:"" ,
                 address2 = location?.address2?:"" ,

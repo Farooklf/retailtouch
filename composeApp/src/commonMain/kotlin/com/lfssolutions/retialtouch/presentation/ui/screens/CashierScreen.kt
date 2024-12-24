@@ -10,18 +10,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -47,16 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -65,9 +57,6 @@ import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCartButton
-import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
-import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
-import com.lfssolutions.retialtouch.presentation.ui.common.CartListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.CartLoader
 import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.CategoryListItem
@@ -75,8 +64,6 @@ import com.lfssolutions.retialtouch.presentation.ui.common.CustomSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ItemDiscountDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
-import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductItemAnimation
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductListItem
@@ -87,38 +74,21 @@ import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.lib.rememberValRef
+import com.outsidesource.oskitcompose.router.KMPBackHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.clear_scanned_message
-import retailtouch.composeapp.generated.resources.discount_value
-import retailtouch.composeapp.generated.resources.held_tickets
-import retailtouch.composeapp.generated.resources.hold_sale
 import retailtouch.composeapp.generated.resources.ic_grid
 import retailtouch.composeapp.generated.resources.ic_list
-import retailtouch.composeapp.generated.resources.img_empty_cart
-import retailtouch.composeapp.generated.resources.items
-import retailtouch.composeapp.generated.resources.members
-import retailtouch.composeapp.generated.resources.no_products_added
-import retailtouch.composeapp.generated.resources.payment
-import retailtouch.composeapp.generated.resources.price
-import retailtouch.composeapp.generated.resources.qty
-import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
-import retailtouch.composeapp.generated.resources.review_cart
 import retailtouch.composeapp.generated.resources.rtl
 import retailtouch.composeapp.generated.resources.search_items
-import retailtouch.composeapp.generated.resources.selected_member
-import retailtouch.composeapp.generated.resources.sub_total
-import retailtouch.composeapp.generated.resources.tax_value
-import retailtouch.composeapp.generated.resources.total_value
 
 
 object CashierScreen: Screen {
@@ -132,9 +102,14 @@ object CashierScreen: Screen {
 fun CashierUI(
     viewModel: SharedPosViewModel = koinInject()
 ){
+    val navigator = LocalNavigator.currentOrThrow
     val appState = LocalAppState.current
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
     val state by viewModel.posUIState.collectAsStateWithLifecycle()
+
+    KMPBackHandler(true, onBack = {
+        NavigatorActions.navigateToHomeScreen(navigator,false)
+    })
 
     LaunchedEffect(Unit){
         viewModel.loadCategoryAndMenuItems()
@@ -209,7 +184,7 @@ fun CashierUI(
         onCancel = {
             viewModel.updateClearCartDialogVisibility(false)
         },
-        onYes = {
+        onConfirm = {
             viewModel.removedScannedItem()
         }
     )
@@ -292,7 +267,7 @@ fun LandscapeCashierScreen(interactorRef: ValRef<SharedPosViewModel>) {
     val categoryListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    println("categories -${state.categories} | menuItems - ${state.menuProducts}")
+    //println("categories -${state.categories} | menuItems - ${state.menuProducts}")
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -426,6 +401,7 @@ private fun PortraitCashierScreen(
     LaunchedEffect(Unit) {
         viewModel.loadTotal()
     }
+
 
     Box(
         modifier = Modifier.fillMaxWidth()

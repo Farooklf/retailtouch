@@ -18,6 +18,7 @@ import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.LocalHomeViewModel
 import com.lfssolutions.retialtouch.utils.LocalSharedViewModel
+import com.outsidesource.oskitcompose.lib.rememberInjectForRoute
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 
@@ -27,9 +28,6 @@ import org.koin.compose.koinInject
 fun App(baseViewModel: BaseViewModel = koinInject()
 ) {
     val appState by baseViewModel.composeAppState.collectAsStateWithLifecycle()
-    //val sharedViewModel = viewModel<SharedPosViewModel>()
-    //val homeViewModel = viewModel<HomeViewModel>()
-
 
     AppTheme {
         BoxWithConstraints(
@@ -41,8 +39,7 @@ fun App(baseViewModel: BaseViewModel = koinInject()
             }
 
             // Provide the appState globally using CompositionLocalProvider
-            CompositionLocalProvider(LocalAppState provides appState/*,LocalSharedViewModel provides sharedViewModel,*/
-                /*LocalHomeViewModel provides homeViewModel*/) {
+            CompositionLocalProvider(LocalAppState provides appState) {
                 Navigator(screen = Route.SplashScreen.toVoyagerScreen(),
                     onBackPressed = {
                         true

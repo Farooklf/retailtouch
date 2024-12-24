@@ -306,30 +306,6 @@ fun BasicScreen(
             ){
                 content()
             }
-
-        /*BoxWithConstraints(
-            modifier = Modifier
-                .weight(1f)
-                .widthIn(max = contentMaxWidth)
-                .fillMaxWidth()
-                .padding(innerPadding)
-                .background(screenBackground),
-        ){
-            AppScreenPadding(
-                content = { horizontalPadding, verticalPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(PaddingValues(
-                                horizontal = horizontalPadding,
-                                vertical = verticalPadding,
-                            )),
-                        contentAlignment = contentAlignment,
-                        content = content,
-                    )
-                }
-            )
-        }*/
     }
 }
 

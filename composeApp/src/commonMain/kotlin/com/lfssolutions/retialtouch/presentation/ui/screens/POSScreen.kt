@@ -538,7 +538,7 @@ fun Pos(
         onCancel = {
             posViewModel.updateClearCartDialogVisibility(false)
         },
-        onYes = {
+        onConfirm = {
             posViewModel.removedScannedItem()
         }
     )

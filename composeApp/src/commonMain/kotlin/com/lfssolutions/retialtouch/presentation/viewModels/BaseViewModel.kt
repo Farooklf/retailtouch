@@ -8,6 +8,7 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
+import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
@@ -29,8 +30,12 @@ import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.location.Location
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
+import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
 import com.lfssolutions.retialtouch.domain.model.productLocations.ProductLocationResponse
+import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.ProductWithTaxByLocationResponse
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
@@ -65,7 +70,6 @@ import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
-import com.lfssolutions.retialtouch.utils.NumberFormatting
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
@@ -78,6 +82,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -96,6 +101,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
+
+    private val _posSaleApiState: MutableStateFlow<ApiLoaderStateResponse> = MutableStateFlow(ApiLoaderStateResponse.Loader)
+    val posSaleApiState: StateFlow<ApiLoaderStateResponse> = _posSaleApiState.asStateFlow()
 
     val _loginScreenState = MutableStateFlow(LoginUiState())
     val loginScreenState: StateFlow<LoginUiState> = _loginScreenState
@@ -204,7 +212,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return enabled
     }
 
-
     fun updateScreenMode(width: Dp,height:Dp){
         val deviceType = when {
             width < SMALL_PHONE_MAX_WIDTH -> DeviceType.SMALL_PHONE
@@ -222,8 +229,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
         }
     }
-
-
 
      fun updatePrinterValue(isPrinter: Boolean) {
         viewModelScope.launch {
@@ -301,6 +306,83 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
         return loginRequest
 
+    }
+
+    suspend fun createUpdatePosInvoice(posInvoice: PosInvoice, pendingSaleCount : Int, posSaleId: Long){
+        networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
+            observeResponseNew(apiResponse,
+                onLoading = {
+                    _posSaleApiState.update { ApiLoaderStateResponse.Loader }
+                },
+                onSuccess = { apiData ->
+                    if(apiData.success && apiData.result?.posInvoiceNo != null){
+                        println("posInvoiceNo:${apiData.result.posInvoiceNo}")
+                        viewModelScope.launch {
+                            try {
+                                dataBaseRepository.addUpdatePendingSales(
+                                    PendingSaleDao(
+                                        posInvoice = posInvoice,
+                                        posSaleId = posSaleId,
+                                        isDbUpdate = true,
+                                        isSynced = true
+                                    )
+                                )
+                                println("API call succeeded for posSaleId: $posSaleId")
+                                _posSaleApiState.update { ApiLoaderStateResponse.Success }
+                                // Cancel the loader only after the last successful API call
+                                //var localPendingCount = pendingSaleCount
+                                /*if (--localPendingCount==0) {
+                                    _posSaleApiState.update { ApiLoaderStateResponse.Success }
+                                    println("Last API call succeeded. Loader canceled.")
+                                }*/
+                            }catch (ex:Exception){
+                                _posSaleApiState.update { ApiLoaderStateResponse.Error("Error saving invoice \n ${ex.message}") }
+                            }
+                        }
+                    }
+                },
+                onError = { errorMsg ->
+                    println(errorMsg)
+                    _posSaleApiState.update { ApiLoaderStateResponse.Error("Error saving invoice \n $errorMsg") }
+                }
+            )
+        }
+    }
+
+    fun deClassifyPendingRecord(data: PendingSale, location: Location, tenantId: Int): PosInvoice {
+        val posInvoice= PosInvoice(
+            id = 0,
+            tenantId = tenantId,
+            employeeId = data.employeeId,
+            locationId = location.locationId,
+            locationCode = location.code,
+            terminalId = location.locationId,
+            terminalName = data.terminalName,
+            isRetailWebRequest=data.isRetailWebRequest,
+            invoiceNo = data.invoiceNo,
+            invoiceDate= data.invoiceDate,
+            invoiceTotal = data.invoiceTotal, //before Tax
+            invoiceItemDiscount = data.invoiceItemDiscount,
+            invoiceTotalValue= data.invoiceTotalValue,
+            invoiceNetDiscountPerc= data.invoiceNetDiscountPerc,
+            invoiceNetDiscount= data.invoiceNetDiscount,
+            invoiceTotalAmount=data.invoiceTotalAmount,
+            invoiceSubTotal= data.invoiceSubTotal,
+            invoiceTax= data.globalTax,
+            invoiceRoundingAmount = data.invoiceRoundingAmount,
+            invoiceNetTotal= data.invoiceNetTotal,
+            invoiceNetCost= data.invoiceNetCost,
+            paid= data.paid, //netCost
+            memberId = data.memberId,
+            posInvoiceDetails = data.posInvoiceDetailRecord,
+            posPayments = data.posPaymentConfigRecord,
+            qty = data.qty,
+            customerName = data.memberName,
+            address1 = data.address1 ,
+            address2 = data.address2 ,
+        )
+
+        return posInvoice
     }
 
 

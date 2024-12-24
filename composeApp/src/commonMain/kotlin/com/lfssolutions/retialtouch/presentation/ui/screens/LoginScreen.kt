@@ -24,6 +24,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.navigation.NavigationItem
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicatorWithMessage
@@ -50,8 +52,9 @@ import retailtouch.composeapp.generated.resources.user_name
 object LoginScreen:Screen{
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         Login(onNavigateDashBoard = {
-            NavigatorActions.navigateToHomeScreen(true)
+            NavigatorActions.navigateToHomeScreen(navigator,true)
         })
     }
 
@@ -63,7 +66,7 @@ fun Login(
     loginViewModel: LoginViewModel = koinInject()
 ){
     val loginScreenState by loginViewModel.loginScreenState.collectAsState()
-    val appState = LocalAppState.current
+    //val appState = LocalAppState.current
 
     ResponsiveBox(
         modifier = Modifier.fillMaxSize(),

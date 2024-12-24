@@ -15,12 +15,21 @@ UPDATE PosInvoicePendingSaleRecord
 SET isSync = :isSynced , posInvoice =:ticket
 WHERE id = :ticketId;
 
+updateSynced:
+UPDATE PosInvoicePendingSaleRecord
+SET isSync = :isSynced
+WHERE id = :ticketId;
+
 getAll:
 SELECT * FROM PosInvoicePendingSaleRecord;
 
 getPendingSale:
 SELECT * FROM PosInvoicePendingSaleRecord
 WHERE isSync=0;
+
+deleteById:
+DELETE FROM PosInvoicePendingSaleRecord
+WHERE id = :ticketId;
 
 delete:
 DELETE  FROM PosInvoicePendingSaleRecord;

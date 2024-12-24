@@ -81,7 +81,7 @@ class ObjectToReceiptTemplateV1 {
                 }
                 Log.e("Netemplate", "before table processed text $processedText")
                 //Apply image
-                val imageRegex = "@@@(.*?)@@@".toRegex()
+                /*val imageRegex = "@@@(.*?)@@@".toRegex()
                 if(imageRegex.containsMatchIn(processedText)){
                     val match = imageRegex.find(processedText) // Finds the first match
                     val matchResults = match?.groupValues?.get(1)
@@ -98,7 +98,8 @@ class ObjectToReceiptTemplateV1 {
                             }
                         }
                     }
-                }
+                }*/
+
                 //Apply weight to columns
                 val tableWeightRegex = Regex("\\[\\[(.*?):(.*)\\]\\]")
                 val matchResults = tableWeightRegex.findAll(processedText)

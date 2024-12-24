@@ -532,8 +532,8 @@ class DataBaseRepository: KoinComponent {
 
     suspend fun addUpdatePendingSales(data: PendingSaleDao){
         withContext(Dispatchers.IO) {
-            val posInvoice=data.posInvoice
-             val id =  if(data.isDbUpdate) posInvoice.id else getCurrentDateAndTimeInEpochMilliSeconds()
+             val posInvoice=data.posInvoice
+             val id =  if(data.isDbUpdate) data.posSaleId else getCurrentDateAndTimeInEpochMilliSeconds()
              println("posInvoicesId : $id")
              val pendingSaleRecord=PendingSale(
                  id=id,
@@ -577,7 +577,7 @@ class DataBaseRepository: KoinComponent {
             }else{
                 dataBaseRepository.updatePosSales(pendingSaleRecord)
             }
-            posInvoice.posPayments?.map { payment ->
+            /*posInvoice.posPayments?.map { payment ->
                 val paymentRecord  = PosSalePayment(
                     posPaymentRecordId = id,
                     posInvoiceId = payment.posInvoiceId,
@@ -585,9 +585,9 @@ class DataBaseRepository: KoinComponent {
                     amount = payment.amount
                 )
                 dataBaseRepository.insertPosConfiguredPaymentRecord(paymentRecord)
-            }
+            }*/
 
-            posInvoice.posInvoiceDetails?.forEach { invoice->
+           /* posInvoice.posInvoiceDetails?.forEach { invoice->
               val posInvoiceDetails= PosSaleDetails(
                   posPaymentRecordId = id, 
                   productId=invoice.productId,
@@ -606,10 +606,16 @@ class DataBaseRepository: KoinComponent {
                 taxPercentage=invoice.taxPercentage
               )
                 dataBaseRepository.insertPosDetailsRecord(posInvoiceDetails)
-            }
+            }*/
 
         }
         }
+
+    suspend fun updateSalesAsSynced(id:Long){
+        withContext(Dispatchers.IO){
+            dataBaseRepository.updateSynced(id)
+        }
+    }
 
     suspend  fun insertOrUpdatePrinter(printer: PrinterScreenState) {
         withContext(Dispatchers.IO){
@@ -877,6 +883,12 @@ class DataBaseRepository: KoinComponent {
     suspend fun removeHoldSaleItemById(id:Long){
         withContext(Dispatchers.IO) {
             dataBaseRepository.deleteHoldSaleById(id)
+        }
+    }
+
+    suspend fun removeSalesById(id:Long){
+        withContext(Dispatchers.IO){
+            dataBaseRepository.deleteSaleById(id)
         }
     }
 

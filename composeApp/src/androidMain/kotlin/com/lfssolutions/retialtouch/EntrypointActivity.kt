@@ -104,6 +104,7 @@ class EntrypointActivity : ComponentActivity() {
             val transactionAmount = getPaymentFactory(Payments.ASCAN).createPayment().postProcess(
                 requestCode, resultCode, data, this
             )
+            println("transactionAmount $transactionAmount")
             mSharedPosViewModel.updatePaymentStatus(transactionAmount)
         }
     }

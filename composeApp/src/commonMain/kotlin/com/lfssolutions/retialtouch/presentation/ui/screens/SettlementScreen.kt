@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.presentation.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.SubcomposeAsyncImage
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentTypeSummary
 import com.lfssolutions.retialtouch.domain.model.settlement.SettlementUIState
+import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedTextField
@@ -61,10 +63,14 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.app_logo
+import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.pending
 import retailtouch.composeapp.generated.resources.print
+import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.settlement
 import retailtouch.composeapp.generated.resources.submit
+import retailtouch.composeapp.generated.resources.sync
+import retailtouch.composeapp.generated.resources.sync_desc
 
 object SettlementScreen : Screen {
 
@@ -86,6 +92,7 @@ object SettlementScreen : Screen {
 
        LaunchedEffect(Unit){
            viewModel.loadDataFromDb()
+           viewModel.getPendingSaleCount()
            //viewModel.getPosPaymentSummary(location)
        }
 
@@ -112,7 +119,73 @@ object SettlementScreen : Screen {
             else
                 AppTheme.typography.captionBold()
 
-            AppBaseCard(
+
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    items(screenState.localSettlement,key={item -> item.paymentTypeId!!}) {payment ->
+                        PaymentItem(
+                            localPayment = payment,
+                            screenState = screenState,
+                            viewModel=viewModel,
+                            onValueChanged = { amount,paymentItem->
+                                viewModel.updateAmount(amount,paymentItem)
+                            },
+                            isTablet = appState.isTablet
+                        )
+                    }
+                }
+
+                //Action Button
+                Row(modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .padding(if(appState.isTablet) 10.dp else 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(if(appState.isTablet) 10.dp else 5.dp)) {
+
+                    //Print Button
+                    AppPrimaryButton(
+                        label = stringResource(Res.string.print),
+                        backgroundColor = AppTheme.colors.textPrimary,
+                        disabledBackgroundColor = AppTheme.colors.textPrimary,
+                        style = txtStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+
+                        })
+
+                    //Pending Button
+                    AppPrimaryButton(
+                        label = stringResource(Res.string.pending),
+                        backgroundColor = AppTheme.colors.appRed,
+                        disabledBackgroundColor = AppTheme.colors.appRed,
+                        style = txtStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+
+                        })
+
+                    //submit Button
+                    AppPrimaryButton(
+                        label = stringResource(Res.string.submit),
+                        backgroundColor = AppTheme.colors.appGreen,
+                        disabledBackgroundColor = AppTheme.colors.appGreen,
+                        style = txtStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                           viewModel.submitPOSSettlement()
+                        })
+                }
+            }
+
+            /*AppBaseCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
@@ -122,77 +195,28 @@ object SettlementScreen : Screen {
                         end = if (appState.isTablet) 20.dp else 0.dp
                     )
             ){
-                Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(15.dp)) {
 
-                    LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                        items(screenState.localSettlement,key={item -> item.paymentTypeId!!}) {payment ->
-                            PaymentItem(
-                                localPayment = payment,
-                                screenState = screenState,
-                                viewModel=viewModel,
-                                onValueChanged = { amount,payment->
-                                   viewModel.updateAmount(amount,payment)
-                                },
-                                onClick = {
-                                    //viewModel.updateSelectedPaymentId(payment)
-                                }         ,
-                                isTablet = appState.isTablet
-                            )
-                        }
-                    }
-
-                    //Action Button
-                    Row(modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .padding(if(appState.isTablet) 10.dp else 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(if(appState.isTablet) 10.dp else 5.dp)) {
-
-                        //Print Button
-                        AppPrimaryButton(
-                            label = stringResource(Res.string.print),
-                            backgroundColor = AppTheme.colors.textPrimary,
-                            disabledBackgroundColor = AppTheme.colors.textPrimary,
-                            style = txtStyle,
-                            modifier = Modifier
-                                .weight(1f)
-                                .wrapContentHeight(),
-                            onClick = {
-
-                            })
-
-                        //Pending Button
-                        AppPrimaryButton(
-                            label = stringResource(Res.string.pending),
-                            backgroundColor = AppTheme.colors.appRed,
-                            disabledBackgroundColor = AppTheme.colors.appRed,
-                            style = txtStyle,
-                            modifier = Modifier
-                                .weight(1f)
-                                .wrapContentHeight(),
-                            onClick = {
-
-                            })
-
-                        //submit Button
-                        AppPrimaryButton(
-                            label = stringResource(Res.string.submit),
-                            backgroundColor = AppTheme.colors.appGreen,
-                            disabledBackgroundColor = AppTheme.colors.appGreen,
-                            style = txtStyle,
-                            modifier = Modifier
-                                .weight(1f)
-                                .wrapContentHeight(),
-                            onClick = {
-
-                            })
-                    }
-                }
-            }
+            }*/
 
             AppScreenCircleProgressIndicator(isVisible = screenState.isLoading)
         }
+
+        ActionDialog(
+            isVisible = screenState.showPendingSalesMessage,
+            dialogTitle = stringResource(Res.string.retail_pos),
+            dialogMessage = stringResource(Res.string.sync_desc),
+            confirmButtonTxt = stringResource(Res.string.sync),
+            onDismissRequest = {
+                viewModel.updatePendingSalesMessage(false)
+            },
+            onCancel = {
+                viewModel.updatePendingSalesMessage(false)
+            },
+            onConfirm = {
+                viewModel.updatePendingSalesMessage(false)
+               viewModel.syncPendingSales()
+            }
+        )
     }
 }
 
@@ -202,7 +226,6 @@ private fun PaymentItem(
     screenState: SettlementUIState,
     viewModel: SettlementViewModel,
     isTablet: Boolean = false,
-    onClick: () -> Unit = {},
     onValueChanged: (String, PosPaymentTypeSummary) -> Unit,
 ) {
     //println("ListPaymentMap : $paymentsMap")
@@ -215,101 +238,110 @@ private fun PaymentItem(
     val currencySymbol by viewModel.currencySymbol.collectAsState()
 
     val paddingHorizontal = if (isTablet) 10.dp else 5.dp
-    val paddingVertical = if (isTablet) 10.dp else 10.dp
+    val paddingVertical = if (isTablet) 6.dp else 5.dp
+
+    val textStyle = if (isTablet) AppTheme.typography.bodyMedium() else AppTheme.typography.captionMedium()
 
     val imageWidth by remember(localPayment, isTablet) {
-        mutableStateOf(if (isTablet) 80.dp else 60.dp)
+        mutableStateOf(if (isTablet) 80.dp else 50.dp)
     }
 
     val imageHeight by remember(localPayment, isTablet) {
-        mutableStateOf(if (isTablet) 50.dp else 40.dp)
+        mutableStateOf(if (isTablet) 50.dp else 30.dp)
     }
 
     val remoteItem = screenState.remoteSettlement?.items?.firstOrNull{ pts->pts.paymentTypeId==localPayment.paymentTypeId}
         ?:PosPaymentTypeSummary(paymentTypeId= localPayment.paymentTypeId, paymentType= localPayment.paymentType, imageUrl = localPayment.imageUrl, amount=0.0)
 
-    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = paddingHorizontal, vertical = paddingVertical), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.fillMaxWidth().wrapContentWidth().background(AppTheme.colors.secondaryBg), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
 
-        Card(
-            modifier = Modifier.width(imageWidth).height(imageHeight),
-            shape = RoundedCornerShape(5.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = AppTheme.colors.cardBgColor
-            )
-        ) {
+        Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = paddingHorizontal, vertical = paddingVertical), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
 
-            Image(
-                painter = painterResource(Res.drawable.app_logo),
-                contentDescription = localPayment.paymentType,
-                modifier = Modifier
-                    .width(imageWidth)
-                    .height(imageHeight),
-                contentScale = ContentScale.Crop,
-            )
-            /*SubcomposeAsyncImage(
-                model = localPayment.imageUrl?.toImageFiles()?.getOrNull(0) ?: "",
-                contentDescription = localPayment.paymentType,
-                modifier = Modifier
-                    .width(imageWidth)
-                    .height(imageHeight),
-                contentScale = ContentScale.Crop,
-                error = {
-                    Image(
-                        painter = painterResource(Res.drawable.app_logo),
-                        contentDescription = localPayment.paymentType,
-                        modifier = Modifier
-                            .width(imageWidth)
-                            .height(imageHeight),
-                        contentScale = ContentScale.Crop,
+            Card(
+                modifier = Modifier.width(imageWidth).height(imageHeight),
+                shape = RoundedCornerShape(5.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = AppTheme.colors.cardBgColor
+                )
+            ) {
+
+                Image(
+                    painter = painterResource(Res.drawable.app_logo),
+                    contentDescription = localPayment.paymentType,
+                    modifier = Modifier
+                        .width(imageWidth)
+                        .height(imageHeight),
+                    contentScale = ContentScale.Crop,
+                )
+                /*SubcomposeAsyncImage(
+                    model = localPayment.imageUrl?.toImageFiles()?.getOrNull(0) ?: "",
+                    contentDescription = localPayment.paymentType,
+                    modifier = Modifier
+                        .width(imageWidth)
+                        .height(imageHeight),
+                    contentScale = ContentScale.Crop,
+                    error = {
+                        Image(
+                            painter = painterResource(Res.drawable.app_logo),
+                            contentDescription = localPayment.paymentType,
+                            modifier = Modifier
+                                .width(imageWidth)
+                                .height(imageHeight),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                )*/
+            }
+
+            Column(modifier = Modifier.wrapContentWidth()) {
+                ListText(
+                    label = "${remoteItem.paymentType} : ${formatPrice(remoteItem.amount,currencySymbol)}",
+                    color = AppTheme.colors.primaryText,
+                    textStyle = textStyle
+                )
+                if(remoteItem.paymentType.equals("cash", ignoreCase = true) && screenState.remoteSettlement?.floatMoney!=0.0){
+                    ListText(
+                        label = "$ Float Amount : ${formatPrice(remoteItem.amount,currencySymbol)}",
+                        color = AppTheme.colors.primaryText,
+                        textStyle = AppTheme.typography.bodyMedium(),
+                        modifier = Modifier.wrapContentWidth().padding(top = 5.dp)
                     )
                 }
-            )*/
-        }
-
-        Column(modifier = Modifier.weight(.5f)) {
-            ListText(
-                label = "${remoteItem.paymentType} : ${formatPrice(remoteItem.amount,currencySymbol)}",
-                color = AppTheme.colors.primaryText,
-                textStyle = AppTheme.typography.bodyMedium()
-            )
-            if(remoteItem.paymentType.equals("cash", ignoreCase = true) && screenState.remoteSettlement?.floatMoney!=0.0){
-                ListText(
-                    label = "$ Float Amount : ${formatPrice(remoteItem.amount,currencySymbol)}",
-                    color = AppTheme.colors.primaryText,
-                    textStyle = AppTheme.typography.bodyMedium(),
-                    modifier = Modifier.wrapContentWidth().padding(top = 5.dp)
-                )
             }
+
+            AppOutlinedTextField(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .weight(1f),
+                value = localPayment.enteredAmount,
+                onValueChange = { newValue ->
+                    onValueChanged.invoke(newValue,localPayment)
+                },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Decimal
+                ),
+                label = "",
+                placeholder = "",
+                singleLine = true,
+                focusedBorderColor=AppTheme.colors.primaryColor,
+                unfocusedBorderColor =AppTheme.colors.secondaryColor)
+
+            Text(
+                text = formatPrice(localPayment.amount?.minus(remoteItem.amount?:0.0),currencySymbol),
+                style = AppTheme.typography.h1Medium()
+                    .copy(fontSize = if (isTablet) 25.sp else 20.sp),
+                color = AppTheme.colors.textPrimary,
+                modifier = Modifier.weight(.5f).padding(start = if (isTablet) 5.dp else 0.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
-        AppOutlinedTextField(
-            modifier = Modifier
-                .wrapContentHeight()
-                .weight(.5f),
-            value = localPayment.amount.toString(),
-            onValueChange = { newValue ->
-                onValueChanged.invoke(newValue,localPayment)
-            },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Decimal
-            ),
-            label = "",
-            placeholder = "",
-            singleLine = true,
-            focusedBorderColor=AppTheme.colors.primaryColor,
-            unfocusedBorderColor =AppTheme.colors.secondaryColor)
-
-        Text(
-            text = formatPrice(localPayment.amount?.minus(remoteItem.amount?:0.0),currencySymbol),
-            style = AppTheme.typography.h1Medium()
-                .copy(fontSize = if (isTablet) 25.sp else 20.sp),
-            color = AppTheme.colors.textPrimary,
-            modifier = Modifier.weight(.5f).padding(start = if (isTablet) 5.dp else 0.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        AppHorizontalDivider(
+            color = AppTheme.colors.borderColor
         )
-    }
+     }
 
 }

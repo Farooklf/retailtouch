@@ -265,6 +265,4 @@ public class TransResponse implements Serializable{
     public void setEmployee_id(String employee_id) {
         this.employee_id = employee_id;
     }
-
-
 }

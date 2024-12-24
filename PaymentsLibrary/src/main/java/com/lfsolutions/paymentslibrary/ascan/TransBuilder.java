@@ -265,10 +265,15 @@ public class TransBuilder {
     }
 
     public static String getCurrentDate() {
-        Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-        String dateToStr = format.format(today);
-        return dateToStr;
+        try {
+            Date today = new Date();
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+            String dateToStr = format.format(today);
+            return dateToStr;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }

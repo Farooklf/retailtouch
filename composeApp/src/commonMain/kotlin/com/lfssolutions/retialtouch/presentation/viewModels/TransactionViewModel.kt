@@ -16,15 +16,12 @@ import com.lfssolutions.retialtouch.utils.getDeliveryType
 import com.lfssolutions.retialtouch.utils.getStatusType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -209,14 +206,18 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun syncPendingSales() {
+    /*fun syncPendingSales() {
         try {
             viewModelScope.launch {
                 updatePendingLoading(true)
-                //val posInvoiceRequest : MutableList<CreatePOSInvoiceRequest> = mutableListOf()
+                val state = screenState.value
                 screenState.value.let { state->
                     state.pendingSales.forEach { pendingSale->
-                        val posInvoice = deClassifyPendingRecord(pendingSale)
+                        val posInvoice = deClassifyPendingRecord(
+                            pendingSale,
+                            state.loginUser,
+                            state.loginUser.tenantId,
+                        )
                         updatePOSSale(posInvoice)
                         networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
                             observeResponseNew(apiResponse,
@@ -253,9 +254,9 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
             updateLoader(false)
             updatePendingLoading(false)
         }
-    }
+    }*/
 
-    private fun deClassifyPendingRecord(data: PendingSale):PosInvoice{
+   /* private fun deClassifyPendingRecord(data: PendingSale):PosInvoice{
         val state=screenState.value
         val posInvoice= PosInvoice(
             id = data.id,
@@ -290,5 +291,5 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
         )
 
         return posInvoice
-    }
+    }*/
 }

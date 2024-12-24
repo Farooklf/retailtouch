@@ -36,6 +36,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
+import com.lfssolutions.retialtouch.domain.model.settlement.CreateEditPOSSettlementRequest
+import com.lfssolutions.retialtouch.domain.model.settlement.CreateEditPOSSettlementResult
 import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentSummaryResult
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
@@ -359,6 +361,16 @@ import kotlinx.coroutines.withContext
              requestBody = mBasicApiRequest
          ) { response ->
              handleApiResponse<PosPaymentSummaryResult>(response)
+         }
+     }
+
+     override fun createOrUpdatePosSettlementOutput(mBasicApiRequest: CreateEditPOSSettlementRequest): Flow<RequestState<CreateEditPOSSettlementResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.CREATE_UPDATE_POS_SETTLEMENT,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<CreateEditPOSSettlementResult>(response)
          }
      }
  }

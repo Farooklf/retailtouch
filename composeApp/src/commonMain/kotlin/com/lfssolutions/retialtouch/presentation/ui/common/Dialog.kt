@@ -485,12 +485,13 @@ fun ActionDialog(
     isVisible: Boolean,
     dialogTitle:String,
     dialogMessage:String,
+    confirmButtonTxt:String?=null,
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp = AppTheme.dimensions.contentMaxSmallWidth,
     isFullScreen: Boolean = false,
     properties: DialogProperties = DialogProperties(dismissOnBackPress = false,dismissOnClickOutside = false),
     onDismissRequest: () -> Unit,
-    onYes: () -> Unit,
+    onConfirm: () -> Unit,
     onCancel: () -> Unit
 ){
     AppDialog(
@@ -519,7 +520,7 @@ fun ActionDialog(
             )
 
             Text(
-                text = stringResource(Res.string.dialog_message,dialogMessage),
+                text = dialogMessage,
                 style = AppTheme.typography.bodyNormal(),
                 color = AppTheme.colors.primaryText,
                 minLines= 1,
@@ -529,7 +530,8 @@ fun ActionDialog(
 
             Row(modifier = Modifier
                 .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center) {
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically) {
 
                 AppPrimaryButton(
                     onClick = {
@@ -542,10 +544,10 @@ fun ActionDialog(
 
                 AppPrimaryButton(
                     onClick = {
-                        onYes()
+                        onConfirm()
                     },
                     modifier=Modifier.wrapContentHeight().padding(horizontal = 10.dp),
-                    label = stringResource(Res.string.yes),
+                    label = confirmButtonTxt?:stringResource(Res.string.yes),
                     backgroundColor = AppTheme.colors.primaryColor,
                     contentColor = AppTheme.colors.appWhite
                 )
@@ -785,7 +787,7 @@ fun PendingSaleDialog(
                     .padding(AppTheme.dimensions.padding10),
                 syncInProgress = state.isSalePendingSync,
                 onClick = {
-                    viewModel.syncPendingSales()
+                    //viewModel.syncPendingSales()
                 }
             )
         }

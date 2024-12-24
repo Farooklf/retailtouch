@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.SmallTextComponent
@@ -35,10 +37,12 @@ object SplashScreen:Screen{
         val baseViewModel: BaseViewModel = koinInject()
         var isLoading by remember { mutableStateOf(true) }
         val isUserLoggedIn by baseViewModel.isUserLoggedIn.collectAsStateWithLifecycle()
-        println("isUserLoggedIn : $isUserLoggedIn")
-        val startDate= DateFormatter().formatDateWithTimeForApi(getStartLocalDateTime())
-        val endDate= DateFormatter().formatDateWithTimeForApi(getEndLocalDateTime())
-        println("startDate :$startDate | endDate : $endDate")
+       // println("isUserLoggedIn : $isUserLoggedIn")
+        //val startDate= DateFormatter().formatDateWithTimeForApi(getStartLocalDateTime())
+        //val endDate= DateFormatter().formatDateWithTimeForApi(getEndLocalDateTime())
+        //println("startDate :$startDate | endDate : $endDate")
+
+        val navigator = LocalNavigator.currentOrThrow
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(Res.drawable.app_logo),
@@ -61,7 +65,7 @@ object SplashScreen:Screen{
             true -> {
                 // If user is logged in, navigate to Dashboard
                 isLoading = false
-                NavigatorActions.navigateToHomeScreen(true)
+                NavigatorActions.navigateToHomeScreen(navigator  ,true)
             }
 
             false -> {

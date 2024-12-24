@@ -13,10 +13,13 @@ import com.lfsolutions.paymentslibrary.ascan.GlobalConstants.PACKAGE_NAME_BOC
 import com.lfsolutions.paymentslibrary.ascan.GlobalConstants.PACKAGE_NAME_DBS
 import com.lfsolutions.paymentslibrary.ascan.GlobalConstants.PACKAGE_NAME_OCBC
 import com.lfsolutions.paymentslibrary.isPackageInstalled
+import java.text.DecimalFormat
 
 class AscanPayment : Payment {
 
-    var packageName = ""
+    var packageName = PACKAGE_NAME_DBS
+    val REAL_FORMATTER: DecimalFormat = DecimalFormat("0.00")
+
     override fun preProcess(context: Context, processorName: String): Boolean {
         packageName = if (processorName.lowercase().contains("dbs"))
             PACKAGE_NAME_DBS
@@ -32,14 +35,16 @@ class AscanPayment : Payment {
     override fun process(context: Context, amount: Double) {
         var bundleString = TransBuilder.getInstance().getSaleObject(amount.toString())
         try {
+            Toast.makeText(context, "bundleString $bundleString", Toast.LENGTH_LONG).show()
             val intent = Intent()
-            intent.setClassName(packageName, ASCAN_CLASS_NAME)
+            intent.setClassName(PACKAGE_NAME_DBS, ASCAN_CLASS_NAME)
             intent.putExtra("Request", bundleString)
             (context as Activity).startActivityForResult(
                 intent,
                 ASCAN_REQUEST_CODE
             )
         } catch (e: Exception) {
+            Toast.makeText(context, "Process Failed ${e.message}", Toast.LENGTH_SHORT).show()
             Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
@@ -52,32 +57,47 @@ class AscanPayment : Payment {
     ): Double {
         Log.e("TAG", "resultCode:" + resultCode)
         Log.e("TAG", "data:" + resultCode)
+        Toast.makeText(context, "resultCode: $resultCode", Toast.LENGTH_LONG).show()
         var ecrResponse: TransResponse? = null
         ecrResponse = TransResponse()
+        val gson = Gson()
+        val transResponse = data?.getStringExtra("Response")
+        if (transResponse != null) {
+            ecrResponse = gson.fromJson(
+                transResponse,
+                TransResponse::class.java
+            )
+//            Toast.makeText(
+//                context,
+//                "ecrResponse :transaction_amount ${ecrResponse.transaction_amount}:response_code${ecrResponse.response_code}:approval_code${ecrResponse.approval_code}",
+//                Toast.LENGTH_LONG
+//            ).show()
 
-        if (Activity.RESULT_OK == resultCode) {
-            val gson = Gson()
-            val transResponse = data?.getStringExtra("Response")
-            if (transResponse != null) {
-                ecrResponse = gson.fromJson(
-                    transResponse,
-                    TransResponse::class.java
-                )
-                if (ecrResponse?.response_code != null) {
-                    if (ecrResponse.response_code!!.contentEquals("00")) {
-                        Toast.makeText(context, "Payment Successful", Toast.LENGTH_LONG)
-                            .show()
-                    } else {
-                        Toast.makeText(context, "Payment Failed", Toast.LENGTH_LONG)
-                            .show()
-                    }
+            if (ecrResponse?.response_code != null) {
+                if (ecrResponse.response_code!!.contentEquals("00")) {
+                    Toast.makeText(context, "Payment Successful", Toast.LENGTH_LONG)
+                        .show()
+                } else {
+                    Toast.makeText(context, "Payment Failed", Toast.LENGTH_LONG)
+                        .show()
                 }
-            } else {
-                Toast.makeText(context, "Payment Failed", Toast.LENGTH_LONG)
-                    .show()
             }
-
+        } else {
+            Toast.makeText(context, "Payment Failed $transResponse", Toast.LENGTH_LONG)
+                .show()
         }
-        return ecrResponse?.transaction_amount?.toDouble()?:0.0
+        val amount = getConvertedAmount(ecrResponse?.transaction_amount?:"")
+
+        return (ecrResponse?.transaction_amount?.toDouble() ?: 0.0) / 100
+    }
+
+    private fun getConvertedAmount(amount: String): String {
+        val l = if (amount.isNotEmpty()) {
+            amount.toDouble()
+        }else{
+            0.00
+        }
+        // l = l / 100;
+        return REAL_FORMATTER.format(l)
     }
 }

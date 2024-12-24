@@ -8,6 +8,7 @@ import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvo
 import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
+import com.lfssolutions.retialtouch.domain.model.settlement.CreateEditPOSSettlementRequest
 import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -97,5 +98,8 @@ class NetworkRepository : KoinComponent {
 
     fun getPosPaymentSummary(mRequest: GetPOSPaymentSummaryRequest) =
         api.getPosPaymentSummary(mRequest)
+
+    fun createOrUpdatePosSettlement(mRequest: CreateEditPOSSettlementRequest) =
+        api.createOrUpdatePosSettlementOutput(mRequest)
 
 }

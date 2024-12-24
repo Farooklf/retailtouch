@@ -275,13 +275,14 @@ fun startPayment(viewModel: SharedPosViewModel, state: PosUIState) {
     state.apply {
         val processorName = availablePayments.find { it.id == selectedPaymentTypesId }?.paymentProcessorName?:""
         val paymentName = availablePayments.find { it.id ==selectedPaymentTypesId }?.name?:""
-
+        //val isAutoPayment = state.selectedPayment.autoPayment
         //paymentName should be replace with processorName
+
         if (paymentName.equals("RFM", ignoreCase = true)) {
-            PaymentProvider().launchExternalApp(grandTotal, PaymentLibTypes.RFM, "")
+            PaymentProvider().launchExternalApp(remainingBalance, PaymentLibTypes.RFM, "")
         }else if (paymentName.equals("Ascan", ignoreCase = true)){
             PaymentProvider().launchExternalApp(
-                paymentTotal,
+                remainingBalance,
                 PaymentLibTypes.ASCAN,
                 "dbs"//processorName
             )
@@ -289,7 +290,7 @@ fun startPayment(viewModel: SharedPosViewModel, state: PosUIState) {
             //PaymentProvider().launchApi(PaymentLibTypes.PAYTM, httpClient = httpClient)
         }else if (paymentName.equals("Nets", ignoreCase = true)) {
             PaymentProvider().launchExternalApp(
-                paymentTotal,
+                remainingBalance,
                 PaymentLibTypes.PAYTM,
                 paymentName
             )
@@ -403,19 +404,6 @@ fun LandscapePaymentScreen(
                 balance = state.remainingBalance,
                 payments = state.createdPayments
             )
-
-            /*AppPrimaryButton(
-                onClick = {
-                    viewModel.onPaymentClose()
-                },
-                backgroundColor = AppTheme.colors.primaryColor,
-                rightIcon = AppIcons.addIcon,
-                label = stringResource(Res.string.add_more) ,
-                isPortrait = false,
-                modifier = Modifier
-                    .fillMaxWidth(7f)
-                    .height(AppTheme.dimensions.defaultButtonSize)
-            )*/
         }
     }
 }
@@ -544,13 +532,13 @@ private fun OrderSummary(
                 textAlign = TextAlign.Center
             )
 
-            OrderSummaryRow(
+            /*OrderSummaryRow(
                 label = stringResource(Res.string.subtotal),
                 value = subTotal,
                 textStyle = textStyleHeader,
                 viewModel=viewModel
-            )
-            if (appliedDiscountTotal >0.0) {
+            )*/
+            /*if (appliedDiscountTotal >0.0) {
                 OrderSummaryRow(
                     label = "Discount",
                     value = appliedDiscountTotal,
@@ -558,15 +546,15 @@ private fun OrderSummary(
                     textStyle = textStyleHeader,
                     viewModel=viewModel
                 )
-            }
+            }*/
 
 
-            OrderSummaryRow(
+            /*OrderSummaryRow(
                 label = stringResource(Res.string.tax),
                 value = appliedTax,
                 textStyle = textStyleHeader,
                 viewModel=viewModel
-            )
+            )*/
 
             OrderSummaryRow(
                 label = stringResource(Res.string.grand_total),

@@ -16,29 +16,20 @@ actual class PaymentProvider actual constructor() {
     private val _resultFlow = MutableSharedFlow<String>()
     val resultFlow: SharedFlow<String> = _resultFlow
 
-    // fun getResultFlow(): SharedFlow<String>
     @Composable
-    actual fun launchExternalApp(
-        amount: Double,
-        paymentTypes: PaymentLibTypes,
-        processorName: String
-    ) {
+    actual fun launchExternalApp(amount: Double, paymentTypes: PaymentLibTypes, processorName: String) {
         val context = LocalContext.current
         val paymentFactory: PaymentFactory = getPaymentFactory(paymentTypes)
         val payment = paymentFactory.createPayment()
         val isPreProcessSuccess = payment.preProcess(context, processorName)
         if (isPreProcessSuccess) {
-            payment.process(context, amount,)
+            Toast.makeText(context, "Amount $amount", Toast.LENGTH_SHORT).show()
+            payment.process(context, amount)
         } else {
+            //payment.process(context, amount)
+            Toast.makeText(context, "Amount $amount", Toast.LENGTH_SHORT).show()
             Toast.makeText(context, "Please install the APP first!", Toast.LENGTH_LONG).show()
         }
-    }
-
-    actual fun launchApi(
-        paymentTypes: PaymentLibTypes,
-        httpClient: HttpClient
-    ) {
-
     }
 
     actual fun processResult(result: String) {
@@ -47,6 +38,11 @@ actual class PaymentProvider actual constructor() {
         }
     }
 
+    // actual fun getResultFlow(): SharedFlow<String> = _resultFlow
+    actual fun launchApi(paymentTypes: PaymentLibTypes, httpClient: HttpClient) {
+
+
+    }
 
     private fun getPaymentFactory(paymentTypes: PaymentLibTypes) =
         when (paymentTypes) {
@@ -55,4 +51,5 @@ actual class PaymentProvider actual constructor() {
             PaymentLibTypes.PAYTM -> com.lfsolutions.paymentslibrary.getPaymentFactory(Payments.PAYTM)
             PaymentLibTypes.RFM -> com.lfsolutions.paymentslibrary.getPaymentFactory(Payments.RFM)
         }
+
 }

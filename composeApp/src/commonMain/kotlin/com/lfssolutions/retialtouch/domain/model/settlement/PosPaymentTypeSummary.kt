@@ -11,6 +11,6 @@ data class PosPaymentTypeSummary(
     val paymentType: String? =  "",
     @SerialName("amount")
     var amount: Double? =  0.0,
-    var enteredAmount: Double? =  0.0,
+    var enteredAmount: String =  "",
     var imageUrl: String? = "",
 )

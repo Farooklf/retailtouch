@@ -73,7 +73,7 @@
     <string name="name">Member Name</string>
     <string name="yes">Yes</string>
     <string name="dialog_message">Do you want to %1$s?</string>
-    <string name="clear_scanned_message">clear the scanned items</string>
+    <string name="clear_scanned_message">Do you want to clear the scanned items</string>
 
     //payment
     <string name="delivery">Delivery</string>
@@ -177,5 +177,5 @@
     <string name="selected_member">Member : </string>
     <string name="no_products_added">No Products Added</string>
     <string name="print">Print</string>
-
+    <string name="sync_desc">Some items are not synced.</string>
 </resources>
