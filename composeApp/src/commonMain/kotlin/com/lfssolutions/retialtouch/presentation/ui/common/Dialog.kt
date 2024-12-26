@@ -78,11 +78,15 @@ import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatDateForUI
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getDateTimeFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getEpochTimestamp
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.lfssolutions.retialtouch.utils.formatAmountForUI
+import com.lfssolutions.retialtouch.utils.formatPrice
+import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.popup.Modal
@@ -102,19 +106,23 @@ import retailtouch.composeapp.generated.resources.app_logo
 import retailtouch.composeapp.generated.resources.barcode
 import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.choose_printer_template
+import retailtouch.composeapp.generated.resources.clear
 import retailtouch.composeapp.generated.resources.close
 import retailtouch.composeapp.generated.resources.confirm
+import retailtouch.composeapp.generated.resources.date
 import retailtouch.composeapp.generated.resources.delete_payment
 import retailtouch.composeapp.generated.resources.description
 import retailtouch.composeapp.generated.resources.dialog_message
 import retailtouch.composeapp.generated.resources.enter_terminal_code
 import retailtouch.composeapp.generated.resources.error
+import retailtouch.composeapp.generated.resources.hash
 import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_success
 import retailtouch.composeapp.generated.resources.in_stock
 import retailtouch.composeapp.generated.resources.items
+import retailtouch.composeapp.generated.resources.member
 import retailtouch.composeapp.generated.resources.network_dialog_hint
 import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
@@ -124,10 +132,15 @@ import retailtouch.composeapp.generated.resources.pending_sales
 import retailtouch.composeapp.generated.resources.price
 import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
+import retailtouch.composeapp.generated.resources.qty
+import retailtouch.composeapp.generated.resources.receipt_no
 import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.sku
+import retailtouch.composeapp.generated.resources.status
 import retailtouch.composeapp.generated.resources.sync_all
 import retailtouch.composeapp.generated.resources.terminal_code
+import retailtouch.composeapp.generated.resources.total
+import retailtouch.composeapp.generated.resources.type
 import retailtouch.composeapp.generated.resources.yes
 
 @Composable
@@ -707,30 +720,31 @@ fun HoldTicketListItem(
 
 @Composable
 fun PendingSaleDialog(
-    state: SaleTransactionState,
-    viewModel: TransactionViewModel,
     isVisible: Boolean,
-    isPortrait: Boolean=true,
-    modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxMidWidth,
+    isSync: Boolean=false,
+    pendingSales: List<PendingSale>,
+    currency:String,
+    modifier: Modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
     dialogBgColor: Color = AppTheme.colors.backgroundDialog,
-    isFullScreen: Boolean = false,
+    isFullScreen: Boolean = true,
     properties: DialogProperties = DialogProperties(),
     onDismiss: () -> Unit,
-    onRemove : (Long) -> Unit={},
-    syncAll : () -> Unit={},
+    onRemove : (PendingSale) -> Unit={},
+    onSyncAll : () -> Unit={},
 ){
-    val (vertPadding,horPadding)=if(isPortrait)
+    val appState = LocalAppState.current
+    val (vertPadding,horPadding)=if(appState.isPortrait)
         AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
     else
         AppTheme.dimensions.padding10 to AppTheme.dimensions.padding20
 
-    val textStyleHeader=if(isPortrait)
-        AppTheme.typography.bodyBold().copy(fontSize = 18.sp)
+    val textStyleHeader=if(appState.isPortrait)
+        AppTheme.typography.bodyBold()
     else
-        AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+        AppTheme.typography.titleBold()
 
-    val pendingCount=state.pendingSales.size
+    val iconSize= if(appState.isPortrait) AppTheme.dimensions.smallXIcon else AppTheme.dimensions.small24Icon
 
     AppDialog(
         isVisible = isVisible,
@@ -741,76 +755,151 @@ fun PendingSaleDialog(
         isFullScreen = isFullScreen,
         bgColor = dialogBgColor
     ){
-        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), horizontalAlignment = Alignment.CenterHorizontally) {
-            VectorIcons(
-                icons = AppIcons.cancelIcon,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding5),
-                iconSize = AppTheme.dimensions.smallIcon,
-                iconColor=AppTheme.colors.appRed,
-                onClick = {
-                    onDismiss.invoke()
-                })
+        Column(modifier=Modifier.fillMaxWidth().fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5), horizontalAlignment = Alignment.CenterHorizontally) {
+            //List UI Header
+            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = AppTheme.dimensions.padding10, horizontal = AppTheme.dimensions.padding5),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ){
+                if(appState.isPortrait){
+                    ListCenterText(label = stringResource(Res.string.receipt_no),arrangement = Arrangement.Start, textStyle = textStyleHeader, modifier = Modifier.weight(1f))
+                    ListCenterText(label = stringResource(Res.string.date),textStyle = textStyleHeader, modifier = Modifier.weight(1f))
+                    ListCenterText(label = stringResource(Res.string.price),textStyle = textStyleHeader, modifier = Modifier.weight(.5f))
+                    ListCenterText(label = stringResource(Res.string.qty), textStyle = textStyleHeader,modifier = Modifier.weight(.5f))
+                    VectorIcons(
+                        icons = AppIcons.removeIcon,
+                        modifier = Modifier.weight(.5f),
+                        iconSize = iconSize,
+                        iconColor=AppTheme.colors.appRed,
+                        onClick = {
 
-            Text(
-                text = stringResource(Res.string.pending_sales,pendingCount),
-                color = AppTheme.colors.textBlack,
-                style = textStyleHeader
-            )
+                        })
+                }
+            }
 
-            LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding5)) {
+            LazyColumn(modifier = Modifier.weight(1f).padding(AppTheme.dimensions.padding5)) {
                 itemsIndexed(
-                    state.pendingSales
+                    pendingSales
                 ) { index,pendingSale  ->
 
                     PendingTicketListItem(
                         index = index,
                         item = pendingSale,
-                        viewModel = viewModel,
-                        isPortrait = isPortrait,
+                        currencySymbol=currency,
+                        isPortrait = appState.isPortrait,
                         horizontalPadding = horPadding,
                         verticalPadding = vertPadding,
-                        onRemove = {
-
-                        }
+                        onRemove = { selectedSale->
+                           onRemove.invoke(selectedSale)
+                        },
                     )
                 }
             }
 
-            AppPrimaryButton(
-                label = stringResource(Res.string.sync_all),
-                leftIcon = AppIcons.syncIcon,
-                backgroundColor = AppTheme.colors.primaryColor,
-                disabledBackgroundColor = AppTheme.colors.primaryColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(AppTheme.dimensions.padding10),
-                syncInProgress = state.isSalePendingSync,
-                onClick = {
-                    //viewModel.syncPendingSales()
-                }
-            )
-        }
+            Row(modifier=Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AppPrimaryButton(
+                    label = stringResource(Res.string.cancel),
+                    leftIcon = AppIcons.cancelIcon,
+                    backgroundColor = AppTheme.colors.appRed,
+                    disabledBackgroundColor = AppTheme.colors.appRed,
+                    modifier = Modifier
+                        .weight(1f)
+                        .wrapContentHeight(),
+                    onClick = {
+                        onDismiss.invoke()
+                    })
 
+                AppPrimaryButton(
+                    label = stringResource(Res.string.sync_all),
+                    enabled = pendingSales.isNotEmpty(),
+                    syncInProgress = isSync,
+                    leftIcon = AppIcons.syncIcon,
+                    backgroundColor = AppTheme.colors.primaryColor,
+                    disabledBackgroundColor = AppTheme.colors.primaryColor,
+                    modifier = Modifier
+                        .weight(1f)
+                        .wrapContentHeight(),
+                    onClick = {
+                        onSyncAll.invoke()
+                    })
+            }
         }
+    }
 }
 
 @Composable
 fun PendingTicketListItem(
     index:Int,
     item: PendingSale,
-    viewModel: TransactionViewModel,
+    currencySymbol:String,
     isPortrait: Boolean,
     horizontalPadding:Dp,
     verticalPadding:Dp,
-    onRemove: () -> Unit,
+    onRemove: (PendingSale) -> Unit,
 ){
-    val (textStyle,amountStyle)=if(isPortrait)
+    val (textStyle,invoiceNoStyle)=if(isPortrait)
         AppTheme.typography.captionMedium() to AppTheme.typography.bodyBold()
     else
-        AppTheme.typography.bodyMedium() to AppTheme.typography.titleBold().copy(fontSize = 20.sp)
+        AppTheme.typography.bodyMedium() to AppTheme.typography.titleBold()
 
-    AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding3)) {
+    val (borderColor,rowBgColor)=when(index%2 == 0){
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
+        false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
+    }
+    val iconSize= if(isPortrait) AppTheme.dimensions.smallXIcon else AppTheme.dimensions.small24Icon
+
+    Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite).clickable { }){
+        Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor),
+            verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
+            AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+
+                //Invoice No.
+                ListCenterText(
+                    label = item.invoiceNo,
+                    textStyle = invoiceNoStyle,
+                    color = AppTheme.colors.textBlack,
+                    modifier = Modifier.weight(1f)
+                )
+
+                //Invoice Date
+                ListCenterText(
+                    label = item.invoiceDate,
+                    textStyle = textStyle,
+                    color = AppTheme.colors.textPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                //Price
+                ListCenterText(
+                    label = formatPrice(item.invoiceTotal,currencySymbol),
+                    textStyle = textStyle,
+                    color = AppTheme.colors.appRed,
+                    modifier = Modifier.weight(.5f)
+                )
+
+                //Qty
+                ListCenterText(
+                    label = "${item.qty}",
+                    textStyle = textStyle,
+                    color = AppTheme.colors.textBlack,
+                    modifier = Modifier.weight(.5f)
+                )
+                //Remove Icon
+                VectorIcons(
+                    icons = AppIcons.cancelIcon,
+                    modifier = Modifier.weight(.5f),
+                    iconSize = iconSize,
+                    iconColor=AppTheme.colors.appRed,
+                    onClick = {
+                        onRemove.invoke(item)
+                    })
+            }
+            AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+        }
+    }
+
+    /*AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding3)) {
         Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = horizontalPadding, vertical = verticalPadding),
             horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)) {
 
@@ -850,10 +939,10 @@ fun PendingTicketListItem(
                     AppHorizontalDivider(color = AppTheme.colors.borderColor, modifier = Modifier.fillMaxWidth())
                 }
             }
-            ListText(label = viewModel.formatPriceForUI(item.grandTotal), textStyle = amountStyle, color  = AppTheme.colors.appRed, modifier = Modifier.wrapContentWidth())
+            ListText(label = formatPrice(item.grandTotal,currencySymbol), textStyle = amountStyle, color  = AppTheme.colors.appRed, modifier = Modifier.wrapContentWidth())
 
         }
-    }
+    }*/
 }
 
 @Composable

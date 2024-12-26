@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 
 data class SettlementUIState(
     var isLoading : Boolean = false,
+    var isSync : Boolean = false,
     var isError : Boolean = false,
     var errorDesc : String = "",
     var enteredAmount : Double = 0.0,

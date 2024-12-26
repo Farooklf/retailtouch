@@ -127,7 +127,7 @@ fun TransactionDetailsUI(
             verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10),
         ){
             //Filter Status,Type row
-            Row(modifier = Modifier.fillMaxWidth(),
+            /*Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10),
                 verticalAlignment = Alignment.CenterVertically,) {
 
@@ -153,7 +153,7 @@ fun TransactionDetailsUI(
                         viewModel.updateStatus(selectedValue)
                     })
 
-            }
+            }*/
 
             //Main Body Content
             Column(modifier = Modifier.weight(1f)) {

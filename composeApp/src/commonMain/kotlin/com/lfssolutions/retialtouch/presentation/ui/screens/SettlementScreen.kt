@@ -51,6 +51,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
+import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SettlementViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
@@ -88,12 +89,11 @@ object SettlementScreen : Screen {
         val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
         val navigator = LocalNavigator.currentOrThrow
         val appState = LocalAppState.current
-        //val location by viewModel.location.collectAsState()
+        val currencySymbol by viewModel.currencySymbol.collectAsState()
 
        LaunchedEffect(Unit){
            viewModel.loadDataFromDb()
            viewModel.getPendingSaleCount()
-           //viewModel.getPosPaymentSummary(location)
        }
 
         LaunchedEffect(screenState.isError) {
@@ -167,7 +167,7 @@ object SettlementScreen : Screen {
                             .weight(1f)
                             .wrapContentHeight(),
                         onClick = {
-
+                         viewModel.updatePendingSalesDialog(true)
                         })
 
                     //submit Button
@@ -215,6 +215,24 @@ object SettlementScreen : Screen {
             onConfirm = {
                 viewModel.updatePendingSalesMessage(false)
                viewModel.syncPendingSales()
+            }
+        )
+
+        PendingSaleDialog(
+            isVisible = screenState.showPendingSales,
+            pendingSales = screenState.pendingSales,
+            currency=currencySymbol,
+            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+            onDismiss = {
+                viewModel.updatePendingSalesDialog(false)
+            },
+            onRemove = {saleItem->
+             viewModel.deletePendingSaleItem(saleItem)
+            },
+            onSyncAll={
+                viewModel.updateSyncProgress(true)
+                viewModel.updatePendingSalesDialog(false)
+                 viewModel.syncPendingSales()
             }
         )
     }

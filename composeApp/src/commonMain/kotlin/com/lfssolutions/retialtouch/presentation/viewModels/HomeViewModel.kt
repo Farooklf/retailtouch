@@ -39,14 +39,13 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         syncEveryThing()
     }
 
-    fun initialiseSplash(isSplash: Boolean) {
+    fun initialiseEmpScreen(isSplash: Boolean) {
         viewModelScope.launch {
             _homeUIState.update { it.copy(isFromSplash = isSplash,isBlur=isSplash) }
-            prepareHomeData()
         }
     }
 
-    private fun prepareHomeData() {
+     fun prepareHomeData() {
         viewModelScope.launch {
             // Wait for the authentication DAO to initialize
             prepareHomeScreenItems()
@@ -133,6 +132,14 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             _homeUIState.update {
                 it.copy(hasEmployeeLoggedIn = true, isFromSplash = false,isBlur=false)
+            }
+        }
+    }
+
+    fun updateEmployeeStatus() {
+        viewModelScope.launch {
+            _homeUIState.update {
+                it.copy(hasEmployeeLoggedIn = false, isFromSplash = true,isBlur=true)
             }
         }
     }

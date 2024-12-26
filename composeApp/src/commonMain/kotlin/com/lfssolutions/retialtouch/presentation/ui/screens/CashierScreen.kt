@@ -108,7 +108,7 @@ fun CashierUI(
     val state by viewModel.posUIState.collectAsStateWithLifecycle()
 
     KMPBackHandler(true, onBack = {
-        NavigatorActions.navigateToHomeScreen(navigator,false)
+        NavigatorActions.navigateBackToHomeScreen(navigator,false)
     })
 
     LaunchedEffect(Unit){

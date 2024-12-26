@@ -56,7 +56,7 @@ val defaultTemplate = """
 val defaultTemplate2 = """
 @@@http://tajmahal.rtlconnect.net/common/upload/Taj2.bmp@@@
 
-[L]TAJ MAHAL FOOD PTE LTD
+[L]<b>TAJ MAHAL FOOD PTE LTD</b>
 [L]UEN NO- 201705269N
 [L]8A ADMIRALTY ST
 [L]#07-26, FOOD XCHANGE@ADMIRALITY
@@ -86,7 +86,7 @@ val defaultTemplate2 = """
 [[Line]]
 [[{8,4}:Outstanding Amt |{{invoiceNetTotal}}]]
 [[Line]]
-[[{8,4}:Received By|Delivered By]]
+[[{6,6}:Received By |Delivered By]]
 [[{6,6}:[L] | [R]]]
 
 @@{{&invoice.signature}}@@
@@ -104,4 +104,9 @@ val defaultTemplate2 = """
 [L]{{inventoryName}}
 [[{6,6}:{{qty}} X PCS {{price}} |[R]{{netTotal}}]]
 </ListItem>
+"""
+
+
+val posSettlementDefaultTemplate= """
+    [CA]SETTLEMENT\\n[C]---------------------------------------------------------------------------------------\\n[CA]{{settlement.date}}\\n[C]---------------------------------------------------------------------------------------\\nPay By    Actual    Entered    Difference\\n[C]---------------------------------------------------------------------------------------\\n{{#items}}\\n{{&paymentType}}    {{serverAmount}}    {{localAmount}}    {{diff}}\\n{{/items}}\\n[C]---------------------------------------------------------------------------------------\\n           {{settlement.itemTotal}}    {{settlement.localTotal}}    {{settlement.diff}}    \\n[C]---------------------------------------------------------------------------------------\\n[XXX]
 """

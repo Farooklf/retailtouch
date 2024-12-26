@@ -28,7 +28,7 @@ data class CRShoppingCartItem(
     val stock: Stock = Stock(),
     var promotion: PromotionDetails? = null,
     var promotionName: String? = null,
-    var price: Double = stock.price ?: 0.0,
+    var price: Double = stock.price,
     var oldPrice: Double = 0.0,
     var amount: Double? = 0.0,
     var qty: Double = 1.0,
@@ -39,8 +39,8 @@ data class CRShoppingCartItem(
     var discountIsInPercent: Boolean = false,
     var discount: Double = 0.0,
     var promoDiscount: Double = 0.0,
-    var tax: Double = stock.tax ?: 0.0,
-    var code: String = stock.barcode ?: stock.inventoryCode ?:""
+    var tax: Double = stock.tax,
+    var code: String = stock.barcode
 ){
 
     // Calculate the current price (with promotion if active)

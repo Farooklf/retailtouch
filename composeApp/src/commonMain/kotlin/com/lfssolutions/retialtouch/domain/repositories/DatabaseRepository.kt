@@ -486,7 +486,7 @@ class DataBaseRepository: KoinComponent {
                 }
             }
         } catch (ex: Exception) {
-            println("EXCEPTION NEXTPOSSALE: ${ex.message}")
+            println("EXCEPTION NEXT POSSALE: ${ex.message}")
         }
     }
 
@@ -506,7 +506,7 @@ class DataBaseRepository: KoinComponent {
                 subtotal = subtotal,
                 discount = item.itemDiscount,
                 taxValue = taxValue,
-                taxPercentage = item.tax ?: 0.0
+                taxPercentage = item.tax
             )
             dataBaseRepository.insertScannedProduct(dao)
         }

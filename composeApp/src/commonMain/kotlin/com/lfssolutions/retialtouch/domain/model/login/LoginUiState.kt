@@ -6,11 +6,11 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String = "Logging in...",
 
-    val username: String = "admin",
+    val username: String = "",
     val password: String = "",
     val locationId: String = "",
-    val tenant: String = "fb",
-    val server: String = "http://testrelease.rtlconnect.net",
+    val tenant: String = "",
+    val server: String = "http://",
 
     val serverError: String? = null,
     val tenantError: String? = null,

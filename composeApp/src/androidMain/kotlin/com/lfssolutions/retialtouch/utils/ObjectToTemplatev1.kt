@@ -79,7 +79,7 @@ class ObjectToReceiptTemplateV1 {
                     }
 
                 }
-                Log.e("Netemplate", "before table processed text $processedText")
+                Log.e("template", "before table processed text $processedText")
                 //Apply image
                 /*val imageRegex = "@@@(.*?)@@@".toRegex()
                 if(imageRegex.containsMatchIn(processedText)){
@@ -329,7 +329,7 @@ class ObjectToReceiptTemplateV1 {
                 .toIntArray()
 
             val splitAfterColon = afterColon.split("|")
-            val totalWidth = calculateTotalWidth(printerWidth, 203, 1.25f)
+            val totalWidth = calculateTotalWidth(printerWidth, 203, 2f) //previously taken 1.25f
             val columnWidths = calculateColumnWidths(splitBeforeColon, totalWidth)
 
             return printMultiLineTable(splitAfterColon, columnWidths)

@@ -33,8 +33,9 @@ actual class PrinterServiceProvider actual constructor(){
 
     actual fun getPrintTextForReceiptTemplate(
         posInvoice: PosInvoice,
-        template: String
+        template: String,
+        printers: Printers
     ): String {
-        return printer.applyDynamicReceiptTemplate(posInvoice,template)
+        return printer.applyDynamicReceiptTemplate(posInvoice,template,printers)
     }
 }

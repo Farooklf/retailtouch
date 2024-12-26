@@ -217,12 +217,12 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
-        val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
-        println("printingReceipt $finalTextToPrint")
+        //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+        //println("printingReceipt $finalTextToPrint")
         viewModelScope.launch {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2,printer)
                     println("finalTextToPrint :$finalTextToPrint")
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,

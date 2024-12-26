@@ -40,7 +40,6 @@ import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -78,22 +77,18 @@ fun Home(
     val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
 
     LaunchedEffect(isFromSplash) {
-          // println("callIsSplash :$isFromSplash")
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
-            homeViewModel.initialiseSplash(true)
-        }else{
-            homeViewModel.isLoggedIn()
+            homeViewModel.prepareHomeData()
+            homeViewModel.initialiseEmpScreen(isFromSplash)
         }
     }
 
-    /*when(homeUIState.hasEmployeeLoggedIn){
-        true -> {
-            //homeViewModel.updateSyncRotation(5)
-        }
-        false -> {
-            homeViewModel.initialiseSplash(isFromSplash)
+    /*LaunchedEffect(homeUIState.hasEmployeeLoggedIn) {
+        if (homeUIState.hasEmployeeLoggedIn) {
+            homeViewModel.prepareHomeData()
         }
     }*/
+
 
     LaunchedEffect(syncInProgress){
         if(syncInProgress){
@@ -101,21 +96,6 @@ fun Home(
         }
     }
 
-    // Update time every second
-    LaunchedEffect(Unit) {
-        while (true) {
-            currentTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            delay(1000L) // Update every second
-        }
-    }
-
-    // Blink effect for the colon every second
-    LaunchedEffect(Unit) {
-        while (true) {
-            showColon = !showColon // Toggle colon visibility
-            delay(1000L) // Blink every second
-        }
-    }
 
     Box(modifier = Modifier.fillMaxSize()){
         GradientBackgroundScreen(
@@ -177,6 +157,9 @@ fun Home(
                                     }
                                     HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)
+                                    }
+                                    HomeItemId.LOGOUT_ID->{
+                                        homeViewModel.updateEmployeeStatus()
                                     }
                                 }
                             }

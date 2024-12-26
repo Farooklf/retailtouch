@@ -22,7 +22,8 @@ actual class PrinterServiceProvider actual constructor() {
 
     actual fun getPrintTextForReceiptTemplate(
         posInvoice: PosInvoice,
-        template: String
+        template: String,
+        printers: Printers,
     ): String {
         return ""
     }

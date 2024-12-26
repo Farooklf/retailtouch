@@ -113,7 +113,7 @@ fun TransactionUI(
     LaunchedEffect(screenState.isError){
         if(screenState.isError){
             snackbarHostState.value.showSnackbar(screenState.errorMessage)
-            delay(2000)
+            delay(1000)
             viewModel.updateError("",false)
         }
     }
@@ -432,15 +432,7 @@ fun TransactionUI(
         )
     }
 
-    PendingSaleDialog(
-        state = screenState,
-        viewModel=viewModel,
-        isVisible = screenState.showPendingSalePopup,
-        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-        onDismiss = {
-            viewModel.updatePendingSalePopupState(false)
-        }
-    )
+
 }
 
 

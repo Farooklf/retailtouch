@@ -31,7 +31,7 @@ data class PosInvoiceDetail(
     @SerialName("promotionId")
     val promotionId: Int? = 0,
     @SerialName("qty")
-    val qty: Int = 0,
+    val qty: Double,
     @SerialName("roundingAmount")
     val roundingAmount: Double = 0.0,
     @SerialName("subTotal")

@@ -1699,8 +1699,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 posInvoiceDetails = cartList.map {cart->
                     var disc = 0.0
                     val itemPrice = cart.getFinalPrice().roundTo(4)
-                    if (/*itemTotal > 0 && */cart.qty > 0) {
-                    }
                     // Determine discount percentage based on global or item-level logic
                     val discountPercentage = if (globalDiscountIsInPercent) {
                         globalDiscount
@@ -1711,12 +1709,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     val total = cart.qty * cart.price
                     val subTotal = total - disc - cart.calculateDiscount()
                     val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotal, cart.tax)
+                    println("cart.qty ${cart.qty}")
                     PosInvoiceDetail(
                         productId = cart.stock.productId,
                         posInvoiceId = 0,
                         inventoryCode = cart.stock.inventoryCode,
                         inventoryName = cart.stock.name,
-                        qty = cart.qty.toInt(),
+                        qty = if(cart.qty>1.0) cart.qty else 1.0,
                         price = cart.price,
                         total = total,
                         totalAmount = itemPrice,
@@ -1767,7 +1766,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 //constructReceiptAndPrint(posInvoice)
                 constructReceiptAndPrintTemplate(posInvoice)
                 //constructReceiptAndPrint(posInvoice)
-                updateSales()
+                //updateSales()
                 //syncStockQuantity()
                 //syncInventory()
                 clearSale()
@@ -1873,12 +1872,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
-        val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
-        println("finalText $finalTextToPrint")
+        //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+        //println("finalText $finalTextToPrint")
         viewModelScope.launch {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
+                    println("printer_paperSize ${printer.paperSize}")
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2,printer)
                     println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(

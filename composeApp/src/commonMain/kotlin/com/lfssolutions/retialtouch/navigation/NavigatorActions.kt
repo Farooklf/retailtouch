@@ -21,12 +21,12 @@ object NavigatorActions {
     @Composable
     fun navigateToLoginScreen() {
         val navigator = LocalNavigator.currentOrThrow
-        navigator.push(Route.LoginScreen.toVoyagerScreen())
+        navigator.replace(Route.LoginScreen.toVoyagerScreen())
     }
 
     fun navigateToHomeScreen(navigator: Navigator,isSplash : Boolean) {
         //val navigator = LocalNavigator.currentOrThrow
-        navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
+        navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
 
@@ -35,9 +35,12 @@ object NavigatorActions {
     }
 
     fun navigateToCashierScreen(navigator: Navigator) {
-        navigator.replace(Route.POSScreen.toVoyagerScreen())
+        navigator.push(Route.POSScreen.toVoyagerScreen())
     }
 
+    fun navigateToCartScreen(navigator: Navigator) {
+        navigator.push(Route.CartScreen.toVoyagerScreen())
+    }
 
     fun navigateToPaymentScreen(navigator: Navigator) {
         navigator.push(Route.PaymentType.toVoyagerScreen())
@@ -59,9 +62,6 @@ object NavigatorActions {
         navigator.push(Route.Payout.toVoyagerScreen())
     }
 
-    fun navigateToCartScreen(navigator: Navigator) {
-        navigator.push(Route.CartScreen.toVoyagerScreen())
-    }
 
     fun navigateToSettlementScreen(navigator: Navigator) {
         navigator.push(Route.Settlement.toVoyagerScreen())
