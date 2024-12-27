@@ -1,7 +1,7 @@
 package com.lfssolutions.retialtouch.sync
 
 
-import com.lfssolutions.retialtouch.domain.model.sync.SyncResult
+import com.lfssolutions.retialtouch.domain.model.sync.UnSyncList
 
 
 data class SyncDataState(
@@ -14,5 +14,5 @@ data class SyncDataState(
     val reSyncTime:Int=0,
     val isPrinterEnabled:Boolean=false,
     val isBackDisplayActive:Boolean=false,
-    val syncerGuid: SyncResult = SyncResult()
+    val syncerGuid: UnSyncList = UnSyncList()
     )

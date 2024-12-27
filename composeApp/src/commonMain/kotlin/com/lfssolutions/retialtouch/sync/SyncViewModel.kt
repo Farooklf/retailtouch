@@ -12,7 +12,7 @@ import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllResponse
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
-import com.lfssolutions.retialtouch.domain.model.sync.SyncResult
+import com.lfssolutions.retialtouch.domain.model.sync.UnSyncList
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
 import com.lfssolutions.retialtouch.utils.AppConstants.MEMBER
@@ -147,12 +147,14 @@ class SyncViewModel : ViewModel() , KoinComponent {
     }
 
     private fun observeSyncChanges(apiResponse: RequestState<SyncAllResponse>) {
-        println("sync changes insertion")
         observeResponseNew(apiResponse,
-            onLoading = {  },
+            onLoading = {
+
+            },
             onSuccess = { apiData ->
                 if(apiData.success){
                     updateSyncerGuid(apiData.result)
+                    println("sync changes insertion")
                     getReSyncableItems()
                 }
             },
@@ -165,7 +167,8 @@ class SyncViewModel : ViewModel() , KoinComponent {
 
     private fun getReSyncableItems() {
         viewModelScope.launch(Dispatchers.IO) {
-            _syncDataState.value.syncerGuid.items.forEach { element ->
+            val state=syncDataState.value
+            state.syncerGuid.items.forEach { element ->
                 when (element.name.uppercase()) {
                     "MEMBER" ->{
                         updateSyncStatus("Syncing Member")
@@ -258,8 +261,8 @@ class SyncViewModel : ViewModel() , KoinComponent {
         }
     }
 
-    private fun updateSyncerGuid(mSyncResult: SyncResult) {
-        _syncDataState.update { it.copy(syncerGuid = mSyncResult) }
+    private fun updateSyncerGuid(mUnSyncList: UnSyncList) {
+        _syncDataState.update { it.copy(syncerGuid = mUnSyncList) }
     }
 
     private fun updateSyncProgress(syncStatus: Boolean) {

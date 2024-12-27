@@ -147,6 +147,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private val _lastSyncTs = MutableStateFlow(0L)
     val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
 
+    private val _resyncTimer = MutableStateFlow(0L)
+    val resyncTimer: StateFlow<Long> = _resyncTimer.asStateFlow()
+
+
     private val _uiUpdateStatus = MutableStateFlow(false)
     val uiUpdateStatus: StateFlow<Boolean> = _uiUpdateStatus.asStateFlow()
 

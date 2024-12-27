@@ -63,6 +63,21 @@ interface PreferencesRepository {
     suspend fun setMemberGroupSyncGrid(result: String)
     fun getMemberGroupSyncGrid(): Flow<String>
 
+    suspend fun setProductsSyncGrid(result: String)
+    fun getProductsSyncGrid(): Flow<String>
+
+    suspend fun setCategorySyncGrid(result: String)
+    fun getCategorySyncGrid(): Flow<String>
+
+    suspend fun setStockSyncGrid(result: String)
+    fun getStockSyncGrid(): Flow<String>
+
+    suspend fun setPromotionsSyncGrid(result: String)
+    fun getPromotionsSyncGrid(): Flow<String>
+
+    suspend fun setPaymentTypeSyncGrid(result: String)
+    fun getPaymentTypeSyncGrid(): Flow<String>
+
     suspend fun setIsPrinterEnabled(result: Boolean)
     fun getIsPrinterEnabled(): Flow<Boolean>
 
