@@ -53,8 +53,32 @@ val defaultTemplate = """
 ###{{invoice.qrUrl}}
 """
 
+
+val posSettlementDefaultTemplate1= """
+    [CA]SETTLEMENT\\n[C]---------------------------------------------------------------------------------------\\n[CA]{{settlement.date}}\\n[C]---------------------------------------------------------------------------------------\\nPay By    Actual    Entered    Difference\\n[C]---------------------------------------------------------------------------------------\\n{{#items}}\\n{{&paymentType}}    {{serverAmount}}    {{localAmount}}    {{diff}}\\n{{/items}}\\n[C]---------------------------------------------------------------------------------------\\n           {{settlement.itemTotal}}    {{settlement.localTotal}}    {{settlement.diff}}    \\n[C]---------------------------------------------------------------------------------------\\n[XXX]
+"""
+
+val posSettlementDefaultTemplate = """
+[C]<font size='big'>SETTLEMENT</font>   
+[[Line]]
+[C]<font size='big'>{{date}}</font>  
+[[Line]]
+Pay By  Actual  Entered  Difference
+[[Line]]
+{posSettlementDetails}
+[[Line]]   
+[C]{{itemTotal}}    {{localTotal}}    {{diff}}  
+[[Line]] 
+[XXX]
+   
+<!-- posSettlementDetails Table -->
+<ListItem>
+{{paymentType}}    {{serverAmount}}    {{localAmount}}    {{diff}}
+</ListItem>   
+"""
+
 val defaultTemplate2 = """
-@@@http://tajmahal.rtlconnect.net/common/upload/Taj2.bmp@@@
+@@@http://tajmahal.rtlconnect.net/common/upload/Taj2.bmp
 
 [L]<b>TAJ MAHAL FOOD PTE LTD</b>
 [L]UEN NO- 201705269N
@@ -64,7 +88,7 @@ val defaultTemplate2 = """
 [L]Customer Care- 8585 8584 / 8485 8585
 
 [[Line]]
-[C]TAX INVOICE
+[C]<b>TAX INVOICE</b>
 [[Line]]
 
 [L]Invoice No: {{invoiceNo}}
@@ -107,6 +131,4 @@ val defaultTemplate2 = """
 """
 
 
-val posSettlementDefaultTemplate= """
-    [CA]SETTLEMENT\\n[C]---------------------------------------------------------------------------------------\\n[CA]{{settlement.date}}\\n[C]---------------------------------------------------------------------------------------\\nPay By    Actual    Entered    Difference\\n[C]---------------------------------------------------------------------------------------\\n{{#items}}\\n{{&paymentType}}    {{serverAmount}}    {{localAmount}}    {{diff}}\\n{{/items}}\\n[C]---------------------------------------------------------------------------------------\\n           {{settlement.itemTotal}}    {{settlement.localTotal}}    {{settlement.diff}}    \\n[C]---------------------------------------------------------------------------------------\\n[XXX]
-"""
+

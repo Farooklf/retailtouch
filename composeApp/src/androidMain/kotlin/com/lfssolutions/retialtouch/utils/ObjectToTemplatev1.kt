@@ -35,6 +35,7 @@ class ObjectToReceiptTemplateV1 {
                 data::class.java.declaredFields.forEach { prop ->
                     prop.isAccessible = true
                     val value = prop.get(data)
+                    println("processTemplateValue: $value")
                     if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()

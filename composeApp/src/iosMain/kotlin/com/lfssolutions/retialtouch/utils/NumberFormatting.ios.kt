@@ -3,7 +3,7 @@ package com.lfssolutions.retialtouch.utils
 import kotlin.math.pow
 import kotlin.math.round
 
-actual class NumberFormatting actual constructor() {
+actual class NumberFormatter actual constructor() {
     actual fun format(value: Double, dec: Int): String {
         val multiplier = 10.0.pow(dec)
         val roundedValue = round(value * multiplier) / multiplier
@@ -18,5 +18,9 @@ actual class NumberFormatting actual constructor() {
                 append(parts[1].padEnd(dec, '0'))
             }
         }
+    }
+
+    actual fun formatAmountForPrint(amount: Double): String {
+        return ""
     }
 }

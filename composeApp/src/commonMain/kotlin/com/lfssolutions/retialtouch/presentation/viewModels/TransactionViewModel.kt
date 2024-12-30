@@ -1,17 +1,13 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
-import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
-import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
-import com.lfssolutions.retialtouch.utils.NumberFormatting
+import com.lfssolutions.retialtouch.utils.NumberFormatter
 import com.lfssolutions.retialtouch.utils.getDeliveryType
 import com.lfssolutions.retialtouch.utils.getStatusType
 import kotlinx.coroutines.Dispatchers
@@ -189,7 +185,7 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
         }
     }
     fun formatPriceForUI(amount: Double?) :String{
-        return  "${_screenState.value.currencySymbol}${NumberFormatting().format(amount?:0.0,2)}"
+        return  "${_screenState.value.currencySymbol}${NumberFormatter().format(amount?:0.0,2)}"
     }
 
     fun updateError(error: String,isError: Boolean){

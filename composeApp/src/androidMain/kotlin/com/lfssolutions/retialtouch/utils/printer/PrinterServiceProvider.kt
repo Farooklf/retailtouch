@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.utils.printer
 
 import com.lfssolutions.retialtouch.AndroidApp
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
+import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlement
 import com.lfssolutions.retialtouch.utils.PrinterType
 import comlfssolutionsretialtouch.Printers
 
@@ -37,5 +38,13 @@ actual class PrinterServiceProvider actual constructor(){
         printers: Printers
     ): String {
         return printer.applyDynamicReceiptTemplate(posInvoice,template,printers)
+    }
+
+    actual fun getFormattedTemplateForSettlement(
+        posSettlement: PosSettlement,
+        template: String,
+        printers: Printers
+    ): String {
+        return printer.applyDynamicReceiptTemplate(posSettlement,template,printers)
     }
 }

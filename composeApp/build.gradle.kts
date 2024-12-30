@@ -27,7 +27,7 @@ kotlin {
         }
     }
 
-    jvm("desktop")
+    //jvm("desktop")
     
     listOf(
         iosX64(),
@@ -41,7 +41,7 @@ kotlin {
     }
     
     sourceSets {
-        val desktopMain by getting
+       // val desktopMain by getting
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -58,6 +58,7 @@ kotlin {
             implementation(project(":escposprinter"))
             implementation(project(":PaymentsLibrary"))
         }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -90,7 +91,6 @@ kotlin {
 
             implementation(libs.kotlinx.datetime)
 
-            //implementation(libs.androidx.material.icons.extended)
             implementation(libs.kamel.imageLoader)
             implementation(libs.oskit.kmp)
             implementation(libs.oskit.compose)
@@ -109,12 +109,12 @@ kotlin {
 
         }
 
-        desktopMain.dependencies {
+        /*desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.cio)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.sqldelight.jvm)
-        }
+        }*/
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
