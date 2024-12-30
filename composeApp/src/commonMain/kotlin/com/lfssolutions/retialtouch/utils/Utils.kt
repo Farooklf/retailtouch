@@ -6,17 +6,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
-import io.kamel.core.utils.File
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
-import kotlinx.datetime.minus
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
@@ -92,6 +81,7 @@ import kotlin.math.round
 
 val JsonObj = Json { encodeDefaults = true }
 // Define the LocalAppState CompositionLocal
+
 
 
 val LocalAppState = compositionLocalOf<AppState> {
@@ -234,6 +224,7 @@ object AppConstants{
 
 object DoubleExtension{
 
+
     fun Double.roundTo(dec: Int = 2): Double {
         val multiplier = 10.0.pow(dec)
         return round(this * multiplier) / multiplier
@@ -265,8 +256,9 @@ object DoubleExtension{
 
 }
 
-fun formatAmountForPrint(amount: Double?, currencySymbol: String) :String{
-    return  "${currencySymbol}${amount?.roundTo(2)}"
+
+fun formatAmountForPrint(amount: Double?) :String{
+    return NumberFormatter().format(amount?:0.0)
 }
 
 fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
@@ -274,7 +266,15 @@ fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
 }
 
 fun formatPrice(amount: Double?,currencySymbol:String) : String {
-    return "${NumberFormatting().format(amount?:0.0)}$currencySymbol"
+    return "${NumberFormatter().format(amount?:0.0)}$currencySymbol"
+}
+
+fun roundTwoDecimalPlaces(amount:Double) :Double{
+    return amount.roundTo(2)
+}
+
+fun roundFourDecimalPlaces(amount:Double) :Double{
+    return amount.roundTo(4)
 }
 
 expect inline fun <reified T : ViewModel> Module.viewModelDefinition(

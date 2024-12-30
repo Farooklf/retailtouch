@@ -12,12 +12,19 @@ import com.lfssolutions.retialtouch.domain.model.settlement.CreateEditPOSSettlem
 import com.lfssolutions.retialtouch.domain.model.settlement.GetPOSPaymentSummaryRequest
 import com.lfssolutions.retialtouch.domain.model.settlement.PosLocation
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentTypeSummary
+import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlement
 import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlementDetail
+import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlementItem
 import com.lfssolutions.retialtouch.domain.model.settlement.SettlementUIState
 import com.lfssolutions.retialtouch.utils.DateFormatter
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatLocalDateWithoutTimeForPrint
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentLocalDateTime
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getEndLocalDateTime
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getStartLocalDateTime
+import com.lfssolutions.retialtouch.utils.PrinterType
+import com.lfssolutions.retialtouch.utils.posSettlementDefaultTemplate
+import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
+import com.lfssolutions.retialtouch.utils.roundTwoDecimalPlaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -262,7 +269,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                     getPendingSaleCount()
                     getPendingSales()
                     if (state.callPosSettlement) {
-                        callSettlementApi()
+                        executePosSettlement()
                     } else {
                         getPosPaymentSummary()
                         updateSyncProgress(false)
@@ -274,7 +281,6 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-
     fun submitPOSSettlement() {
         viewModelScope.launch(Dispatchers.IO) {
             val state = settlementState.value
@@ -284,60 +290,16 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
             } else {
                 updateSettlementCall(false)
                 updateLoader(true)
-                callSettlementApi()
+                executePosSettlement()
             }
         }
     }
 
-    private suspend fun callSettlementApi() {
+    private suspend fun executePosSettlement() {
         try {
-            val state = settlementState.value
-            var shortageOrEx = 0.0
-            var localTotal = 0.0
-            /*state.localSettlement.forEach{pt->
-                pt.amount?.let { localAmt ->
-                    localTotal+=localAmt
-                    val remoteAmt = state.remoteSettlement?.items
-                        ?.find { it.paymentTypeId == pt.paymentTypeId }
-                        ?.amount ?: 0.0
-
-                    shortageOrEx += (localAmt - remoteAmt)
-                }
-           }*/
-
-            val posSettlementDetails = state.localSettlement.map { pt ->
-                val amount = state.remoteSettlement?.items
-                    ?.find { it.paymentTypeId == pt.paymentTypeId }?.amount ?: 0.0
-                localTotal += pt.amount ?: 0.0
-                shortageOrEx += ((pt.amount ?: (0.0 - amount)))
-                PosSettlementDetail(
-                    paymentTypeId = pt.paymentTypeId,
-                    paymentTypeName = pt.paymentType,
-                    manualTotal = pt.amount,
-                    computerTotal = amount,
-                    shortageOrExcess = pt.amount?.let { localAmt -> localAmt - amount }
-                )
-            }
-
-
-            val posSettlementEditDio = CreateEditPOSSettlement(
-                settlementDate = getCurrentLocalDateTime(),
-                locationId = state.location.locationId,
-                locationName = state.location.name,
-                terminalName = "RetailWeb",
-                shift = 1,
-                cashOut = 0.0,
-                cashIn = 0.0,
-                computerTotal = state.remoteSettlement?.itemTotal,
-                floatAmount = state.remoteSettlement?.floatMoney,
-                manualTotal = localTotal,
-                netManualTotal = localTotal,
-                shortageOrExcess = shortageOrEx,
-                posSettlementDetails = posSettlementDetails
-            )
-
+            val posSettlement=prepareSettlementData()
             networkRepository.createOrUpdatePosSettlement(
-                CreateEditPOSSettlementRequest(posSettlement = posSettlementEditDio)
+                CreateEditPOSSettlementRequest(posSettlement = posSettlement)
             ).collect { apiResponse ->
                 observeResponseNew(apiResponse,
                     onLoading = {
@@ -361,6 +323,55 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
             updateError(exception.message ?: "submit data failed", true)
             updateLoader(false)
         }
+    }
+
+    private fun prepareSettlementData() : CreateEditPOSSettlement{
+        val state = settlementState.value
+        var shortageOrEx = 0.0
+        var localTotal = 0.0
+        /*state.localSettlement.forEach{pt->
+            pt.amount?.let { localAmt ->
+                localTotal+=localAmt
+                val remoteAmt = state.remoteSettlement?.items
+                    ?.find { it.paymentTypeId == pt.paymentTypeId }
+                    ?.amount ?: 0.0
+
+                shortageOrEx += (localAmt - remoteAmt)
+            }
+       }*/
+
+        val posSettlementDetails = state.localSettlement.map { pt ->
+            val amount = state.remoteSettlement?.items
+                ?.find { it.paymentTypeId == pt.paymentTypeId }?.amount ?: 0.0
+            localTotal += pt.amount ?: 0.0
+            shortageOrEx += ((pt.amount ?: (0.0 - amount)))
+            PosSettlementDetail(
+                paymentTypeId = pt.paymentTypeId,
+                paymentTypeName = pt.paymentType,
+                manualTotal = pt.amount,
+                computerTotal = amount,
+                shortageOrExcess = pt.amount?.let { localAmt -> localAmt - amount }
+            )
+        }
+
+
+        val posSettlement = CreateEditPOSSettlement(
+            settlementDate = getCurrentLocalDateTime(),
+            locationId = state.location.locationId,
+            locationName = state.location.name,
+            terminalName = "RetailWeb",
+            shift = 1,
+            cashOut = 0.0,
+            cashIn = 0.0,
+            computerTotal = state.remoteSettlement?.itemTotal,
+            floatAmount = state.remoteSettlement?.floatMoney,
+            manualTotal = localTotal,
+            netManualTotal = localTotal,
+            shortageOrExcess = shortageOrEx,
+            posSettlementDetails = posSettlementDetails
+        )
+
+        return posSettlement
     }
 
     private fun deleteSyncData() {
@@ -389,6 +400,96 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                 )
             }
         }
+    }
+
+    fun connectAndPrintTemplate(){
+       viewModelScope.launch {
+         try {
+             updateLoader(true)
+             val posSettlement = prepareSettlementPrintData()
+             println("posSettlement :$posSettlement")
+             connectAndPrintTemplate(posSettlement)
+
+         }catch (ex:Exception){
+             updateError(ex.message?:"print settlement failed",true)
+             updateLoader(false)
+         }
+       }
+   }
+
+
+  private fun prepareSettlementPrintData() : PosSettlement{
+      val state = settlementState.value
+      val localTotalAmount=state.localSettlement.sumOf { it.amount?:0.0 }
+
+      val posSettlementDetails = state.localSettlement.map { pt ->
+          val serverSettlement = state.remoteSettlement?.items
+              ?.firstOrNull { it.paymentTypeId == pt.paymentTypeId }?: PosPaymentTypeSummary(paymentType = pt.paymentType, paymentTypeId = pt.paymentTypeId, amount = 0.0)
+          val localAmount=pt.amount?:0.0
+          val serverAmount=serverSettlement.amount?:0.0
+          PosSettlementItem(
+              paymentTypeId = serverSettlement.paymentTypeId?:0,
+              paymentType = serverSettlement.paymentType?:"",
+              localAmount =  roundTwoDecimalPlaces(localAmount),
+              serverAmount = roundTwoDecimalPlaces(serverAmount),
+              diff = roundTwoDecimalPlaces(localAmount-serverAmount)
+          )
+      }
+
+      val posSettlement = PosSettlement(
+          date = formatLocalDateWithoutTimeForPrint(getCurrentLocalDateTime()),
+          cashOut = roundTwoDecimalPlaces(state.remoteSettlement?.cashIn?:0.0),
+          cashIn = roundTwoDecimalPlaces(state.remoteSettlement?.cashOut?:0.0),
+          floatMoney = roundTwoDecimalPlaces(state.remoteSettlement?.floatMoney?:0.0),
+          amount = roundTwoDecimalPlaces(state.remoteSettlement?.amount?:0.0),
+          itemTotal = roundTwoDecimalPlaces(state.remoteSettlement?.itemTotal?:0.0),
+          netTotal = roundTwoDecimalPlaces(state.remoteSettlement?.netTotal?:0.0),
+          subTotal = roundTwoDecimalPlaces(state.remoteSettlement?.subTotal?:0.0),
+          localTotal = roundTwoDecimalPlaces(localTotalAmount),
+          diff = roundTwoDecimalPlaces(localTotalAmount-(state.remoteSettlement?.itemTotal?:0.0)),
+          posSettlementDetails = posSettlementDetails
+      )
+      return posSettlement
+  }
+
+  private suspend fun connectAndPrintTemplate(posSettlement: PosSettlement) {
+      dataBaseRepository.getPrinter().collect { printer ->
+          if(printer!=null){
+              println("printer_paperSize ${printer.paperSize}")
+              val finalTextToPrint = PrinterServiceProvider().getFormattedTemplateForSettlement(
+                  posSettlement=posSettlement,
+                  template = posSettlementDefaultTemplate,
+                  printers = printer
+              )
+              println("finalTextToPrint :\n $finalTextToPrint")
+
+              PrinterServiceProvider().connectPrinterAndPrint(
+                  printers = printer,
+                  printerType = when (printer.printerType) {
+                      1L -> {
+                          PrinterType.Ethernet
+                      }
+
+                      2L -> {
+                          PrinterType.USB
+                      }
+
+                      3L -> {
+                          PrinterType.Bluetooth
+                      }
+                      else -> {
+                          PrinterType.Bluetooth
+                      }
+                  },
+                  textToPrint = finalTextToPrint
+              )
+              updateLoader(false)
+          }else{
+              //Show Message that your device is not connected
+              updateError(error = "add printer setting", isError = true)
+              updateLoader(false)
+          }
+      }
     }
 
 }

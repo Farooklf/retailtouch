@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.utils.printer
 
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
+import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlement
 import com.lfssolutions.retialtouch.utils.PrinterType
 import comlfssolutionsretialtouch.Printers
 
@@ -14,4 +15,5 @@ expect class PrinterServiceProvider(){
     )
 
     fun getPrintTextForReceiptTemplate(posInvoice: PosInvoice, template:String,printers: Printers):String
+    fun getFormattedTemplateForSettlement(posSettlement: PosSettlement, template:String, printers: Printers):String
 }

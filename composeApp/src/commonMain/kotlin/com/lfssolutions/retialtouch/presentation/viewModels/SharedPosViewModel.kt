@@ -4,9 +4,7 @@ package com.lfssolutions.retialtouch.presentation.viewModels
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.LoadData
-import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
@@ -34,7 +32,7 @@ import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateTime
 import com.lfssolutions.retialtouch.utils.DiscountApplied
 import com.lfssolutions.retialtouch.utils.DiscountType
 import com.lfssolutions.retialtouch.utils.DoubleExtension.roundTo
-import com.lfssolutions.retialtouch.utils.NumberFormatting
+import com.lfssolutions.retialtouch.utils.NumberFormatter
 import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.defaultTemplate
@@ -478,8 +476,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun findCartItem(stock: Stock, shoppingCart: List<CRShoppingCartItem>): CRShoppingCartItem? {
         return shoppingCart.firstOrNull { itm ->
-            val sameBarcode = stock.barcode != null && stock.barcode.length > 3 &&
-                    (itm.stock.barcode == stock.barcode || itm.stock.inventoryCode == stock.barcode)
+            val sameBarcode = stock.barcode.length > 3 && (itm.stock.barcode == stock.barcode || itm.stock.inventoryCode == stock.barcode)
             itm.stock.id == stock.id || sameBarcode
         }
     }
@@ -1178,7 +1175,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
 
     fun formatPriceForUI(amount: Double) :String{
-      return  "${_posUIState.value.currencySymbol}${NumberFormatting().format(amount)}"
+      return  "${_posUIState.value.currencySymbol}${NumberFormatter().format(amount)}"
     }
 
     fun updateDiscountType(discountType: DiscountType) {
@@ -1758,17 +1755,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     isDbUpdate = posInvoice.pendingInvoices>0,
                     isSynced = isSync
                 ))
-                //update qty
-                //dataBaseRepository.updateProductStockQuantity(posInvoice)
-                /*dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { pendingCount->
-                    updateUnSyncedInvoices(pendingCount)
-                }*/
-                //constructReceiptAndPrint(posInvoice)
                 constructReceiptAndPrintTemplate(posInvoice)
-                //constructReceiptAndPrint(posInvoice)
-                //updateSales()
-                //syncStockQuantity()
-                //syncInventory()
                 clearSale()
 
             }catch (ex:Exception){
@@ -1807,7 +1794,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-
     private fun prepareData(ticket: PosInvoice, state: PosUIState): Map<String, Any?> {
         val currencySymbol=state.currencySymbol
 
@@ -1815,8 +1801,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             ItemData(index+1,
                 items.inventoryName,
                 items.qty.toDouble(),
-                formatAmountForPrint(items.price, currencySymbol),
-                formatAmountForPrint(items.qty.times(items.price),currencySymbol))
+                formatAmountForPrint(items.price),
+                formatAmountForPrint(items.qty.times(items.price)))
         }?: emptyList()
 
 
@@ -1829,10 +1815,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             "customer.address2" to state.location?.address2,
             "items" to row,
             "invoice.qty" to row.size,
-            "invoice.invoiceSubTotal" to formatAmountForPrint(ticket.invoiceSubTotal,currencySymbol),
-            "invoice.tax" to formatAmountForPrint(ticket.invoiceTax,currencySymbol),
-            "invoice.netTotal" to formatAmountForPrint(ticket.invoiceNetTotal,currencySymbol),
-            "customer.balanceAmount" to  formatAmountForPrint(ticket.invoiceNetTotal, currencySymbol),
+            "invoice.invoiceSubTotal" to formatAmountForPrint(ticket.invoiceSubTotal),
+            "invoice.tax" to formatAmountForPrint(ticket.invoiceTax),
+            "invoice.netTotal" to formatAmountForPrint(ticket.invoiceNetTotal),
+            "customer.balanceAmount" to  formatAmountForPrint(ticket.invoiceNetTotal),
         )
 
         return data

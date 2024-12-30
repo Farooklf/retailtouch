@@ -14,7 +14,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.PosPayment
-import com.lfssolutions.retialtouch.utils.NumberFormatting
+import com.lfssolutions.retialtouch.utils.NumberFormatter
 import com.lfssolutions.retialtouch.utils.PrinterType
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
 import com.lfssolutions.retialtouch.utils.getDeliveryType
@@ -22,7 +22,6 @@ import com.lfssolutions.retialtouch.utils.getStatusType
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +31,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 
 class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
@@ -192,7 +190,7 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun formatPriceForUI(amount: Double?) :String{
-        return  "${_screenState.value.currencySymbol}${NumberFormatting().format(amount?:0.0,2)}"
+        return  "${_screenState.value.currencySymbol}${NumberFormatter().format(amount?:0.0,2)}"
     }
 
     fun rePrintAndCloseReceipt(){

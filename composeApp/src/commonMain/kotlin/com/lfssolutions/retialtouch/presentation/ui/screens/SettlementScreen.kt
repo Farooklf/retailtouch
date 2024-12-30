@@ -2,7 +2,6 @@ package com.lfssolutions.retialtouch.presentation.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,11 +39,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import coil3.compose.SubcomposeAsyncImage
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentTypeSummary
 import com.lfssolutions.retialtouch.domain.model.settlement.SettlementUIState
 import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
@@ -55,16 +52,13 @@ import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SettlementViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import com.lfssolutions.retialtouch.utils.NumberFormatting
 import com.lfssolutions.retialtouch.utils.formatPrice
-import com.lfssolutions.retialtouch.utils.serializers.toImageFiles
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.app_logo
-import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.pending
 import retailtouch.composeapp.generated.resources.print
 import retailtouch.composeapp.generated.resources.retail_pos
@@ -154,7 +148,7 @@ object SettlementScreen : Screen {
                             .weight(1f)
                             .wrapContentHeight(),
                         onClick = {
-
+                           viewModel.connectAndPrintTemplate()
                         })
 
                     //Pending Button
