@@ -6,6 +6,7 @@ import com.lfssolutions.retialtouch.domain.model.sync.UnSyncList
 
 data class SyncDataState(
     val syncInProgress:Boolean=false,
+    val syncingPosInvoices:Boolean=false,
     val syncProgressStatus:String="",
     val syncError:Boolean=false,
     val syncErrorInfo:String="",

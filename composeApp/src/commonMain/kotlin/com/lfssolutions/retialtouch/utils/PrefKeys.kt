@@ -9,6 +9,7 @@ object PrefKeys {
     const val USER_ID = "userID"
     const val USER_NAME = "userName"
     const val USER_PASSWORD = "userPassword"
+    const val USER_LOCATION = "userLocation"
     const val USER_TENANT_NAME = "userTenancyName"
     const val LOCATION_ID = "locationID"
     const val CURRENCY_SYMBOL = "currencySymbol"

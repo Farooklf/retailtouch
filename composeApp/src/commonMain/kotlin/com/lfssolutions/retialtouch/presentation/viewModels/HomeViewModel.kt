@@ -35,10 +35,6 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     private val _homeUIState = MutableStateFlow(HomeUIState())
     val homeUIState: StateFlow<HomeUIState> = _homeUIState.asStateFlow()
 
-    init {
-        syncEveryThing()
-    }
-
     fun initialiseEmpScreen(isSplash: Boolean) {
         viewModelScope.launch {
             _homeUIState.update { it.copy(isFromSplash = isSplash,isBlur=isSplash) }
@@ -153,7 +149,7 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
                     else
                         item
                 }
-                uiState.copy(homeItemList = updatedList,isSync=false)
+                uiState.copy(homeItemList = updatedList)
             }
         }
     }
@@ -185,14 +181,15 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun stopSyncRotation(value:Boolean){
+    fun stopSyncRotation(value:Boolean){
         viewModelScope.launch {
             _homeUIState.update { uiState ->
                 val updatedList = uiState.homeItemList.map { item ->
                     item.copy(isSyncRotate = value) // Update the isSyncRotate flag based on the passed value
                 }
-                uiState.copy(homeItemList = updatedList, isSync = value)
+                uiState.copy(homeItemList = updatedList)
             }
         }
     }
+
 }

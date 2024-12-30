@@ -397,6 +397,7 @@ private fun PortraitCashierScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.currentOrThrow
 
+    println("categories -${state.categories} | menuItems - ${state.menuProducts}")
 
     LaunchedEffect(Unit) {
         viewModel.loadTotal()

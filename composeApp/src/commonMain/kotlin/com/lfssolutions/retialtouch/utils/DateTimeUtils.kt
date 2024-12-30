@@ -38,6 +38,7 @@ object DateTimeUtils{
         )
         return endOfDay
     }
+
     fun getCurrentFormattedDate(): String {
         val currentMoment: Instant = Clock.System.now()
         val dateTime: LocalDateTime = currentMoment.toLocalDateTime(TimeZone.UTC)
@@ -104,9 +105,9 @@ object DateTimeUtils{
         return currentDateTime
     }
 
-    fun getLastSyncDateTime(): Instant {
+    fun getLastSyncDateTime(): String {
         val lastSyncDateTime = Clock.System.now().minus(2, DateTimeUnit.DAY, TimeZone.UTC)
-        return lastSyncDateTime
+        return lastSyncDateTime.toString()
     }
 
 

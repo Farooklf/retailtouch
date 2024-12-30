@@ -322,7 +322,7 @@ class DataBaseRepository: KoinComponent {
             withContext(Dispatchers.IO) {
                 clearStocks()
                 newStock.map { item ->
-                    println("InventoryCode: ${item.inventoryCode}")
+                    //println("InventoryCode: ${item.inventoryCode}")
                     val dao = MenuDao(
                         productId = item.id,
                         menuProductItem = item

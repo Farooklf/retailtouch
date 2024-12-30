@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ResponsiveBox
 import com.lfssolutions.retialtouch.presentation.ui.common.ScreenHeaderText
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
+import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -67,6 +69,8 @@ fun Login(
 ){
     val loginScreenState by loginViewModel.loginScreenState.collectAsState()
     //val appState = LocalAppState.current
+
+
 
     ResponsiveBox(
         modifier = Modifier.fillMaxSize(),
@@ -166,9 +170,9 @@ fun Login(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth(),
-                value = loginScreenState.locationId,
+                value = loginScreenState.location,
                 onValueChange = { locationId ->
-                    loginViewModel.updateLocationId(locationId)
+                    loginViewModel.updateLocation(locationId)
                 },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Done
@@ -219,149 +223,6 @@ fun Login(
             onNavigateDashBoard()
         }
     }
-    /*BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.backgroundWindow)
-    ) {
 
-        AppScreenPadding(
-            content = { horizontalPadding, verticalPadding ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            PaddingValues(
-                            horizontal = horizontalPadding,
-                            vertical = verticalPadding,
-                        )
-                        ),
-                    contentAlignment = Alignment.Center,
-                    content = {
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                        ){
-                            //Screen Header Text
-                            ScreenHeaderText(
-                                label = stringResource(Res.string.retail_pos)
-                            )
-
-                            //server address
-                            AppOutlinedTextField(
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                value = loginScreenState.server,
-                                onValueChange = { url ->
-                                    loginViewModel.updateServer(url)
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Next
-                                ),
-                                label = stringResource(Res.string.server_address),
-                                placeholder = stringResource(Res.string.server_address),
-                                singleLine = true,
-                                error = loginScreenState.serverError,
-                                enabled = !loginScreenState.isLoading
-                            )
-
-                            //tenant
-                            AppOutlinedTextField(
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                value = loginScreenState.tenant,
-                                onValueChange = { tenant ->
-                                    loginViewModel.updateTenant(tenant)
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Next
-                                ),
-                                label = stringResource(Res.string.tenant_name),
-                                placeholder = stringResource(Res.string.tenant_name),
-                                singleLine = true,
-                                error = loginScreenState.tenantError,
-                                enabled = !loginScreenState.isLoading
-                            )
-
-                            //User Name
-                            AppOutlinedTextField(
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                value = loginScreenState.username,
-                                onValueChange = { userName ->
-                                    loginViewModel.updateUsername(userName)
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Next
-                                ),
-                                placeholder = stringResource(Res.string.user_name),
-                                label = stringResource(Res.string.user_name),
-                                error = loginScreenState.userNameError,
-                                singleLine = true,
-                                enabled = !loginScreenState.isLoading
-                            )
-
-
-
-                            //User Password
-                            AppOutlinedTextField(
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                value = loginScreenState.password,
-                                onValueChange = { password ->
-                                    loginViewModel.updatePassword(password)
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Next
-                                ),
-                                visualTransformation = PasswordVisualTransformation(),
-                                label = stringResource(Res.string.password),
-                                placeholder = stringResource(Res.string.password),
-                                error = loginScreenState.passwordError,
-                                singleLine = true,
-                                enabled = !loginScreenState.isLoading)
-
-                            //Location Id
-                            AppOutlinedTextField(
-                                modifier = Modifier
-                                    .wrapContentHeight()
-                                    .fillMaxWidth(),
-                                value = loginScreenState.locationId,
-                                onValueChange = { locationId ->
-                                    loginViewModel.updateLocationId(locationId)
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Done
-                                ),
-                                label = stringResource(Res.string.location_id),
-                                placeholder = stringResource(Res.string.location_id),
-                                singleLine = true,
-                                enabled = !loginScreenState.isLoading)
-
-                            AppPrimaryButton(
-                                enabled = !loginScreenState.isLoading,
-                                onClick = {
-                                    loginViewModel.onLoginClick()
-                                },
-                                label = stringResource(Res.string.sign_in) ,
-                                isPortrait = appState.isPortrait,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                            )
-
-                        }
-
-                    }
-                )
-            }
-        )
-    }*/
 }
 

@@ -2,14 +2,18 @@ package com.lfssolutions.retialtouch.presentation.viewModels
 
 
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.RequestState
+import com.lfssolutions.retialtouch.domain.model.location.Location
+import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
-import com.lfssolutions.retialtouch.utils.TemplateType
+import com.lfssolutions.retialtouch.utils.AppConstants.LOCATION_ERROR_TITLE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -64,8 +68,8 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         _loginScreenState.update { it.copy(password = passwordInput) }
     }
 
-    fun updateLocationId(urlInput: String) {
-        _loginScreenState.update { it.copy(locationId = urlInput) }
+    fun updateLocation(location: String) {
+        _loginScreenState.update { it.copy(location = location) }
     }
 
     fun dismissErrorDialog() {
@@ -131,6 +135,8 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             try {
                     with(loginScreenState.value) {
+                        val lastLocationName = getLocationName()
+                        _loginScreenState.update { it.copy(lastLocationName=lastLocationName) }
                         networkRepository.hitLoginAPI(
                             LoginRequest(
                                 usernameOrEmailAddress = username.trim(),
@@ -179,13 +185,14 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
 
     private fun storeLoginInfo(loginResponse: LoginResponse?) {
         loginResponse?.let {
-            with(_loginScreenState.value) {
+            with(loginScreenState.value) {
                 setUserDetailsToDB(
                     loginResponse = loginResponse,
                     username = username,
                     url = server,
                     password = password,
-                    tenant = tenant
+                    tenant = tenant,
+                    location = location,
                 )
             }
         }
@@ -197,7 +204,8 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         username: String,
         url: String,
         password: String,
-        tenant: String
+        tenant: String,
+        location: String
     ) {
         val finalUrl = if (url.startsWith("http://") || url.startsWith("https://")) {
             url
@@ -222,12 +230,15 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
 
     private fun hitApiCall(){
         viewModelScope.launch(Dispatchers.IO) {
+
+            //Employee API
+            val locationResponse=async {
+                networkRepository.getLocationForUser(getBasicRequest())
+            }.await()
+            observeLocation(locationResponse)
+
             // Prepare all API calls in parallel using async
             val deferredResults = listOf(
-                //Location API
-                async {
-                   getLocations()
-                },
                 //Employee API
                 async {
                    getEmployees()
@@ -235,10 +246,6 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 //Employee Role API
                 async {
                     getEmployeeRole()
-                },
-
-                async {
-                    syncPrintTemplate(TemplateType.POSInvoice)
                 }
             )
 
@@ -251,6 +258,38 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
             }
             println("apiCall is end")
         }
+    }
+
+    private suspend fun observeLocation(apiResponse: Flow<RequestState<LocationResponse>>) {
+        val state=loginScreenState.value
+        observeResponse(apiResponse,
+            onLoading = {
+                updateLoaderMsg("Syncing Location")
+            },
+            onSuccess = { apiData ->
+                var userLocation=Location(name = "Empty Location", locationId = 0)
+                if(apiData.success && apiData.result.items.isNotEmpty()){
+                    val locationsData = apiData.result.items
+                    val locationItem = locationsData.first()
+                    userLocation=Location(locationId = locationItem.id?:0, name = locationItem.name?:"", code = locationItem.code?:"", address1 = locationItem.address1?:"", address2 = locationItem.address2?:"")
+                    if(state.location.isNotEmpty()){
+                        val rtLocation = locationsData.find{ it.code?.lowercase()== state.location.lowercase() || it.name?.lowercase() == state.location.lowercase()}
+                        if(rtLocation!=null){
+                            userLocation =Location(locationId = rtLocation.id?:0, name = rtLocation.name?:"", code = rtLocation.code?:"", address1 = rtLocation.address1?:"", address2 = rtLocation.address2?:"")
+                        }
+                    }
+
+                }
+                viewModelScope.launch {
+                    dataBaseRepository.insertLocation(apiData)
+                    setDefaultLocation(userLocation)
+                }
+            },
+            onError = {
+                    errorMsg ->
+                handleApiError(LOCATION_ERROR_TITLE,errorMsg)
+            }
+        )
     }
 
 }

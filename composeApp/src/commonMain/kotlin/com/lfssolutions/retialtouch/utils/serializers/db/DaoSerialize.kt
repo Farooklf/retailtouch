@@ -17,10 +17,14 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PriceBreakPromotionA
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
 import com.lfssolutions.retialtouch.utils.JsonObj
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+fun Location.toJson(): String = JsonObj.encodeToString(this)
+fun String.toDefaultLocation(): Location = JsonObj.decodeFromString(this)
 
 fun SaleInvoiceItem.toJson(): String = JsonObj.encodeToString(this)
 

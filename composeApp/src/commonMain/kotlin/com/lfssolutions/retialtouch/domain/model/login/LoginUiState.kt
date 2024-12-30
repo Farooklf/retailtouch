@@ -8,7 +8,7 @@ data class LoginUiState(
 
     val username: String = "",
     val password: String = "",
-    val locationId: String = "",
+    val location: String = "",
     val tenant: String = "",
     val server: String = "http://",
 
@@ -20,6 +20,7 @@ data class LoginUiState(
     val isLoginError: Boolean = false,
     val loginErrorMessage: String = "",
     val loginErrorTitle: String = "",
+    val lastLocationName: String = "",
 
 
     val userId:Int=0,

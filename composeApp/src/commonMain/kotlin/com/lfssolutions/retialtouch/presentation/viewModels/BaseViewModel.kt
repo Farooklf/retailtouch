@@ -73,6 +73,8 @@ import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
+import com.lfssolutions.retialtouch.utils.serializers.db.toDefaultLocation
+import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -82,7 +84,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -249,7 +250,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncProgressStatus.update { syncStatus }
     }
 
-    private fun updateLastSyncTs(syncStatus: Long) {
+     fun updateLastSyncTs(syncStatus: Long) {
         _lastSyncTs.update { syncStatus }
     }
     // Handle any sync errors
@@ -392,7 +393,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     //Api Calls
 
-    suspend fun getLocations(){
+    suspend fun getLocations(location: String) {
         try {
             //updateLoaderMsg("Fetching location data...")
             println("location Calling api : ${count++}")
@@ -458,14 +459,14 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun syncEveryThing(){
+    fun syncEveryThing2(){
        try {
          viewModelScope.launch(Dispatchers.IO) {
              updateSyncProgress(true)
 
              val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
              if (pendingCount <= 0) {
-                 loadNextSalesInvoiceNumber()
+                 loadNextSalesInvoiceNumber2()
              } else {
                  updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
              }
@@ -491,7 +492,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
        }
     }
 
-    private suspend fun loadNextSalesInvoiceNumber(){
+    suspend fun loadNextSalesInvoiceNumber2(){
         try {
             println("API CALL : ${count++}")
             updateSyncStatus("loading sale invoice count")
@@ -871,7 +872,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    private suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
+    suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
         println("employees insertion : ${count++}")
         observeResponse(apiResponse,
             onLoading = {  updateLoaderMsg("Syncing Employees")},
@@ -1067,7 +1068,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private fun observePromotionsQty(
+     private fun observePromotionsQty(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
@@ -1101,7 +1102,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    private fun observePromotionPrice(
+     private fun observePromotionPrice(
         apiResponse: RequestState<GetPromotionsByPriceResult>,
         promotion: PromotionItem
     ){
@@ -1135,7 +1136,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     }
 
 
-    private fun observePromotionByPriceBreak(
+     private fun observePromotionByPriceBreak(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
@@ -1170,7 +1171,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    private fun observeDefaultPromotions(
+     private fun observeDefaultPromotions(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
@@ -1267,7 +1268,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private fun handleApiError(errorTitle:String, errorMsg: String) {
+     fun handleApiError(errorTitle:String, errorMsg: String) {
         viewModelScope.launch(Dispatchers.Main) {
             println(errorMsg)
             updateLoginState(
@@ -1303,13 +1304,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private suspend fun getBasicRequest() = BasicApiRequest(
+    suspend fun getBasicRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
         lastSyncDateTime = _lastSyncDateTime.value
         )
 
-    private fun getBasicRequest(id:Int) = BasicApiRequest(
+    fun getBasicRequest(id:Int) = BasicApiRequest(
         id =id
     )
 
@@ -1317,7 +1318,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         tenantId = preferences.getTenantId().first()
     )
 
-    private suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
+    suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
         lastSyncDateTime = _lastSyncDateTime.value,
@@ -1326,6 +1327,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
     suspend fun getTenantId() = preferences.getTenantId().first()
+    suspend fun getLocation() = dataBaseRepository.getSelectedLocation().first()
 
     suspend fun getUserId() :Long{
         return preferences.getUserId().first()
@@ -1339,6 +1341,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getEmployeeCode().first()
     }
 
+    suspend fun setDefaultLocation(location: Location){
+        preferences.setLocation(location.toJson())
+    }
+
+    suspend fun getDefaultLocation():Location{
+        return preferences.getLocation().first().toDefaultLocation()
+    }
+
+    suspend fun getLocationName():String{
+        return preferences.getLocation().first().toDefaultLocation().name
+    }
 
 
     fun resetStates() {

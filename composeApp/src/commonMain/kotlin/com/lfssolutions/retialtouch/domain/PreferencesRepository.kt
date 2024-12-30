@@ -36,6 +36,9 @@ interface PreferencesRepository {
     suspend fun setUserPass(result: String)
     suspend fun getUserPass(): Flow<String>
 
+    suspend fun setLocation(result: String)
+    suspend fun getLocation(): Flow<String>
+
     suspend fun setTenancyName(result: String)
     suspend fun getTenancyName(): Flow<String>
 
