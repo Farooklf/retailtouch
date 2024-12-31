@@ -85,7 +85,9 @@ object DateTimeUtils{
         return durationDiff
     }
 
-    fun getHoursDifferenceFromEpochMilliseconds(startTime: Long, currentTime: Long): Long {
+
+
+    fun getHoursDifference(startTime: Long, currentTime: Long): Long {
         return (currentTime - startTime) / (1000 * 60 * 60) // Convert milliseconds to hours
     }
 

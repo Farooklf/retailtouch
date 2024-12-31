@@ -81,7 +81,8 @@ fun Home(
     //val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit){
-        syncViewModel.reSyncAfterLogin()
+        println("${homeViewModel.isCallCompleteSync()}")
+        syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
     }
 
     LaunchedEffect(isFromSplash) {

@@ -154,32 +154,7 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun onSyncClick(){
 
-        viewModelScope.launch(Dispatchers.IO) {
-            // Prepare all API calls in parallel using async
-            val deferredResults = listOf(
-                //Employee API
-                async {
-                    getEmployees()
-                },
-                //Employee Role API
-                async {
-                    getEmployeeRole()
-                },
-
-                //MenuCategory API
-                async {
-                    //syncMenu()
-                }
-            )
-
-            // Await all tasks (this will wait for all the parallel jobs to complete)
-            deferredResults.awaitAll()
-            stopSyncRotation(false)
-            println("apiCall is end")
-        }
-    }
 
     fun stopSyncRotation(value:Boolean){
         viewModelScope.launch {

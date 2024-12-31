@@ -18,6 +18,7 @@ object PrefKeys {
     const val EMPLOYEE_STATE = "employeeState"
     const val PRINTER_ENABLE= "printerEnable"
     const val TOKEN_EXPIRY_THRESHOLD = 1
+    const val SYNC_EXPIRY_THRESHOLD = 1
 
     const val LAST_SYNC_TS= "lastSyncTs"
     const val RE_SYNC_TIMER= "reSyncTimer"

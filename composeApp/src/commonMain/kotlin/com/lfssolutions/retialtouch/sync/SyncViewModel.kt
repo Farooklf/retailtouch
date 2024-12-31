@@ -12,6 +12,7 @@ import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosI
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryItem
+import com.lfssolutions.retialtouch.domain.model.menu.MenuItem
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPriceResult
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
@@ -62,12 +63,9 @@ import org.koin.core.component.inject
 
 class SyncViewModel : BaseViewModel() , KoinComponent {
 
-    //private val networkRepository: NetworkRepository by inject()
-    private val preferencesRepository: PreferencesRepository by inject()
-    //private val dataBaseRepository: DataBaseRepository by inject()
-
     private val _syncDataState = MutableStateFlow(SyncDataState())
     val syncDataState: StateFlow<SyncDataState> = _syncDataState.asStateFlow()
+
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
     private val categoryList = MutableStateFlow<List<CategoryItem>>(emptyList())
 
@@ -83,36 +81,34 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         PAYMENT_TYPE to false
     )
 
-    init {
+    /*init {
         // Read reSync time from storage and start the sync timer
         viewModelScope.launch {
-            _syncDataState.update { it.copy(reSyncTime = getReSyncTimer()) }
+            println("start periodicSync")
             startPeriodicSync()
         }
-    }
+    }*/
 
     suspend fun reSyncAfterLogin(locationChange : Boolean = false)  {
         val pCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
         println("pCount :$pCount")
         if (pCount <= 0 || locationChange) {
-            println("start sync everything")
+            println("start syncEveryThing")
             syncEveryThing()
         } else {
-            println("start re sync items")
+            println("start reSyncItems")
             reSyncItems()
         }
     }
 
-
-
     fun reSync(completeSync: Boolean = false) {
-        if (syncInProgress.value) return
+        if (syncDataState.value.syncInProgress) return
         if (completeSync) {
-            println("start sync everything")
+            println("start syncEveryThing")
             syncEveryThing()
         } else {
-            println("start re sync items")
-            reSyncItems()
+            println("start reSyncItems")
+                reSyncItems()
         }
     }
 
@@ -125,7 +121,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     async {
                         val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
                         if (pendingCount <= 0) {
-                            loadNextSalesInvoiceNumber()
+                            _loadNextSalesInvoiceNumber()
                         } else {
                             updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
                         }
@@ -133,9 +129,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     async { _syncMember() },
                     async { _syncMemberGroup() },
                     async { _syncSalesHistory() },
-                    async { _syncStockQuantity() },
+                    async { _syncCategory() },
                     async { _syncInventory() },
-                    async { _syncCategories() },
                     async { _syncPromotion()},
                     async { _syncPaymentTypes()}
                 )
@@ -146,7 +141,6 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 setLastSyncTs()
                 updateSyncCountZero()
                 updateSyncProgress(false)
-
             } catch (e: Exception) {
                 val error = "failed during sync: ${e.message}"
                 println("SYNC_ERROR $error")
@@ -154,18 +148,27 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncProgress(false)
             }
         }
-
     }
 
+    // Update reSync time and restart timer
+    fun updateReSyncTime(time: Int) {
+        if (time > 0) {
+            viewModelScope.launch {
+                setReSyncTimer(time) // Persist new time to storage
+                _syncDataState.update {it.copy(reSyncTime = time)}
+                startPeriodicSync()  // Restart timer with new interval
+            }
+        }
+    }
 
     // Start the periodic reSync timer with the given time
     private fun startPeriodicSync() {
         // Cancel any existing timer before setting a new one
         timerJob?.cancel()
         // Create a new coroutine for periodic resync
-        timerJob = CoroutineScope(Dispatchers.Default).launch {
+        timerJob = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) { // Check if the coroutine is still active
-                val time = syncDataState.value.reSyncTime
+                val time = getReSyncTimer()
                 try {
                     reSyncItems(silent = true)
                     syncPendingSales()
@@ -176,22 +179,17 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             }
         }
 
-        /*while (isActive) {
-                reSyncItems(true)  // Perform the sync silently
-                //getPendingData
-                delay(timeInMinutes.minutes.inWholeMilliseconds)
-            }*/
     }
 
     private fun reSyncItems(silent: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                networkRepository.syncAllApis(getBasicRequest()).collectLatest { apiResponse ->
+                if (!silent) {
+                    updateSyncProgress(true)
+                }
+                networkRepository.syncAllApis(getBasicRequest()).collect { apiResponse ->
                     observeResponseNew(apiResponse,
                         onLoading = {
-                            if (!silent) {
-                                updateSyncProgress(true)
-                            }
                         },
                         onSuccess = { apiData ->
                             if (apiData.success) {
@@ -201,22 +199,16 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                         updateSyncerGuid(apiData.result)
                                         getReSyncableItems()
                                         for ((key, value) in syncFlags) {
-                                            updateSyncStatus("Syncing $key Data")
-                                            println("Syncing $key Data")
+                                            println("Syncing $key ...")
+                                            updateSyncStatus("Syncing $key ...")
                                             when (key) {
-                                                MEMBER -> if (value) {
-                                                    _syncMember()
-                                                }
-                                                MEMBER_GROUP -> if (value) _syncMemberGroup()
-                                                PRODUCT -> if(value) {
-                                                    _syncStockQuantity(lastSyncTime = getLastSyncDateTime())
-                                                    _syncInventory(lastSyncTime = getLastSyncDateTime())
-                                                }
-                                                CATEGORY -> if(value) _syncCategories()
-                                                PROMOTION -> if(value) _syncPromotion()
-                                                PAYMENT_TYPE -> if(value) _syncPaymentTypes()
+                                                MEMBER ->  if(value){ _syncMember() }
+                                                MEMBER_GROUP -> if(value) _syncMemberGroup()
+                                                PRODUCT -> if(value) { _syncInventory(lastSyncTime = getLastSyncDateTime()) }
+                                                CATEGORY -> if(value)  _syncCategory()
+                                                PROMOTION -> if(value)  _syncPromotion()
+                                                PAYMENT_TYPE -> if(value)  _syncPaymentTypes()
                                             }
-                                            //updateSyncCount() // Increment after each sync
                                         }
                                         updateSyncCountZero()
                                         updateSyncStatus("All sync operation have been completed")
@@ -249,20 +241,21 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             when (element.name.uppercase()) {
                 MEMBER -> {
                     updateSyncStatus("Syncing Member")
+                    println("MEMBER ${getMemberSyncGrid()}")
                     syncFlags["MEMBER"] = getMemberSyncGrid() != element.syncerGuid
 
                 }
 
                 MEMBER_GROUP -> {
                     updateSyncStatus("Syncing Member Group")
+                    println("MEMBERGROUP ${getMemberGroupSyncGrid()}")
                     syncFlags["MEMBERGROUP"] = getMemberGroupSyncGrid() != element.syncerGuid
-                    return@forEach // Skips remaining lines of this iteration
                 }
 
                 "PRODUCT" -> {
                     updateSyncStatus("Syncing Inventory")
+                    println("PRODUCT ${getProductsSyncGrid()}")
                     syncFlags["PRODUCT"] = getProductsSyncGrid() != element.syncerGuid
-                    return@forEach
                 }
 
                 "CATEGORY" -> {
@@ -282,6 +275,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
 
                 "PAYMENTTYPE" -> {
                     updateSyncStatus("Syncing Payment Type")
+                    println("PAYMENTTYPE ${getPaymentTypeSyncGrid()}")
                     syncFlags["PAYMENTTYPE"] = getPaymentTypeSyncGrid() != element.syncerGuid
                 }
             }
@@ -309,8 +303,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     listenSaleProcessState()
                 }
             } catch (ex: Exception) {
-                handleError(
-                    "pending saving invoice", "Error saving invoice \n" +
+                handleError("pending saving invoice", "Error saving invoice \n" +
                             " ${ex.message} "
                 )
                 updateInvoiceSyncing(false)
@@ -324,7 +317,6 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 is ApiLoaderStateResponse.Loader -> {
 
                 }
-
                 is ApiLoaderStateResponse.Error -> {
                     updateInvoiceSyncing(false)
                 }
@@ -332,24 +324,22 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 is ApiLoaderStateResponse.Success -> {
                     updateInvoiceSyncing(false)
                 }
-
             }
         }
     }
 
     private suspend fun _syncMember() {
         try {
+            updateSyncStatus("Syncing Member Data...")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest { apiResponse ->
                 observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateSyncStatus("Syncing Member Data")
-                    },
+                    onLoading = {},
                     onSuccess = { apiData ->
                         if (apiData.success) {
                             viewModelScope.launch {
                                 dataBaseRepository.insertMembers(apiData)
                                 val syncItem = updateSyncGrid(MEMBER)
-                                preferencesRepository.setMemberSyncGrid(syncItem.syncerGuid)
+                                preferences.setMemberSyncGrid(syncItem.syncerGuid)
                                 updateSyncCount()
                                 println("SyncMemberInsertionComplete ${syncDataState.value.syncCount}")
                             }
@@ -368,30 +358,29 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
 
     private suspend fun _syncMemberGroup() {
         try {
-            networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest { apiResponse ->
+            updateSyncStatus("Syncing Member Group Data")
+            networkRepository.getMemberGroup(getBasicTenantRequest()).collect { apiResponse ->
                 observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateSyncStatus("Syncing Member Group Data")
-                    },
+                    onLoading = {},
                     onSuccess = { apiData ->
                         if (apiData.success) {
                             viewModelScope.launch {
                                 dataBaseRepository.insertMemberGroup(apiData)
                                 val syncItem = updateSyncGrid(MEMBER_GROUP)
-                                preferencesRepository.setMemberGroupSyncGrid(syncItem.syncerGuid)
+                                preferences.setMemberGroupSyncGrid(syncItem.syncerGuid)
                                 updateSyncCount()
                                 println("SyncMemberGroupInsertionComplete ${syncDataState.value.syncCount}")
                             }
                         }
                     },
                     onError = { errorMsg ->
-                        handleError(MEMBER_ERROR_TITLE, errorMsg)
+                        updateError(true,MEMBER_ERROR_TITLE, errorMsg)
                     }
                 )
             }
         } catch (e: Exception) {
-            val error = "${e.message}"
-            handleError(MEMBER_ERROR_TITLE, error)
+            val errorMsg = "${e.message}"
+            updateError(true,MEMBER_ERROR_TITLE, errorMsg)
         }
     }
 
@@ -408,7 +397,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     }
 
                     is RequestState.Loading -> {
-                        updateLoaderMsg("Syncing Sales History")
+
                     }
 
                     is RequestState.Success -> {
@@ -498,13 +487,15 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    private suspend fun _syncInventory(syncProduct:Boolean=true,lastSyncTime:String?=null){
+    private suspend fun _syncProducts(syncProduct:Boolean=true,lastSyncTime:String?=null){
         try {
             if(!syncProduct) return
+            updateSyncStatus("Syncing Inventory...")
            val request = BasicApiRequest(
                 locationId = getLocationId(),
                 tenantId = getTenantId(),
                 lastSyncDateTime = lastSyncTime)
+
             val inventoryResponse=networkRepository.getProductsWithTax(request)
             val barcodesResponse=networkRepository.getProductBarCode(request)
             if(lastSyncTime!=null){
@@ -512,15 +503,13 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 dataBaseRepository.clearBarcode()
             }
             observeResponse(inventoryResponse,
-                onLoading = {
-                    updateSyncStatus("Syncing Inventory")
-                },
+                onLoading = {},
                 onSuccess = { apiData ->
                     viewModelScope.launch {
                         if(apiData.success){
                             dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap.value)
                             val syncItem = updateSyncGrid(PRODUCT)
-                            preferencesRepository.setProductsSyncGrid(syncItem.syncerGuid)
+                            preferences.setProductsSyncGrid(syncItem.syncerGuid)
                             updateSyncCount()
                             println("SyncProductInsertionComplete ${syncDataState.value.syncCount}")
                         }
@@ -553,71 +542,152 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    private suspend fun _syncCategories(){
+    private fun _syncInventory(syncProduct:Boolean=true,lastSyncTime:String?=null){
         try {
-            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
-                observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateSyncStatus("Syncing Categories")
-                    },
-                    onSuccess = { apiData ->
-                        if(apiData.success){
-                            viewModelScope.launch {
-                                dataBaseRepository.insertCategories(apiData)
-                                val syncItem = updateSyncGrid(CATEGORY)
-                                preferencesRepository.setCategorySyncGrid(syncItem.syncerGuid)
-                                updateSyncCount()
-                                println("SyncCategoryInsertionComplete ${syncDataState.value.syncCount}")
-                                categoryList.update { apiData.result.items }
-                                _syncMenu(apiData.result.items)
+            if(!syncProduct) return
+            updateLoginSyncStatus("Syncing Inventory...")
+            println("Syncing Inventory : ${count++}")
+            viewModelScope.launch {
+                val stockQtyMap: MutableMap<Int, Double?> = mutableMapOf()
+                val request = BasicApiRequest(
+                    locationId = getLocationId(),
+                    tenantId = getTenantId(),
+                    lastSyncDateTime = lastSyncTime)
+                async { networkRepository.getProductLocation(request).collect {stockAvailResponse->
+                    observeResponseNew(stockAvailResponse,
+                        onLoading = {
+                        },
+                        onSuccess = { apiData ->
+                            if (apiData.success) {
+                                apiData.result?.items?.forEach { stock ->
+                                    stockQtyMap[stock.productId]=stock.qtyOnHand
+                                }
                             }
+                        },
+                        onError = { errorMsg ->
+                            updateError(true,INVENTORY_ERROR_TITLE,errorMsg)
                         }
-                    },
-                    onError = {
-                            errorMsg ->
-                        updateError(true,MENU_CATEGORY_ERROR_TITLE,errorMsg)
+                    )
+                } }.await()
+                println("StocksQty:$stockQtyMap")
+                async {
+                    networkRepository.getProductsWithTax(request).collect{inventoryResponse->
+                        observeResponseNew(inventoryResponse,
+                            onLoading = {  },
+                            onSuccess = { apiData ->
+                                if(apiData.success){
+                                    viewModelScope.launch {
+                                        dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap)
+                                        val syncItem = updateSyncGrid(PRODUCT)
+                                        preferences.setProductsSyncGrid(syncItem.syncerGuid)
+                                        updateSyncCount()
+                                        println("SyncProductInsertionComplete ${syncDataState.value.syncCount}")
+                                    }
+                                }
+                            },
+                            onError = {
+                                    errorMsg ->
+                                updateError(true,INVENTORY_ERROR_TITLE,errorMsg)
+                            }
+                        )
                     }
-                )
+                }.await()
+                async {
+                    networkRepository.getProductBarCode(request).collect{barcodesResponse->
+                        observeResponseNew(barcodesResponse,
+                            onLoading = {  },
+                            onSuccess = { apiData ->
+                                viewModelScope.launch {
+                                    dataBaseRepository.insertUpdateBarcode(apiResponse = apiData,lastSyncDateTime=lastSyncTime)
+                                }
+                            },
+                            onError = { errorMsg ->
+                                updateError(true,INVENTORY_ERROR_TITLE,errorMsg)
+                            }
+                        )
+                    }
+                }.await()
+
+            }
+
+        }catch (e: Exception){
+            val errorMsg="${e.message}"
+            updateError(true,INVENTORY_ERROR_TITLE,errorMsg)
+        }
+    }
+
+    private suspend fun _syncCategory(){
+        try {
+            viewModelScope.launch {
+                val categoryList: MutableList<CategoryItem> = mutableListOf()
+                async {
+                    updateLoginSyncStatus("Syncing Product Category...")
+                    println("Syncing Product Category : ${count++}")
+                    networkRepository.getMenuCategories(getBasicRequest()).collect {apiResponse->
+                        observeResponseNew(apiResponse,
+                            onLoading = {  },
+                            onSuccess = { apiData ->
+                                if(apiData.success){
+                                    viewModelScope.launch {
+                                        dataBaseRepository.insertCategories(apiData)
+                                        val syncItem = updateSyncGrid(CATEGORY)
+                                        preferences.setCategorySyncGrid(syncItem.syncerGuid)
+                                        updateSyncCount()
+                                        println("SyncCategoryInsertionComplete ${syncDataState.value.syncCount}")
+                                        apiData.result.items.forEach {category->
+                                            println("menu api for : ${category.id}")
+                                            categoryList.add(category)
+                                        }
+                                    }
+                                }
+                            },
+                            onError = { errorMsg ->
+                                updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
+                            }
+                        )
+                    }
+                }.await()
+                println("categoryList :$categoryList")
+                _syncMenu(categoryList)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            updateError(true,MENU_CATEGORY_ERROR_TITLE,error)
+            updateLoginError(MENU_CATEGORY_ERROR_TITLE,error)
         }
     }
 
     private suspend fun _syncMenu(items: List<CategoryItem>) {
-        //val newStock : MutableList<MenuItem> = mutableListOf()
+        val newStock : MutableList<MenuItem> = mutableListOf()
         items.forEach { cat->
             println("MenuProductsAPI : ${cat.id}")
+            updateSyncStatus("Syncing Menu For Category ID ${cat.id}")
             networkRepository.getMenuProducts(getBasicRequest(cat.id?:0)).collectLatest {response->
                 observeResponseNew(response,
-                    onLoading = {
-                        updateSyncStatus("Syncing Menu For Category ID ${cat.id}")
-                    },
+                    onLoading = {},
                     onSuccess = { menuData ->
                         if(menuData.success){
+                            menuData.result.items.forEach { menu->
+                                val updatedMenu=menu.copy(menuCategoryId=cat.id?:0, id = if(menu.id==0L) menu.productId else menu.id)
+                                newStock.add(updatedMenu)
+                            }
                             viewModelScope.launch {
-                                val newStock = menuData.result.items.map { menu->
-                                    menu.copy(menuCategoryId=cat.id?:0, id = if(menu.id==0L) menu.productId else menu.id)
-                                    //newStock.add(updatedMenu)
-                                }
-                                dataBaseRepository.insertNewStock(newStock.map{mnu->
+                                val updatedStocks=newStock.map{menu->
                                     Stock(
-                                        id = mnu.id?:0,
-                                        name = mnu.name?:"",
-                                        imagePath = mnu.imagePath ?: "",
-                                        categoryId = mnu.menuCategoryId?:0,
-                                        productId = mnu.productId?:0,
-                                        sortOrder = mnu.sortOrder?:0,
-                                        inventoryCode = mnu.inventoryCode?:"",
-                                        fgColor = mnu.foreColor ?: "",
-                                        bgColor = mnu.backColor ?: "",
-                                        barcode = mnu.barCode?:""
+                                        id = menu.id?:-1,
+                                        name = menu.name?:"",
+                                        imagePath = menu.imagePath ?: "",
+                                        categoryId = menu.menuCategoryId?:-1,
+                                        productId = menu.productId?:0,
+                                        sortOrder = menu.sortOrder?:0,
+                                        inventoryCode = menu.inventoryCode?:"",
+                                        fgColor = menu.foreColor ?: "",
+                                        bgColor = menu.backColor ?: "",
+                                        barcode = menu.barCode?:""
                                     )
-                                })
-
+                                }
+                                dataBaseRepository.insertNewStock(updatedStocks)
                                 val syncItem = updateSyncGrid(MENU)
-                                preferencesRepository.setStockSyncGrid(syncItem.syncerGuid)
+                                preferences.setStockSyncGrid(syncItem.syncerGuid)
                                 updateSyncCount()
                                 println("SyncStockInsertionComplete ${syncDataState.value.syncCount}")
                             }
@@ -633,48 +703,42 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
 
     private suspend fun _syncPromotion(){
         try {
+            updateSyncStatus("Syncing Promotions...")
             networkRepository.getPromotions(PromotionRequest(tenantId = getTenantId())).collectLatest { apiResponse->
                 observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateSyncStatus("Syncing Promotions")
-                    },
+                    onLoading = {},
                     onSuccess = { apiData ->
                         if(apiData.success){
                             viewModelScope.launch {
-                                dataBaseRepository.insertPromotions(apiData)
-                                //get
                                 apiData.result?.map {item->
-                                    if(item!=null){
-                                        when(item.promotionTypeName){
-                                            "PromotionByQty"->{
-                                                networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collect { promotionsData->
-                                                    observePromotionsQty(promotionsData,item)
-                                                }
-                                            }
-
-                                            "PromotionByPrice" ->{
-                                                networkRepository.getPromotionsByPrice(PromotionRequest(id = item.id.toInt())).collect { promotionsData->
-                                                    observePromotionPrice(promotionsData,item)
-                                                }
-                                            }
-
-                                            "PromotionByPriceBreak"->{
-                                                networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                                                    observePromotionByPriceBreak(promotionsData,item)
-                                                }
-                                            }
-                                            else->{
-                                                networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                                                    observeDefaultPromotions(promotionsData,item)
-                                                }
+                                    when(item.promotionTypeName){
+                                        "PromotionByQty"->{
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collect { promotionsData->
+                                                observePromotionsQty(promotionsData,item)
                                             }
                                         }
 
+                                        "PromotionByPrice" ->{
+                                            networkRepository.getPromotionsByPrice(PromotionRequest(id = item.id.toInt())).collect { promotionsData->
+                                                observePromotionPrice(promotionsData,item)
+                                            }
+                                        }
+
+                                        "PromotionByPriceBreak"->{
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
+                                                observePromotionByPriceBreak(promotionsData,item)
+                                            }
+                                        }
+                                        else->{
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
+                                                observeDefaultPromotions(promotionsData,item)
+                                            }
+                                        }
                                     }
                                 }
-
+                                dataBaseRepository.insertPromotions(apiData)
                                 val syncItem = updateSyncGrid(PROMOTION)
-                                preferencesRepository.setPromotionsSyncGrid(syncItem.syncerGuid)
+                                preferences.setPromotionsSyncGrid(syncItem.syncerGuid)
                                 updateSyncCount()
                                 println("SyncPromotionInsertionComplete ${syncDataState.value.syncCount}")
                             }
@@ -838,7 +902,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                             viewModelScope.launch {
                                 dataBaseRepository.insertPaymentType(apiData)
                                 val syncItem = updateSyncGrid(PAYMENT_TYPE)
-                                preferencesRepository.setPaymentTypeSyncGrid(syncItem.syncerGuid)
+                                preferences.setPaymentTypeSyncGrid(syncItem.syncerGuid)
                                 updateSyncCount()
                                 println("SyncPaymentInsertionComplete ${syncDataState.value.syncCount}")
                             }
@@ -856,7 +920,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    private suspend fun loadNextSalesInvoiceNumber(){
+    private suspend fun _loadNextSalesInvoiceNumber(){
         try {
             updateSyncStatus("syncing sale invoice count")
             networkRepository.getNextPOSSaleInvoice(getBasicRequest()).collectLatest {apiResponse->
@@ -892,30 +956,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         return state.syncerGuid.items.firstOrNull{ it.name.uppercase() == name }
             ?: SyncItem(name = name, syncerGuid = "", id = 0)
     }
-
-    private suspend fun setLastSyncTs(){
-        preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
-    }
-
-    private suspend fun setReSyncTimer(time:Int) {
-        preferencesRepository.setReSyncTimer(time)
-    }
-
-    // Load from preferencesRepository
-    private suspend fun getReSyncTimer(): Int {
-        return preferencesRepository.getReSyncTime().first()
-    }
-
-    // Update reSync time and restart timer
-    fun updateReSyncTime(time: Int) {
-        if (time > 0) {
-            viewModelScope.launch {
-                setReSyncTimer(time) // Persist new time to storage
-                _syncDataState.update {it.copy(reSyncTime = time)}
-                startPeriodicSync()  // Restart timer with new interval
-            }
-        }
-    }
+    
 
     private fun updateSyncerGuid(mUnSyncList: UnSyncList) {
         _syncDataState.update { it.copy(syncerGuid = mUnSyncList) }
@@ -940,8 +981,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     private fun updateSyncCountZero() {
         _syncDataState.update { it.copy(syncCount = 0) }
     }
-
-
+    
     // Handle any sync errors
     private fun handleError(errorTitle: String, errorMsg: String) {
         _syncDataState.update { it.copy(syncError = true, syncErrorInfo = "$errorTitle \n $errorMsg") }
@@ -951,45 +991,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         _syncDataState.update { it.copy(syncError = syncError,syncErrorInfo = "$errorTitle \n $errorMsg") }
     }
 
-     /*suspend fun getBasicRequest() = BasicApiRequest(
-        tenantId = preferencesRepository.getTenantId().first(),
-        locationId = preferencesRepository.getLocationId().first(),
-    )*/
-
-
-    private suspend fun getBasicTenantRequest() = BasicApiRequest(
-        tenantId = preferencesRepository.getTenantId().first()
-    )
-
-    private suspend fun getMemberSyncGrid() : String{
-        return preferencesRepository.getMemberSyncGrid().first()
-    }
-
-    private suspend fun getMemberGroupSyncGrid() : String{
-        return preferencesRepository.getMemberGroupSyncGrid().first()
-    }
-
-    private suspend fun getProductsSyncGrid() : String{
-        return preferencesRepository.getProductsSyncGrid().first()
-    }
-
-    private suspend fun getCategorySyncGrid() : String{
-        return preferencesRepository.getCategorySyncGrid().first()
-    }
-
-    private suspend fun getStockSyncGrid() : String{
-        return preferencesRepository.getStockSyncGrid().first()
-    }
-
-    private suspend fun getPromotionsSyncGrid() : String{
-        return preferencesRepository.getPromotionsSyncGrid().first()
-    }
-
-    private suspend fun getPaymentTypeSyncGrid() : String{
-        return preferencesRepository.getPaymentTypeSyncGrid().first()
-    }
-
-
+    
     private fun stopPeriodicSync() {
         timerJob?.cancel()  // Stop the job
     }
