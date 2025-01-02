@@ -12,6 +12,8 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_GROUP_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG
+import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG_DEFAULT_VALUE
 import com.lfssolutions.retialtouch.utils.PrefKeys.NEXT_SALE_INVOICE_NUMBER
 import com.lfssolutions.retialtouch.utils.PrefKeys.PRINTER_ENABLE
 import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
@@ -344,6 +346,20 @@ class PreferencesImpl(
         return flowSettings.getStringFlow(
             key = TERMINAL_CODE,
             defaultValue = ""
+        )
+    }
+
+    override suspend fun setNetworkConfig(result: String) {
+        flowSettings.putString(
+            key = NETWORK_CONFIG,
+            value = result
+        )
+    }
+
+    override fun getNetworkConfig(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = NETWORK_CONFIG,
+            defaultValue = NETWORK_CONFIG_DEFAULT_VALUE
         )
     }
 

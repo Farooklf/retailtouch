@@ -68,4 +68,7 @@ interface PreferencesRepository {
 
     suspend fun setTerminalCode(result: String)
     fun getTerminalCode(): Flow<String>
+
+    suspend fun setNetworkConfig(result: String)
+    fun getNetworkConfig(): Flow<String>
 }

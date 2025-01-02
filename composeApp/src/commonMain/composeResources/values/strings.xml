@@ -178,4 +178,28 @@
     <string name="no_products_added">No Products Added</string>
     <string name="print">Print</string>
     <string name="sync_desc">Some items are not synced.</string>
+
+    <string name="general_settings">General Settings</string>
+    <string name="general">General</string>
+    <string name="language">Language</string>
+    <string name="language_description">Change Language</string>
+    <string name="error_log">Error Log</string>
+    <string name="export_log">Export Log</string>
+    <string name="pos_link">POS Link</string>
+    <string name="server">Server</string>
+    <string name="master_user">Master User</string>
+    <string name="unlink">Unlink</string>
+    <string name="disconnect_device">Disconnect this device</string>
+    <string name="not_specified">Not specified</string>
+    <string name="network_config">Network Config</string>
+    <string name="ip_address_with_port">IP Address with Port</string>
+    <string name="app_version">App Version</string>
+    <string name="round_off_option">Select Round Off Options</string>
+    <string name="round_off_description">Can change the RoundOff applied type</string>
+    <string name="grid_view_options">Grid View Options</string>
+    <string name="grid_view_option_value">%1$dx%1$d Menu Items - Grid View</string>
+    <string name="grid_view_options_description">Can change the Grid View Items of the Menu Items into 3x3 , 4x4</string>
+    <string name="payment_settings">Payment Settings</string>
+    <string name="confirm_popup_title">Payment Confirm Popup</string>
+    <string name="confirm_popup_description">Enable to show popup after every payment completion</string>
 </resources>

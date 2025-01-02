@@ -1,0 +1,506 @@
+package com.lfssolutions.retialtouch.presentation.ui.settings
+
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabPosition
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.presentation.ui.common.AppDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogButton
+import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogContent
+import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogTextField
+import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
+import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
+import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
+import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.utils.AppIcons
+import com.lfssolutions.retialtouch.utils.LocalAppState
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
+import org.koin.compose.koinInject
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.alert_cancel
+import retailtouch.composeapp.generated.resources.alert_ok
+import retailtouch.composeapp.generated.resources.app_version
+import retailtouch.composeapp.generated.resources.disconnect_device
+import retailtouch.composeapp.generated.resources.error_log
+import retailtouch.composeapp.generated.resources.export_log
+import retailtouch.composeapp.generated.resources.general
+import retailtouch.composeapp.generated.resources.ip_address_with_port
+import retailtouch.composeapp.generated.resources.language
+import retailtouch.composeapp.generated.resources.master_user
+import retailtouch.composeapp.generated.resources.network_config
+import retailtouch.composeapp.generated.resources.pos_link
+import retailtouch.composeapp.generated.resources.server
+import retailtouch.composeapp.generated.resources.settings
+import retailtouch.composeapp.generated.resources.tenant_name
+import retailtouch.composeapp.generated.resources.terminal_code
+import retailtouch.composeapp.generated.resources.unlink
+
+
+object SettingScreen : Screen {
+
+    @Composable
+    override fun Content() {
+       SettingUI()
+    }
+
+
+    @Composable
+    private fun SettingUI(
+        viewModel : SettingViewModel = koinInject()
+    ) {
+
+        val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
+        val navigator = LocalNavigator.currentOrThrow
+        val appState = LocalAppState.current
+        val state by viewModel.settingUiState.collectAsStateWithLifecycle()
+        val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
+        val authUser by viewModel.authUser.collectAsStateWithLifecycle()
+
+        BasicScreen(
+            modifier = Modifier.systemBarsPadding(),
+            screenBackground = AppTheme.colors.screenBackground,
+            title = stringResource(Res.string.settings),
+            isTablet = appState.isTablet,
+            contentMaxWidth = Int.MAX_VALUE.dp,
+            onBackClick = {
+                navigator.pop()
+            }
+        ){
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillScreenHeight()
+                    .align(Alignment.TopCenter)
+            ){
+                val scope = rememberCoroutineScope()
+                val pagerState = rememberPagerState(pageCount = { state.tabs.size })
+                val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
+
+                // Scrollable Tabs Row
+                ScrollableTabRow(
+                    selectedTabIndex = selectedTabIndex.value,
+                    containerColor = AppTheme.colors.secondaryBg,
+                    contentColor = AppTheme.colors.textPrimary,
+                    modifier = Modifier.fillMaxWidth().background(
+                        color = AppTheme.colors.secondaryBg,
+                        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp) // Custom background shape
+                    ).padding(top = 5.dp),
+                    edgePadding = 8.dp,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex.value]),
+                            color = AppTheme.colors.textPrimary,
+                            height = 4.dp
+                        )
+                    }
+                ){
+                    state.tabs.forEachIndexed  {index, currentTab ->
+                        Tab(
+                            selected = selectedTabIndex.value == index,
+                            selectedContentColor=AppTheme.colors.textPrimary,
+                            unselectedContentColor =AppTheme.colors.textDarkGrey,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = {
+                                Text(
+                                    text = currentTab.title,
+                                    style = if(index==selectedTabIndex.value) AppTheme.typography.bodyBold() else AppTheme.typography.bodyMedium()
+                                )
+                            },
+                            icon = {
+                               Icon(
+                                   imageVector = vectorResource(currentTab.icon) ,
+                                   contentDescription = currentTab.title,
+                                   modifier = Modifier.size(AppTheme.dimensions.standerIcon),
+                                   )
+                                //tint = if(index==selectedTabIndex.value) AppTheme.colors.textPrimary else AppTheme.colors.textDarkGrey
+                            }
+                        )
+                    }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+
+                ){ page ->
+                    Column(
+                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        when (page) {
+                            0 -> SettingMainPage(state = state,viewModel= viewModel)
+                            1 -> SettingCategoriesPage(state = state,viewModel= viewModel)
+                            2 -> SettingPaymentPage(state = state,viewModel= viewModel)
+                            3 -> SettingEmployeesPage(state = state,viewModel= viewModel)
+                            4 -> SettingDataStatsPage(state = state,viewModel= viewModel)
+                        }
+                    }
+                }
+            }
+
+         }
+
+
+
+        TextFieldSettingsDialog(
+            isVisible = state.showNetworkConfigDialog,
+            value = state.networkConfig,
+            title = stringResource(Res.string.network_config),
+            onCloseDialog = {
+                viewModel.updateNetworkConfigDialogVisibility(false)
+            },
+            onDialogResult = {
+                viewModel.updateNetworkConfig(it)
+            }
+        )
+
+    }
+
+
+    @Composable
+    fun CustomTabIndicator(currentTabPosition: TabPosition) {
+        val indicatorWidth by animateDpAsState(targetValue = currentTabPosition.width)
+        val indicatorOffset by animateDpAsState(targetValue = currentTabPosition.left)
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+            Box(
+                Modifier
+                    .offset(x = indicatorOffset)
+                    .width(indicatorWidth)
+                    .height(2.dp)
+                    .background(AppTheme.colors.textPrimary)
+            )
+        }
+    }
+
+    @Composable
+    fun SettingMainPage(state: SettingUIState, viewModel: SettingViewModel) {
+        //Language
+        SettingsGroupItem(
+            title = stringResource(Res.string.general)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.language),
+                icon = AppIcons.languageIcon,
+                onClick = {},
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //Error Log
+        SettingsGroupItem(
+            title = stringResource(Res.string.error_log)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.export_log),
+                icon = AppIcons.exportIcon,
+                onClick = {},
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //network_config
+        SettingsGroupItem(
+            title = stringResource(Res.string.network_config)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.ip_address_with_port),
+                description = state.networkConfig,
+                icon = AppIcons.serverIcon,
+                onClick = {
+                    viewModel.updateNetworkConfigDialogVisibility(true)
+                },
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //App Version
+        SettingsGroupItem(
+            title = stringResource(Res.string.app_version)
+        ){
+            SettingsItem(
+                title = state.appVersion,
+                icon = AppIcons.versionIcon,
+                onClick = {
+                },
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //POS Link
+        SettingsGroupItem(
+            title = stringResource(Res.string.pos_link)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.server),
+                description = state.serverUrl,
+                icon = AppIcons.serverIcon,
+                onClick = {
+
+                },
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.tenant_name),
+                description = state.tenant.uppercase(),
+                icon = AppIcons.empRoleIcon,
+                onClick = {
+
+                },
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.master_user),
+                description = state.user.uppercase(),
+                icon = AppIcons.empRoleIcon,
+                onClick = {
+
+                },
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.unlink),
+                description = stringResource(Res.string.disconnect_device),
+                icon = AppIcons.unlinkIcon,
+                onClick = {
+
+                },
+                isSwitchable = false,
+                showDivider = false
+            )
+
+        }
+    }
+
+
+    @Composable
+    fun SettingPaymentPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+    }
+
+    @Composable
+    fun SettingEmployeesPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+    }
+
+    @Composable
+    fun SettingCategoriesPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+    }
+
+    @Composable
+    fun SettingDataStatsPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+    }
+
+    @Composable
+    private fun SettingsGroupItem(
+        title: String,
+        content: @Composable ColumnScope.() -> Unit = {},
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp)
+        ) {
+
+            Text(
+                text = title,
+                modifier = Modifier.padding(start = 20.dp, bottom = 10.dp),
+                style = AppTheme.typography.bodyMedium(),
+                color = AppTheme.colors.textPrimary
+            )
+
+            Card(modifier = Modifier.fillMaxWidth().padding(5.dp),
+                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBgColor),
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ){
+                content()
+            }
+        }
+    }
+
+    @Composable
+    private fun SettingsItem(
+        title: String,
+        icon: DrawableResource,
+        description: String? = null,
+        onClick: () -> Unit = {},
+        isSwitchable: Boolean = true,
+        checked: Boolean = false,
+        showDivider: Boolean = true,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(2.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        role = Role.Button,
+                        onClick = onClick
+                    )
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = vectorResource(icon),
+                    contentDescription = title,
+                    tint = AppTheme.colors.textDarkGrey,
+                    modifier = Modifier.size(AppTheme.dimensions.standerIcon),
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = AppTheme.typography.titleNormal(),
+                        color = AppTheme.colors.textDarkGrey
+                    )
+
+                    description?.let {
+                        Text(
+                            text = it ,
+                            style = AppTheme.typography.bodyNormal().copy(fontSize = 14.sp),
+                            color = AppTheme.colors.textDarkGrey.copy(alpha = .8f)
+                        )
+                    }
+                }
+
+                if (isSwitchable) {
+                    AppSwitch(
+                        checked = checked,
+                        onCheckedChange = { onClick() }
+                    )
+                }
+            }
+
+            if (showDivider) {
+                Divider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = AppTheme.colors.listBorderColor,
+                    thickness = 1.dp
+                )
+            }
+        }
+    }
+
+
+    @Composable
+    private fun TextFieldSettingsDialog(
+        isVisible: Boolean,
+        value: String,
+        title: String,
+        onCloseDialog: () -> Unit = {},
+        onDialogResult: (String) -> Unit = {},
+    ) {
+        var displayedValue by remember(value) {
+            mutableStateOf(value)
+        }
+        val focusRequester = remember { FocusRequester() }
+
+        AppDialog(
+            isVisible = isVisible,
+            onDismissRequest = onCloseDialog,
+        ) {
+            AppDialogContent(
+                title = title,
+                modifier = Modifier.padding(bottom = 10.dp),
+                body = {
+                    AppDialogTextField(
+                        value = displayedValue,
+                        onValueChange = { displayedValue = it },
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .focusRequester(focusRequester)
+                            .onGloballyPositioned {
+                                focusRequester.requestFocus()
+                            }
+                    )
+                },
+                buttons = {
+                    AppDialogButton(
+                        title = stringResource(Res.string.alert_cancel),
+                        onClick = onCloseDialog
+                    )
+
+                    AppDialogButton(
+                        title = stringResource(Res.string.alert_ok),
+                        onClick = { onDialogResult(displayedValue) }
+                    )
+                }
+            )
+        }
+    }
+}

@@ -1217,29 +1217,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    suspend fun getTerminal(){
-        try {
-            updateLoaderMsg("Fetching terminal data...")
-            println("terminal calling api : ${count++}")
-            networkRepository.getTerminal(getBasicRequest()).collectLatest{terminalResponse->
-                observeTerminal(terminalResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleApiError(TERMINAL_ERROR_TITLE,error)
-        }
-    }
 
-    private fun observeTerminal(apiResponse: RequestState<TerminalResponse>) {
-        println("terminal insertion : ${count++}")
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Fetching Terminal....")},
-            onSuccess = { apiData -> /*inser(locationData)*/ },
-            onError = { errorMsg ->
-                handleApiError(TERMINAL_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
 
     fun updateLoginState(loading: Boolean, successfulLogin:Boolean, loginError: Boolean, title :String,error:String) {
         viewModelScope.launch {
@@ -1335,7 +1313,21 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getEmployeeCode().first()
     }
 
+    suspend fun getCurrentServer() : String{
+        return preferences.getBaseURL().first()
+    }
 
+    suspend fun setNetworkConfig(networkConfig:String){
+         preferences.setNetworkConfig(networkConfig)
+    }
+
+    suspend fun getNetworkConfig():String{
+        return preferences.getNetworkConfig().first()
+    }
+
+    fun observeNetworkConfig(): Flow<String> {
+        return preferences.getNetworkConfig()
+    }
 
     fun resetStates() {
         viewModelScope.launch {

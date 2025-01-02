@@ -28,24 +28,31 @@ import retailtouch.composeapp.generated.resources.delivered
 import retailtouch.composeapp.generated.resources.delivery
 import retailtouch.composeapp.generated.resources.drawer
 import retailtouch.composeapp.generated.resources.ic_add
+import retailtouch.composeapp.generated.resources.ic_app_version
 import retailtouch.composeapp.generated.resources.ic_back_arrow_circle
 import retailtouch.composeapp.generated.resources.ic_calendar
 import retailtouch.composeapp.generated.resources.ic_cancel
 import retailtouch.composeapp.generated.resources.ic_card
 import retailtouch.composeapp.generated.resources.ic_cash
 import retailtouch.composeapp.generated.resources.ic_cashier
+import retailtouch.composeapp.generated.resources.ic_categories
 import retailtouch.composeapp.generated.resources.ic_category
 import retailtouch.composeapp.generated.resources.ic_check
 import retailtouch.composeapp.generated.resources.ic_cross
+import retailtouch.composeapp.generated.resources.ic_data_stats
 import retailtouch.composeapp.generated.resources.ic_discount
 import retailtouch.composeapp.generated.resources.ic_dollar
 import retailtouch.composeapp.generated.resources.ic_down
 import retailtouch.composeapp.generated.resources.ic_drawer
 import retailtouch.composeapp.generated.resources.ic_e_exchange
 import retailtouch.composeapp.generated.resources.ic_edit
+import retailtouch.composeapp.generated.resources.ic_employees
 import retailtouch.composeapp.generated.resources.ic_error
+import retailtouch.composeapp.generated.resources.ic_exclamation
 import retailtouch.composeapp.generated.resources.ic_file_excel
+import retailtouch.composeapp.generated.resources.ic_home
 import retailtouch.composeapp.generated.resources.ic_indian_rupee
+import retailtouch.composeapp.generated.resources.ic_language_exchange
 import retailtouch.composeapp.generated.resources.ic_locations
 import retailtouch.composeapp.generated.resources.ic_login_lock
 import retailtouch.composeapp.generated.resources.ic_member
@@ -53,6 +60,7 @@ import retailtouch.composeapp.generated.resources.ic_membership
 import retailtouch.composeapp.generated.resources.ic_minus
 import retailtouch.composeapp.generated.resources.ic_minus_circle
 import retailtouch.composeapp.generated.resources.ic_pause
+import retailtouch.composeapp.generated.resources.ic_payment
 import retailtouch.composeapp.generated.resources.ic_payment_card
 import retailtouch.composeapp.generated.resources.ic_payout
 import retailtouch.composeapp.generated.resources.ic_percentage
@@ -64,12 +72,14 @@ import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_promotion_discount
 import retailtouch.composeapp.generated.resources.ic_receipt
 import retailtouch.composeapp.generated.resources.ic_search
+import retailtouch.composeapp.generated.resources.ic_server
 import retailtouch.composeapp.generated.resources.ic_settings
 import retailtouch.composeapp.generated.resources.ic_settlement
 import retailtouch.composeapp.generated.resources.ic_star
 import retailtouch.composeapp.generated.resources.ic_stock
 import retailtouch.composeapp.generated.resources.ic_sync
 import retailtouch.composeapp.generated.resources.ic_trash
+import retailtouch.composeapp.generated.resources.ic_unlink
 import retailtouch.composeapp.generated.resources.ic_user_add
 import retailtouch.composeapp.generated.resources.ic_wifi
 import retailtouch.composeapp.generated.resources.logout
@@ -155,6 +165,16 @@ object AppIcons {
     val cardIcon by lazy { Res.drawable.ic_card}
     val cashIcon by lazy { Res.drawable.ic_cash}
     val editIcon by lazy { Res.drawable.ic_edit}
+    val employees by lazy { Res.drawable.ic_employees}
+    val homeIcon by lazy { Res.drawable.ic_home}
+    val categories by lazy { Res.drawable.ic_categories}
+    val payment by lazy { Res.drawable.ic_payment}
+    val dataStats by lazy { Res.drawable.ic_data_stats}
+    val exportIcon by lazy { Res.drawable.ic_exclamation}
+    val serverIcon by lazy { Res.drawable.ic_server}
+    val unlinkIcon by lazy { Res.drawable.ic_unlink}
+    val languageIcon by lazy { Res.drawable.ic_language_exchange}
+    val versionIcon by lazy { Res.drawable.ic_app_version}
 }
 
 object HomeItemId{

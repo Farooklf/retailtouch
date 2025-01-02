@@ -67,6 +67,7 @@ interface SystemDesignColors {
     val textLightGrey: Color
     val textBlack: Color
     val textDarkGrey: Color
+    val textGrey: Color
     val listRowBgColor: Color
     val borderColor: Color
     val mintGreenColor: Color
@@ -127,6 +128,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     override val textLightGrey = Color(0xFFf5f5f5)
     override val textBlack = Color(0xFF010101)
     override val textDarkGrey = Color(0xFF4c4c4c)
+    override val textGrey = Color(0xFFe1e1e1)
     override val textCaption: Color = Color(0xFF000000)
     override val textError: Color = Color(0xFFb8131a)
     override val appWhite: Color = TextWhite
@@ -225,6 +227,7 @@ fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
     override val textBlack = Color(0xFF000000)
     override val textLightGrey = Color(0xFFE2E2E2)
     override val textDarkGrey = Color(0xFF4c4c4c)
+    override val textGrey = Color(0xFFe1e1e1)
     override val textCaption: Color = Color(0xFF000000)
     override val textError: Color = Color(0xFFb8131a)
     override val appWhite: Color = Color(0xFFFFFFFF)
