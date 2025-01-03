@@ -16,4 +16,17 @@ data class AuthenticateDao(
 
 )
 
+@Serializable
+data class RTLoginUser(
+    val userId: Int=0,
+    val tenantId: Int=0,
+    val isLoggedIn: Boolean=false,
+    val isSelected: Boolean=false,
+    val userName: String = "",
+    val tenantName: String = "",
+    val serverURL: String = "",
+    val password: String = "",
+    val currency: String = "",
+)
+
 

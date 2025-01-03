@@ -202,4 +202,13 @@
     <string name="payment_settings">Payment Settings</string>
     <string name="confirm_popup_title">Payment Confirm Popup</string>
     <string name="confirm_popup_description">Enable to show popup after every payment completion</string>
+    <string name="menu_settings">Menu Settings</string>
+    <string name="menu_notes">Menu Notes</string>
+    <string name="menu_notes_description">Enable notes when selecting menu items</string>
+    <string name="cart_marquee">Cart Marquee</string>
+    <string name="cart_marquee_description">Enable cart marquee for cart items</string>
+    <string name="cart_item_merge">Merge Cart Items</string>
+    <string name="cart_item_merge_description">Enable merging cart items</string>
+    <string name="fast_paymode">Fast Paymode</string>
+    <string name="fast_paymode_description">Enable Fast PayMode to have speed and fast seamless payment experience with minimal steps</string>
 </resources>

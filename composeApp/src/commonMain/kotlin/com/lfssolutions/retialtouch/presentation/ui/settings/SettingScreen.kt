@@ -42,9 +42,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +49,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogButton
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogContent
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogTextField
+import com.lfssolutions.retialtouch.presentation.ui.common.ActionTextFiledDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
+import com.lfssolutions.retialtouch.presentation.ui.common.GridViewOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.RoundOffOptionsDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -68,22 +64,31 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
-import retailtouch.composeapp.generated.resources.alert_cancel
-import retailtouch.composeapp.generated.resources.alert_ok
 import retailtouch.composeapp.generated.resources.app_version
+import retailtouch.composeapp.generated.resources.cart_item_merge
+import retailtouch.composeapp.generated.resources.cart_item_merge_description
+import retailtouch.composeapp.generated.resources.confirm_popup_description
+import retailtouch.composeapp.generated.resources.confirm_popup_title
 import retailtouch.composeapp.generated.resources.disconnect_device
 import retailtouch.composeapp.generated.resources.error_log
 import retailtouch.composeapp.generated.resources.export_log
+import retailtouch.composeapp.generated.resources.fast_paymode
+import retailtouch.composeapp.generated.resources.fast_paymode_description
 import retailtouch.composeapp.generated.resources.general
+import retailtouch.composeapp.generated.resources.grid_view_options
+import retailtouch.composeapp.generated.resources.grid_view_options_description
 import retailtouch.composeapp.generated.resources.ip_address_with_port
 import retailtouch.composeapp.generated.resources.language
 import retailtouch.composeapp.generated.resources.master_user
+import retailtouch.composeapp.generated.resources.menu_settings
 import retailtouch.composeapp.generated.resources.network_config
+import retailtouch.composeapp.generated.resources.payment_settings
 import retailtouch.composeapp.generated.resources.pos_link
+import retailtouch.composeapp.generated.resources.round_off_description
+import retailtouch.composeapp.generated.resources.round_off_option
 import retailtouch.composeapp.generated.resources.server
 import retailtouch.composeapp.generated.resources.settings
 import retailtouch.composeapp.generated.resources.tenant_name
-import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.unlink
 
 
@@ -104,8 +109,6 @@ object SettingScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val appState = LocalAppState.current
         val state by viewModel.settingUiState.collectAsStateWithLifecycle()
-        val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
-        val authUser by viewModel.authUser.collectAsStateWithLifecycle()
 
         BasicScreen(
             modifier = Modifier.systemBarsPadding(),
@@ -188,10 +191,10 @@ object SettingScreen : Screen {
 
                         when (page) {
                             0 -> SettingMainPage(state = state,viewModel= viewModel)
-                            1 -> SettingCategoriesPage(state = state,viewModel= viewModel)
-                            2 -> SettingPaymentPage(state = state,viewModel= viewModel)
-                            3 -> SettingEmployeesPage(state = state,viewModel= viewModel)
-                            4 -> SettingDataStatsPage(state = state,viewModel= viewModel)
+                            1 -> SettingProductPage(state = state,viewModel= viewModel)
+                            /*2 -> SettingPaymentPage(state = state,viewModel= viewModel)*/
+                            2 -> SettingEmployeesPage(state = state,viewModel= viewModel)
+                            3 -> SettingDataStatsPage(state = state,viewModel= viewModel)
                         }
                     }
                 }
@@ -201,7 +204,7 @@ object SettingScreen : Screen {
 
 
 
-        TextFieldSettingsDialog(
+        ActionTextFiledDialog(
             isVisible = state.showNetworkConfigDialog,
             value = state.networkConfig,
             title = stringResource(Res.string.network_config),
@@ -211,6 +214,24 @@ object SettingScreen : Screen {
             onDialogResult = {
                 viewModel.updateNetworkConfig(it)
             }
+        )
+
+        GridViewOptionsDialog(
+            title = stringResource(Res.string.grid_view_options),
+            isVisible = state.showGridViewOptionsDialog,
+            values = state.availableGridViewOptions,
+            selectedValue = state.gridViewOption,
+            onCloseDialog = { viewModel.updateGridViewOptionsDialogVisibility(false) },
+            onDialogResult = { viewModel.updateGridViewOption(it) }
+        )
+
+        RoundOffOptionsDialog(
+            title = stringResource(Res.string.round_off_option),
+            isVisible = state.showRoundOffDialog,
+            values = state.availableRoundOffOptions,
+            selectedValue = state.roundOffOption,
+            onCloseDialog = { viewModel.updateRoundOffOptionsDialogVisibility(false) },
+            onDialogResult = { viewModel.updateRoundOffOption(it) }
         )
 
     }
@@ -342,6 +363,66 @@ object SettingScreen : Screen {
         }
     }
 
+    @Composable
+    fun SettingProductPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+       val roundOffText = when (state.roundOffOption) {
+            1 -> "Default"
+            2 -> "Round Up"
+            3 -> "Round Down"
+            else -> stringResource(Res.string.round_off_description)
+        }
+        //Menu Setting
+        SettingsGroupItem(title = stringResource(Res.string.menu_settings)){
+            SettingsItem(
+                title = stringResource(Res.string.grid_view_options),
+                description = stringResource(Res.string.grid_view_options_description),
+                icon = AppIcons.gridIcon,
+                onClick = {
+                    viewModel.updateGridViewOptionsDialogVisibility(true)
+                },
+                isSwitchable = false,
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.cart_item_merge),
+                description = stringResource(Res.string.cart_item_merge_description),
+                icon = AppIcons.cartMergeIcon,
+                onClick = { viewModel.updateMergeCartItems() },
+                checked = state.mergeCartItems,
+                showDivider = false
+            )
+        }
+
+        //Payment Setting
+        SettingsGroupItem(title = stringResource(Res.string.payment_settings)){
+
+            SettingsItem(
+                title = stringResource(Res.string.confirm_popup_title),
+                description = stringResource(Res.string.confirm_popup_description),
+                icon = AppIcons.payment,
+                onClick = { viewModel.updatePaymentConfirmPopup() },
+                checked = state.paymentConfirmPopup
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.fast_paymode),
+                description = stringResource(Res.string.fast_paymode_description),
+                icon = AppIcons.fastPaymentIcon,
+                onClick = { viewModel.updateFastPayMode() },
+                checked = state.fastPaymode
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.round_off_option),
+                description = roundOffText,
+                icon = AppIcons.roundOffIcon,
+                isSwitchable = false,
+                showDivider = false,
+                onClick = { viewModel.updateRoundOffOptionsDialogVisibility(true) }
+            )
+        }
+    }
 
     @Composable
     fun SettingPaymentPage(state: SettingUIState, viewModel: SettingViewModel) {
@@ -350,11 +431,6 @@ object SettingScreen : Screen {
 
     @Composable
     fun SettingEmployeesPage(state: SettingUIState, viewModel: SettingViewModel) {
-
-    }
-
-    @Composable
-    fun SettingCategoriesPage(state: SettingUIState, viewModel: SettingViewModel) {
 
     }
 
@@ -394,7 +470,7 @@ object SettingScreen : Screen {
     @Composable
     private fun SettingsItem(
         title: String,
-        icon: DrawableResource,
+        icon: DrawableResource?=null,
         description: String? = null,
         onClick: () -> Unit = {},
         isSwitchable: Boolean = true,
@@ -413,12 +489,14 @@ object SettingScreen : Screen {
                 horizontalArrangement = Arrangement.spacedBy(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = vectorResource(icon),
-                    contentDescription = title,
-                    tint = AppTheme.colors.textDarkGrey,
-                    modifier = Modifier.size(AppTheme.dimensions.standerIcon),
-                )
+                icon?.let {
+                    Icon(
+                        imageVector = vectorResource(icon),
+                        contentDescription = title,
+                        tint = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.size(AppTheme.dimensions.standerIcon),
+                    )
+                }
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -457,50 +535,5 @@ object SettingScreen : Screen {
     }
 
 
-    @Composable
-    private fun TextFieldSettingsDialog(
-        isVisible: Boolean,
-        value: String,
-        title: String,
-        onCloseDialog: () -> Unit = {},
-        onDialogResult: (String) -> Unit = {},
-    ) {
-        var displayedValue by remember(value) {
-            mutableStateOf(value)
-        }
-        val focusRequester = remember { FocusRequester() }
 
-        AppDialog(
-            isVisible = isVisible,
-            onDismissRequest = onCloseDialog,
-        ) {
-            AppDialogContent(
-                title = title,
-                modifier = Modifier.padding(bottom = 10.dp),
-                body = {
-                    AppDialogTextField(
-                        value = displayedValue,
-                        onValueChange = { displayedValue = it },
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .focusRequester(focusRequester)
-                            .onGloballyPositioned {
-                                focusRequester.requestFocus()
-                            }
-                    )
-                },
-                buttons = {
-                    AppDialogButton(
-                        title = stringResource(Res.string.alert_cancel),
-                        onClick = onCloseDialog
-                    )
-
-                    AppDialogButton(
-                        title = stringResource(Res.string.alert_ok),
-                        onClick = { onDialogResult(displayedValue) }
-                    )
-                }
-            )
-        }
-    }
 }

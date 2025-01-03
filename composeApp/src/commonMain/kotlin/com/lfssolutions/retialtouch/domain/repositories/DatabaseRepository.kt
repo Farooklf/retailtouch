@@ -48,6 +48,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
@@ -695,6 +696,10 @@ class DataBaseRepository: KoinComponent {
 
     fun getAuthUser(): Flow<AuthenticateDao> {
         return dataBaseRepository.getAllAuthentication()
+    }
+
+    fun getRTLoginUser(): Flow<RTLoginUser> {
+        return dataBaseRepository.getAuthUser().flowOn(Dispatchers.IO)
     }
 
     suspend fun getAuthUser(id:Long): AuthenticateDao {

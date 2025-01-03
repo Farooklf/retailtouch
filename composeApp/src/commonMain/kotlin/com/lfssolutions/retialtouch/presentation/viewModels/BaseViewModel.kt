@@ -1325,6 +1325,46 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getNetworkConfig().first()
     }
 
+    suspend fun setGridViewOptions(updatedValue:Int){
+        preferences.setGridViewOptions(updatedValue)
+    }
+
+    suspend fun getGridViewOptions() : Int{
+        return preferences.getGridViewOptions().first()
+    }
+
+    suspend fun setRoundOffOption(updatedValue:Int){
+        preferences.setRoundOffOption(updatedValue)
+    }
+
+    suspend fun getRoundOffOption() : Int{
+        return preferences.getRoundOffOption().first()
+    }
+
+    suspend fun setMergeCartItems(updatedValue:Boolean){
+        preferences.setMergeCartItems(updatedValue)
+    }
+
+    suspend fun getMergeCartItems() : Boolean{
+        return preferences.getMergeCartItems().first()
+    }
+
+    suspend fun setFastPaymentMode(updatedValue:Boolean) {
+        preferences.setFastPaymentMode(updatedValue)
+    }
+
+    suspend fun getFastPaymentMode():Boolean {
+        return preferences.getFastPaymentMode().first()
+    }
+
+    suspend fun setPaymentConfirmPopup(updatedValue:Boolean) {
+        preferences.setPaymentConfirmPopup(updatedValue)
+    }
+
+    suspend fun getPaymentConfirmPopup():Boolean {
+        return preferences.getPaymentConfirmPopup().first()
+    }
+
     fun observeNetworkConfig(): Flow<String> {
         return preferences.getNetworkConfig()
     }

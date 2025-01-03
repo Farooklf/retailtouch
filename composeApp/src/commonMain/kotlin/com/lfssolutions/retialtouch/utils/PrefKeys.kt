@@ -17,6 +17,13 @@ object PrefKeys {
     const val EMPLOYEE_STATE = "employeeState"
     const val PRINTER_ENABLE= "printerEnable"
     const val NETWORK_CONFIG = "networkConfig"
+    const val CART_MARQUEE = "cartMarquee"
+    const val MERGE_CART_ITEMS = "mergeCartItems"
+    const val GRID_VIEW_OPTIONS = "gridViewOptions"
+    const val FAST_PAYMENT = "fastPayment"
+    const val PAYMENT_CONFIRM_POPUP = "paymentConfirmPopup"
+    const val ROUND_OFF_OPTION = "roundOffOption"
+
 
     const val NETWORK_CONFIG_DEFAULT_VALUE = "192.168.25.39:768"
     const val TOKEN_EXPIRY_THRESHOLD = 1

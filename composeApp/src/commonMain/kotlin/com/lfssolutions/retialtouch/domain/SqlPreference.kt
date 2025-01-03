@@ -28,6 +28,8 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
+import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
@@ -39,6 +41,7 @@ interface SqlPreference {
     suspend fun insertAuthentication(authenticateDao: AuthenticateDao)
     fun selectUserByUserId(userId: Long): Flow<AuthenticateDao>
     fun getAllAuthentication(): Flow<AuthenticateDao>
+    fun getAuthUser(): Flow<RTLoginUser>
     suspend fun deleteAuthentication()
 
     //Location

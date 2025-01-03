@@ -54,8 +54,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -115,6 +118,7 @@ import retailtouch.composeapp.generated.resources.description
 import retailtouch.composeapp.generated.resources.dialog_message
 import retailtouch.composeapp.generated.resources.enter_terminal_code
 import retailtouch.composeapp.generated.resources.error
+import retailtouch.composeapp.generated.resources.grid_view_option_value
 import retailtouch.composeapp.generated.resources.hash
 import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.ic_add
@@ -1704,5 +1708,131 @@ fun ShowDateRangePicker(onDismiss: () -> Unit, onConfirmClicked: (LocalDate) -> 
                     .fillMaxWidth().padding(10.dp) // Adjust weight as needed
             )
         }
+    }
+}
+
+
+@Composable
+fun GridViewOptionsDialog(
+    title: String,
+    isVisible: Boolean,
+    values: List<Int>,
+    selectedValue: Int,
+    onCloseDialog: () -> Unit = {},
+    onDialogResult: (Int) -> Unit = {},
+) {
+
+    AppDialog(
+        isVisible = isVisible,
+        onDismissRequest = onCloseDialog,
+    ) {
+        AppDialogContent(
+            title = title,
+            modifier = Modifier.padding(bottom = 10.dp),
+            body = {
+                values.forEachIndexed { index, value ->
+                    AppRadioButtonWithText(
+                        title = stringResource(Res.string.grid_view_option_value, value),
+                        selected = value == selectedValue,
+                        isClickable = true,
+                        onClick = { onDialogResult(value) }
+                    )
+                }
+            },
+            buttons = {
+                AppDialogButton(
+                    title = stringResource(Res.string.alert_cancel),
+                    onClick = onCloseDialog
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun ActionTextFiledDialog(
+    isVisible: Boolean,
+    value: String,
+    title: String,
+    onCloseDialog: () -> Unit = {},
+    onDialogResult: (String) -> Unit = {},
+) {
+    var displayedValue by remember(value) {
+        mutableStateOf(value)
+    }
+    val focusRequester = remember { FocusRequester() }
+
+    AppDialog(
+        isVisible = isVisible,
+        onDismissRequest = onCloseDialog,
+    ) {
+        AppDialogContent(
+            title = title,
+            modifier = Modifier.padding(bottom = 10.dp),
+            body = {
+                AppDialogTextField(
+                    value = displayedValue,
+                    onValueChange = { displayedValue = it },
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .focusRequester(focusRequester)
+                        .onGloballyPositioned {
+                            focusRequester.requestFocus()
+                        }
+                )
+            },
+            buttons = {
+                AppDialogButton(
+                    title = stringResource(Res.string.alert_cancel),
+                    onClick = onCloseDialog
+                )
+
+                AppDialogButton(
+                    title = stringResource(Res.string.alert_ok),
+                    onClick = { onDialogResult(displayedValue) }
+                )
+            }
+        )
+    }
+}
+
+
+@Composable
+fun RoundOffOptionsDialog(
+    title: String,
+    isVisible: Boolean,
+    values: List<Int>,
+    selectedValue: Int,
+    onCloseDialog: () -> Unit = {},
+    onDialogResult: (Int) -> Unit = {},
+) {
+    //val options = values.map { mapIntToText(it) }
+
+    AppDialog(
+        isVisible = isVisible,
+        onDismissRequest = onCloseDialog,
+    ) {
+        AppDialogContent(
+            title = title,
+            modifier = Modifier.padding(bottom = 10.dp),
+            body = {
+
+                values.forEach { value ->
+                    AppRadioButtonWithText(
+                        title = mapIntToText(value),
+                        selected = value == selectedValue,
+                        isClickable = true,
+                        onClick = { onDialogResult(value) }
+                    )
+                }
+
+            },
+            buttons = {
+                AppDialogButton(
+                    title = stringResource(Res.string.alert_cancel),
+                    onClick = onCloseDialog
+                )
+            }
+        )
     }
 }

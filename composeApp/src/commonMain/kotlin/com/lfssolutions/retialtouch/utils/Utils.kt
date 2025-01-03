@@ -33,6 +33,7 @@ import retailtouch.composeapp.generated.resources.ic_back_arrow_circle
 import retailtouch.composeapp.generated.resources.ic_calendar
 import retailtouch.composeapp.generated.resources.ic_cancel
 import retailtouch.composeapp.generated.resources.ic_card
+import retailtouch.composeapp.generated.resources.ic_cart_merge
 import retailtouch.composeapp.generated.resources.ic_cash
 import retailtouch.composeapp.generated.resources.ic_cashier
 import retailtouch.composeapp.generated.resources.ic_categories
@@ -49,9 +50,11 @@ import retailtouch.composeapp.generated.resources.ic_edit
 import retailtouch.composeapp.generated.resources.ic_employees
 import retailtouch.composeapp.generated.resources.ic_error
 import retailtouch.composeapp.generated.resources.ic_exclamation
+import retailtouch.composeapp.generated.resources.ic_fast_payment
 import retailtouch.composeapp.generated.resources.ic_file_excel
 import retailtouch.composeapp.generated.resources.ic_home
 import retailtouch.composeapp.generated.resources.ic_indian_rupee
+import retailtouch.composeapp.generated.resources.ic_ip_address
 import retailtouch.composeapp.generated.resources.ic_language_exchange
 import retailtouch.composeapp.generated.resources.ic_locations
 import retailtouch.composeapp.generated.resources.ic_login_lock
@@ -71,7 +74,9 @@ import retailtouch.composeapp.generated.resources.ic_power
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_promotion_discount
 import retailtouch.composeapp.generated.resources.ic_receipt
+import retailtouch.composeapp.generated.resources.ic_roundoff
 import retailtouch.composeapp.generated.resources.ic_search
+import retailtouch.composeapp.generated.resources.ic_selling_products
 import retailtouch.composeapp.generated.resources.ic_server
 import retailtouch.composeapp.generated.resources.ic_settings
 import retailtouch.composeapp.generated.resources.ic_settlement
@@ -167,7 +172,7 @@ object AppIcons {
     val editIcon by lazy { Res.drawable.ic_edit}
     val employees by lazy { Res.drawable.ic_employees}
     val homeIcon by lazy { Res.drawable.ic_home}
-    val categories by lazy { Res.drawable.ic_categories}
+    val gridIcon by lazy { Res.drawable.ic_categories}
     val payment by lazy { Res.drawable.ic_payment}
     val dataStats by lazy { Res.drawable.ic_data_stats}
     val exportIcon by lazy { Res.drawable.ic_exclamation}
@@ -175,6 +180,11 @@ object AppIcons {
     val unlinkIcon by lazy { Res.drawable.ic_unlink}
     val languageIcon by lazy { Res.drawable.ic_language_exchange}
     val versionIcon by lazy { Res.drawable.ic_app_version}
+    val cartMergeIcon by lazy { Res.drawable.ic_cart_merge}
+    val sellingProductIcon by lazy { Res.drawable.ic_selling_products}
+    val IPAddressIcon by lazy { Res.drawable.ic_ip_address}
+    val fastPaymentIcon by lazy { Res.drawable.ic_fast_payment}
+    val roundOffIcon by lazy { Res.drawable.ic_roundoff}
 }
 
 object HomeItemId{

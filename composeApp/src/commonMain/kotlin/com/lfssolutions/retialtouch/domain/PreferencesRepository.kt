@@ -71,4 +71,19 @@ interface PreferencesRepository {
 
     suspend fun setNetworkConfig(result: String)
     fun getNetworkConfig(): Flow<String>
+
+    suspend fun setGridViewOptions(result: Int)
+    fun getGridViewOptions(): Flow<Int>
+
+    suspend fun setMergeCartItems(result: Boolean)
+    fun getMergeCartItems(): Flow<Boolean>
+
+    suspend fun setPaymentConfirmPopup(result: Boolean)
+    fun getPaymentConfirmPopup(): Flow<Boolean>
+
+    suspend fun setRoundOffOption(result: Int)
+    fun getRoundOffOption(): Flow<Int>
+
+    suspend fun setFastPaymentMode(result: Boolean)
+    fun getFastPaymentMode(): Flow<Boolean>
 }

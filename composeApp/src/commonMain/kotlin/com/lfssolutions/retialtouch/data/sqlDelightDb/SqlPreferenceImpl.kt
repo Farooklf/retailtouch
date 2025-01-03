@@ -28,6 +28,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
@@ -115,7 +116,26 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deleteAuthentication() {
+     override fun getAuthUser(): Flow<RTLoginUser> = flow{
+         retailTouch.userTenanatQueries.getAll().executeAsOneOrNull().let { body ->
+             body?.let {
+                 val login=it.loginDao.toLogin()
+                 emit(
+                        RTLoginUser(
+                         userId = login.userId,
+                         tenantId = login.tenantId?:0,
+                         serverURL = it.url,
+                         tenantName = it.tenantname,
+                         userName = it.username,
+                         password = it.password,
+                         currency = login.currencySymbol?:""
+                     )
+                 )
+             }
+         }
+     }
+
+     override suspend fun deleteAuthentication() {
         retailTouch.userTenanatQueries.deleteAuth()
     }
 
