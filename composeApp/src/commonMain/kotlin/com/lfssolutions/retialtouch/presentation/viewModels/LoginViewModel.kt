@@ -404,8 +404,8 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 syncInventory()
             }
         }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(MENU_CATEGORY_ERROR_TITLE,error)
+            val errorM="${e.message}"
+            updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorM)
         }
     }
 
