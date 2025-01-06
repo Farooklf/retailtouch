@@ -8,11 +8,10 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
-import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
-import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
+import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
@@ -45,8 +44,10 @@ import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyRe
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionItem
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
+import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
+import com.lfssolutions.retialtouch.sync.SyncDataState
 import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
@@ -66,9 +67,12 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifference
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
+import com.lfssolutions.retialtouch.utils.PrefKeys.SYNC_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
@@ -90,17 +94,15 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 open class BaseViewModel: ViewModel(), KoinComponent {
 
     val networkRepository: NetworkRepository by inject()
-    val preferences : PreferencesRepository by inject()
+    val preferences: PreferencesRepository by inject()
     val dataBaseRepository: DataBaseRepository by inject()
-    val sqlPreference: SqlPreference by inject()
-
+   //Changed
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
 
@@ -110,26 +112,19 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val _loginScreenState = MutableStateFlow(LoginUiState())
     val loginScreenState: StateFlow<LoginUiState> = _loginScreenState
 
-    val _posEmployees : MutableStateFlow<List<POSEmployee>> = MutableStateFlow(emptyList())
-    val posEmployees: StateFlow<List<POSEmployee>> = _posEmployees
-
     var count =0
 
     private val _isPrinterEnabled = MutableStateFlow(false)
     val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
 
 
-    private var refreshingToken : StateFlow<Boolean> = MutableStateFlow(false)
-
     private val _lastSyncDateTime = MutableStateFlow<String?>(null)
     val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
 
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
-    val employeeDoa = MutableStateFlow<POSEmployee?>(null)
-
+    val employeeDoa = MutableStateFlow<EmployeeDao?>(null)
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
-
     private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
     private val paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
     private val productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
@@ -151,6 +146,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val _lastSyncTs = MutableStateFlow(0L)
     val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
+
+    private val _resyncTimer = MutableStateFlow(0L)
+    val resyncTimer: StateFlow<Long> = _resyncTimer.asStateFlow()
+
 
     private val _uiUpdateStatus = MutableStateFlow(false)
     val uiUpdateStatus: StateFlow<Boolean> = _uiUpdateStatus.asStateFlow()
@@ -184,7 +183,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
-    val employee: StateFlow<POSEmployee?> = flow {
+    val employee: StateFlow<EmployeeDao?> = flow {
         // This flow emits the employee data asynchronously
         val employeeCode = getEmpCode()  // Suspends here
         emit(dataBaseRepository.getEmployee(employeeCode).firstOrNull())
@@ -203,6 +202,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         initialValue = null  // Initial state of the flow
 
     )
+
 
 
     suspend fun isDiscountEnabledTaxInclusiveName():Boolean{
@@ -246,11 +246,11 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncInProgress.update { syncStatus }
     }
 
-     fun updateLoginSyncStatus(syncStatus: String) {
+    private fun updateSyncStatus(syncStatus: String) {
         _syncProgressStatus.update { syncStatus }
     }
 
-    private fun updateLastSyncTs(syncStatus: Long) {
+     private fun updateLastSyncTs(syncStatus: Long) {
         _lastSyncTs.update { syncStatus }
     }
     // Handle any sync errors
@@ -273,6 +273,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return true
     }
 
+    suspend fun isCallCompleteSync() : Boolean{
+        val lastSyncTs : Long = getLastSyncTs()
+        val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
+        val hoursPassed = getHoursDifferenceFromEpochMillSeconds(lastSyncTs, currentTime)
+        println("HourPassed:$hoursPassed")
+        return hoursPassed > SYNC_EXPIRY_THRESHOLD
+    }
 
     private fun refreshToken(){
         viewModelScope.launch {
@@ -312,6 +319,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return loginRequest
 
     }
+    //Api Calls
+
+
 
     suspend fun createUpdatePosInvoice(posInvoice: PosInvoice, pendingSaleCount : Int, posSaleId: Long){
         networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
@@ -390,47 +400,38 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return posInvoice
     }
 
-
-    //Api Calls
-
-    suspend fun getLocations(){
-        try {
-            //updateLoaderMsg("Fetching location data...")
-            println("location Calling api : ${count++}")
-            val loginApiResponse=networkRepository.getLocationForUser(getBasicRequest())
-            observeLocation(loginApiResponse)
-        }catch (e:Exception){
-            handleApiError(LOCATION_ERROR_TITLE,e.message.toString())
+    fun syncEmployeeRights(){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                updateLoginSyncStatus("Syncing Employee Rights")
+                networkRepository.getEmployeeRights(BasicApiRequest(
+                    tenantId = getTenantId(),
+                    name = employeeDoa.value?.employeeRoleName
+                )).collectLatest {apiResponse->
+                    observeResponseNew(apiResponse,
+                        onLoading = {  },
+                        onSuccess = { apiData ->
+                            if(apiData.success){
+                                viewModelScope.launch {
+                                    dataBaseRepository.insertEmpRights(apiData)
+                                    println("employee rights insertion : ${count++}")
+                                }
+                            }
+                        },
+                        onError = {
+                                errorMsg ->
+                            updateLoginError(EMPLOYEE_ERROR_TITLE,errorMsg)
+                        }
+                    )
+                }
+            }catch (e: Exception){
+                val error="${e.message}"
+                updateLoginError(EMPLOYEE_ERROR_TITLE,error)
+            }
         }
     }
 
-    suspend fun getEmployees(){
-        try {
-            updateLoaderMsg("Fetching employees data...")
-            println("employees calling api : ${count++}")
-            val employeesResponse=networkRepository.getEmployees(getBasicRequest())
-            observeEmployees(employeesResponse)
-        }catch (e: Exception){
-            val error=e.message.toString()
-            handleApiError(EMPLOYEE_ERROR_TITLE,error)
-        }
-    }
-
-    suspend fun getEmployeeRole(){
-        try {
-            updateLoaderMsg("Fetching employees role data...")
-            println("employees role calling api : ${count++}")
-            val empRoleResponse=networkRepository.getEmployeeRole(getBasicRequest())
-            observeEmpRole(empRoleResponse)
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleApiError(EMPLOYEE_ROLE_ERROR_TITLE,error)
-        }
-    }
-
-
-
-    fun syncEveryThing(){
+    fun syncEveryThing2(){
        try {
          viewModelScope.launch(Dispatchers.IO) {
              updateSyncProgress(true)
@@ -439,7 +440,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              if (pendingCount <= 0) {
                  loadNextSalesInvoiceNumber()
              } else {
-                 updateLoginSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
+                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
              }
 
              syncMembers()
@@ -451,7 +452,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
-             updateLoginSyncStatus("All Sync Operations have been Completed Successfully")
+             updateSyncStatus("All Sync Operations have been Completed Successfully")
              updateSyncProgress(false)
              preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
          }
@@ -463,10 +464,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
        }
     }
 
-    private suspend fun loadNextSalesInvoiceNumber(){
+    suspend fun loadNextSalesInvoiceNumber(){
         try {
             println("API CALL : ${count++}")
-            updateLoginSyncStatus("loading sale invoice count")
+            updateSyncStatus("loading sale invoice count")
             networkRepository.getNextPOSSaleInvoice(getBasicRequest()).collectLatest {apiResponse->
                 observeNextSaleInvoices(apiResponse)
             }
@@ -479,20 +480,20 @@ open class BaseViewModel: ViewModel(), KoinComponent {
      private suspend fun syncStockQuantity(lastSyncTime:String?=null){
         try {
             println("API CALL : ${count++}")
-            updateLoaderMsg("Syncing Inventory Count")
+            updateLoginSyncStatus("Syncing Inventory Count")
             networkRepository.getProductLocation(getBasicRequest()).collectLatest {stockAvailResponse->
                 observeStock(stockAvailResponse,lastSyncTime)
                 //println("QtyMap: $stockQtyMap")
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(INVENTORY_ERROR_TITLE,error)
+            updateLoginError(INVENTORY_ERROR_TITLE,error)
         }
     }
 
-     suspend fun syncInventory(lastSyncTime:String?=null){
+    private suspend fun syncInventory(lastSyncTime:String?=null){
         try {
-            updateLoaderMsg("Syncing Inventory")
+            updateLoginSyncStatus("Syncing Inventory")
             println("Inventory API CALL : ${count++}")
             val inventoryResponse=networkRepository.getProductsWithTax(getBasicRequest())
             val barcodesResponse=networkRepository.getProductBarCode(getBasicRequest())
@@ -505,56 +506,56 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(INVENTORY_ERROR_TITLE,error)
+            updateLoginError(INVENTORY_ERROR_TITLE,error)
         }
     }
 
     private suspend fun syncMembers(){
         try {
             println("Members API CALL : ${count++}")
-            updateLoaderMsg("Syncing Member")
+            updateLoginSyncStatus("Syncing Member")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMembers(apiResponse)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(MEMBER_ERROR_TITLE,error)
+            updateLoginError(MEMBER_ERROR_TITLE,error)
         }
     }
 
     private suspend fun syncPaymentTypes(){
         try {
-            updateLoaderMsg("Syncing Payment Type")
+            updateLoginSyncStatus("Syncing Payment Type")
             networkRepository.getPaymentTypes(getBasicTenantRequest()).collectLatest {apiResponse->
                 observePaymentType(apiResponse)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(PAYMENT_TYPE_ERROR_TITLE,error)
+            updateLoginError(PAYMENT_TYPE_ERROR_TITLE,error)
         }
     }
 
     private suspend fun syncMemberGroup(){
         try {
-            updateLoaderMsg("Syncing Member Group")
+            updateLoginSyncStatus("Syncing Member Group")
             println("MemberGroup API CALL : ${count++}")
             networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeMemberGroup(apiResponse)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(MEMBER_ERROR_TITLE,error)
+            updateLoginError(MEMBER_ERROR_TITLE,error)
         }
     }
 
     private suspend fun syncSales(){
         try {
-            updateLoaderMsg("Syncing Sales History")
+            updateLoginSyncStatus("Syncing Sales History")
             println("API CALL : ${count++}")
             getLatestSale(skipCount = 0, maxResultCount = 1).collect{sale->
                 when(sale){
                     is RequestState.Error -> {
-                        handleApiError(SYNC_SALES_ERROR_TITLE,sale.message)
+                        updateLoginError(SYNC_SALES_ERROR_TITLE,sale.message)
                     }
                     is RequestState.Idle -> {
 
@@ -576,7 +577,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(SYNC_SALES_ERROR_TITLE,error)
+            updateLoginError(SYNC_SALES_ERROR_TITLE,error)
         }
     }
 
@@ -589,7 +590,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 if(apiData.success){
                     viewModelScope.launch {
                         dataBaseRepository.insertNewLatestSales(apiData)
-                        updateSyncGrid(INVOICE)
+                        //updateSyncGrid(INVOICE)
                         //set
                         updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
                     }
@@ -605,17 +606,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private suspend fun syncCategories(){
         try {
-            updateLoaderMsg("Syncing Categories")
+            updateLoginSyncStatus("Syncing Categories")
             networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
                 observeCategory(apiResponse)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(MENU_CATEGORY_ERROR_TITLE,error)
+            updateLoginError(MENU_CATEGORY_ERROR_TITLE,error)
         }
     }
 
-    suspend fun syncMenu(){
+   private suspend fun syncMenu(){
         val newStock : MutableList<MenuItem> = mutableListOf()
         categoryResponse.value.forEach { cat->
             println("Menu products api : ${cat.id}")
@@ -648,7 +649,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                     },
                     onError = {
                             errorMsg ->
-                        handleApiError(MENU_PRODUCTS_ERROR_TITLE,errorMsg)
+                        updateLoginError(MENU_PRODUCTS_ERROR_TITLE,errorMsg)
                     }
                 )
             }
@@ -657,19 +658,19 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private suspend fun syncPromotion(){
         try {
-            updateLoaderMsg("Syncing Promotions")
+            updateLoginSyncStatus("Syncing Promotions")
             networkRepository.getPromotions(PromotionRequest(tenantId = getTenantId())).collectLatest { apiResponse->
                 observePromotions(apiResponse)
             }
         }catch (e: Exception){
             val error="${e.message}"
-            handleApiError(PROMOTIONS_ERROR_TITLE,error)
+            updateLoginError(PROMOTIONS_ERROR_TITLE,error)
         }
     }
 
     fun updateSales(){
        try {
-           updateLoginSyncStatus("Syncing Sales History")
+           updateSyncStatus("Syncing Sales History")
            viewModelScope.launch {
                val job = async { getSalesTotalCount() }
                val saleRecord = job.await()
@@ -715,7 +716,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 return
 
             println("Syncing Print Template: ${templateType.toInt()}")
-            updateLoginSyncStatus("Syncing Print Template")
+            updateSyncStatus("Syncing Print Template")
             networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collect { apiResponse->
                 observePrintTemplate(apiResponse)
             }
@@ -785,11 +786,11 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 if(apiData.success){
                     viewModelScope.launch {
                         dataBaseRepository.insertNewLatestSales(apiData)
-                        updateSyncGrid(INVOICE)
+                        //updateSyncGrid(INVOICE)
                         //set
                         updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
                         updateSyncProgress(false)
-                        updateLoginSyncStatus("")
+                        updateSyncStatus("")
                         handleError(false,"","")
                         updateUIStatus(true)
                     }
@@ -813,7 +814,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                     viewModelScope.launch {
                         categoryResponse.update { apiData.result.items }
                         dataBaseRepository.insertCategories(apiData)
-                        updateSyncGrid(CATEGORY)
+                        //updateSyncGrid(CATEGORY)
                         //set
                         syncMenu()
                     }
@@ -821,38 +822,49 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             },
             onError = {
                     errorMsg ->
-                handleApiError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
+                updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
             }
         )
     }
 
-    private suspend fun observeLocation(apiResponse: Flow<RequestState<LocationResponse>>) {
-        println("location insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Location")},
-            onSuccess = { apiData ->
-                viewModelScope.launch {
-                    dataBaseRepository.insertLocation(apiData)
-                    //
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleApiError(LOCATION_ERROR_TITLE,errorMsg)
+    private suspend fun _syncCategories(){
+        try {
+            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateSyncStatus("Syncing Categories")
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertCategories(apiData)
+                                //val syncItem = updateSyncGrid(CATEGORY)
+
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        //updateError(true,MENU_CATEGORY_ERROR_TITLE,errorMsg)
+                    }
+                )
             }
-        )
+        }catch (e: Exception){
+            val error="${e.message}"
+            //updateError(true,MENU_CATEGORY_ERROR_TITLE,error)
+        }
     }
 
-    private suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
+    suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
         println("employees insertion : ${count++}")
         observeResponse(apiResponse,
-            onLoading = {  updateLoaderMsg("Syncing Employees")},
+            onLoading = {  updateLoginSyncStatus("Syncing Employees")},
             onSuccess = { apiData ->
                 viewModelScope.launch {
                     dataBaseRepository.insertEmployees(apiData)
                 } },
             onError = {errorMsg->
-                handleApiError(EMPLOYEE_ERROR_TITLE,errorMsg)
+                updateLoginError(EMPLOYEE_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -860,13 +872,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private suspend fun observeEmpRole(apiResponse: Flow<RequestState<EmployeesResponse>>) {
         println("employees role insertion : ${count++}")
         observeResponse(apiResponse,
-            onLoading = {  updateLoaderMsg("Syncing Employees Role")},
+            onLoading = {  updateLoginSyncStatus("Syncing Employees Role")},
             onSuccess = { apiData ->
                 viewModelScope.launch {
                     dataBaseRepository.insertEmpRole(apiData)
                 } },
             onError = {errorMsg->
-                handleApiError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
+                updateLoginError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -884,7 +896,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             },
             onError = {
                     errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -904,7 +916,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             },
             onError = {
                     errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -920,13 +932,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 viewModelScope.launch {
                     if(apiData.success){
                         dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap)
-                        updateSyncGrid(PRODUCT)
+                        //updateSyncGrid(PRODUCT)
                     }
                 }
             },
             onError = {
                     errorMsg ->
-                handleApiError(INVENTORY_ERROR_TITLE,errorMsg)
+                updateLoginError(INVENTORY_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -952,7 +964,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 }
             },
             onError = { errorMsg ->
-                handleApiError(MENU_CATEGORY_ERROR_TITLE, errorMsg)
+                updateLoginError(MENU_CATEGORY_ERROR_TITLE, errorMsg)
 
             }
         )
@@ -976,7 +988,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 },
                 onError = {
                         errorMsg ->
-                    handleApiError(INVENTORY_ERROR_TITLE,errorMsg)
+                    updateLoginError(INVENTORY_ERROR_TITLE,errorMsg)
                 }
             )
         }
@@ -992,7 +1004,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         dataBaseRepository.insertPromotions(apiData)
                         //get
                         mapPromotions()
-                        updateSyncGrid(PROMOTION)
+                        //updateSyncGrid(PROMOTION)
                         //set syncToken
 
                     }
@@ -1000,7 +1012,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             },
             onError = {
                     errorMsg ->
-                handleApiError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -1008,7 +1020,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private suspend fun mapPromotions(){
         promotionResult.collectLatest {
             it?.result?.forEach { item->
-            if(item!=null){
                 when(item.promotionTypeName){
                     "PromotionByQty"->{
                         networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
@@ -1033,18 +1044,16 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         }
                     }
                 }
-
-            }
         }
         }
     }
 
-    private fun observePromotionsQty(
+     private fun observePromotionsQty(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
         observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Promotion QTY....")},
+            onLoading = { updateLoginSyncStatus("Syncing Promotion QTY....")},
             onSuccess = { apiData ->
                if(apiData.success){
                    viewModelScope.launch {
@@ -1068,17 +1077,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                }
             },
             onError = { errorMsg ->
-                handleApiError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
     }
 
-    private fun observePromotionPrice(
+     private fun observePromotionPrice(
         apiResponse: RequestState<GetPromotionsByPriceResult>,
         promotion: PromotionItem
     ){
         observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Promotion By Price....")},
+            onLoading = { updateLoginSyncStatus("Syncing Promotion By Price....")},
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
@@ -1101,18 +1110,18 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 }
             },
             onError = { errorMsg ->
-                handleApiError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
     }
 
 
-    private fun observePromotionByPriceBreak(
+     private fun observePromotionByPriceBreak(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
         observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Promotion By Price Break....")},
+            onLoading = { updateLoginSyncStatus("Syncing Promotion By Price Break....")},
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
@@ -1137,17 +1146,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 }
             },
             onError = { errorMsg ->
-                handleApiError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
     }
 
-    private fun observeDefaultPromotions(
+     private fun observeDefaultPromotions(
         apiResponse: RequestState<GetPromotionsByQtyResult>,
         promotion: PromotionItem
     ){
         observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Syncing Promotion Default....")},
+            onLoading = { updateLoginSyncStatus("Syncing Promotion Default....")},
             onSuccess = { apiData ->
                 if(apiData.success){
                     viewModelScope.launch {
@@ -1168,7 +1177,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 }
             },
             onError = { errorMsg ->
-                handleApiError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -1188,11 +1197,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             },
             onError = {
                     errorMsg ->
-                handleApiError(MEMBER_ERROR_TITLE,errorMsg)
+                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
             }
         )
     }
-
 
 
     fun updateLoginState(loading: Boolean, successfulLogin:Boolean, loginError: Boolean, title :String,error:String) {
@@ -1209,7 +1217,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun updateLoaderMsg(loadingMsg:String) {
+    fun updateLoginSyncStatus(loadingMsg:String) {
         viewModelScope.launch {
             _loginScreenState.value = _loginScreenState.value.copy(
                 loadingMessage = loadingMsg
@@ -1217,7 +1225,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private fun handleApiError(errorTitle:String, errorMsg: String) {
+     fun updateLoginError(errorTitle:String, errorMsg: String) {
         viewModelScope.launch(Dispatchers.Main) {
             println(errorMsg)
             updateLoginState(
@@ -1234,52 +1242,51 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     }
 
 
-    private fun updateSyncGrid(name: String): SyncItem {
-        /*with(_syncDataState.value){
-            return syncerGuid.items.firstOrNull{ it.name.uppercase() == name }
-                ?: SyncItem(name = name, syncerGuid = "", id = 0)
-        }*/
-        return SyncItem()
-    }
-
-
     suspend fun setEmployeeCode(code:String){
         preferences.setEmployeeCode(code)
-    }
-
-    suspend fun setPOSEmployee(employee:POSEmployee){
-        preferences.setPOSEmployee(employee.toJson())
-    }
-
-    suspend fun updatePOSEmployees(employee: POSEmployee
-    ) {
-        withContext(Dispatchers.IO) {
-            val mPOSEmployee = POSEmployee(
-                employeeId = employee.employeeId,
-                employeeName = employee.employeeName,
-                employeeCode = employee.employeeCode,
-                employeeRoleName = employee.employeeRoleName,
-                employeePassword = employee.employeePassword,
-                employeeCategoryName = employee.employeeCategoryName,
-                employeeDepartmentName = employee.employeeDepartmentName,
-                isAdmin = employee.isAdmin,
-                isDeleted = employee.isDeleted,
-                isPosEmployee = true,
-            )
-            sqlPreference.updatePOSEmployee(mPOSEmployee)
-        }
-    }
-
-    suspend fun getPosEmployees(): List<POSEmployee>{
-        val employees = sqlPreference.getPOSEmployees().first() // Collects the list.
-        _posEmployees.value = employees // Updates the StateFlow.
-        return employees
     }
 
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
         }
+    }
+
+    suspend fun getBasicRequest() = BasicApiRequest(
+        tenantId = preferences.getTenantId().first(),
+        locationId = preferences.getLocationId().first(),
+        lastSyncDateTime = _lastSyncDateTime.value
+        )
+
+    fun getBasicRequest(id:Int) = BasicApiRequest(
+        id =id
+    )
+
+     suspend fun getBasicTenantRequest() = BasicApiRequest(
+        tenantId = preferences.getTenantId().first()
+    )
+
+    suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
+        tenantId = preferences.getTenantId().first(),
+        locationId = preferences.getLocationId().first(),
+        lastSyncDateTime = _lastSyncDateTime.value,
+        isDeleted = isDeleted
+    )
+
+    //suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
+    suspend fun getTenantId() = preferences.getTenantId().first()
+    suspend fun getLocation() = dataBaseRepository.getSelectedLocation().first()
+
+    suspend fun getUserId() :Long{
+        return preferences.getUserId().first()
+    }
+
+    suspend fun getLastTokenTime() : Long{
+        return preferences.getTokenTime().first()
+    }
+
+    suspend fun getEmpCode() :String{
+        return preferences.getEmployeeCode().first()
     }
 
     suspend fun setDefaultLocation(location: Location){
@@ -1301,102 +1308,55 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getLocation().first().toDefaultLocation().locationId.toInt()
     }
 
-    suspend fun getBasicRequest() = BasicApiRequest(
-        tenantId = preferences.getTenantId().first(),
-        locationId = preferences.getLocationId().first(),
-        lastSyncDateTime = _lastSyncDateTime.value
-        )
-
-    fun getBasicRequest(id:Int) = BasicApiRequest(
-        id =id
-    )
-
-     suspend fun getBasicTenantRequest() = BasicApiRequest(
-        tenantId = preferences.getTenantId().first()
-    )
-
-    private suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
-        tenantId = preferences.getTenantId().first(),
-        locationId = preferences.getLocationId().first(),
-        lastSyncDateTime = _lastSyncDateTime.value,
-        isDeleted = isDeleted
-    )
-
-   // suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
-    suspend fun getTenantId() = preferences.getTenantId().first()
-
-    suspend fun getUserId() :Long{
-        return preferences.getUserId().first()
+    suspend fun getMemberSyncGrid() : String{
+        return preferences.getMemberSyncGrid().first()
     }
 
-    suspend fun getLastTokenTime() : Long{
-        return preferences.getTokenTime().first()
+    suspend fun getMemberGroupSyncGrid() : String{
+        return preferences.getMemberGroupSyncGrid().first()
     }
 
-    suspend fun getEmpCode() :String{
-        return preferences.getEmployeeCode().first()
+    suspend fun getProductsSyncGrid() : String{
+        return preferences.getProductsSyncGrid().first()
     }
 
-    suspend fun getCurrentServer() : String{
-        return preferences.getBaseURL().first()
+    suspend fun getCategorySyncGrid() : String{
+        return preferences.getCategorySyncGrid().first()
     }
 
-    suspend fun setNetworkConfig(networkConfig:String){
-         preferences.setNetworkConfig(networkConfig)
+    suspend fun getStockSyncGrid() : String{
+        return preferences.getStockSyncGrid().first()
     }
 
-    suspend fun getNetworkConfig():String{
-        return preferences.getNetworkConfig().first()
+    suspend fun getPromotionsSyncGrid() : String{
+        return preferences.getPromotionsSyncGrid().first()
     }
 
-    suspend fun setGridViewOptions(updatedValue:Int){
-        preferences.setGridViewOptions(updatedValue)
+    suspend fun getPaymentTypeSyncGrid() : String{
+        return preferences.getPaymentTypeSyncGrid().first()
     }
 
-    suspend fun getGridViewOptions() : Int{
-        return preferences.getGridViewOptions().first()
+    suspend fun setLastSyncTs(){
+        preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
     }
 
-    suspend fun setRoundOffOption(updatedValue:Int){
-        preferences.setRoundOffOption(updatedValue)
+    suspend fun getLastSyncTs():Long{
+      return  preferences.getLastSyncTs().first()
     }
 
-    suspend fun getRoundOffOption() : Int{
-        return preferences.getRoundOffOption().first()
+    suspend fun setReSyncTimer(time:Int) {
+        preferences.setReSyncTimer(time)
     }
 
-    suspend fun setMergeCartItems(updatedValue:Boolean){
-        preferences.setMergeCartItems(updatedValue)
-    }
-
-    suspend fun getMergeCartItems() : Boolean{
-        return preferences.getMergeCartItems().first()
-    }
-
-    suspend fun setFastPaymentMode(updatedValue:Boolean) {
-        preferences.setFastPaymentMode(updatedValue)
-    }
-
-    suspend fun getFastPaymentMode():Boolean {
-        return preferences.getFastPaymentMode().first()
-    }
-
-    suspend fun setPaymentConfirmPopup(updatedValue:Boolean) {
-        preferences.setPaymentConfirmPopup(updatedValue)
-    }
-
-    suspend fun getPaymentConfirmPopup():Boolean {
-        return preferences.getPaymentConfirmPopup().first()
-    }
-
-    fun observeNetworkConfig(): Flow<String> {
-        return preferences.getNetworkConfig()
+    // Load from preferencesRepository
+    suspend fun getReSyncTimer(): Int {
+        return preferences.getReSyncTime().first()
     }
 
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { employeeDoa.update { POSEmployee() } },
+                async { employeeDoa.update { EmployeeDao() } },
                 async { categoryResponse.update { emptyList()} },
             )
             jobs.awaitAll()
@@ -1414,6 +1374,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 async { preferences.setUserId(-1) },
                 async { preferences.setTenantId(-1) },
                 async { preferences.setLocationId(-1) },
+                async { preferences.setLocation("") },
                 async { preferences.setUserLoggedIn(false) },
             )
             jobs.awaitAll()
@@ -1427,7 +1388,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 async { dataBaseRepository.clearExistingLocations() },
                 async { dataBaseRepository.clearEmployees() },
                 async { dataBaseRepository.clearEmployeeRole() },
-                async { dataBaseRepository.clearMember() },
+                async { dataBaseRepository.clearMember()},
                 async { dataBaseRepository.clearMemberGroup() },
                 async { dataBaseRepository.clearInventory() },
                 async { dataBaseRepository.clearBarcode() },
