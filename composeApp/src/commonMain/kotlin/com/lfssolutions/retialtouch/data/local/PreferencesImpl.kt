@@ -7,14 +7,22 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENCY_SYMBOL
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENT_TENANT_URL
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_CODE
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_STATE
+import com.lfssolutions.retialtouch.utils.PrefKeys.FAST_PAYMENT
+import com.lfssolutions.retialtouch.utils.PrefKeys.GRID_VIEW_OPTIONS
 import com.lfssolutions.retialtouch.utils.PrefKeys.IS_LOGGED_IN
 import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_GROUP_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.MERGE_CART_ITEMS
+import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG
+import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG_DEFAULT_VALUE
 import com.lfssolutions.retialtouch.utils.PrefKeys.NEXT_SALE_INVOICE_NUMBER
+import com.lfssolutions.retialtouch.utils.PrefKeys.PAYMENT_CONFIRM_POPUP
+import com.lfssolutions.retialtouch.utils.PrefKeys.POS_EMPLOYEE
 import com.lfssolutions.retialtouch.utils.PrefKeys.PRINTER_ENABLE
 import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
+import com.lfssolutions.retialtouch.utils.PrefKeys.ROUND_OFF_OPTION
 import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_LENGTH
 import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_PREFIX
 import com.lfssolutions.retialtouch.utils.PrefKeys.TENANT_ID
@@ -249,6 +257,20 @@ class PreferencesImpl(
         )
     }
 
+    override suspend fun setPOSEmployee(result: String) {
+        flowSettings.putString(
+            key = POS_EMPLOYEE,
+            value = result
+        )
+    }
+
+    override fun sgtPOSEmployee(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = POS_EMPLOYEE,
+            defaultValue = ""
+        )
+    }
+
     override suspend fun setUserLoggedIn(result: Boolean) {
         flowSettings.putBoolean(
             key = IS_LOGGED_IN,
@@ -347,5 +369,88 @@ class PreferencesImpl(
         )
     }
 
+    override suspend fun setNetworkConfig(result: String) {
+        flowSettings.putString(
+            key = NETWORK_CONFIG,
+            value = result
+        )
+    }
+
+    override fun getNetworkConfig(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = NETWORK_CONFIG,
+            defaultValue = NETWORK_CONFIG_DEFAULT_VALUE
+        )
+    }
+
+    override suspend fun setGridViewOptions(result: Int) {
+        flowSettings.putInt(
+            key = GRID_VIEW_OPTIONS,
+            value = result
+        )
+    }
+
+    override fun getGridViewOptions(): Flow<Int> {
+        return flowSettings.getIntFlow(
+            key = GRID_VIEW_OPTIONS,
+            defaultValue = 3
+        )
+    }
+
+    override suspend fun setMergeCartItems(result: Boolean) {
+        flowSettings.putBoolean(
+            key = MERGE_CART_ITEMS,
+            value = result
+        )
+    }
+
+    override fun getMergeCartItems(): Flow<Boolean> {
+        return flowSettings.getBooleanFlow(
+            key = MERGE_CART_ITEMS,
+            defaultValue = true
+        )
+    }
+
+    override suspend fun setPaymentConfirmPopup(result: Boolean) {
+        flowSettings.putBoolean(
+            key = PAYMENT_CONFIRM_POPUP,
+            value = result
+        )
+    }
+
+    override fun getPaymentConfirmPopup(): Flow<Boolean> {
+        return flowSettings.getBooleanFlow(
+            key = PAYMENT_CONFIRM_POPUP,
+            defaultValue = false
+        )
+    }
+
+    override suspend fun setRoundOffOption(result: Int) {
+        flowSettings.putInt(
+            key = ROUND_OFF_OPTION,
+            value = result
+        )
+    }
+
+    override fun getRoundOffOption(): Flow<Int> {
+        return flowSettings.getIntFlow(
+            key = ROUND_OFF_OPTION,
+            defaultValue = 0
+        )
+    }
+
+    override suspend fun setFastPaymentMode(result: Boolean) {
+        flowSettings.putBoolean(
+            key = FAST_PAYMENT,
+            value = result
+        )
+    }
+
+    override fun getFastPaymentMode(): Flow<Boolean> {
+        return flowSettings.getBooleanFlow(
+            key = FAST_PAYMENT,
+            defaultValue = false
+        )
+    }
 
 }

@@ -16,4 +16,5 @@ sealed class Route {
     data class TransactionDetails(val mSaleRecord: SaleRecord) : Route()
     data object Payout : Route()
     data object Settlement : Route()
+    data object Setting : Route()
 }

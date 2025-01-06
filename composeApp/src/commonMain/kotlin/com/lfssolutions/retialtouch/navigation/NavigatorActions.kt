@@ -62,8 +62,11 @@ object NavigatorActions {
         navigator.push(Route.Payout.toVoyagerScreen())
     }
 
-
     fun navigateToSettlementScreen(navigator: Navigator) {
         navigator.push(Route.Settlement.toVoyagerScreen())
+    }
+
+    fun navigateToSettingScreen(navigator: Navigator) {
+        navigator.push(Route.Setting.toVoyagerScreen())
     }
 }

@@ -1,7 +1,8 @@
 package com.lfssolutions.retialtouch.utils.serializers.db
 
 
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleInvoiceItem
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
@@ -65,9 +66,13 @@ fun SyncItem.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toSyncItem(): SyncItem = JsonObj.decodeFromString(this)
 
-fun EmployeeDao.toJson(): String = JsonObj.encodeToString(this)
+fun POSEmployee.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toEmployeeDao(): EmployeeDao = JsonObj.decodeFromString(this)
+fun String.toPOSEmployee(): POSEmployee = JsonObj.decodeFromString(this)
+
+fun POSEmployeeRight.toJson(): String = JsonObj.encodeToString(this)
+
+fun String.toPOSEmployeeRight(): POSEmployeeRight = JsonObj.decodeFromString(this)
 
 fun PendingSale.toJson(): String = JsonObj.encodeToString(this)
 

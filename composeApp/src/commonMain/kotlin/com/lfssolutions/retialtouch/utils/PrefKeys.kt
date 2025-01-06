@@ -13,11 +13,21 @@ object PrefKeys {
     const val LOCATION_ID = "locationID"
     const val CURRENCY_SYMBOL = "currencySymbol"
     const val TENANT_ID = "tenantID"
+    const val POS_EMPLOYEE = "posEmployee"
     const val EMPLOYEE_CODE = "employeeCode"
     const val EMPLOYEE_STATE = "employeeState"
     const val PRINTER_ENABLE= "printerEnable"
-    const val TOKEN_EXPIRY_THRESHOLD = 1
+    const val NETWORK_CONFIG = "networkConfig"
+    const val CART_MARQUEE = "cartMarquee"
+    const val MERGE_CART_ITEMS = "mergeCartItems"
+    const val GRID_VIEW_OPTIONS = "gridViewOptions"
+    const val FAST_PAYMENT = "fastPayment"
+    const val PAYMENT_CONFIRM_POPUP = "paymentConfirmPopup"
+    const val ROUND_OFF_OPTION = "roundOffOption"
 
+
+    const val NETWORK_CONFIG_DEFAULT_VALUE = "192.168.25.39:768"
+    const val TOKEN_EXPIRY_THRESHOLD = 1
     const val LAST_SYNC_TS= "lastSyncTs"
     const val RE_SYNC_TIMER= "reSyncTimer"
     const val SALE_INVOICE_LENGTH= "salesInvoiceNumberLength"

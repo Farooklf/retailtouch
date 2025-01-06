@@ -2,12 +2,11 @@ package com.lfssolutions.retialtouch.domain.repositories
 
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.SqlPreference
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
-import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.Stock
@@ -48,6 +47,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
@@ -140,8 +140,8 @@ class DataBaseRepository: KoinComponent {
     ) {
         withContext(Dispatchers.IO) {
             employeesResponse.result.items.forEach { employee ->
-                val mEmployeeDao =
-                    EmployeeDao(
+                val mPOSEmployee =
+                    POSEmployee(
                         employeeId = employee.id,
                         employeeName = employee.name,
                         employeeCode = employee.employeeCode,
@@ -150,26 +150,28 @@ class DataBaseRepository: KoinComponent {
                         employeeCategoryName = employee.employeeCategoryName ?: "",
                         employeeDepartmentName = employee.employeeDepartmentName ?: "",
                         isAdmin = employee.isAdmin,
-                        isDeleted = employee.isDeleted
+                        isDeleted = employee.isDeleted,
+                        isPosEmployee = false,
                     )
-                dataBaseRepository.insertEmployee(mEmployeeDao)
+                dataBaseRepository.insertEmployee(mPOSEmployee)
             }
         }
     }
+
 
     suspend fun insertEmpRole(
         employeesResponse: EmployeesResponse
     ) {
         withContext(Dispatchers.IO) {
             employeesResponse.result.items.forEach { employee ->
-                val mEmployeeDao =
-                    EmployeeDao(
+                val mPOSEmployee =
+                    POSEmployee(
                         employeeId = employee.id,
                         employeeName = employee.name,
                         isAdmin = employee.isAdmin,
                         isDeleted = employee.isDeleted
                     )
-                dataBaseRepository.insertEmpRole(mEmployeeDao)
+                dataBaseRepository.insertEmpRole(mPOSEmployee)
             }
         }
     }
@@ -181,16 +183,15 @@ class DataBaseRepository: KoinComponent {
             employeesResponse.result.items.forEach {
                 val employee=it.employeeRole
                 if(employee!=null){
-                    val mEmployeeDao = EmployeeDao(
-                            employeeId = employee.id?:0,
-                            employeeName = employee.name,
+                    val mPOSEmployeeRight = POSEmployeeRight(
+                            id = employee.id?:0,
+                            name = employee.name,
                             isAdmin = employee.isAdmin,
-                            isDeleted = employee.isDeleted,
                             grantedPermissionNames = it.grantedPermissionNames,
                             restrictedPermissionNames = it.restrictedPermissionNames,
                             permissions = it.permissions
                         )
-                    dataBaseRepository.insertEmpRights(mEmployeeDao)
+                    dataBaseRepository.insertEmpRights(mPOSEmployeeRight)
                 }
             }
         }
@@ -473,22 +474,7 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
-    suspend fun insertNextPosSale(
-        response: NextPOSSaleInvoiceNoResponse
-    ) {
-        try {
-            withContext(Dispatchers.IO) {
-                response.result?.let {
-                    val dao = NextPOSSaleDao(
-                        posItem = it
-                    )
-                    dataBaseRepository.insertNextPosSale(dao)
-                }
-            }
-        } catch (ex: Exception) {
-            println("EXCEPTION NEXT POSSALE: ${ex.message}")
-        }
-    }
+
 
 
     suspend fun insertOrUpdateScannedProduct(item: Product) {
@@ -697,6 +683,10 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getAllAuthentication()
     }
 
+    fun getRTLoginUser(): Flow<RTLoginUser> {
+        return dataBaseRepository.getAuthUser().flowOn(Dispatchers.IO)
+    }
+
     suspend fun getAuthUser(id:Long): AuthenticateDao {
         return dataBaseRepository.selectUserByUserId(id).first()
     }
@@ -709,15 +699,15 @@ class DataBaseRepository: KoinComponent {
         return dataBaseRepository.getSelectedLocation().flowOn(Dispatchers.IO)
     }
 
-    fun getEmployee(empCode: String): Flow<EmployeeDao?> {
+    fun getEmployee(empCode: String): Flow<POSEmployee?> {
         return dataBaseRepository.getEmployeeByCode(empCode)
     }
 
-    suspend fun getEmployeeByCode(empCode: String): EmployeeDao? {
+    suspend fun getEmployeeByCode(empCode: String): POSEmployee? {
         return dataBaseRepository.getEmployeeByCode(empCode.trim()).first()
     }
 
-    fun getEmpRights(): Flow<List<EmployeeDao>> {
+    fun getEmpRights(): Flow<List<POSEmployeeRight>> {
         return dataBaseRepository.getAllEmpRights()
     }
 

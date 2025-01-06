@@ -3,7 +3,8 @@ package com.lfssolutions.retialtouch.data.sqlDelightDb
 
 import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.location.Location
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
@@ -28,11 +29,11 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import com.lfssolutions.retialtouch.retailTouchDB
-import com.lfssolutions.retialtouch.utils.serializers.db.toEmployeeDao
 import com.lfssolutions.retialtouch.utils.serializers.db.toHoldSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
@@ -40,6 +41,7 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
+import com.lfssolutions.retialtouch.utils.serializers.db.toPOSEmployeeRight
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceDetailRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoicePendingSaleRecord
@@ -76,7 +78,7 @@ import kotlinx.coroutines.flow.flow
 
     override  fun selectUserByUserId(userId: Long): Flow<AuthenticateDao> = flow{
         retailTouch.userTenanatQueries.selectUserByUserId(userId).executeAsOneOrNull().let { body->
-            println("dbAuth:$body")
+           // println("dbAuth:$body")
             body?.let {
                 emit(
                     AuthenticateDao(
@@ -115,7 +117,26 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deleteAuthentication() {
+     override fun getAuthUser(): Flow<RTLoginUser> = flow{
+         retailTouch.userTenanatQueries.getAll().executeAsOneOrNull().let { body ->
+             body?.let {
+                 val login=it.loginDao.toLogin()
+                 emit(
+                        RTLoginUser(
+                         userId = login.userId,
+                         tenantId = login.tenantId?:0,
+                         serverURL = it.url,
+                         tenantName = it.tenantname,
+                         userName = it.username,
+                         password = it.password,
+                         currency = login.currencySymbol?:""
+                     )
+                 )
+             }
+         }
+     }
+
+     override suspend fun deleteAuthentication() {
         retailTouch.userTenanatQueries.deleteAuth()
     }
 
@@ -156,27 +177,35 @@ import kotlinx.coroutines.flow.flow
         retailTouch.userLocationQueries.deleteAllLocation()
     }
 
-    override suspend fun insertEmployee(employeeDao: EmployeeDao) {
+    override suspend fun insertEmployee(mPOSEmployee: POSEmployee) {
         retailTouch.employeesQueries.insertEmployees(
-            employeeId = employeeDao.employeeId.toLong(),
-            employeeCode = employeeDao.employeeCode.uppercase(),
-            employeeName = employeeDao.employeeName,
-            employeeRoleName = employeeDao.employeeRoleName,
-            employeePassword = employeeDao.employeePassword,
-            employeeCategoryName = employeeDao.employeeCategoryName,
-            employeeDepartmentName = employeeDao.employeeDepartmentName,
-            creationTime = employeeDao.creationTime,
-            isAdmin = employeeDao.isAdmin,
-            isDeleted = employeeDao.isDeleted
+            employeeId = mPOSEmployee.employeeId.toLong(),
+            employeeCode = mPOSEmployee.employeeCode.uppercase(),
+            employeeName = mPOSEmployee.employeeName,
+            employeeRoleName = mPOSEmployee.employeeRoleName,
+            employeePassword = mPOSEmployee.employeePassword,
+            employeeCategoryName = mPOSEmployee.employeeCategoryName,
+            employeeDepartmentName = mPOSEmployee.employeeDepartmentName,
+            creationTime = mPOSEmployee.creationTime,
+            isAdmin = mPOSEmployee.isAdmin,
+            isDeleted = mPOSEmployee.isDeleted,
+            isPOSEmployee = mPOSEmployee.isPosEmployee
         )
     }
 
-    override fun getEmployeeByCode(employeeCode: String): Flow<EmployeeDao?> = flow {
+     override suspend fun updatePOSEmployee(mPOSEmployee: POSEmployee) {
+         retailTouch.employeesQueries.updatePOSEmployee(
+             id = mPOSEmployee.employeeId.toLong(),
+             isPOSEmployee = mPOSEmployee.isPosEmployee
+         )
+     }
+
+     override fun getEmployeeByCode(employeeCode: String): Flow<POSEmployee?> = flow {
         retailTouch.employeesQueries.selectEmployeeByCode(employeeCode.uppercase()).executeAsOneOrNull().let { body->
-            println("employee : $body")
+            //println("employee : $body")
             if(body!=null){
                 emit(
-                    EmployeeDao(
+                    POSEmployee(
                         employeeId = body.employeeId.toInt(),
                         employeeCode = body.employeeCode,
                         employeeName = body.employeeName,
@@ -185,7 +214,8 @@ import kotlinx.coroutines.flow.flow
                         employeeDepartmentName = body.employeeDepartmentName,
                         employeeRoleName = body.employeeRoleName,
                         isAdmin = body.isAdmin ?: false,
-                        isDeleted = body.isDeleted ?: false
+                        isDeleted = body.isDeleted ?: false,
+                        isPosEmployee = body.isPOSEmployee ?: false,
                     )
                 )
             }else{
@@ -195,32 +225,49 @@ import kotlinx.coroutines.flow.flow
 
     }
 
-    override suspend fun deleteAllEmployee() {
+     override fun getPOSEmployees(): Flow<List<POSEmployee>> = flow{
+         retailTouch.employeesQueries.getAllEmployees().executeAsList().let { list ->
+             emit(
+                 list.map { body ->
+                     POSEmployee(
+                         employeeId = body.employeeId.toInt(),
+                         employeeName = body.employeeName,
+                         employeeCode = body.employeeCode,
+                         employeePassword = body.employeePassword,
+                         employeeRoleName = body.employeeRoleName,
+                         creationTime = body.creationTime,
+                         isDeleted = body.isDeleted ?: false,
+                         isAdmin = body.isAdmin ?: false,
+                         isPosEmployee = body.isPOSEmployee ?: false,
+                     )
+                 })
+         }
+     }
+
+     override suspend fun deleteAllEmployee() {
         retailTouch.employeesQueries.deleteEmployees()
     }
 
-    override suspend fun insertEmpRole(employeeDao: EmployeeDao) {
+    override suspend fun insertEmpRole(mPOSEmployee: POSEmployee) {
         retailTouch.employeeRoleQueries.insertEmpRole(
-            empRoleId = employeeDao.employeeId.toLong(),
-            empRoleName = employeeDao.employeeName,
-            isAdmin = employeeDao.isAdmin,
-            isDeleted = employeeDao.isDeleted
+            empRoleId = mPOSEmployee.employeeId.toLong(),
+            empRoleName = mPOSEmployee.employeeName,
+            isAdmin = mPOSEmployee.isAdmin,
+            isDeleted = mPOSEmployee.isDeleted
         )
     }
 
-    override fun getAllEmpRole(): Flow<List<EmployeeDao>> = flow {
+    override fun getAllEmpRole(): Flow<List<POSEmployee>> = flow {
         retailTouch.employeeRoleQueries.getAllEmpRole().executeAsList().let { list ->
             emit(
                 list.map { body ->
-                    EmployeeDao(
+                    POSEmployee(
                         employeeId = body.empRoleId.toInt(),
                         employeeName = body.empRoleName,
                         isDeleted = body.isDeleted ?: false,
                         isAdmin = body.isAdmin ?: false
                     )
-                }
-
-            )
+                })
         }
     }
 
@@ -228,26 +275,25 @@ import kotlinx.coroutines.flow.flow
         retailTouch.employeeRoleQueries.deleteEmpRole()
     }
 
-    override suspend fun insertEmpRights(employeeDao: EmployeeDao) {
+    override suspend fun insertEmpRights(mPOSEmployeeRight: POSEmployeeRight) {
         retailTouch.employeeRightsQueries.insert(
-            id = employeeDao.employeeId.toLong(),
-            employee = employeeDao.toJson())
+            id = mPOSEmployeeRight.id.toLong(),
+            employee = mPOSEmployeeRight.toJson())
     }
 
-    override fun getAllEmpRights(): Flow<List<EmployeeDao>> = flow{
+    override fun getAllEmpRights(): Flow<List<POSEmployeeRight>> = flow{
         retailTouch.employeeRightsQueries.getAll().executeAsList().let { list ->
             emit(
                 list.map { body ->
-                    val employee=body.employee.toEmployeeDao()
-                    EmployeeDao(
-                        employeeId = body.id.toInt(),
-                        employeeName = employee.employeeName,
-                        isDeleted = employee.isDeleted,
+                    body.employee.toPOSEmployeeRight()
+                    /*POSEmployeeRight(
+                        id = body.id.toInt(),
+                        name = employee.name,
                         isAdmin = employee.isAdmin,
                         permissions = employee.permissions,
                         grantedPermissionNames = employee.grantedPermissionNames,
                         restrictedPermissionNames = employee.restrictedPermissionNames
-                    )
+                    )*/
                 }
 
             )
@@ -267,7 +313,7 @@ import kotlinx.coroutines.flow.flow
 
     override fun selectCategoryById(id: Long): Flow<CategoryDao?> = flow{
         retailTouch.menuCategoryQueries.getCategoryById(id).executeAsOneOrNull().let { body->
-            println("menu category : $body")
+            //println("menu category : $body")
             if(body!=null){
                 emit(
                     CategoryDao(

@@ -1,8 +1,10 @@
 package com.lfssolutions.retialtouch.presentation.viewModels
 
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeUIState
+import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -10,18 +12,15 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
 class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
-
-
     private val _employeeScreenState = MutableStateFlow(EmployeeUIState())
     val employeeScreenState: StateFlow<EmployeeUIState> = _employeeScreenState.asStateFlow()
-
-
 
     fun updateEmployeeCode(urlInput: String) {
         viewModelScope.launch{
@@ -45,6 +44,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
     private fun updateEmpCodeError(error: String?) {
         _employeeScreenState.update { it.copy(employeeCodeError = error) }
     }
+
     private fun updateEmpPinError(error: String?) {
         viewModelScope.launch {
             _employeeScreenState.update { it.copy(pinError = error) }
@@ -86,17 +86,49 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
     private fun performEmployeeLogin() {
         viewModelScope.launch {
-            val employee=dataBaseRepository.getEmployeeByCode(_employeeScreenState.value.employeeCode)
+            val employee=dataBaseRepository.getEmployeeByCode(employeeScreenState.value.employeeCode)
             if(employee!=null){
                 employeeDoa.update { employee }
-                if (employee.employeePassword == _employeeScreenState.value.pin) {
-                    setEmployeeCode(_employeeScreenState.value.employeeCode)
+                if (employee.employeePassword == employeeScreenState.value.pin) {
+                    updatePOSEmployees(employee)
+                    getEmployeeRights()
                     updateEmployeeLogin(true)
                 } else {
                     updateEmpPinError("PIN is not correct")
                 }
             }else{
                 updateEmpPinError("It seems you are not a valid user")
+            }
+        }
+    }
+
+    private fun getEmployeeRights(){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                //updateLoaderMsg("Syncing Employee Rights")
+                networkRepository.getEmployeeRights(BasicApiRequest(
+                    tenantId = getTenantId(),
+                    name = employeeDoa.value?.employeeRoleName
+                )).collectLatest {apiResponse->
+                    observeResponseNew(apiResponse,
+                        onLoading = {
+
+                        },
+                        onSuccess = { apiData ->
+                            if(apiData.success){
+                                viewModelScope.launch {
+                                    dataBaseRepository.insertEmpRights(apiData)
+                                }
+                            }
+                        },
+                        onError = { errorMsg ->
+                            //handleApiError(EMPLOYEE_ERROR_TITLE,errorMsg)
+                        }
+                    )
+                }
+            }catch (e: Exception){
+                val error="${e.message}"
+                //handleApiError(EMPLOYEE_ERROR_TITLE,error)
             }
         }
     }

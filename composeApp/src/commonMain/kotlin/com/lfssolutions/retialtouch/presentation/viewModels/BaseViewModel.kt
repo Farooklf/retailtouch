@@ -8,10 +8,11 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
+import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
@@ -44,7 +45,6 @@ import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyRe
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionItem
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
-import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
@@ -66,13 +66,13 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
+import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -82,7 +82,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -90,14 +89,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 open class BaseViewModel: ViewModel(), KoinComponent {
 
     val networkRepository: NetworkRepository by inject()
-    val preferences: PreferencesRepository by inject()
+    val preferences : PreferencesRepository by inject()
     val dataBaseRepository: DataBaseRepository by inject()
+    val sqlPreference: SqlPreference by inject()
 
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
@@ -107,6 +108,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     val _loginScreenState = MutableStateFlow(LoginUiState())
     val loginScreenState: StateFlow<LoginUiState> = _loginScreenState
+
+    val _posEmployees : MutableStateFlow<List<POSEmployee>> = MutableStateFlow(emptyList())
+    val posEmployees: StateFlow<List<POSEmployee>> = _posEmployees
 
     var count =0
 
@@ -121,7 +125,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
-    val employeeDoa = MutableStateFlow<EmployeeDao?>(null)
+    val employeeDoa = MutableStateFlow<POSEmployee?>(null)
 
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
 
@@ -179,7 +183,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
-    val employee: StateFlow<EmployeeDao?> = flow {
+    val employee: StateFlow<POSEmployee?> = flow {
         // This flow emits the employee data asynchronously
         val employeeCode = getEmpCode()  // Suspends here
         emit(dataBaseRepository.getEmployee(employeeCode).firstOrNull())
@@ -423,36 +427,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun syncEmployeeRights(){
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                updateLoaderMsg("Syncing Employee Rights")
-                networkRepository.getEmployeeRights(BasicApiRequest(
-                    tenantId = getTenantId(),
-                    name = employeeDoa.value?.employeeRoleName
-                )).collectLatest {apiResponse->
-                    observeResponseNew(apiResponse,
-                        onLoading = {  },
-                        onSuccess = { apiData ->
-                            if(apiData.success){
-                                viewModelScope.launch {
-                                    dataBaseRepository.insertEmpRights(apiData)
-                                    println("employee rights insertion : ${count++}")
-                                }
-                            }
-                        },
-                        onError = {
-                                errorMsg ->
-                            handleApiError(EMPLOYEE_ERROR_TITLE,errorMsg)
-                        }
-                    )
-                }
-            }catch (e: Exception){
-                val error="${e.message}"
-                handleApiError(EMPLOYEE_ERROR_TITLE,error)
-            }
-        }
-    }
+
 
     fun syncEveryThing(){
        try {
@@ -1217,29 +1192,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    suspend fun getTerminal(){
-        try {
-            updateLoaderMsg("Fetching terminal data...")
-            println("terminal calling api : ${count++}")
-            networkRepository.getTerminal(getBasicRequest()).collectLatest{terminalResponse->
-                observeTerminal(terminalResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleApiError(TERMINAL_ERROR_TITLE,error)
-        }
-    }
 
-    private fun observeTerminal(apiResponse: RequestState<TerminalResponse>) {
-        println("terminal insertion : ${count++}")
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoaderMsg("Fetching Terminal....")},
-            onSuccess = { apiData -> /*inser(locationData)*/ },
-            onError = { errorMsg ->
-                handleApiError(TERMINAL_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
 
     fun updateLoginState(loading: Boolean, successfulLogin:Boolean, loginError: Boolean, title :String,error:String) {
         viewModelScope.launch {
@@ -1293,6 +1246,35 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setEmployeeCode(code)
     }
 
+    suspend fun setPOSEmployee(employee:POSEmployee){
+        preferences.setPOSEmployee(employee.toJson())
+    }
+
+    suspend fun updatePOSEmployees(employee: POSEmployee
+    ) {
+        withContext(Dispatchers.IO) {
+            val mPOSEmployee = POSEmployee(
+                employeeId = employee.employeeId,
+                employeeName = employee.employeeName,
+                employeeCode = employee.employeeCode,
+                employeeRoleName = employee.employeeRoleName,
+                employeePassword = employee.employeePassword,
+                employeeCategoryName = employee.employeeCategoryName,
+                employeeDepartmentName = employee.employeeDepartmentName,
+                isAdmin = employee.isAdmin,
+                isDeleted = employee.isDeleted,
+                isPosEmployee = true,
+            )
+            sqlPreference.updatePOSEmployee(mPOSEmployee)
+        }
+    }
+
+    suspend fun getPosEmployees(): List<POSEmployee>{
+        val employees = sqlPreference.getPOSEmployees().first() // Collects the list.
+        _posEmployees.value = employees // Updates the StateFlow.
+        return employees
+    }
+
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
@@ -1335,12 +1317,66 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getEmployeeCode().first()
     }
 
+    suspend fun getCurrentServer() : String{
+        return preferences.getBaseURL().first()
+    }
 
+    suspend fun setNetworkConfig(networkConfig:String){
+         preferences.setNetworkConfig(networkConfig)
+    }
+
+    suspend fun getNetworkConfig():String{
+        return preferences.getNetworkConfig().first()
+    }
+
+    suspend fun setGridViewOptions(updatedValue:Int){
+        preferences.setGridViewOptions(updatedValue)
+    }
+
+    suspend fun getGridViewOptions() : Int{
+        return preferences.getGridViewOptions().first()
+    }
+
+    suspend fun setRoundOffOption(updatedValue:Int){
+        preferences.setRoundOffOption(updatedValue)
+    }
+
+    suspend fun getRoundOffOption() : Int{
+        return preferences.getRoundOffOption().first()
+    }
+
+    suspend fun setMergeCartItems(updatedValue:Boolean){
+        preferences.setMergeCartItems(updatedValue)
+    }
+
+    suspend fun getMergeCartItems() : Boolean{
+        return preferences.getMergeCartItems().first()
+    }
+
+    suspend fun setFastPaymentMode(updatedValue:Boolean) {
+        preferences.setFastPaymentMode(updatedValue)
+    }
+
+    suspend fun getFastPaymentMode():Boolean {
+        return preferences.getFastPaymentMode().first()
+    }
+
+    suspend fun setPaymentConfirmPopup(updatedValue:Boolean) {
+        preferences.setPaymentConfirmPopup(updatedValue)
+    }
+
+    suspend fun getPaymentConfirmPopup():Boolean {
+        return preferences.getPaymentConfirmPopup().first()
+    }
+
+    fun observeNetworkConfig(): Flow<String> {
+        return preferences.getNetworkConfig()
+    }
 
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { employeeDoa.update { EmployeeDao() } },
+                async { employeeDoa.update { POSEmployee() } },
                 async { categoryResponse.update { emptyList()} },
             )
             jobs.awaitAll()

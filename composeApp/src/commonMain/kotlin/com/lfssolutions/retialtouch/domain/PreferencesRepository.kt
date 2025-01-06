@@ -48,6 +48,9 @@ interface PreferencesRepository {
     suspend fun setEmployeeCode(result: String)
     fun getEmployeeCode(): Flow<String>
 
+    suspend fun setPOSEmployee(result: String)
+    fun sgtPOSEmployee(): Flow<String>
+
     suspend fun setUserLoggedIn(result: Boolean)
     fun getUserLoggedIn(): Flow<Boolean>
 
@@ -68,4 +71,22 @@ interface PreferencesRepository {
 
     suspend fun setTerminalCode(result: String)
     fun getTerminalCode(): Flow<String>
+
+    suspend fun setNetworkConfig(result: String)
+    fun getNetworkConfig(): Flow<String>
+
+    suspend fun setGridViewOptions(result: Int)
+    fun getGridViewOptions(): Flow<Int>
+
+    suspend fun setMergeCartItems(result: Boolean)
+    fun getMergeCartItems(): Flow<Boolean>
+
+    suspend fun setPaymentConfirmPopup(result: Boolean)
+    fun getPaymentConfirmPopup(): Flow<Boolean>
+
+    suspend fun setRoundOffOption(result: Int)
+    fun getRoundOffOption(): Flow<Int>
+
+    suspend fun setFastPaymentMode(result: Boolean)
+    fun getFastPaymentMode(): Flow<Boolean>
 }

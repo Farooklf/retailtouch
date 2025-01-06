@@ -1,6 +1,6 @@
 package com.lfssolutions.retialtouch.domain.model.home
 
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 
 
@@ -15,7 +15,7 @@ data class HomeUIState(
     val rotationAngle: Float = 0f, // Store the current rotation angle
 
     val employeeRole: String = "",
-    val employeeDao: EmployeeDao = EmployeeDao(),
+    val POSEmployee: POSEmployee = POSEmployee(),
     val authUser: AuthenticateDao = AuthenticateDao(),
 
-)
+    )

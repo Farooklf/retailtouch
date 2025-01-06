@@ -158,6 +158,9 @@ fun Home(
                                     HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)
                                     }
+                                    HomeItemId.SETTING_ID->{
+                                        NavigatorActions.navigateToSettingScreen(navigator)
+                                    }
                                     HomeItemId.LOGOUT_ID->{
                                         homeViewModel.updateEmployeeStatus()
                                     }

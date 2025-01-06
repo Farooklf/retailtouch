@@ -175,7 +175,7 @@ fun EmployeeScreen(
             }
 
             if(employeeScreenState.isEmployeeLoginSuccess){
-                employeeViewModel.syncEmployeeRights()
+                //employeeViewModel.getEmployeeRights()
                 onDismiss()
             }
 
