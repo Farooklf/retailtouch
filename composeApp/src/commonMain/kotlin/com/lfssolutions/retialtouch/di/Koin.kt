@@ -24,6 +24,7 @@ import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionDetailsViewModel
 import com.lfssolutions.retialtouch.retailTouchDB
+import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -86,6 +87,7 @@ fun appModule() = module {
     single { PrinterViewModel() }
 
     viewModelDefinition { BaseViewModel() }
+    viewModelDefinition { SyncViewModel() }
     viewModelDefinition { PaymentCollectorViewModel() }
     viewModelDefinition { LoginViewModel() }
     viewModelDefinition { DashBoardViewmodel() }

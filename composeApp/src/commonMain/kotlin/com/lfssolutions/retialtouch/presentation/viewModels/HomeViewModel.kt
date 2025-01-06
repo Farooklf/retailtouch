@@ -35,10 +35,6 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     private val _homeUIState = MutableStateFlow(HomeUIState())
     val homeUIState: StateFlow<HomeUIState> = _homeUIState.asStateFlow()
 
-    init {
-        syncEveryThing()
-    }
-
     fun initialiseEmpScreen(isSplash: Boolean) {
         viewModelScope.launch {
             _homeUIState.update { it.copy(isFromSplash = isSplash,isBlur=isSplash) }
@@ -153,46 +149,22 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
                     else
                         item
                 }
-                uiState.copy(homeItemList = updatedList,isSync=false)
+                uiState.copy(homeItemList = updatedList)
             }
         }
     }
 
-    fun onSyncClick(){
 
-        viewModelScope.launch(Dispatchers.IO) {
-            // Prepare all API calls in parallel using async
-            val deferredResults = listOf(
-                //Employee API
-                async {
-                    getEmployees()
-                },
-                //Employee Role API
-                async {
-                    getEmployeeRole()
-                },
 
-                //MenuCategory API
-                async {
-                    //syncMenu()
-                }
-            )
-
-            // Await all tasks (this will wait for all the parallel jobs to complete)
-            deferredResults.awaitAll()
-            stopSyncRotation(false)
-            println("apiCall is end")
-        }
-    }
-
-    private fun stopSyncRotation(value:Boolean){
+    fun stopSyncRotation(value:Boolean){
         viewModelScope.launch {
             _homeUIState.update { uiState ->
                 val updatedList = uiState.homeItemList.map { item ->
                     item.copy(isSyncRotate = value) // Update the isSyncRotate flag based on the passed value
                 }
-                uiState.copy(homeItemList = updatedList, isSync = value)
+                uiState.copy(homeItemList = updatedList)
             }
         }
     }
+
 }

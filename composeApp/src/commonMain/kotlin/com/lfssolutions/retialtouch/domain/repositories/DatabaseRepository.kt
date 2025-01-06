@@ -62,14 +62,17 @@ import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotio
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -316,14 +319,14 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
-    suspend fun insertNewStock(
+   suspend fun insertNewStock(
         newStock: List<Stock>
     ) {
         try {
             withContext(Dispatchers.IO) {
-                clearStocks()
+                //clearStocks()
                 newStock.map { item ->
-                    println("InventoryCode: ${item.inventoryCode}")
+                    //println("InventoryCode: ${item.inventoryCode}")
                     val dao = MenuDao(
                         productId = item.id,
                         menuProductItem = item

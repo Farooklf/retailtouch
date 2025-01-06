@@ -38,6 +38,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
+import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import kotlinx.datetime.Clock
@@ -64,17 +65,25 @@ data class HomeScreen(val isSplash: Boolean): Screen{
 @Composable
 fun Home(
     homeViewModel: HomeViewModel,
+    syncViewModel: SyncViewModel= koinInject(),
     isFromSplash:Boolean,
     onLogout: @Composable () -> Unit
     )
 {
+
     val navigator = LocalNavigator.currentOrThrow
-    var currentTime by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
-    var showColon by remember { mutableStateOf(true) }
+    val currentTime by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
+    val showColon by remember { mutableStateOf(true) }
 
     val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
-    val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
+    val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
+    //val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit){
+        println("${homeViewModel.isCallCompleteSync()}")
+        syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
+    }
 
     LaunchedEffect(isFromSplash) {
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
@@ -90,9 +99,9 @@ fun Home(
     }*/
 
 
-    LaunchedEffect(syncInProgress){
-        if(syncInProgress){
-            //homeViewModel.onSyncClick()
+    LaunchedEffect(syncDataState.syncInProgress){
+        if(!syncDataState.syncInProgress){
+           homeViewModel.stopSyncRotation(syncDataState.syncInProgress)
         }
     }
 
@@ -135,7 +144,7 @@ fun Home(
                                     textAlign = TextAlign.Center
                                 )
                             }
-                            ListGridItems(homeUIState.homeItemList,syncInProgress){id->
+                            ListGridItems(homeUIState.homeItemList,syncDataState.syncInProgress){id->
                                 when(id){
                                     HomeItemId.CASHIER_ID->{ //Cashier
                                         NavigatorActions.navigateToPOSScreen(navigator)
@@ -154,6 +163,7 @@ fun Home(
                                     }
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
+                                        syncViewModel.reSync(true)
                                     }
                                     HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)

@@ -12,7 +12,7 @@ data class SyncAllResponse(
     @SerialName("error")
     val error: ErrorResponse?,
     @SerialName("result")
-    val result: SyncResult = SyncResult(),
+    val result: UnSyncList? = UnSyncList(),
     @SerialName("success")
     val success: Boolean = false,
     @SerialName("targetUrl")

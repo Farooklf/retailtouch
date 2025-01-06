@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SyncResult(
+data class UnSyncList(
     @SerialName("items")
     val items: List<SyncItem> = listOf()
 )
