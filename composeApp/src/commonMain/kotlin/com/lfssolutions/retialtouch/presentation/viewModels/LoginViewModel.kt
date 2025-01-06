@@ -409,7 +409,7 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun syncInventory(lastSyncTime:String?=null){
+    suspend fun syncInventory(lastSyncTime:String?=null){
         try {
             updateLoginSyncStatus("Syncing Inventory...")
              println("Syncing Inventory : ${count++}")
@@ -724,6 +724,18 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                     moveToNextScreen()
                 }
             }
+        }
+    }
+
+    fun updateLoginError(errorTitle:String, errorMsg: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            println(errorMsg)
+            updateLoginState(
+                loading = _loginScreenState.value.isLoading,
+                successfulLogin = false,
+                loginError = true,
+                title = errorTitle,
+                error = errorMsg)
         }
     }
 }

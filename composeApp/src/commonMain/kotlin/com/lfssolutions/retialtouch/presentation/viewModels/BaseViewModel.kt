@@ -72,6 +72,7 @@ import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
+import com.lfssolutions.retialtouch.utils.serializers.db.toDefaultLocation
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -245,7 +246,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncInProgress.update { syncStatus }
     }
 
-    private fun updateSyncStatus(syncStatus: String) {
+     fun updateLoginSyncStatus(syncStatus: String) {
         _syncProgressStatus.update { syncStatus }
     }
 
@@ -438,7 +439,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              if (pendingCount <= 0) {
                  loadNextSalesInvoiceNumber()
              } else {
-                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
+                 updateLoginSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
              }
 
              syncMembers()
@@ -450,7 +451,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
              syncPromotion()
              syncPaymentTypes()
              println("All Sync Operations Completed Successfully")
-             updateSyncStatus("All Sync Operations have been Completed Successfully")
+             updateLoginSyncStatus("All Sync Operations have been Completed Successfully")
              updateSyncProgress(false)
              preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
          }
@@ -465,7 +466,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private suspend fun loadNextSalesInvoiceNumber(){
         try {
             println("API CALL : ${count++}")
-            updateSyncStatus("loading sale invoice count")
+            updateLoginSyncStatus("loading sale invoice count")
             networkRepository.getNextPOSSaleInvoice(getBasicRequest()).collectLatest {apiResponse->
                 observeNextSaleInvoices(apiResponse)
             }
@@ -668,7 +669,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     fun updateSales(){
        try {
-           updateSyncStatus("Syncing Sales History")
+           updateLoginSyncStatus("Syncing Sales History")
            viewModelScope.launch {
                val job = async { getSalesTotalCount() }
                val saleRecord = job.await()
@@ -714,7 +715,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 return
 
             println("Syncing Print Template: ${templateType.toInt()}")
-            updateSyncStatus("Syncing Print Template")
+            updateLoginSyncStatus("Syncing Print Template")
             networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collect { apiResponse->
                 observePrintTemplate(apiResponse)
             }
@@ -788,7 +789,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         //set
                         updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
                         updateSyncProgress(false)
-                        updateSyncStatus("")
+                        updateLoginSyncStatus("")
                         handleError(false,"","")
                         updateUIStatus(true)
                     }
@@ -1281,17 +1282,36 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private suspend fun getBasicRequest() = BasicApiRequest(
+    suspend fun setDefaultLocation(location: Location){
+        preferences.setLocation(location.toJson())
+    }
+
+    suspend fun getDefaultLocation():Location{
+        return preferences.getLocation().first().toDefaultLocation()
+    }
+
+    suspend fun setDefaultLocationId(locationId:Int){
+        preferences.setLocationId(locationId)
+    }
+    suspend fun getLocationName():String{
+        return preferences.getLocation().first().toDefaultLocation().name
+    }
+
+    suspend fun getLocationId():Int{
+        return preferences.getLocation().first().toDefaultLocation().locationId.toInt()
+    }
+
+    suspend fun getBasicRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
         lastSyncDateTime = _lastSyncDateTime.value
         )
 
-    private fun getBasicRequest(id:Int) = BasicApiRequest(
+    fun getBasicRequest(id:Int) = BasicApiRequest(
         id =id
     )
 
-    private suspend fun getBasicTenantRequest() = BasicApiRequest(
+     suspend fun getBasicTenantRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first()
     )
 
@@ -1302,7 +1322,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         isDeleted = isDeleted
     )
 
-    suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
+   // suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
     suspend fun getTenantId() = preferences.getTenantId().first()
 
     suspend fun getUserId() :Long{
