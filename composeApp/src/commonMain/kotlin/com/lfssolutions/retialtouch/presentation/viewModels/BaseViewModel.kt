@@ -102,7 +102,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val networkRepository: NetworkRepository by inject()
     val preferences: PreferencesRepository by inject()
     val dataBaseRepository: DataBaseRepository by inject()
-
+   //Changed
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
 
