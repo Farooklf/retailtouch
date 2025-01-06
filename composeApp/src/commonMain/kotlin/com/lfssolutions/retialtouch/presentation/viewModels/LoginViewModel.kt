@@ -236,7 +236,6 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                 async {
                     getEmployeeRole()
                 },
-
                 async {
                     syncPrintTemplate(TemplateType.POSInvoice)
                 }

@@ -138,6 +138,7 @@ import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.receipt_no
+import retailtouch.composeapp.generated.resources.round_off_description
 import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.sku
 import retailtouch.composeapp.generated.resources.status
@@ -1834,5 +1835,15 @@ fun RoundOffOptionsDialog(
                 )
             }
         )
+    }
+}
+
+@Composable
+fun mapIntToText(value: Int): String {
+    return when (value) {
+        1 -> "Default"
+        2 -> "Round Up"
+        3 -> "Round Down"
+        else -> stringResource(Res.string.round_off_description)
     }
 }

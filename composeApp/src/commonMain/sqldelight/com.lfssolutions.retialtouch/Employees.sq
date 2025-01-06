@@ -9,12 +9,18 @@ CREATE TABLE Employees (
     employeeCategoryName TEXT NOT NULL ,
     creationTime TEXT NOT NULL ,
     isDeleted INTEGER AS Boolean DEFAULT 0,
-    isAdmin INTEGER AS Boolean DEFAULT 0
+    isAdmin INTEGER AS Boolean DEFAULT 0,
+    isPOSEmployee INTEGER AS Boolean DEFAULT 0
 );
 
 insertEmployees:
-INSERT OR REPLACE INTO Employees(employeeId,employeeCode,employeeName,employeePassword,employeeRoleName,employeeDepartmentName,employeeCategoryName,creationTime,isDeleted,isAdmin)
-VALUES(?,?,?,?,?,?,?,?,?,?);
+INSERT OR REPLACE INTO Employees(employeeId,employeeCode,employeeName,employeePassword,employeeRoleName,employeeDepartmentName,employeeCategoryName,creationTime,isDeleted,isAdmin,isPOSEmployee)
+VALUES(?,?,?,?,?,?,?,?,?,?,?);
+
+updatePOSEmployee:
+UPDATE Employees
+SET isPOSEmployee = :isPOSEmployee
+WHERE employeeId = :id;
 
 getAllEmployees:
 SELECT * FROM Employees;

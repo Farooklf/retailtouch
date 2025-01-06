@@ -19,6 +19,7 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG
 import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG_DEFAULT_VALUE
 import com.lfssolutions.retialtouch.utils.PrefKeys.NEXT_SALE_INVOICE_NUMBER
 import com.lfssolutions.retialtouch.utils.PrefKeys.PAYMENT_CONFIRM_POPUP
+import com.lfssolutions.retialtouch.utils.PrefKeys.POS_EMPLOYEE
 import com.lfssolutions.retialtouch.utils.PrefKeys.PRINTER_ENABLE
 import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
 import com.lfssolutions.retialtouch.utils.PrefKeys.ROUND_OFF_OPTION
@@ -252,6 +253,20 @@ class PreferencesImpl(
     override fun getEmployeeCode(): Flow<String> {
         return flowSettings.getStringFlow(
             key = EMPLOYEE_CODE,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setPOSEmployee(result: String) {
+        flowSettings.putString(
+            key = POS_EMPLOYEE,
+            value = result
+        )
+    }
+
+    override fun sgtPOSEmployee(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = POS_EMPLOYEE,
             defaultValue = ""
         )
     }

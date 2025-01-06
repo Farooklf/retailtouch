@@ -79,15 +79,21 @@ import retailtouch.composeapp.generated.resources.grid_view_options
 import retailtouch.composeapp.generated.resources.grid_view_options_description
 import retailtouch.composeapp.generated.resources.ip_address_with_port
 import retailtouch.composeapp.generated.resources.language
+import retailtouch.composeapp.generated.resources.logged_in_staff
 import retailtouch.composeapp.generated.resources.master_user
 import retailtouch.composeapp.generated.resources.menu_settings
+import retailtouch.composeapp.generated.resources.misc
 import retailtouch.composeapp.generated.resources.network_config
 import retailtouch.composeapp.generated.resources.payment_settings
 import retailtouch.composeapp.generated.resources.pos_link
+import retailtouch.composeapp.generated.resources.role_str
 import retailtouch.composeapp.generated.resources.round_off_description
 import retailtouch.composeapp.generated.resources.round_off_option
 import retailtouch.composeapp.generated.resources.server
 import retailtouch.composeapp.generated.resources.settings
+import retailtouch.composeapp.generated.resources.staff_list
+import retailtouch.composeapp.generated.resources.superuser
+import retailtouch.composeapp.generated.resources.sync_staff
 import retailtouch.composeapp.generated.resources.tenant_name
 import retailtouch.composeapp.generated.resources.unlink
 
@@ -432,6 +438,41 @@ object SettingScreen : Screen {
     @Composable
     fun SettingEmployeesPage(state: SettingUIState, viewModel: SettingViewModel) {
 
+        //Employees
+        SettingsGroupItem(
+            title = stringResource(Res.string.staff_list)
+        ){
+           state.posEmployees.forEachIndexed{ index,employee->
+               val currentStaff = if(employee.isPosEmployee) "- ${stringResource(Res.string.logged_in_staff)}" else ""
+               val employeeRole = if(employee.isAdmin) "${employee.employeeRoleName.lowercase()} , ${stringResource(Res.string.superuser)}" else employee.employeeRoleName.lowercase()
+
+               SettingsItem(
+                   title = "${index+1}. ${employee.employeeName.uppercase()} $currentStaff ",
+                   description =  stringResource(Res.string.role_str,employeeRole),
+                   icon = AppIcons.empRoleIcon,
+                   onClick = {
+
+                   },
+                   isSwitchable = false,
+                   showDivider = state.posEmployees.size!=(index+1)
+               )
+           }
+        }
+
+        //Sync staff
+        SettingsGroupItem(
+            title = stringResource(Res.string.misc)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.sync_staff),
+                icon = AppIcons.syncIcon,
+                onClick = {
+                  viewModel.syncEmployees()
+                },
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
     }
 
     @Composable

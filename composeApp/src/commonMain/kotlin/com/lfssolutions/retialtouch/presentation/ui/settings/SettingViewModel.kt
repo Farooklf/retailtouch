@@ -3,6 +3,9 @@ package com.lfssolutions.retialtouch.presentation.ui.settings
 
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,9 +20,9 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
     val settingUiState: StateFlow<SettingUIState> = _settingUiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            val posEmployees = getPosEmployees()
             val rtUser= dataBaseRepository.getRTLoginUser().first()
-
             _settingUiState.update { state->
                 state.copy(
                     serverUrl = getCurrentServer(),
@@ -30,7 +33,8 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                     mergeCartItems = getMergeCartItems(),
                     roundOffOption = getRoundOffOption(),
                     paymentConfirmPopup = getPaymentConfirmPopup(),
-                    fastPaymode = getFastPaymentMode()
+                    fastPaymode = getFastPaymentMode(),
+                    posEmployees = posEmployees
                 )}
         }
 
@@ -103,6 +107,19 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
             _settingUiState. update { state ->
                 setRoundOffOption(value)
                 state.copy(roundOffOption = value,showRoundOffDialog = false)
+            }
+        }
+    }
+
+    fun syncEmployees(){
+        viewModelScope.launch {
+        //Employee API
+            async {
+                getEmployees()
+            },
+            //Employee Role API
+            async {
+                getEmployeeRole()
             }
         }
     }

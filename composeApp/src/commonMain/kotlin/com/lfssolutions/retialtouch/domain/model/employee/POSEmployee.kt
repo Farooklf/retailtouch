@@ -3,10 +3,11 @@ package com.lfssolutions.retialtouch.domain.model.employee
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class EmployeeDao(
+data class POSEmployee(
     val employeeId: Int=0,
     val employeeCode: String="",
     val isDeleted: Boolean=false,
+    val isPosEmployee: Boolean=false,
     val isAdmin: Boolean=false,
     val employeeName: String = "",
     val employeePassword: String = "",

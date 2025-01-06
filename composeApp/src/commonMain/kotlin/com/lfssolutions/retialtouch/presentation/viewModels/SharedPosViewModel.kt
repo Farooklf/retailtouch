@@ -144,11 +144,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     _posUIState.update { it.copy(isLoading = true)}
                 }  // Show loader when starting
                 .catch { th ->
-                    println("exception : ${th.message}")
+                    //println("exception : ${th.message}")
                     _posUIState.update { it.copy(isLoading = false) }
                 }   // Handle any errors and hide loader
                 .collect { (members,details, promotion,location,holdSale) ->
-                    println("promotionDetails : $details | promotion : $promotion | location : $location |holdSale : $holdSale")
+                    //println("promotionDetails : $details | promotion : $promotion | location : $location |holdSale : $holdSale")
                     val holdMap = holdSale.associateBy { item -> item.collectionId }.toMutableMap()
                     _posUIState.update {  it.copy(
                         location=location,

@@ -2,7 +2,8 @@ package com.lfssolutions.retialtouch.domain
 
 
 
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
@@ -28,7 +29,6 @@ import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDao
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetailsDao
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
-import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.login.RTLoginUser
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.products.Stock
@@ -50,18 +50,20 @@ interface SqlPreference {
     suspend fun deleteAllLocations()
 
     //Employees
-    suspend fun insertEmployee(employeeDao: EmployeeDao)
-    fun getEmployeeByCode(employeeCode: String): Flow<EmployeeDao?>
+    suspend fun insertEmployee(mPOSEmployee: POSEmployee)
+    suspend fun updatePOSEmployee(mPOSEmployee: POSEmployee)
+    fun getEmployeeByCode(employeeCode: String): Flow<POSEmployee?>
+    fun getPOSEmployees(): Flow<List<POSEmployee>>
     suspend fun deleteAllEmployee()
 
 
     //Employee Role
-    suspend fun insertEmpRole(employeeDao: EmployeeDao)
-    fun getAllEmpRole(): Flow<List<EmployeeDao>>
+    suspend fun insertEmpRole(mPOSEmployee: POSEmployee)
+    fun getAllEmpRole(): Flow<List<POSEmployee>>
     suspend fun deleteAllEmpRole()
 
-    suspend fun insertEmpRights(employeeDao: EmployeeDao)
-    fun getAllEmpRights(): Flow<List<EmployeeDao>>
+    suspend fun insertEmpRights(mPOSEmployeeRight: POSEmployeeRight)
+    fun getAllEmpRights(): Flow<List<POSEmployeeRight>>
     suspend fun deleteEmpRights()
 
     //Member

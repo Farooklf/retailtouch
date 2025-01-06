@@ -13,6 +13,7 @@ object PrefKeys {
     const val LOCATION_ID = "locationID"
     const val CURRENCY_SYMBOL = "currencySymbol"
     const val TENANT_ID = "tenantID"
+    const val POS_EMPLOYEE = "posEmployee"
     const val EMPLOYEE_CODE = "employeeCode"
     const val EMPLOYEE_STATE = "employeeState"
     const val PRINTER_ENABLE= "printerEnable"

@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.presentation.ui.settings
 
 
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.utils.AppIcons
 
 data class SettingUIState(
@@ -22,6 +23,8 @@ data class SettingUIState(
   val showTerminalCodeDialog: Boolean = false,
   val showNetworkConfigDialog: Boolean = false,
   val showGridViewOptionsDialog: Boolean = false,
+
+  val posEmployees: List<POSEmployee> = listOf(),
 
   //tab
   val tabs: MutableList<TabItem> = mutableListOf(

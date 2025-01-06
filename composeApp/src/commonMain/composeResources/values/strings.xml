@@ -211,4 +211,10 @@
     <string name="cart_item_merge_description">Enable merging cart items</string>
     <string name="fast_paymode">Fast Paymode</string>
     <string name="fast_paymode_description">Enable Fast PayMode to have speed and fast seamless payment experience with minimal steps</string>
+    <string name="staff_list">Staff List</string>
+    <string name="misc">Misc</string>
+    <string name="role_str">Role : %1$s</string>
+    <string name="sync_staff">Sync Staff</string>
+    <string name="logged_in_staff">logged-in employee</string>
+    <string name="superuser">Superuser</string>
 </resources>
