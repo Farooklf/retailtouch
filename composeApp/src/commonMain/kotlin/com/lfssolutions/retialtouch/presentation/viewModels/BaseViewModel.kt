@@ -11,11 +11,9 @@ import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
-import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.products.Stock
-import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginUiState
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
@@ -1327,7 +1325,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { employeeDoa.update { EmployeeDao() } },
                 async { categoryResponse.update { emptyList()} },
             )
             jobs.awaitAll()
