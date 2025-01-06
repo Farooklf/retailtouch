@@ -125,6 +125,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
+    //For Rights
     val employeeDoa = MutableStateFlow<POSEmployee?>(null)
 
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
