@@ -108,7 +108,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
                 //updateLoaderMsg("Syncing Employee Rights")
                 networkRepository.getEmployeeRights(BasicApiRequest(
                     tenantId = getTenantId(),
-                    name = employeeDoa.value?.employeeRoleName
+                    name = employeeDoa.value?.em
                 )).collectLatest {apiResponse->
                     observeResponseNew(apiResponse,
                         onLoading = {

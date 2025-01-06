@@ -727,15 +727,4 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updateLoginError(errorTitle:String, errorMsg: String) {
-        viewModelScope.launch(Dispatchers.Main) {
-            println(errorMsg)
-            updateLoginState(
-                loading = _loginScreenState.value.isLoading,
-                successfulLogin = false,
-                loginError = true,
-                title = errorTitle,
-                error = errorMsg)
-        }
-    }
 }

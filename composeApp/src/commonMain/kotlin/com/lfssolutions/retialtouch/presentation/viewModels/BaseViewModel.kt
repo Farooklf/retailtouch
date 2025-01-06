@@ -13,6 +13,7 @@ import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeeDao
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
+import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
@@ -123,7 +124,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
-    val employeeDoa = MutableStateFlow<EmployeeDao?>(null)
+    //val employeeDoa = MutableStateFlow<POSEmployee?>(null)
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
     private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
     private val paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
@@ -183,7 +184,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             initialValue = null
         )
 
-    val employee: StateFlow<EmployeeDao?> = flow {
+    val employee: StateFlow<POSEmployee?> = flow {
         // This flow emits the employee data asynchronously
         val employeeCode = getEmpCode()  // Suspends here
         emit(dataBaseRepository.getEmployee(employeeCode).firstOrNull())
@@ -400,36 +401,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return posInvoice
     }
 
-    fun syncEmployeeRights(){
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                updateLoginSyncStatus("Syncing Employee Rights")
-                networkRepository.getEmployeeRights(BasicApiRequest(
-                    tenantId = getTenantId(),
-                    name = employeeDoa.value?.employeeRoleName
-                )).collectLatest {apiResponse->
-                    observeResponseNew(apiResponse,
-                        onLoading = {  },
-                        onSuccess = { apiData ->
-                            if(apiData.success){
-                                viewModelScope.launch {
-                                    dataBaseRepository.insertEmpRights(apiData)
-                                    println("employee rights insertion : ${count++}")
-                                }
-                            }
-                        },
-                        onError = {
-                                errorMsg ->
-                            updateLoginError(EMPLOYEE_ERROR_TITLE,errorMsg)
-                        }
-                    )
-                }
-            }catch (e: Exception){
-                val error="${e.message}"
-                updateLoginError(EMPLOYEE_ERROR_TITLE,error)
-            }
-        }
-    }
 
     fun syncEveryThing2(){
        try {

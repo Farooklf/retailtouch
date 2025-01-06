@@ -104,9 +104,9 @@ object DateTimeUtils{
         return currentDateTime
     }
 
-    fun getLastSyncDateTime(): Instant {
+    fun getLastSyncDateTime(): String {
         val lastSyncDateTime = Clock.System.now().minus(2, DateTimeUnit.DAY, TimeZone.UTC)
-        return lastSyncDateTime
+        return lastSyncDateTime.toString()
     }
 
     fun String?.parseDateFromApi(): String {

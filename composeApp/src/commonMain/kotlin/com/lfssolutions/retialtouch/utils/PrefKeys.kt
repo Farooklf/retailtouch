@@ -28,6 +28,7 @@ object PrefKeys {
 
     const val NETWORK_CONFIG_DEFAULT_VALUE = "192.168.25.39:768"
     const val TOKEN_EXPIRY_THRESHOLD = 1
+    const val SYNC_EXPIRY_THRESHOLD = 1
     const val LAST_SYNC_TS= "lastSyncTs"
     const val RE_SYNC_TIMER= "reSyncTimer"
     const val SALE_INVOICE_LENGTH= "salesInvoiceNumberLength"
