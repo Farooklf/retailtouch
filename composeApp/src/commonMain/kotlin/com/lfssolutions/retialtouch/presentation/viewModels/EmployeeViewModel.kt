@@ -91,6 +91,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
                 employeeDoa.update { employee }
                 if (employee.employeePassword == employeeScreenState.value.pin) {
                     updatePOSEmployees(employee)
+                    setPOSEmployee(employee)
                     getEmployeeRights()
                     updateEmployeeLogin(true)
                 } else {

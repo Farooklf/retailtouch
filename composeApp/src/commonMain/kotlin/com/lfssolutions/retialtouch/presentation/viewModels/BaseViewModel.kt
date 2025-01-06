@@ -8,6 +8,7 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
+import com.lfssolutions.retialtouch.domain.SqlPreference
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
@@ -93,6 +94,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -101,6 +103,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val networkRepository: NetworkRepository by inject()
     val preferences: PreferencesRepository by inject()
     val dataBaseRepository: DataBaseRepository by inject()
+    val sqlPreference: SqlPreference by inject()
    //Changed
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
@@ -1315,6 +1318,35 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun setReSyncTimer(time:Int) {
         preferences.setReSyncTimer(time)
+    }
+
+    suspend fun setPOSEmployee(employee:POSEmployee){
+        preferences.setPOSEmployee(employee.toJson())
+    }
+
+    suspend fun updatePOSEmployees(employee: POSEmployee
+    ) {
+        withContext(Dispatchers.IO) {
+            val mPOSEmployee = POSEmployee(
+                employeeId = employee.employeeId,
+                employeeName = employee.employeeName,
+                employeeCode = employee.employeeCode,
+                employeeRoleName = employee.employeeRoleName,
+                employeePassword = employee.employeePassword,
+                employeeCategoryName = employee.employeeCategoryName,
+                employeeDepartmentName = employee.employeeDepartmentName,
+                isAdmin = employee.isAdmin,
+                isDeleted = employee.isDeleted,
+                isPosEmployee = true,
+            )
+            sqlPreference.updatePOSEmployee(mPOSEmployee)
+        }
+    }
+
+    suspend fun getPosEmployees(): List<POSEmployee>{
+        val employees = sqlPreference.getPOSEmployees().first() // Collects the list.
+        //_posEmployees.value = employees // Updates the StateFlow.
+        return employees
     }
 
     // Load from preferencesRepository
