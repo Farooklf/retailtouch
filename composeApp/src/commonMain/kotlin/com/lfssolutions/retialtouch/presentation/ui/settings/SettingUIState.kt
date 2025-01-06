@@ -5,7 +5,9 @@ import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.utils.AppIcons
 
 data class SettingUIState(
-  val isLoading:Boolean=false,
+  val syncLoader:Boolean=false,
+  val isError:Boolean=false,
+  val errorMsg:String="",
   val serverUrl:String="",
   val tenant:String="",
   val user:String="",

@@ -3,6 +3,7 @@ package com.lfssolutions.retialtouch.data.local
 
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.utils.DateFormatter
+import com.lfssolutions.retialtouch.utils.PrefKeys.CATEGORY_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENCY_SYMBOL
 import com.lfssolutions.retialtouch.utils.PrefKeys.CURRENT_TENANT_URL
 import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_CODE
@@ -11,6 +12,7 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.FAST_PAYMENT
 import com.lfssolutions.retialtouch.utils.PrefKeys.GRID_VIEW_OPTIONS
 import com.lfssolutions.retialtouch.utils.PrefKeys.IS_LOGGED_IN
 import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
+import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_GROUP_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.MEMBER_SYNC
@@ -19,12 +21,16 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG
 import com.lfssolutions.retialtouch.utils.PrefKeys.NETWORK_CONFIG_DEFAULT_VALUE
 import com.lfssolutions.retialtouch.utils.PrefKeys.NEXT_SALE_INVOICE_NUMBER
 import com.lfssolutions.retialtouch.utils.PrefKeys.PAYMENT_CONFIRM_POPUP
+import com.lfssolutions.retialtouch.utils.PrefKeys.PAYMENT_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.POS_EMPLOYEE
 import com.lfssolutions.retialtouch.utils.PrefKeys.PRINTER_ENABLE
+import com.lfssolutions.retialtouch.utils.PrefKeys.PRODUCT_SYNC
+import com.lfssolutions.retialtouch.utils.PrefKeys.PROMOTION_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.RE_SYNC_TIMER
 import com.lfssolutions.retialtouch.utils.PrefKeys.ROUND_OFF_OPTION
 import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_LENGTH
 import com.lfssolutions.retialtouch.utils.PrefKeys.SALE_INVOICE_PREFIX
+import com.lfssolutions.retialtouch.utils.PrefKeys.STOCK_SYNC
 import com.lfssolutions.retialtouch.utils.PrefKeys.TENANT_ID
 import com.lfssolutions.retialtouch.utils.PrefKeys.TERMINAL_CODE
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN
@@ -201,6 +207,20 @@ class PreferencesImpl(
         )
     }
 
+    override suspend fun setLocation(result: String) {
+        flowSettings.putString(
+            key = LOCATION,
+            value = result
+        )
+    }
+
+    override suspend fun getLocation(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = LOCATION,
+            defaultValue = ""
+        )
+    }
+
     override suspend fun setTenancyName(result: String) {
         flowSettings.putString(
             key = USER_TENANT_NAME,
@@ -264,7 +284,7 @@ class PreferencesImpl(
         )
     }
 
-    override fun sgtPOSEmployee(): Flow<String> {
+    override fun getPOSEmployee(): Flow<String> {
         return flowSettings.getStringFlow(
             key = POS_EMPLOYEE,
             defaultValue = ""
@@ -337,6 +357,76 @@ class PreferencesImpl(
     override fun getMemberGroupSyncGrid(): Flow<String> {
         return flowSettings.getStringFlow(
             key = MEMBER_GROUP_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setProductsSyncGrid(result: String) {
+        flowSettings.putString(
+            key = PRODUCT_SYNC,
+            value = result
+        )
+    }
+
+    override fun getProductsSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = PRODUCT_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setCategorySyncGrid(result: String) {
+        flowSettings.putString(
+            key = CATEGORY_SYNC,
+            value = result
+        )
+    }
+
+    override fun getCategorySyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = CATEGORY_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setStockSyncGrid(result: String) {
+        flowSettings.putString(
+            key = STOCK_SYNC,
+            value = result
+        )
+    }
+
+    override fun getStockSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = STOCK_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setPromotionsSyncGrid(result: String) {
+        flowSettings.putString(
+            key = PROMOTION_SYNC,
+            value = result
+        )
+    }
+
+    override fun getPromotionsSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = PROMOTION_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setPaymentTypeSyncGrid(result: String) {
+        flowSettings.putString(
+            key = PAYMENT_SYNC,
+            value = result
+        )
+    }
+
+    override fun getPaymentTypeSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = PAYMENT_SYNC,
             defaultValue = ""
         )
     }

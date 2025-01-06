@@ -67,9 +67,7 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.TERMINAL_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
-import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifference
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.PrefKeys.SYNC_EXPIRY_THRESHOLD
@@ -78,6 +76,7 @@ import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import com.lfssolutions.retialtouch.utils.serializers.db.toDefaultLocation
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
+import com.lfssolutions.retialtouch.utils.serializers.db.toPOSEmployee
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -119,6 +118,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private val _isPrinterEnabled = MutableStateFlow(false)
     val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
 
+    //For Rights
+    val employeeDoa = MutableStateFlow<POSEmployee?>(null)
 
     private val _lastSyncDateTime = MutableStateFlow<String?>(null)
     val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
@@ -1324,6 +1325,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setPOSEmployee(employee.toJson())
     }
 
+    suspend fun getPOSEmployee():POSEmployee{
+        return preferences.getPOSEmployee().first().toPOSEmployee()
+    }
+
     suspend fun updatePOSEmployees(employee: POSEmployee
     ) {
         withContext(Dispatchers.IO) {
@@ -1344,14 +1349,84 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     }
 
     suspend fun getPosEmployees(): List<POSEmployee>{
-        val employees = sqlPreference.getPOSEmployees().first() // Collects the list.
-        //_posEmployees.value = employees // Updates the StateFlow.
-        return employees
+        val allPosEmployees = sqlPreference.getPOSEmployees().first() // Collects the list.
+        val currentEmployee = getPOSEmployee()
+        return allPosEmployees.map {employee->
+             POSEmployee(
+                employeeId = employee.employeeId,
+                employeeName = employee.employeeName,
+                employeeCode = employee.employeeCode,
+                employeeRoleName = employee.employeeRoleName,
+                employeePassword = employee.employeePassword,
+                employeeCategoryName = employee.employeeCategoryName,
+                employeeDepartmentName = employee.employeeDepartmentName,
+                isAdmin = employee.isAdmin,
+                isDeleted = employee.isDeleted,
+                isPosEmployee = currentEmployee.employeeId==employee.employeeId,
+            )
+        }
     }
 
     // Load from preferencesRepository
     suspend fun getReSyncTimer(): Int {
         return preferences.getReSyncTime().first()
+    }
+
+
+    suspend fun getCurrentServer() : String{
+        return preferences.getBaseURL().first()
+    }
+
+    suspend fun setNetworkConfig(networkConfig:String){
+        preferences.setNetworkConfig(networkConfig)
+    }
+
+    suspend fun getNetworkConfig():String{
+        return preferences.getNetworkConfig().first()
+    }
+
+    suspend fun setGridViewOptions(updatedValue:Int){
+        preferences.setGridViewOptions(updatedValue)
+    }
+
+    suspend fun getGridViewOptions() : Int{
+        return preferences.getGridViewOptions().first()
+    }
+
+    suspend fun setRoundOffOption(updatedValue:Int){
+        preferences.setRoundOffOption(updatedValue)
+    }
+
+    suspend fun getRoundOffOption() : Int{
+        return preferences.getRoundOffOption().first()
+    }
+
+    suspend fun setMergeCartItems(updatedValue:Boolean){
+        preferences.setMergeCartItems(updatedValue)
+    }
+
+    suspend fun getMergeCartItems() : Boolean{
+        return preferences.getMergeCartItems().first()
+    }
+
+    suspend fun setFastPaymentMode(updatedValue:Boolean) {
+        preferences.setFastPaymentMode(updatedValue)
+    }
+
+    suspend fun getFastPaymentMode():Boolean {
+        return preferences.getFastPaymentMode().first()
+    }
+
+    suspend fun setPaymentConfirmPopup(updatedValue:Boolean) {
+        preferences.setPaymentConfirmPopup(updatedValue)
+    }
+
+    suspend fun getPaymentConfirmPopup():Boolean {
+        return preferences.getPaymentConfirmPopup().first()
+    }
+
+    fun observeNetworkConfig(): Flow<String> {
+        return preferences.getNetworkConfig()
     }
 
     fun resetStates() {

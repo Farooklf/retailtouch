@@ -142,9 +142,9 @@ class DataBaseRepository: KoinComponent {
         employeesResponse: EmployeesResponse
     ) {
         withContext(Dispatchers.IO) {
+            //dataBaseRepository.updatePOSEmployee()
             employeesResponse.result.items.forEach { employee ->
-                val mPOSEmployee =
-                    POSEmployee(
+                val mPOSEmployee = POSEmployee(
                         employeeId = employee.id,
                         employeeName = employee.name,
                         employeeCode = employee.employeeCode,

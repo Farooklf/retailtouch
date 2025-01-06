@@ -52,7 +52,7 @@ interface PreferencesRepository {
     fun getEmployeeCode(): Flow<String>
 
     suspend fun setPOSEmployee(result: String)
-    fun sgtPOSEmployee(): Flow<String>
+    fun getPOSEmployee(): Flow<String>
 
     suspend fun setUserLoggedIn(result: Boolean)
     fun getUserLoggedIn(): Flow<Boolean>

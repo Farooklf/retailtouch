@@ -1,6 +1,11 @@
 package com.lfssolutions.retialtouch.presentation.ui.settings
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +39,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -467,10 +474,11 @@ object SettingScreen : Screen {
                 title = stringResource(Res.string.sync_staff),
                 icon = AppIcons.syncIcon,
                 onClick = {
-                  viewModel.syncEmployees()
+                  viewModel.syncStaff()
                 },
                 isSwitchable = false,
-                showDivider = false
+                showDivider = false,
+                syncInProgress = state.syncLoader
             )
         }
     }
@@ -517,7 +525,23 @@ object SettingScreen : Screen {
         isSwitchable: Boolean = true,
         checked: Boolean = false,
         showDivider: Boolean = true,
+        syncInProgress: Boolean = false,
     ) {
+        val rotation = remember { Animatable(0f) }
+        LaunchedEffect(syncInProgress) {
+            if (syncInProgress) {
+                rotation.animateTo(
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    )
+                )
+            } else {
+                rotation.snapTo(0f)
+            }
+        }
+
         Column(modifier = Modifier.fillMaxWidth().padding(2.dp)) {
             Row(
                 modifier = Modifier
@@ -535,7 +559,7 @@ object SettingScreen : Screen {
                         imageVector = vectorResource(icon),
                         contentDescription = title,
                         tint = AppTheme.colors.textDarkGrey,
-                        modifier = Modifier.size(AppTheme.dimensions.standerIcon),
+                        modifier = Modifier.size(AppTheme.dimensions.standerIcon).rotate(rotation.value)
                     )
                 }
                 Column(
@@ -574,7 +598,5 @@ object SettingScreen : Screen {
             }
         }
     }
-
-
 
 }

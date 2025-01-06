@@ -11,7 +11,6 @@ import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.presentation.ui.settings.SettingViewModel
 import com.lfssolutions.retialtouch.utils.viewModelDefinition
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
-import com.lfssolutions.retialtouch.presentation.viewModels.DashBoardViewmodel
 import com.lfssolutions.retialtouch.presentation.viewModels.EmployeeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
@@ -90,7 +89,6 @@ fun appModule() = module {
     viewModelDefinition { SyncViewModel() }
     viewModelDefinition { PaymentCollectorViewModel() }
     viewModelDefinition { LoginViewModel() }
-    viewModelDefinition { DashBoardViewmodel() }
     viewModelDefinition { EmployeeViewModel() }
     viewModelDefinition { PaymentTypeViewModel() }
     viewModelDefinition { TransactionViewModel() }

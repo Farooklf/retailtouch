@@ -11,6 +11,7 @@ object PrefKeys {
     const val USER_PASSWORD = "userPassword"
     const val USER_TENANT_NAME = "userTenancyName"
     const val LOCATION_ID = "locationID"
+    const val LOCATION = "location"
     const val CURRENCY_SYMBOL = "currencySymbol"
     const val TENANT_ID = "tenantID"
     const val POS_EMPLOYEE = "posEmployee"
