@@ -1,7 +1,7 @@
 package com.lfssolutions.retialtouch.data.remote.api
 
 
-import com.lfssolutions.retialtouch.domain.SqlPreference
+import com.lfssolutions.retialtouch.domain.SqlRepository
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.ApiUtils.handleApiResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.handleException
@@ -63,7 +63,7 @@ import kotlinx.coroutines.withContext
  class ApiServiceImpl(
     private val httpClient: HttpClient,
     private val preferences: PreferencesRepository,
-    private val sqlPreference: SqlPreference
+    private val sqlRepository: SqlRepository
 ) : ApiService{
 
     private suspend fun getBaseUrl() : String {
@@ -106,7 +106,7 @@ import kotlinx.coroutines.withContext
      }
 
      private suspend fun getLoginDetails(): LoginRequest {
-         val authDao=sqlPreference.selectUserByUserId(preferences.getUserId().first()).first()
+         val authDao=sqlRepository.selectUserByUserId(preferences.getUserId().first()).first()
          val loginRequest = LoginRequest(
              usernameOrEmailAddress = authDao.userName,
              tenancyName = authDao.tenantName,

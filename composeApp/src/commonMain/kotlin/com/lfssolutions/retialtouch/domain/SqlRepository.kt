@@ -36,7 +36,7 @@ import com.lfssolutions.retialtouch.domain.model.sync.SyncAllDao
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.flow.Flow
 
-interface SqlPreference {
+interface SqlRepository {
 
     suspend fun insertAuthentication(authenticateDao: AuthenticateDao)
     fun selectUserByUserId(userId: Long): Flow<AuthenticateDao>
@@ -89,16 +89,16 @@ interface SqlPreference {
     fun selectProductsById(id: Long): Flow<MenuDao?>
     fun getStocks(): Flow<List<Stock>>
     suspend fun deleteStocks()
-    fun getMenuCProductsCount():Flow<Int>
+    fun getMenuItemsCount():Flow<Int>
 
 
     //Next POS Sale
 
-    suspend fun insertNextPosSale(nextPOSSaleDao: NextPOSSaleDao)
+    /*suspend fun insertNextPosSale(nextPOSSaleDao: NextPOSSaleDao)
     fun getNextPosSaleById(id: Long): Flow<NextPOSSaleDao?>
     fun getAllNextPosSale(): Flow<List<NextPOSSaleDao>>
     suspend fun deleteNextPosSale()
-    fun getNextPosSaleCount():Flow<Int>
+    fun getNextPosSaleCount():Flow<Int>*/
 
 
     //Latest POS Invoice Sales
@@ -116,6 +116,7 @@ interface SqlPreference {
     fun getProductById(id: Long): Flow<Product?>
     fun getProductByCode(code: String): Flow<Product?>
     fun getProductQty(code: String) : Flow<Double>
+    fun getProductCount():Flow<Int>
     suspend fun deleteProduct()
 
     //Scanned Product
@@ -146,6 +147,7 @@ interface SqlPreference {
     fun getItemByBarcode(code:String): Flow<Barcode?>
     fun getItemByInventoryCode(code:String): Flow<Barcode?>
     fun getItemByProductId(code:Long): Flow<Barcode?>
+    suspend fun getBarcodeCount():Flow<Int>
     suspend fun deleteBarcode()
 
     //Promotions

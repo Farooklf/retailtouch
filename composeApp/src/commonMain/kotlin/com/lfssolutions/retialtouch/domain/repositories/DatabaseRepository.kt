@@ -1,7 +1,7 @@
 package com.lfssolutions.retialtouch.domain.repositories
 
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
-import com.lfssolutions.retialtouch.domain.SqlPreference
+import com.lfssolutions.retialtouch.domain.SqlRepository
 import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesResponse
 import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
@@ -21,8 +21,6 @@ import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleInvoiceNoResponse
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeResponse
@@ -62,24 +60,21 @@ import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotio
 import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 
 class DataBaseRepository: KoinComponent {
-    private val dataBaseRepository: SqlPreference by inject()
+    private val dataBaseRepository: SqlRepository by inject()
     private val preferences: PreferencesRepository by inject()
 
     // Create a custom CoroutineScope

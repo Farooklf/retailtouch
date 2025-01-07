@@ -2,8 +2,8 @@ package com.lfssolutions.retialtouch.di
 
 import com.lfssolutions.retialtouch.data.local.PreferencesImpl
 import com.lfssolutions.retialtouch.data.remote.api.ApiServiceImpl
-import com.lfssolutions.retialtouch.domain.SqlPreference
-import com.lfssolutions.retialtouch.data.sqlDelightDb.SqlPreferenceImpl
+import com.lfssolutions.retialtouch.domain.SqlRepository
+import com.lfssolutions.retialtouch.data.sqlDelightDb.SqlRepositoryImpl
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
@@ -73,13 +73,13 @@ fun appModule() = module {
     single { NetworkRepository() }
     single { DataBaseRepository() }
     single<PreferencesRepository> { PreferencesImpl(settings = get()) }
-    single<ApiService> { ApiServiceImpl(httpClient = get(), preferences = get(), sqlPreference = get())}
+    single<ApiService> { ApiServiceImpl(httpClient = get(), preferences = get(), sqlRepository = get())}
 
 
    //Database Driver
     single<retailTouchDB> { retailTouchDB.invoke(get()) }
     //DataBaseRepository
-    single<SqlPreference> { SqlPreferenceImpl(get()) }
+    single<SqlRepository> { SqlRepositoryImpl(get()) }
     //ViewModels
     single { SharedPosViewModel() }
     single { HomeViewModel() }

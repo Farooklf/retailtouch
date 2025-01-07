@@ -37,7 +37,8 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                     roundOffOption = getRoundOffOption(),
                     paymentConfirmPopup = getPaymentConfirmPopup(),
                     fastPaymode = getFastPaymentMode(),
-                    posEmployees = posEmployees
+                    posEmployees = posEmployees,
+                    statsInventory=statsInventory
                 )}
         }
 
@@ -45,6 +46,15 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
             observeNetworkConfig().collect{updatedValue->
                 _settingUiState.update { state -> state.copy(networkConfig = updatedValue,showNetworkConfigDialog = false) }
             }
+        }
+    }
+
+    fun readStats(){
+        viewModelScope.launch {
+            val statsInventory = getInventoryUniqueCount()
+            val categoryCount = getCategoriesCount()
+            val menuItemsCount = getMenuItemsCount()
+            val menuItemsCount = getBarcodesCount()
         }
     }
 

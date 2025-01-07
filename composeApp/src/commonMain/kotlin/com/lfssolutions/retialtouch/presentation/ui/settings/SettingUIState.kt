@@ -27,6 +27,10 @@ data class SettingUIState(
   val showGridViewOptionsDialog: Boolean = false,
 
   val posEmployees: List<POSEmployee> = listOf(),
+  val statsInventory :Int = 0,
+  val statsMenuCategories :Int = 0,
+  val statsMenuItems :Int = 0,
+  val statsBarcodes :Int = 0,
 
   //tab
   val tabs: MutableList<TabItem> = mutableListOf(

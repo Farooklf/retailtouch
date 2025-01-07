@@ -1,7 +1,7 @@
 package com.lfssolutions.retialtouch.data.sqlDelightDb
 
 
-import com.lfssolutions.retialtouch.domain.SqlPreference
+import com.lfssolutions.retialtouch.domain.SqlRepository
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.employee.POSEmployee
 import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
@@ -58,7 +58,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 
- class SqlPreferenceImpl(private val retailTouch: retailTouchDB) : SqlPreference {
+ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository {
 
 
     override suspend fun insertAuthentication(authenticateDao: AuthenticateDao) {
@@ -386,13 +386,13 @@ import kotlinx.coroutines.flow.flow
         retailTouch.menuProductQueries.deleteMenuProduct()
     }
 
-    override  fun getMenuCProductsCount():  Flow<Int> = flow {
+    override  fun getMenuItemsCount():  Flow<Int> = flow {
         retailTouch.menuProductQueries.countMenuProducts().executeAsOne().let {count->
             emit(count.toInt())
         }
     }
 
-    override suspend fun insertNextPosSale(nextPOSSaleDao: NextPOSSaleDao) {
+   /* override suspend fun insertNextPosSale(nextPOSSaleDao: NextPOSSaleDao) {
         retailTouch.nextPOSSaleQueries.insertNextPosSale(
             posItem = nextPOSSaleDao.posItem.toJson()
         )
@@ -440,7 +440,7 @@ import kotlinx.coroutines.flow.flow
         retailTouch.nextPOSSaleQueries.getCount().executeAsOne().let {count->
             emit(count.toInt())
         }
-    }
+    }*/
 
     override suspend fun insertLatestSales(saleRecord: SaleRecord) {
         saleRecord.items?.let {
@@ -556,32 +556,28 @@ import kotlinx.coroutines.flow.flow
 
      override fun getAllProduct(): Flow<List<Product>> = flow{
         retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
-            if(list.isNotEmpty()) {
-                emit(
-                    list.map { product ->
-                        Product(
-                            id = product.productId,
-                            productCode = product.inventoryCode,
-                            name = product.name,
-                            barcode = product.barcode,
-                            image = product.image,
-                            tax = product.tax,
-                            price = product.price,
-                            qtyOnHand = product.quantity,
-                            itemDiscount = product.itemDiscount
-                        )
-                    }
+            emit(
+                list.map { product ->
+                    Product(
+                        id = product.productId,
+                        productCode = product.inventoryCode,
+                        name = product.name,
+                        barcode = product.barcode,
+                        image = product.image,
+                        tax = product.tax,
+                        price = product.price,
+                        qtyOnHand = product.quantity,
+                        itemDiscount = product.itemDiscount
+                    )
+                }
 
-                )
-            }else{
-                emit(emptyList())
-            }
+            )
         }
     }
 
     override fun getProductById(id: Long) : Flow<Product?> = flow{
         retailTouch.productsQueries.getProductById(id).executeAsOneOrNull().let { product->
-            println("product_db_data : $product")
+            //println("product_db_data : $product")
             if(product!=null){
                 //val product=body.rowItem.toProduct()
                 emit(
@@ -605,7 +601,7 @@ import kotlinx.coroutines.flow.flow
 
     override fun getProductByCode(code: String): Flow<Product?> = flow{
         retailTouch.productsQueries.getProductByInventory(code).executeAsOneOrNull().let { product->
-            println("product_db_data : $product")
+            //println("product_db_data : $product")
             if(product!=null){
                 emit(
                     Product(
@@ -628,6 +624,12 @@ import kotlinx.coroutines.flow.flow
 
      override fun getProductQty(code: String): Flow<Double> = flow{
          retailTouch.productsQueries.getProductQty(code).executeAsOneOrNull()
+     }
+
+     override fun getProductCount(): Flow<Int> = flow{
+         retailTouch.productsQueries.getCount().executeAsOne()/*.let {count->
+             emit(count.toInt())
+         }*/
      }
 
      override suspend fun deleteProduct() {
@@ -867,7 +869,7 @@ import kotlinx.coroutines.flow.flow
 
     override fun getItemByProductId(code: Long): Flow<Barcode?> = flow{
         retailTouch.productBarcodeQueries.getItemByProductId(code).executeAsOneOrNull().let { body->
-            println("db data : $body")
+            //println("db data : $body")
             if(body!=null){
                 emit(
                     Barcode(
@@ -882,7 +884,11 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deleteBarcode() {
+     override suspend fun getBarcodeCount(): Flow<Int> = flow{
+         retailTouch.productBarcodeQueries.getCount().executeAsOne()
+     }
+
+     override suspend fun deleteBarcode() {
         retailTouch.productBarcodeQueries.delete()
     }
 

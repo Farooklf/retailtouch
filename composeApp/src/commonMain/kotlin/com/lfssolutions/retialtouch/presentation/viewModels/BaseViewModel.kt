@@ -8,7 +8,7 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
-import com.lfssolutions.retialtouch.domain.SqlPreference
+import com.lfssolutions.retialtouch.domain.SqlRepository
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
@@ -43,25 +43,17 @@ import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPrice
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionItem
-import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
-import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
-import com.lfssolutions.retialtouch.sync.SyncDataState
-import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.INVOICE
 import com.lfssolutions.retialtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
-import com.lfssolutions.retialtouch.utils.AppConstants.LOCATION_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MEMBER_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.NEXT_SALE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
-import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
@@ -87,6 +79,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -102,7 +95,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val networkRepository: NetworkRepository by inject()
     val preferences: PreferencesRepository by inject()
     val dataBaseRepository: DataBaseRepository by inject()
-    val sqlPreference: SqlPreference by inject()
+    val sqlRepository: SqlRepository by inject()
    //Changed
     private val _composeAppState = MutableStateFlow(AppState())
     val composeAppState: StateFlow<AppState> = _composeAppState.asStateFlow()
@@ -1317,9 +1310,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
       return  preferences.getLastSyncTs().first()
     }
 
-    suspend fun setReSyncTimer(time:Int) {
-        preferences.setReSyncTimer(time)
-    }
+
 
     suspend fun setPOSEmployee(employee:POSEmployee){
         preferences.setPOSEmployee(employee.toJson())
@@ -1344,12 +1335,12 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 isDeleted = employee.isDeleted,
                 isPosEmployee = true,
             )
-            sqlPreference.updatePOSEmployee(mPOSEmployee)
+            sqlRepository.updatePOSEmployee(mPOSEmployee)
         }
     }
 
     suspend fun getPosEmployees(): List<POSEmployee>{
-        val allPosEmployees = sqlPreference.getPOSEmployees().first() // Collects the list.
+        val allPosEmployees = sqlRepository.getPOSEmployees().first() // Collects the list.
         val currentEmployee = getPOSEmployee()
         return allPosEmployees.map {employee->
              POSEmployee(
@@ -1367,7 +1358,28 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
+    suspend fun getInventoryUniqueCount():Int{
+       return sqlRepository.getProductCount().first()
+    }
+
+    suspend fun getCategoriesCount(): Int {
+        return sqlRepository.getMenuCategoriesCount().first()
+    }
+
+    suspend fun getMenuItemsCount(): Int {
+        return sqlRepository.getMenuItemsCount().first()
+    }
+
+    suspend fun getBarcodesCount(): Int {
+        return sqlRepository.getBarcodeCount().first()
+    }
+
     // Load from preferencesRepository
+
+    suspend fun setReSyncTimer(time:Int) {
+        preferences.setReSyncTimer(time)
+    }
+
     suspend fun getReSyncTimer(): Int {
         return preferences.getReSyncTime().first()
     }
