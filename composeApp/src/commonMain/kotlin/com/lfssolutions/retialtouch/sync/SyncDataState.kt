@@ -11,6 +11,7 @@ data class SyncDataState(
     val syncError:Boolean=false,
     val syncErrorInfo:String="",
     val syncCount:Int=0,
+    val syncComplete:Boolean=false,
     val lastSyncTs:Int=0,
     val reSyncTime:Int=0,
     val isPrinterEnabled:Boolean=false,

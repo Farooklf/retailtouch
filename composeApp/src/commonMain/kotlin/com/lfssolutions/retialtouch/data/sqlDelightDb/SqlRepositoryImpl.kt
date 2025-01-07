@@ -627,9 +627,9 @@ import kotlinx.coroutines.flow.flow
      }
 
      override fun getProductCount(): Flow<Int> = flow{
-         retailTouch.productsQueries.getCount().executeAsOne()/*.let {count->
+         retailTouch.productsQueries.getCount().executeAsOne().let {count->
              emit(count.toInt())
-         }*/
+         }
      }
 
      override suspend fun deleteProduct() {
@@ -732,7 +732,7 @@ import kotlinx.coroutines.flow.flow
 
      override fun getHoldSaleById(id: Long): Flow<CRSaleOnHold?> = flow{
          retailTouch.holdSaleRecordQueries.getSaleRecordById(id).executeAsOneOrNull().let { body->
-             println("product_db_data : $body")
+             //println("product_db_data : $body")
              if(body!=null){
                  val item=body.holdSaleItem.toHoldSaleRecord()
                  CRSaleOnHold(
@@ -835,7 +835,7 @@ import kotlinx.coroutines.flow.flow
 
     override fun getItemByBarcode(code: String): Flow<Barcode?> = flow{
         retailTouch.productBarcodeQueries.getItemByBarcode(code).executeAsOneOrNull().let { body->
-            println("db data : $body")
+            //println("db data : $body")
             if(body!=null){
                 emit(
                     Barcode(
@@ -852,7 +852,7 @@ import kotlinx.coroutines.flow.flow
 
     override fun getItemByInventoryCode(code: String): Flow<Barcode?> = flow{
         retailTouch.productBarcodeQueries.getItemByProductCode(code).executeAsOneOrNull().let { body->
-            println("db_data : $body")
+            //println("db_data : $body")
             if(body!=null){
                 emit(
                     Barcode(
@@ -885,7 +885,9 @@ import kotlinx.coroutines.flow.flow
     }
 
      override suspend fun getBarcodeCount(): Flow<Int> = flow{
-         retailTouch.productBarcodeQueries.getCount().executeAsOne()
+         retailTouch.productBarcodeQueries.getCount().executeAsOne().let {count->
+             emit(count.toInt())
+         }
      }
 
      override suspend fun deleteBarcode() {

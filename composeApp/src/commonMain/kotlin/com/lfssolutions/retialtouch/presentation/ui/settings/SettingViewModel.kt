@@ -6,6 +6,8 @@ import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatDateForUI
+import com.lfssolutions.retialtouch.utils.DateTimeUtils.formatMillisecondsToDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -37,29 +39,33 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                     roundOffOption = getRoundOffOption(),
                     paymentConfirmPopup = getPaymentConfirmPopup(),
                     fastPaymode = getFastPaymentMode(),
-                    posEmployees = posEmployees,
-                    statsInventory=statsInventory
+                    posEmployees = posEmployees
                 )}
         }
-
-        viewModelScope.launch {
-            observeNetworkConfig().collect{updatedValue->
-                _settingUiState.update { state -> state.copy(networkConfig = updatedValue,showNetworkConfigDialog = false) }
-            }
-        }
+        _readStats()
     }
 
-    fun readStats(){
+     fun _readStats(){
         viewModelScope.launch {
-            val statsInventory = getInventoryUniqueCount()
+            val inventoryCount = getInventoryUniqueCount()
             val categoryCount = getCategoriesCount()
             val menuItemsCount = getMenuItemsCount()
-            val menuItemsCount = getBarcodesCount()
+            val barcodeCount = getBarcodesCount()
+            val pendingSaleCount = getPendingSaleCount()
+            val lastSyncTime= formatDateForUI(formatMillisecondsToDateTime(getLastSyncTs()))
+            val reSyncTime=getReSyncTimer()
+
+            _settingUiState.update { state -> state.copy(statesInventory=inventoryCount, statsMenuCategories = categoryCount, statsMenuItems = menuItemsCount, statsBarcodes = barcodeCount, statsUnSyncedSales = pendingSaleCount,statsLastSyncTs=lastSyncTime, reSyncTime = reSyncTime)
+              }
         }
     }
 
     fun updateNetworkConfigDialogVisibility(value: Boolean) {
         _settingUiState.update { state -> state.copy(showNetworkConfigDialog = value) }
+    }
+
+    fun updateSyncTimerDialogVisibility(value: Boolean) {
+        _settingUiState.update { state -> state.copy(showSyncTimerDialog = value) }
     }
 
     fun updateNetworkConfig(updatedValue: String) {
@@ -124,6 +130,13 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun updateReSyncTime(updatedValue: String) {
+        viewModelScope.launch {
+             //setReSyncTimer(updatedValue.toInt())
+            _settingUiState.update { state -> state.copy(reSyncTime = updatedValue.toInt(), showSyncTimerDialog = false) }
+        }
+    }
+
     fun syncStaff(){
         viewModelScope.launch {
           //Employee API
@@ -131,7 +144,6 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
             syncEmployeeRole()
         }
     }
-
 
     private suspend fun syncEmployees(){
         try {

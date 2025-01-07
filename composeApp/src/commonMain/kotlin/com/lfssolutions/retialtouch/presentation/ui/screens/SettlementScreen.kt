@@ -87,7 +87,6 @@ object SettlementScreen : Screen {
 
        LaunchedEffect(Unit){
            viewModel.loadDataFromDb()
-           viewModel.getPendingSaleCount()
        }
 
         LaunchedEffect(screenState.isError) {

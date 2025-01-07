@@ -59,17 +59,17 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                             amount = 0.0
                         )
                     }
-                    println("localList: $localList")
+                    //println("localList: $localList")
                     _settlementState.update { state -> state.copy(localSettlement = localList) }
                 }
 
                 authUser.collect { authDao ->
-                    println("Auth: ${authDao.loginDao}")
+                    //println("Auth: ${authDao.loginDao}")
                     _settlementState.update { state -> state.copy(tenantId = authDao.tenantId) }
                 }
 
                 pendingSales.collectLatest { pendingSale ->
-                    println("pendingSale: $pendingSale")
+                    //println("pendingSale: $pendingSale")
                     _settlementState.update { state ->
                         state.copy(
                             pendingSales = pendingSale,
@@ -79,7 +79,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                 }
 
                 location.collect { location ->
-                    println("location: $location")
+                    //println("location: $location")
                     _settlementState.update { state ->
                         state.copy(
                             location = location ?: Location(),
@@ -90,6 +90,9 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                     getPosPaymentSummary()
                 }
 
+                val salePendingCount = getPendingSaleCount()
+                _settlementState.update { it.copy(pendingSaleCount = salePendingCount) }
+
             } catch (e: Exception) {
                 // Handle any other exceptions and set loading to false
                 println("UnexpectedError: ${e.message}")
@@ -99,14 +102,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun getPendingSaleCount() {
-        viewModelScope.launch {
-            dataBaseRepository.getAllPendingSaleRecordsCount().collectLatest { count ->
-                println("pendingCount:$count")
-                _settlementState.update { it.copy(pendingSaleCount = count) }
-            }
-        }
-    }
+
 
     fun getPendingSales() {
         viewModelScope.launch {
@@ -266,7 +262,8 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                 }
 
                 is ApiLoaderStateResponse.Success -> {
-                    getPendingSaleCount()
+                    val salePendingCount=getPendingSaleCount()
+                    _settlementState.update { it.copy(pendingSaleCount = salePendingCount) }
                     getPendingSales()
                     if (state.callPosSettlement) {
                         executePosSettlement()

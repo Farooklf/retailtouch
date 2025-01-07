@@ -1755,6 +1755,7 @@ fun ActionTextFiledDialog(
     isVisible: Boolean,
     value: String,
     title: String,
+    inputType: InputType=InputType.Any,
     onCloseDialog: () -> Unit = {},
     onDialogResult: (String) -> Unit = {},
 ) {
@@ -1774,6 +1775,7 @@ fun ActionTextFiledDialog(
                 AppDialogTextField(
                     value = displayedValue,
                     onValueChange = { displayedValue = it },
+                    inputType=inputType,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .focusRequester(focusRequester)

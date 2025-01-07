@@ -1310,8 +1310,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
       return  preferences.getLastSyncTs().first()
     }
 
-
-
     suspend fun setPOSEmployee(employee:POSEmployee){
         preferences.setPOSEmployee(employee.toJson())
     }
@@ -1372,6 +1370,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun getBarcodesCount(): Int {
         return sqlRepository.getBarcodeCount().first()
+    }
+
+    suspend fun getPendingSaleCount(): Long {
+        return sqlRepository.getAllPendingSalesCount().first()
     }
 
     // Load from preferencesRepository

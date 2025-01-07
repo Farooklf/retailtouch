@@ -46,6 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -89,7 +90,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }*/
 
-    suspend fun reSyncAfterLogin(locationChange : Boolean = false)  {
+   /* suspend fun reSyncAfterLogin(locationChange : Boolean = false)  {
         val pCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
         println("pCount :$pCount")
         if (pCount <= 0 || locationChange) {
@@ -99,7 +100,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             println("start reSyncItems")
             reSyncItems()
         }
-    }
+    }*/
 
     fun reSync(completeSync: Boolean = false) {
         if (syncDataState.value.syncInProgress) return
@@ -116,6 +117,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 updateSyncProgress(true)
+                updateSyncCompleteStatus(false)
                 updateError(syncError = false, errorMsg = "", errorTitle = "")
                 val syncJob= listOf(
                     async {
@@ -140,12 +142,14 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncStatus("All Sync Operations have been Completed Successfully")
                 setLastSyncTs()
                 updateSyncCountZero()
+                updateSyncCompleteStatus(true)
                 updateSyncProgress(false)
             } catch (e: Exception) {
                 val error = "failed during sync: ${e.message}"
                 println("SYNC_ERROR $error")
                 updateError(true, "SYNC_ERROR", error)
                 updateSyncProgress(false)
+                updateSyncCompleteStatus(false)
             }
         }
     }
@@ -154,28 +158,30 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     fun updateReSyncTime(time: Int) {
         if (time > 0) {
             viewModelScope.launch {
-                setReSyncTimer(time) // Persist new time to storage
-                _syncDataState.update {it.copy(reSyncTime = time)}
-                startPeriodicSync()  // Restart timer with new interval
+                setReSyncTimer(time)
+                startPeriodicSync()
             }
         }
     }
 
     // Start the periodic reSync timer with the given time
-    private fun startPeriodicSync() {
+    fun startPeriodicSync() {
         // Cancel any existing timer before setting a new one
         timerJob?.cancel()
-        // Create a new coroutine for periodic resync
-        timerJob = CoroutineScope(Dispatchers.IO).launch {
+        // Create a new coroutine for periodic re sync
+        timerJob = CoroutineScope(Dispatchers.IO+SupervisorJob()).launch {
             while (isActive) { // Check if the coroutine is still active
-                val time = getReSyncTimer()
                 try {
-                    reSyncItems(silent = true)
+                    val interval = getReSyncTimer() // Fetch the timer dynamically
+                    if (interval <= 0) {
+                        throw IllegalStateException("Invalid sync interval from getReSyncTimer()")
+                    }
                     syncPendingSales()
+                    reSyncItems(silent = true)
+                    delay(interval * 60 * 1000L) // Convert time in minutes to milliseconds
                 } catch (e: Exception) {
                     stopPeriodicSync()
                 }
-                delay(time * 60 * 1000L) // Convert time in minutes to milliseconds
             }
         }
 
@@ -211,6 +217,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                             }
                                         }
                                         updateSyncCountZero()
+                                        updateSyncCompleteStatus(true)
                                         updateSyncStatus("All sync operation have been completed")
                                         println("All sync operation have been completed")
                                     }
@@ -220,6 +227,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                         onError = { errorMsg ->
                             handleError(SYNC_CHANGES_ERROR_TITLE, errorMsg)
                             updateSyncProgress(false)
+                            updateSyncCompleteStatus(false)
                         }
                     )
                 }
@@ -231,6 +239,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncProgress(false)
             } finally {
                 updateSyncProgress(false)
+                updateSyncCompleteStatus(false)
             }
         }
     }
@@ -981,6 +990,10 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     private fun updateSyncCountZero() {
         _syncDataState.update { it.copy(syncCount = 0) }
     }
+
+    fun updateSyncCompleteStatus(value:Boolean) {
+        _syncDataState.update { it.copy(syncComplete = value) }
+    }
     
     // Handle any sync errors
     private fun handleError(errorTitle: String, errorMsg: String) {
@@ -991,13 +1004,16 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         _syncDataState.update { it.copy(syncError = syncError,syncErrorInfo = "$errorTitle \n $errorMsg") }
     }
 
-    
-    private fun stopPeriodicSync() {
-        timerJob?.cancel()  // Stop the job
+    // Cancel sync job when ViewModel is cleared
+    fun stopPeriodicSync() {
+        timerJob?.cancel()
+        timerJob = null
+        println("stopPeriodicSync")
     }
 
     override fun onCleared() {
         super.onCleared()
-        stopPeriodicSync()  // Cancel sync job when ViewModel is cleared
+        //println("Cleared SyncViewModel")
+        stopPeriodicSync()
     }
 }

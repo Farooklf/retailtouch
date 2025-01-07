@@ -39,6 +39,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -57,14 +58,18 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.presentation.ui.common.ActionTextFiledDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.GridViewOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.InputType
 import com.lfssolutions.retialtouch.presentation.ui.common.RoundOffOptionsDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
+import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
@@ -74,9 +79,11 @@ import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.app_version
 import retailtouch.composeapp.generated.resources.cart_item_merge
 import retailtouch.composeapp.generated.resources.cart_item_merge_description
+import retailtouch.composeapp.generated.resources.categories
 import retailtouch.composeapp.generated.resources.confirm_popup_description
 import retailtouch.composeapp.generated.resources.confirm_popup_title
 import retailtouch.composeapp.generated.resources.disconnect_device
+import retailtouch.composeapp.generated.resources.ean_codes
 import retailtouch.composeapp.generated.resources.error_log
 import retailtouch.composeapp.generated.resources.export_log
 import retailtouch.composeapp.generated.resources.fast_paymode
@@ -84,22 +91,33 @@ import retailtouch.composeapp.generated.resources.fast_paymode_description
 import retailtouch.composeapp.generated.resources.general
 import retailtouch.composeapp.generated.resources.grid_view_options
 import retailtouch.composeapp.generated.resources.grid_view_options_description
+import retailtouch.composeapp.generated.resources.inventory
 import retailtouch.composeapp.generated.resources.ip_address_with_port
 import retailtouch.composeapp.generated.resources.language
+import retailtouch.composeapp.generated.resources.last_sync
 import retailtouch.composeapp.generated.resources.logged_in_staff
 import retailtouch.composeapp.generated.resources.master_user
+import retailtouch.composeapp.generated.resources.menu_items
 import retailtouch.composeapp.generated.resources.menu_settings
 import retailtouch.composeapp.generated.resources.misc
 import retailtouch.composeapp.generated.resources.network_config
 import retailtouch.composeapp.generated.resources.payment_settings
 import retailtouch.composeapp.generated.resources.pos_link
+import retailtouch.composeapp.generated.resources.products
 import retailtouch.composeapp.generated.resources.role_str
 import retailtouch.composeapp.generated.resources.round_off_description
 import retailtouch.composeapp.generated.resources.round_off_option
+import retailtouch.composeapp.generated.resources.rsync_timer
+import retailtouch.composeapp.generated.resources.run_complete_sync
+import retailtouch.composeapp.generated.resources.sales
+import retailtouch.composeapp.generated.resources.sales_pending
+import retailtouch.composeapp.generated.resources.save
 import retailtouch.composeapp.generated.resources.server
 import retailtouch.composeapp.generated.resources.settings
 import retailtouch.composeapp.generated.resources.staff_list
+import retailtouch.composeapp.generated.resources.status
 import retailtouch.composeapp.generated.resources.superuser
+import retailtouch.composeapp.generated.resources.sync_progress
 import retailtouch.composeapp.generated.resources.sync_staff
 import retailtouch.composeapp.generated.resources.tenant_name
 import retailtouch.composeapp.generated.resources.unlink
@@ -229,6 +247,8 @@ object SettingScreen : Screen {
             }
         )
 
+
+
         GridViewOptionsDialog(
             title = stringResource(Res.string.grid_view_options),
             isVisible = state.showGridViewOptionsDialog,
@@ -286,7 +306,7 @@ object SettingScreen : Screen {
         }
 
         //Error Log
-        SettingsGroupItem(
+        /*SettingsGroupItem(
             title = stringResource(Res.string.error_log)
         ){
             SettingsItem(
@@ -296,7 +316,7 @@ object SettingScreen : Screen {
                 isSwitchable = false,
                 showDivider = false
             )
-        }
+        }*/
 
         //network_config
         SettingsGroupItem(
@@ -484,8 +504,126 @@ object SettingScreen : Screen {
     }
 
     @Composable
-    fun SettingDataStatsPage(state: SettingUIState, viewModel: SettingViewModel) {
+    fun SettingDataStatsPage(state: SettingUIState, viewModel: SettingViewModel,syncViewModel: SyncViewModel= koinInject()) {
+        val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
 
+        LaunchedEffect(syncDataState.syncComplete){
+            if(syncDataState.syncComplete){
+                viewModel._readStats()
+                syncViewModel.updateSyncCompleteStatus(false)
+            }
+        }
+
+        DisposableEffect(Unit) {
+            onDispose {
+                // Stop the timer when the composable is removed from the composition
+                syncViewModel.stopPeriodicSync()
+            }
+        }
+
+        ActionTextFiledDialog(
+            isVisible = state.showSyncTimerDialog,
+            value = state.reSyncTime.toString(),
+            title = stringResource(Res.string.rsync_timer),
+            inputType = InputType.OnlyDigital,
+            onCloseDialog = {
+                viewModel.updateSyncTimerDialogVisibility(false)
+            },
+            onDialogResult = {
+                viewModel.updateReSyncTime(it)
+                syncViewModel.updateReSyncTime(it.toInt())
+            }
+        )
+
+        //Inventory
+        SettingsGroupItem(
+            title = stringResource(Res.string.inventory)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.products),
+                description = "${state.statesInventory}",
+                icon = AppIcons.chartIcon,
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.categories),
+                description = "${state.statsMenuCategories}",
+                icon = AppIcons.chartIcon,
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.menu_items),
+                description = "${state.statsMenuItems}",
+                icon = AppIcons.chartIcon,
+                isSwitchable = false
+            )
+
+            SettingsItem(
+                title = stringResource(Res.string.ean_codes),
+                description = "${state.statsBarcodes}",
+                icon = AppIcons.chartIcon,
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //Sales
+        SettingsGroupItem(
+            title = stringResource(Res.string.sales)
+        ){
+            SettingsItem(
+                title = stringResource(Res.string.sales_pending),
+                description = "${state.statsUnSyncedSales}",
+                icon = AppIcons.pendingIcon,
+                isSwitchable = false,
+                showDivider = false
+            )
+        }
+
+        //Sales
+        SettingsGroupItem(
+            title = stringResource(Res.string.status)
+        ){
+            val (syncTitle,syncDescription)= if(syncDataState.syncInProgress) stringResource(Res.string.sync_progress) to "(${syncDataState.syncCount} /8 ${syncDataState.syncProgressStatus})" else stringResource(Res.string.last_sync) to state.statsLastSyncTs
+
+            SettingsItem(
+                title = syncTitle,
+                description = syncDescription,
+                icon = AppIcons.syncIcon,
+                isSwitchable = false,
+                syncInProgress = syncDataState.syncInProgress
+            )
+            SettingsItem(
+                title = stringResource(Res.string.rsync_timer),
+                description = "${state.reSyncTime} minute",
+                icon = AppIcons.syncTimeIcon,
+                isSwitchable = false,
+                showDivider = false,
+                onClick = {
+                   viewModel.updateSyncTimerDialogVisibility(true)
+                }
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxWidth().padding(2.dp), verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.CenterHorizontally){
+
+            AppPrimaryButton(
+                label = stringResource(Res.string.run_complete_sync),
+                leftIcon = AppIcons.syncIcon,
+                backgroundColor = AppTheme.colors.primaryColor,
+                disabledBackgroundColor = AppTheme.colors.primaryColor,
+                syncInProgress = syncDataState.syncInProgress,
+                modifier = Modifier
+                    .fillMaxWidth(.8f)
+                    .wrapContentHeight(),
+                onClick = {
+                    syncViewModel.reSync(true)
+                }
+            )
+
+        }
     }
 
     @Composable
@@ -542,7 +680,7 @@ object SettingScreen : Screen {
             }
         }
 
-        Column(modifier = Modifier.fillMaxWidth().padding(2.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(2.dp), verticalArrangement = Arrangement.Center) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -236,7 +236,6 @@ object DateTimeUtils{
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
         )
-
         val day = dateTimeToFormat.dayOfMonth
         val month = monthNames[dateTimeToFormat.monthNumber - 1] // Convert 1-based month to name
         val year = dateTimeToFormat.year
@@ -253,6 +252,13 @@ object DateTimeUtils{
     fun getDateTimeFromEpochMillSeconds(epochTime: Long): LocalDate {
         val epochInstant = Instant.fromEpochMilliseconds(epochTime)
         return epochInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
+
+    fun formatMillisecondsToDateTime(milliseconds: Long): LocalDateTime {
+        // Convert milliseconds to LocalDateTime
+        val instant = Instant.fromEpochMilliseconds(milliseconds)
+        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+        return localDateTime
     }
 
 }

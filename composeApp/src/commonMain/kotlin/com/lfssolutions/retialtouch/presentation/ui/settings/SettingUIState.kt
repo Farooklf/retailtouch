@@ -24,13 +24,19 @@ data class SettingUIState(
   val showRoundOffDialog: Boolean = false,
   val showTerminalCodeDialog: Boolean = false,
   val showNetworkConfigDialog: Boolean = false,
+  val showSyncTimerDialog: Boolean = false,
   val showGridViewOptionsDialog: Boolean = false,
 
   val posEmployees: List<POSEmployee> = listOf(),
-  val statsInventory :Int = 0,
-  val statsMenuCategories :Int = 0,
+  val statesInventory :Int = 0,
+  val statsMenuCategories : Int = 0,
   val statsMenuItems :Int = 0,
   val statsBarcodes :Int = 0,
+  val statsUnSyncedSales :Long = 0,
+  val statsLastSyncTs :String = "",
+  val reSyncTime : Int = 0,
+
+
 
   //tab
   val tabs: MutableList<TabItem> = mutableListOf(

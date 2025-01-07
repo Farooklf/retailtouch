@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,8 @@ import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -78,12 +81,22 @@ fun Home(
     val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
     val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
-    //val syncInProgress by homeViewModel.syncInProgress.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit){
         println("${homeViewModel.isCallCompleteSync()}")
         syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
     }
+
+    /*DisposableEffect(Unit) {
+        //println("${homeViewModel.isCallCompleteSync()}")
+        // Start the periodic timer
+        //syncViewModel.startPeriodicSync()
+        syncViewModel.reSync(completeSync = true)
+        onDispose {
+            // Stop the timer when the composable is removed from the composition
+            syncViewModel.stopPeriodicSync()
+        }
+    }*/
 
     LaunchedEffect(isFromSplash) {
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {

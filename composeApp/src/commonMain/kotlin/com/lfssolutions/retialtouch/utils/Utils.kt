@@ -27,6 +27,7 @@ import retailtouch.composeapp.generated.resources.ic_cash
 import retailtouch.composeapp.generated.resources.ic_cashier
 import retailtouch.composeapp.generated.resources.ic_categories
 import retailtouch.composeapp.generated.resources.ic_category
+import retailtouch.composeapp.generated.resources.ic_chart
 import retailtouch.composeapp.generated.resources.ic_check
 import retailtouch.composeapp.generated.resources.ic_cross
 import retailtouch.composeapp.generated.resources.ic_data_stats
@@ -72,6 +73,7 @@ import retailtouch.composeapp.generated.resources.ic_settlement
 import retailtouch.composeapp.generated.resources.ic_star
 import retailtouch.composeapp.generated.resources.ic_stock
 import retailtouch.composeapp.generated.resources.ic_sync
+import retailtouch.composeapp.generated.resources.ic_sync_timer
 import retailtouch.composeapp.generated.resources.ic_trash
 import retailtouch.composeapp.generated.resources.ic_unlink
 import retailtouch.composeapp.generated.resources.ic_user_add
@@ -175,6 +177,9 @@ object AppIcons {
     val IPAddressIcon by lazy { Res.drawable.ic_ip_address}
     val fastPaymentIcon by lazy { Res.drawable.ic_fast_payment}
     val roundOffIcon by lazy { Res.drawable.ic_roundoff}
+    val chartIcon by lazy { Res.drawable.ic_chart}
+    val pendingIcon by lazy { Res.drawable.ic_exclamation}
+    val syncTimeIcon by lazy { Res.drawable.ic_sync_timer}
 }
 
 object HomeItemId{

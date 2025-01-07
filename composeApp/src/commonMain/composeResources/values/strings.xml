@@ -217,4 +217,15 @@
     <string name="sync_staff">Sync Staff</string>
     <string name="logged_in_staff">logged-in employee</string>
     <string name="superuser">Superuser</string>
+    <string name="inventory">Inventory</string>
+    <string name="products">Products</string>
+    <string name="ean_codes">EAN Codes</string>
+    <string name="categories">Categories</string>
+    <string name="menu_items">Menu Items</string>
+    <string name="sales">Sales</string>
+    <string name="sales_pending">Pending Sales</string>
+    <string name="last_sync">Last Sync</string>
+    <string name="rsync_timer">ReSync Timer</string>
+    <string name="sync_progress">Sync In Progress</string>
+    <string name="run_complete_sync">Run Complete Sync</string>
 </resources>
