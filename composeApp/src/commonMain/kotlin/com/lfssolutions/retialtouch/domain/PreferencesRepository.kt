@@ -107,4 +107,7 @@ interface PreferencesRepository {
 
     suspend fun setFastPaymentMode(result: Boolean)
     fun getFastPaymentMode(): Flow<Boolean>
+
+    suspend fun setLanguage(result: String)
+    suspend fun getLanguage():Flow<String>
 }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
-import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
-import com.lfssolutions.retialtouch.presentation.ui.common.DiscountDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.HoldSaleDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.ItemDiscountDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.MemberListDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.StockDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.DiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.MemberListDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.outsidesource.oskitcompose.lib.rememberValRef
 import kotlinx.coroutines.delay

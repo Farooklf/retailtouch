@@ -41,14 +41,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.settlement.PosPaymentTypeSummary
 import com.lfssolutions.retialtouch.domain.model.settlement.SettlementUIState
-import com.lfssolutions.retialtouch.presentation.ui.common.ActionDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
-import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PendingSaleDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SettlementViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState

@@ -4,11 +4,13 @@ package com.lfssolutions.retialtouch.presentation.ui.settings
 import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
+import com.lfssolutions.retialtouch.theme.Language
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppLanguage
+import com.lfssolutions.retialtouch.utils.changeLang
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +28,11 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val posEmployees = getPosEmployees()
             val rtUser= dataBaseRepository.getRTLoginUser().first()
+            val language = try {
+                AppLanguage.valueOf(getAppLanguage())
+            } catch (err: Throwable) {
+                AppLanguage.English
+            }
             _settingUiState.update { state->
                 state.copy(
                     serverUrl = getCurrentServer(),
@@ -37,7 +44,8 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                     roundOffOption = getRoundOffOption(),
                     paymentConfirmPopup = getPaymentConfirmPopup(),
                     fastPaymode = getFastPaymentMode(),
-                    posEmployees = posEmployees
+                    posEmployees = posEmployees,
+                    selectedLanguage= language
                 )}
         }
 
@@ -46,6 +54,10 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                 _settingUiState.update { state -> state.copy(networkConfig = updatedValue,showNetworkConfigDialog = false) }
             }
         }
+    }
+
+    fun updateSelectLanguageDialogVisibility(value: Boolean) {
+        _settingUiState.update { state -> state.copy(showSelectLanguageDialog = value) }
     }
 
     fun updateNetworkConfigDialogVisibility(value: Boolean) {
@@ -114,6 +126,21 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun changeLanguage(value: AppLanguage) {
+        viewModelScope.launch {
+            changeAppLanguage(value)
+            val updatedLang = when (value) {
+                AppLanguage.English -> {
+                    Language.English.isoFormat
+                }
+                AppLanguage.Arabic -> {
+                    Language.Arabic.isoFormat
+                }
+            }
+            changeLang(updatedLang)
+        }
+    }
+
     fun syncStaff(){
         viewModelScope.launch {
           //Employee API
@@ -121,7 +148,6 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
             syncEmployeeRole()
         }
     }
-
 
     private suspend fun syncEmployees(){
         try {

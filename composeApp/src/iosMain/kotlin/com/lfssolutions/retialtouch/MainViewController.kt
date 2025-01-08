@@ -10,5 +10,5 @@ fun MainViewController() = ComposeUIViewController {
     startKoin {
         modules(dbModule + appModule() + iosModule)
     }
-    App()
+    RootContent()
 }

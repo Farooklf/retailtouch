@@ -217,4 +217,9 @@
     <string name="sync_staff">Sync Staff</string>
     <string name="logged_in_staff">logged-in employee</string>
     <string name="superuser">Superuser</string>
+
+
+    <string name="choose_an_language">Choose an Language</string>
+    <string name="english">English</string>
+    <string name="arabic">Arabic</string>
 </resources>

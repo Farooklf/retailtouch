@@ -25,7 +25,7 @@ object PrefKeys {
     const val FAST_PAYMENT = "fastPayment"
     const val PAYMENT_CONFIRM_POPUP = "paymentConfirmPopup"
     const val ROUND_OFF_OPTION = "roundOffOption"
-
+    const val KEY_APP_LANGUAGE = "app_language"
 
     const val NETWORK_CONFIG_DEFAULT_VALUE = "192.168.25.39:768"
     const val TOKEN_EXPIRY_THRESHOLD = 1

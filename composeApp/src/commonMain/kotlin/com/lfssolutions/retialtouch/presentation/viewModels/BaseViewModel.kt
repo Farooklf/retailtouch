@@ -43,30 +43,23 @@ import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByPrice
 import com.lfssolutions.retialtouch.domain.model.promotions.GetPromotionsByQtyResult
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionItem
-import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
-import com.lfssolutions.retialtouch.domain.model.terminal.TerminalResponse
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
-import com.lfssolutions.retialtouch.sync.SyncDataState
-import com.lfssolutions.retialtouch.utils.AppConstants.CATEGORY
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.INVOICE
 import com.lfssolutions.retialtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
-import com.lfssolutions.retialtouch.utils.AppConstants.LOCATION_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MEMBER_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.NEXT_SALE_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
-import com.lfssolutions.retialtouch.utils.AppConstants.PRODUCT
-import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppLanguage
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
@@ -1428,6 +1421,15 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     fun observeNetworkConfig(): Flow<String> {
         return preferences.getNetworkConfig()
     }
+
+    suspend fun changeAppLanguage(value: AppLanguage) {
+      preferences.setLanguage(value.name)
+    }
+
+    suspend fun getAppLanguage():String {
+       return preferences.getLanguage().first()
+    }
+
 
     fun resetStates() {
         viewModelScope.launch {

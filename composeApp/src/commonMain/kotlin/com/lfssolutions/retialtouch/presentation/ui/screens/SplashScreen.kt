@@ -23,6 +23,7 @@ import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
 import com.lfssolutions.retialtouch.presentation.ui.common.SmallTextComponent
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
+import com.lfssolutions.retialtouch.theme.AppTheme.deviceType
 import com.lfssolutions.retialtouch.utils.DateFormatter
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getEndLocalDateTime
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getStartLocalDateTime
@@ -37,11 +38,6 @@ object SplashScreen:Screen{
         val baseViewModel: BaseViewModel = koinInject()
         var isLoading by remember { mutableStateOf(true) }
         val isUserLoggedIn by baseViewModel.isUserLoggedIn.collectAsStateWithLifecycle()
-       // println("isUserLoggedIn : $isUserLoggedIn")
-        //val startDate= DateFormatter().formatDateWithTimeForApi(getStartLocalDateTime())
-        //val endDate= DateFormatter().formatDateWithTimeForApi(getEndLocalDateTime())
-        //println("startDate :$startDate | endDate : $endDate")
-
         val navigator = LocalNavigator.currentOrThrow
         Box(modifier = Modifier.fillMaxSize()) {
             Image(

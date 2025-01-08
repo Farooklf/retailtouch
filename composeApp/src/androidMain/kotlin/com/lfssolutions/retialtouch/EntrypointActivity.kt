@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,7 @@ import com.lfsolutions.paymentslibrary.ASCAN_REQUEST_CODE
 import com.lfsolutions.paymentslibrary.Payments
 import com.lfsolutions.paymentslibrary.RFM_REQUEST_CODE
 import com.lfsolutions.paymentslibrary.getPaymentFactory
+import com.lfssolutions.retialtouch.ComposeApp.RootContent
 import com.lfssolutions.retialtouch.di.androidModule
 import com.lfssolutions.retialtouch.di.appModule
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -78,9 +80,13 @@ class EntrypointActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        if (resources.getBoolean(R.bool.portrait_only)) {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
         setContent {
-            App()
+            RootContent()
         }
     }
 
@@ -113,5 +119,5 @@ class EntrypointActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    App()
+    RootContent()
 }

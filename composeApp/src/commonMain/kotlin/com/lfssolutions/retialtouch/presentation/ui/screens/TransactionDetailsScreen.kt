@@ -47,12 +47,11 @@ import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDropdownMenu
 import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
-import com.lfssolutions.retialtouch.presentation.ui.common.PaymentModeDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PaymentModeDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionDetailsViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -68,9 +67,7 @@ import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.re_print
 import retailtouch.composeapp.generated.resources.save
-import retailtouch.composeapp.generated.resources.status
 import retailtouch.composeapp.generated.resources.transaction_details
-import retailtouch.composeapp.generated.resources.type
 
 data class TransactionDetailsScreen(val mSaleRecord: SaleRecord):Screen{
     @Composable

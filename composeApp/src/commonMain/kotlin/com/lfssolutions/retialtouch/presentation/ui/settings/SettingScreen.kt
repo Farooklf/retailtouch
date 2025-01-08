@@ -45,7 +45,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -56,11 +55,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lfssolutions.retialtouch.presentation.ui.common.ActionTextFiledDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionTextFiledDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
-import com.lfssolutions.retialtouch.presentation.ui.common.GridViewOptionsDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.RoundOffOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.GridViewOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.RoundOffOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.language.SelectLanguageDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -272,6 +272,16 @@ object SettingScreen : Screen {
 
     @Composable
     fun SettingMainPage(state: SettingUIState, viewModel: SettingViewModel) {
+
+        SelectLanguageDialog(
+            isVisible = state.showSelectLanguageDialog,
+            selectedLanguage=state.selectedLanguage,
+            onDismiss = { viewModel.updateSelectLanguageDialogVisibility(false) },
+            onSelectLanguage = {language->
+                viewModel.changeLanguage(language)
+            }
+        )
+
         //Language
         SettingsGroupItem(
             title = stringResource(Res.string.general)
@@ -279,9 +289,11 @@ object SettingScreen : Screen {
             SettingsItem(
                 title = stringResource(Res.string.language),
                 icon = AppIcons.languageIcon,
-                onClick = {},
                 isSwitchable = false,
-                showDivider = false
+                showDivider = false,
+                onClick = {
+                    viewModel.updateSelectLanguageDialogVisibility(true)
+                }
             )
         }
 

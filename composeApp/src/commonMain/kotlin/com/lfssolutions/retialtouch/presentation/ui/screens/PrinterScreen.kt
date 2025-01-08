@@ -38,15 +38,15 @@ import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCheckBox
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCircleProgressIndicator
-import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogChoiceFromList
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.AppDialogChoiceFromList
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppRadioButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.BackgroundScreen
-import com.lfssolutions.retialtouch.presentation.ui.common.ChoosePrinterTemplateDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.NetworkAddressDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ChoosePrinterTemplateDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.NetworkAddressDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.PrinterTextField
-import com.lfssolutions.retialtouch.presentation.ui.common.TerminalCodeDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.TerminalCodeDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.TopAppBarContent
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
@@ -54,7 +54,6 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.PaperSize
 import com.lfssolutions.retialtouch.utils.PrinterType
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -66,7 +65,6 @@ import retailtouch.composeapp.generated.resources.create_printer
 import retailtouch.composeapp.generated.resources.edit_printer
 import retailtouch.composeapp.generated.resources.enable_this_printer
 import retailtouch.composeapp.generated.resources.enter_terminal_code
-import retailtouch.composeapp.generated.resources.error_title
 import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.no_printer_selected
 import retailtouch.composeapp.generated.resources.no_usb_devices
@@ -77,11 +75,8 @@ import retailtouch.composeapp.generated.resources.printer_station_name
 import retailtouch.composeapp.generated.resources.printer_type
 import retailtouch.composeapp.generated.resources.receipts
 import retailtouch.composeapp.generated.resources.select_bluetooth_device
-import retailtouch.composeapp.generated.resources.select_print_template
 import retailtouch.composeapp.generated.resources.select_usb_device
-import retailtouch.composeapp.generated.resources.settings
 import retailtouch.composeapp.generated.resources.success_message
-import retailtouch.composeapp.generated.resources.success_title
 import retailtouch.composeapp.generated.resources.terminal_code_saved_successfully
 import retailtouch.composeapp.generated.resources.update_printer
 
