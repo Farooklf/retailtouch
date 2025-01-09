@@ -99,8 +99,6 @@ import kotlin.math.round
 val JsonObj = Json { encodeDefaults = true }
 // Define the LocalAppState CompositionLocal
 
-
-
 val LocalAppState = compositionLocalOf<AppState> {
     error("No AppState provided")
 }
@@ -217,6 +215,7 @@ object AppStrings{
     val delivered = Res.string.delivered
     val self_connected = Res.string.self_connected
     val returned = Res.string.returned
+
 }
 
 object AppConstants{

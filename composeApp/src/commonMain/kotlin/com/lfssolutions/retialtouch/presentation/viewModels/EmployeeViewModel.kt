@@ -51,11 +51,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun updateLogout(logoutValue: Boolean) {
-        viewModelScope.launch {
-            _employeeScreenState.update { it.copy(isLogoutFromServer = logoutValue) }
-        }
-    }
+
 
     fun onClick() {
         val errors = validateInputs()
@@ -90,6 +86,7 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
             if(employee!=null){
                 employeeDoa.update { employee }
                 if (employee.employeePassword == employeeScreenState.value.pin) {
+                    setEmployeeCode(employee.employeeCode)
                     updatePOSEmployees(employee)
                     setPOSEmployee(employee)
                     getEmployeeRights()
@@ -135,25 +132,6 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun logoutFromThisServer() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // Start all three operations concurrently
-                val jobs = listOf(
-                    async { resetStates() },
-                    async { emptyDataBase() },
-                    async { emptyLocalPref() }
-                )
-                // Wait for all jobs to complete
-                jobs.awaitAll()
 
-                // After all operations complete, update logout status
-                updateLogout(true)
-            } catch (e: Exception) {
-                // Handle exceptions if needed (e.g., logging or user feedback)
-                e.printStackTrace()
-            }
-        }
-    }
 
 }

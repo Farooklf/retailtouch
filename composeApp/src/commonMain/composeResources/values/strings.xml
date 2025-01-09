@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">RetailTouch</string>
+    <!--<string name="app_name">RetailTouch</string>-->
     <string name="general_back">Back</string>
     <string name="retail_pos">Retail POS</string>
     <string name="sign_in">Sign In</string>
@@ -217,6 +217,16 @@
     <string name="sync_staff">Sync Staff</string>
     <string name="logged_in_staff">logged-in employee</string>
     <string name="superuser">Superuser</string>
+
+
+    <string name="choose_an_language">Choose an Language</string>
+    <string name="english">English</string>
+    <string name="arabic">Arabic</string>
+    <string name="french">French</string>
+    <string name="thi">Thai</string>
+    <string name="japanese">Japanese</string>
+    <string name="chinese">Chinese</string>
+
     <string name="inventory">Inventory</string>
     <string name="products">Products</string>
     <string name="ean_codes">EAN Codes</string>
@@ -228,4 +238,5 @@
     <string name="rsync_timer">ReSync Timer</string>
     <string name="sync_progress">Sync In Progress</string>
     <string name="run_complete_sync">Run Complete Sync</string>
+
 </resources>

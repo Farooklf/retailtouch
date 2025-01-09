@@ -5,8 +5,11 @@ import org.jetbrains.compose.resources.stringResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources._58mm
 import retailtouch.composeapp.generated.resources._80mm
+import retailtouch.composeapp.generated.resources.arabic
 import retailtouch.composeapp.generated.resources.bluetooth
+import retailtouch.composeapp.generated.resources.english
 import retailtouch.composeapp.generated.resources.ethernet
+import retailtouch.composeapp.generated.resources.french
 import retailtouch.composeapp.generated.resources.usb
 
 
@@ -133,6 +136,23 @@ enum class PaperSize {
             Size80mm -> Res.string._80mm
         }
         return stringResource(value)
+    }
+}
+
+enum class AppLanguage {
+    English,
+    Arabic,
+    French;
+
+    @Composable
+    fun toStringValue(): String {
+        return stringResource(
+            when (this) {
+                English -> Res.string.english
+                Arabic -> Res.string.arabic
+                French -> Res.string.french
+            }
+        )
     }
 }
 

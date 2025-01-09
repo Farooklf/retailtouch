@@ -43,8 +43,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ClickableAppOutlinedTextField
 import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
-import com.lfssolutions.retialtouch.presentation.ui.common.PendingSaleDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.ShowDateRangePicker
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ShowDateRangePicker
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons

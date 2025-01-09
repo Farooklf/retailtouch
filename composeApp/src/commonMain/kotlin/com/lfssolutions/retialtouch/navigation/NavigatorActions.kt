@@ -1,9 +1,7 @@
 package com.lfssolutions.retialtouch.navigation
 
 import androidx.compose.runtime.Composable
-import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 
 
@@ -19,9 +17,8 @@ object NavigatorActions {
     }
 
     @Composable
-    fun navigateToLoginScreen() {
-        val navigator = LocalNavigator.currentOrThrow
-        navigator.replace(Route.LoginScreen.toVoyagerScreen())
+    fun navigateToLoginScreen(navigator: Navigator) {
+        navigator.push(Route.LoginScreen.toVoyagerScreen())
     }
 
     fun navigateToHomeScreen(navigator: Navigator,isSplash : Boolean) {

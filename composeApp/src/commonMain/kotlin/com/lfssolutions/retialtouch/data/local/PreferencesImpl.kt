@@ -11,6 +11,7 @@ import com.lfssolutions.retialtouch.utils.PrefKeys.EMPLOYEE_STATE
 import com.lfssolutions.retialtouch.utils.PrefKeys.FAST_PAYMENT
 import com.lfssolutions.retialtouch.utils.PrefKeys.GRID_VIEW_OPTIONS
 import com.lfssolutions.retialtouch.utils.PrefKeys.IS_LOGGED_IN
+import com.lfssolutions.retialtouch.utils.PrefKeys.KEY_APP_LANGUAGE
 import com.lfssolutions.retialtouch.utils.PrefKeys.LAST_SYNC_TS
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION
 import com.lfssolutions.retialtouch.utils.PrefKeys.LOCATION_ID
@@ -469,7 +470,7 @@ class PreferencesImpl(
     override fun getNetworkConfig(): Flow<String> {
         return flowSettings.getStringFlow(
             key = NETWORK_CONFIG,
-            defaultValue = NETWORK_CONFIG_DEFAULT_VALUE
+            defaultValue = "Not Specified"
         )
     }
 
@@ -540,6 +541,20 @@ class PreferencesImpl(
         return flowSettings.getBooleanFlow(
             key = FAST_PAYMENT,
             defaultValue = false
+        )
+    }
+
+    override suspend fun setLanguage(result: String) {
+        flowSettings.putString(
+            key = KEY_APP_LANGUAGE,
+            value = result
+        )
+    }
+
+    override suspend fun getLanguage(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = KEY_APP_LANGUAGE,
+            defaultValue =""
         )
     }
 

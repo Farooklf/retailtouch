@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lfssolutions.retialtouch.presentation.ui.common.AppOutlinedTextFieldWithOuterIcon
 import com.lfssolutions.retialtouch.presentation.ui.common.ResponsiveBox
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -56,6 +57,7 @@ fun EmployeeScreen(
     employeeViewModel: EmployeeViewModel = koinInject()
 ){
     val employeeScreenState by employeeViewModel.employeeScreenState.collectAsStateWithLifecycle()
+    val isLogoutFromServer by employeeViewModel.logoutFromServer.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
     val paddingValues = if (appState.isTablet) {
         AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
@@ -144,7 +146,8 @@ fun EmployeeScreen(
                     .wrapContentWidth()
                     .align(Alignment.End)
                     .clickable{
-                        employeeViewModel.logoutFromThisServer() },
+                        employeeViewModel.logoutFromThisServer()
+                   },
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -179,7 +182,7 @@ fun EmployeeScreen(
                 onDismiss()
             }
 
-            if(employeeScreenState.isLogoutFromServer){
+            if(isLogoutFromServer){
                 onNavigateLogout()
                 //navController.navigate(NavigationItem.Login.route) { popUpToTop(navController) }
             }
@@ -187,18 +190,5 @@ fun EmployeeScreen(
         }
     }
 
-
-    /*BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-    ){
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-
-
-        }
-    }*/
 
 }

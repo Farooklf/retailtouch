@@ -195,7 +195,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun getEmployee(){
         viewModelScope.launch {
-            employee.collectLatest { empDao->
+            employee.collect { empDao->
+                print("empDao: $empDao")
                 if(empDao!=null){
                     employeeId.update {
                         empDao.employeeId
@@ -1153,7 +1154,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun onProductItemClick(animatedProductCard: AnimatedProductCard) {
         viewModelScope.launch {
             val stock = animatedProductCard.product
-            println("clicked_menu:$stock")
+            //println("clicked_menu:$stock")
             addToCartItem(stock=stock)
         }
     }

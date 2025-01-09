@@ -84,7 +84,7 @@ interface SystemDesignColors {
 
 }
 
-fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
+fun designColorPaletteBlue() : SystemDesignColors = object : SystemDesignColors{
     override val primaryColor= Color(0xFF005ce5)
     override val primaryDarkColor= Color(0xFF1954a0)
     override val secondaryColor= Color(0xFFbcdffb)
@@ -183,7 +183,7 @@ fun DesignColorsLight() : SystemDesignColors = object : SystemDesignColors{
     )
 }
 
-fun DesignColorsDark() : SystemDesignColors = object : SystemDesignColors{
+fun designColorPaletteDark() : SystemDesignColors = object : SystemDesignColors{
     override val backgroundMenu: Color = BrandGrey
     override val backgroundNavbar: Color = BrandDarkBlue
     override val primaryColor= Color(0xFF005ce5)

@@ -46,7 +46,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -57,19 +56,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lfssolutions.retialtouch.presentation.ui.common.ActionTextFiledDialog
+import com.lfssolutions.retialtouch.navigation.NavigatorActions
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionTextFiledDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppSwitch
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
-import com.lfssolutions.retialtouch.presentation.ui.common.GridViewOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.GridViewOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.RoundOffOptionsDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.language.SelectLanguageDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.InputType
-import com.lfssolutions.retialtouch.presentation.ui.common.RoundOffOptionsDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
-import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
@@ -180,7 +180,7 @@ object SettingScreen : Screen {
                         )
                     }
                 ){
-                    state.tabs.forEachIndexed  {index, currentTab ->
+                    state.tabs.forEachIndexed  { index, currentTab ->
                         Tab(
                             selected = selectedTabIndex.value == index,
                             selectedContentColor=AppTheme.colors.textPrimary,
@@ -223,7 +223,6 @@ object SettingScreen : Screen {
                         when (page) {
                             0 -> SettingMainPage(state = state,viewModel= viewModel)
                             1 -> SettingProductPage(state = state,viewModel= viewModel)
-                            /*2 -> SettingPaymentPage(state = state,viewModel= viewModel)*/
                             2 -> SettingEmployeesPage(state = state,viewModel= viewModel)
                             3 -> SettingDataStatsPage(state = state,viewModel= viewModel)
                         }
@@ -292,20 +291,39 @@ object SettingScreen : Screen {
 
     @Composable
     fun SettingMainPage(state: SettingUIState, viewModel: SettingViewModel) {
+        val navigator = LocalNavigator.currentOrThrow
+        val isLogoutFromServer by viewModel.logoutFromServer.collectAsStateWithLifecycle()
+
+        if(isLogoutFromServer){
+            NavigatorActions.navigateToLoginScreen(navigator)
+        }
+
+        SelectLanguageDialog(
+            isVisible = state.showSelectLanguageDialog,
+            selectedLanguage=state.selectedLanguage,
+            onDismiss = { viewModel.updateSelectLanguageDialogVisibility(false) },
+            onSelectLanguage = {language->
+                viewModel.changeLanguage(language)
+            }
+        )
+
         //Language
         SettingsGroupItem(
             title = stringResource(Res.string.general)
         ){
             SettingsItem(
                 title = stringResource(Res.string.language),
+                description = state.selectedLanguage.name,
                 icon = AppIcons.languageIcon,
-                onClick = {},
                 isSwitchable = false,
-                showDivider = false
+                showDivider = false,
+                onClick = {
+                    viewModel.updateSelectLanguageDialogVisibility(true)
+                }
             )
         }
 
-        //Error Log
+
         /*SettingsGroupItem(
             title = stringResource(Res.string.error_log)
         ){
@@ -318,9 +336,10 @@ object SettingScreen : Screen {
             )
         }*/
 
+
         //network_config
         SettingsGroupItem(
-            title = stringResource(Res.string.network_config)
+                title = stringResource(Res.string.network_config)
         ){
             SettingsItem(
                 title = stringResource(Res.string.ip_address_with_port),
@@ -387,7 +406,7 @@ object SettingScreen : Screen {
                 description = stringResource(Res.string.disconnect_device),
                 icon = AppIcons.unlinkIcon,
                 onClick = {
-
+                  viewModel.logoutFromThisServer()
                 },
                 isSwitchable = false,
                 showDivider = false
@@ -457,10 +476,6 @@ object SettingScreen : Screen {
         }
     }
 
-    @Composable
-    fun SettingPaymentPage(state: SettingUIState, viewModel: SettingViewModel) {
-
-    }
 
     @Composable
     fun SettingEmployeesPage(state: SettingUIState, viewModel: SettingViewModel) {

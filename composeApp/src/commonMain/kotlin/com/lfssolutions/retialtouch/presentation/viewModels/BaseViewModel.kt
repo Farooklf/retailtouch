@@ -59,6 +59,7 @@ import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.AppLanguage
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getHoursDifferenceFromEpochMillSeconds
 import com.lfssolutions.retialtouch.utils.DeviceType
@@ -105,6 +106,9 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     val _loginScreenState = MutableStateFlow(LoginUiState())
     val loginScreenState: StateFlow<LoginUiState> = _loginScreenState
+
+    val _logoutFromServer = MutableStateFlow(false)
+    val logoutFromServer: StateFlow<Boolean> = _logoutFromServer
 
     var count =0
 
@@ -198,7 +202,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         initialValue = null  // Initial state of the flow
 
     )
-
 
 
     suspend fun isDiscountEnabledTaxInclusiveName():Boolean{
@@ -1212,6 +1215,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setEmployeeCode(code)
     }
 
+    suspend fun getEmpCode() :String{
+        return preferences.getEmployeeCode().first()
+    }
+
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
@@ -1251,9 +1258,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getTokenTime().first()
     }
 
-    suspend fun getEmpCode() :String{
-        return preferences.getEmployeeCode().first()
-    }
+
 
     suspend fun setDefaultLocation(location: Location){
         preferences.setLocation(location.toJson())
@@ -1443,6 +1448,40 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getNetworkConfig()
     }
 
+    suspend fun changeAppLanguage(value: AppLanguage) {
+      preferences.setLanguage(value.name)
+    }
+
+    suspend fun getAppLanguage():String {
+       return preferences.getLanguage().first()
+    }
+
+    fun logoutFromThisServer() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Start all three operations concurrently
+                val jobs = listOf(
+                    async { resetStates() },
+                    async { emptyDataBase() },
+                    async { emptyLocalPref() }
+                )
+                // Wait for all jobs to complete
+                jobs.awaitAll()
+                // After all operations complete, update logout status
+                updateLogout(true)
+            } catch (e: Exception) {
+                // Handle exceptions if needed (e.g., logging or user feedback)
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun updateLogout(logoutValue: Boolean) {
+        viewModelScope.launch {
+            _logoutFromServer.update { logoutValue }
+        }
+    }
+
     fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
@@ -1465,6 +1504,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 async { preferences.setLocationId(-1) },
                 async { preferences.setLocation("") },
                 async { preferences.setUserLoggedIn(false) },
+                async { preferences.setLastSyncTs(-1) },
             )
             jobs.awaitAll()
         }

@@ -59,8 +59,9 @@ data class HomeScreen(val isSplash: Boolean): Screen{
     @Composable
     override fun Content() {
        val homeViewModel: HomeViewModel = koinInject()
+        val navigator = LocalNavigator.currentOrThrow
        Home(homeViewModel=homeViewModel,isFromSplash = isSplash,onLogout={
-           NavigatorActions.navigateToLoginScreen()
+           NavigatorActions.navigateToLoginScreen(navigator)
        })
     }
 }
