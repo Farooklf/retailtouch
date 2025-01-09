@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">RetailTouch</string>
+    <!--<string name="app_name">RetailTouch</string>-->
     <string name="general_back">Back</string>
     <string name="retail_pos">Retail POS</string>
     <string name="sign_in">Sign In</string>
@@ -222,4 +222,9 @@
     <string name="choose_an_language">Choose an Language</string>
     <string name="english">English</string>
     <string name="arabic">Arabic</string>
+    <string name="french">French</string>
+    <string name="thi">Thai</string>
+    <string name="japanese">Japanese</string>
+    <string name="chinese">Chinese</string>
+
 </resources>

@@ -9,6 +9,7 @@ import retailtouch.composeapp.generated.resources.arabic
 import retailtouch.composeapp.generated.resources.bluetooth
 import retailtouch.composeapp.generated.resources.english
 import retailtouch.composeapp.generated.resources.ethernet
+import retailtouch.composeapp.generated.resources.french
 import retailtouch.composeapp.generated.resources.usb
 
 
@@ -140,7 +141,8 @@ enum class PaperSize {
 
 enum class AppLanguage {
     English,
-    Arabic;
+    Arabic,
+    French;
 
     @Composable
     fun toStringValue(): String {
@@ -148,6 +150,7 @@ enum class AppLanguage {
             when (this) {
                 English -> Res.string.english
                 Arabic -> Res.string.arabic
+                French -> Res.string.french
             }
         )
     }

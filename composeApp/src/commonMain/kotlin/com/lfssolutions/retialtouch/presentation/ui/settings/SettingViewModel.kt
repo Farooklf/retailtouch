@@ -136,8 +136,12 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                 AppLanguage.Arabic -> {
                     Language.Arabic.isoFormat
                 }
+                AppLanguage.French-> {
+                    Language.French.isoFormat
+                }
             }
             changeLang(updatedLang)
+            _settingUiState.update { it.copy(selectedLanguage = value) }
         }
     }
 

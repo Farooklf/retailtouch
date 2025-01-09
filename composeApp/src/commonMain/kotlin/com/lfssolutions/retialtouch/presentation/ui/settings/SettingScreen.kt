@@ -288,6 +288,7 @@ object SettingScreen : Screen {
         ){
             SettingsItem(
                 title = stringResource(Res.string.language),
+                description = state.selectedLanguage.name,
                 icon = AppIcons.languageIcon,
                 isSwitchable = false,
                 showDivider = false,
@@ -298,7 +299,7 @@ object SettingScreen : Screen {
         }
 
         //Error Log
-        SettingsGroupItem(
+       /* SettingsGroupItem(
             title = stringResource(Res.string.error_log)
         ){
             SettingsItem(
@@ -308,7 +309,7 @@ object SettingScreen : Screen {
                 isSwitchable = false,
                 showDivider = false
             )
-        }
+        }*/
 
         //network_config
         SettingsGroupItem(

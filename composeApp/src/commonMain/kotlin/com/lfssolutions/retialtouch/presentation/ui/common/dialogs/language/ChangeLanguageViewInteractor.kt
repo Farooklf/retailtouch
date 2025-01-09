@@ -27,6 +27,8 @@ class ChangeLanguageViewInteractor :ViewModel(),KoinComponent {
                     // homeScreenViewInteractor.updateScreenDirection(true)
                     Language.Arabic.isoFormat
                 }
+
+                AppLanguage.French -> TODO()
             }
 
             changeLang(updatedLang)

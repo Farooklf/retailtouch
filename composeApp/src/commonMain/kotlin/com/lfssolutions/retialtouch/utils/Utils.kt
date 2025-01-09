@@ -210,6 +210,7 @@ object AppStrings{
     val delivered = Res.string.delivered
     val self_connected = Res.string.self_connected
     val returned = Res.string.returned
+
 }
 
 object AppConstants{

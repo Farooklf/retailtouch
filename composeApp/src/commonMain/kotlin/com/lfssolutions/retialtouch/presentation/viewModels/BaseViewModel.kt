@@ -1212,6 +1212,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setEmployeeCode(code)
     }
 
+    suspend fun getEmpCode() :String{
+        return preferences.getEmployeeCode().first()
+    }
+
     fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
@@ -1251,9 +1255,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getTokenTime().first()
     }
 
-    suspend fun getEmpCode() :String{
-        return preferences.getEmployeeCode().first()
-    }
+
 
     suspend fun setDefaultLocation(location: Location){
         preferences.setLocation(location.toJson())

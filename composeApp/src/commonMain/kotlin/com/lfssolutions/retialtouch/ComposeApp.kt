@@ -32,7 +32,6 @@ object ComposeApp : KoinComponent{
                 }
 
 
-
                 // Provide the appState globally using CompositionLocalProvider
                 CompositionLocalProvider(LocalAppState provides appState) {
                     Navigator(screen = Route.SplashScreen.toVoyagerScreen(),
