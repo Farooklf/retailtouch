@@ -16,6 +16,10 @@ object NavigatorActions {
         navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
+    fun navigateBackToLoginScreen(navigator: Navigator) {
+        navigator.replace(Route.LoginScreen.toVoyagerScreen())
+    }
+
     @Composable
     fun navigateToLoginScreen(navigator: Navigator) {
         navigator.push(Route.LoginScreen.toVoyagerScreen())

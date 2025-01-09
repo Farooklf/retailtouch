@@ -295,7 +295,7 @@ object SettingScreen : Screen {
         val isLogoutFromServer by viewModel.logoutFromServer.collectAsStateWithLifecycle()
 
         if(isLogoutFromServer){
-            NavigatorActions.navigateToLoginScreen(navigator)
+            NavigatorActions.navigateBackToLoginScreen(navigator)
         }
 
         SelectLanguageDialog(
