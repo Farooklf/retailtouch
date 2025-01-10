@@ -41,7 +41,7 @@ class SettingViewModel : BaseViewModel(), KoinComponent {
                     tenant = rtUser.tenantName,
                     user = rtUser.userName,
                     networkConfig = getNetworkConfig(),
-                    gridViewOption = getGridViewOptions(),
+                    gridViewOption = getGridViewCount(),
                     mergeCartItems = getMergeCartItems(),
                     roundOffOption = getRoundOffOption(),
                     paymentConfirmPopup = getPaymentConfirmPopup(),

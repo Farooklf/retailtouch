@@ -18,10 +18,6 @@ import com.lfssolutions.retialtouch.utils.AppStrings.settlement
 import com.lfssolutions.retialtouch.utils.AppStrings.stock
 import com.lfssolutions.retialtouch.utils.AppStrings.sync
 import com.lfssolutions.retialtouch.utils.HomeItemId
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -155,6 +151,13 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
     }
 
 
+    fun updateExitFormDialogState(value:Boolean){
+        viewModelScope.launch {
+            _homeUIState.update { uiState ->
+                uiState.copy(showExitConfirmationDialog = value)
+            }
+        }
+    }
 
     fun stopSyncRotation(value:Boolean){
         viewModelScope.launch {

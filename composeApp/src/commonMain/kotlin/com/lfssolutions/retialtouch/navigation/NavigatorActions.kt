@@ -13,30 +13,29 @@ object NavigatorActions {
     }
 
     fun navigateBackToHomeScreen(navigator: Navigator,isSplash: Boolean) {
-        navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
-    }
-
-    fun navigateBackToLoginScreen(navigator: Navigator) {
-        navigator.replace(Route.LoginScreen.toVoyagerScreen())
+        navigator.popUntilRoot() // Clear the back stack
+        navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
     @Composable
     fun navigateToLoginScreen(navigator: Navigator) {
-        navigator.push(Route.LoginScreen.toVoyagerScreen())
+        navigator.popUntilRoot() // Clear the back stack
+        navigator.replace(Route.LoginScreen.toVoyagerScreen()) // Replace with Login screen
     }
 
     fun navigateToHomeScreen(navigator: Navigator,isSplash : Boolean) {
-        //val navigator = LocalNavigator.currentOrThrow
+        navigator.popUntilRoot()
         navigator.push(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
 
     fun navigateToPOSScreen(navigator: Navigator) {
-        navigator.push(Route.POSScreen.toVoyagerScreen())
+        navigator.push(Route.CashierScreen.toVoyagerScreen())
     }
 
-    fun navigateToCashierScreen(navigator: Navigator) {
-        navigator.push(Route.POSScreen.toVoyagerScreen())
+    fun backToCashierScreen(navigator: Navigator) {
+        navigator.popUntilRoot()
+        navigator.replace(Route.CashierScreen.toVoyagerScreen())
     }
 
     fun navigateToCartScreen(navigator: Navigator) {

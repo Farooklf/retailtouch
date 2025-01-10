@@ -15,3 +15,7 @@ actual fun getScreenWidthHeight(): Pair<Int, Int> {
     val height = LocalConfiguration.current.screenHeightDp
     return Pair(width, height)
 }
+
+actual fun exitApp() {
+    android.os.Process.killProcess(android.os.Process.myPid())
+}

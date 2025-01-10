@@ -25,3 +25,7 @@ actual fun getScreenWidthHeight(): Pair<Int, Int> {
 
     return Pair(screenWidth.value.roundToInt(),screenHeight.value.roundToInt())
 }
+
+actual fun exitApp() {
+    throw RuntimeException("Exit app requested") // Optional; generally discouraged in production
+}

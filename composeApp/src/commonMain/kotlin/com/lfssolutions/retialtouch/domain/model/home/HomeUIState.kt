@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 
 
 data class HomeUIState(
+    val showExitConfirmationDialog: Boolean = false,
     val isLoading: Boolean = false,
     val isFromSplash: Boolean = false,
     val isBlur: Boolean = true,

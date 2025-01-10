@@ -295,7 +295,7 @@ object SettingScreen : Screen {
         val isLogoutFromServer by viewModel.logoutFromServer.collectAsStateWithLifecycle()
 
         if(isLogoutFromServer){
-            NavigatorActions.navigateBackToLoginScreen(navigator)
+            NavigatorActions.navigateToLoginScreen(navigator)
         }
 
         SelectLanguageDialog(
@@ -447,7 +447,7 @@ object SettingScreen : Screen {
         }
 
         //Payment Setting
-        SettingsGroupItem(title = stringResource(Res.string.payment_settings)){
+        /*SettingsGroupItem(title = stringResource(Res.string.payment_settings)){
 
             SettingsItem(
                 title = stringResource(Res.string.confirm_popup_title),
@@ -473,7 +473,7 @@ object SettingScreen : Screen {
                 showDivider = false,
                 onClick = { viewModel.updateRoundOffOptionsDialogVisibility(true) }
             )
-        }
+        }*/
     }
 
 

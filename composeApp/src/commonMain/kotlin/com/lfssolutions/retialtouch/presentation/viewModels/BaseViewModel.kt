@@ -1408,7 +1408,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         preferences.setGridViewOptions(updatedValue)
     }
 
-    suspend fun getGridViewOptions() : Int{
+    suspend fun getGridViewCount() : Int{
         return preferences.getGridViewOptions().first()
     }
 
@@ -1442,6 +1442,10 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun getPaymentConfirmPopup():Boolean {
         return preferences.getPaymentConfirmPopup().first()
+    }
+
+    suspend fun getIsMergeCartItem(): Boolean {
+        return preferences.getMergeCartItems().first()
     }
 
     fun observeNetworkConfig(): Flow<String> {

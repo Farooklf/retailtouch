@@ -132,7 +132,7 @@ fun Payment(
         if(state.isPaymentClose){
             viewModel.updateSales()
             viewModel.resetScreenState()
-            NavigatorActions.navigateToPOSScreen(navigator)
+            NavigatorActions.backToCashierScreen(navigator)
         }
     }
 

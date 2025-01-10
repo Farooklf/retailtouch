@@ -38,9 +38,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.lfssolutions.retialtouch.navigation.NavigationItem
-import com.lfssolutions.retialtouch.navigation.NavigationScreen
-import com.lfssolutions.retialtouch.navigation.Navigator
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.AppIcons.categoryIcon

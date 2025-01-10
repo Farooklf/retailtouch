@@ -25,6 +25,7 @@
     <string name="drawer">درج</string>
     <string name="settings">الإعدادات</string>
     <string name="logout">تسجيل الخروج</string>
+    <string name="exit_app_message">هل تريد الخروج من التطبيق؟</string>
 
     <!--Employee login-->
     <string name="employee_code">رمز الموظف</string>

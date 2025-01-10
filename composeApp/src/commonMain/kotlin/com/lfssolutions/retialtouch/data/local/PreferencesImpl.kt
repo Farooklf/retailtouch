@@ -526,7 +526,7 @@ class PreferencesImpl(
     override fun getRoundOffOption(): Flow<Int> {
         return flowSettings.getIntFlow(
             key = ROUND_OFF_OPTION,
-            defaultValue = 0
+            defaultValue = 1
         )
     }
 

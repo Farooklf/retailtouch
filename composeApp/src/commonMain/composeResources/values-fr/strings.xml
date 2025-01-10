@@ -27,6 +27,7 @@
     <string name="pin">PIN</string>
     <string name="submit">Soumettre</string>
     <string name="logout_from_this_server">Se déconnecter de ce serveur</string>
+    <string name="exit_app_message">Voulez-vous quitter l'application ?</string>
 
     //POS
     <string name="search">Rechercher</string>

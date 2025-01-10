@@ -72,6 +72,16 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     private val _posInvoice = MutableStateFlow(PosInvoice())
     val posInvoice : StateFlow<PosInvoice> = _posInvoice.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            val gridCount=getGridViewCount()
+            val fastPaymentMode=getFastPaymentMode()
+
+            _posUIState.update { state->
+                state.copy(gridColumnCount=gridCount,isFastPayment=fastPaymentMode,)
+            }
+        }
+    }
 
 
     fun initialState(){
@@ -160,7 +170,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
         }
     }
-
 
     fun getPrinterEnable(){
         viewModelScope.launch {
@@ -413,13 +422,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         addSaleItem(stock=stock, qty = qty)
     }
 
-    private fun addToCartItem(stock: Stock) {
+    private suspend fun addToCartItem(stock: Stock) {
         val state=posUIState.value
         val adjustedQty=1.0
 
-        val cartItem = state.cartList.find { (it.stock.inventoryCode==stock.inventoryCode) || (it.stock.barcode==stock.barcode) || (it.stock.productId==stock.productId)}
+        val filteredCartItem = state.cartList.find { (it.stock.inventoryCode==stock.inventoryCode) || (it.stock.barcode==stock.barcode) || (it.stock.productId==stock.productId)}
 
-        val updatedCartList = if(cartItem!=null){
+        val updatedCartList = if(filteredCartItem!=null &&  getIsMergeCartItem()){
             state.cartList.map { element ->
                 if (element.id == stock.id) {
                     element.copy(qty = element.qty + adjustedQty)
@@ -441,6 +450,22 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         updateSaleItem(updatedCartList)
         loadTotal()
         applyDiscountsIfEligible(updatedCartList)
+    }
+
+    private suspend fun cartItemExists(product: Stock): Boolean {
+        val cartItems = posUIState.value.cartList
+        val filteredCartItem = cartItems.firstOrNull { it.stock.productId == product.productId /*&& it.menuPortionId == product.menuPortionId*/ }
+        return if (filteredCartItem != null && getIsMergeCartItem()) {
+            updateItemQty(filteredCartItem,filteredCartItem.qty+1)
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun updateItemQty(item: CRShoppingCartItem, qty: Double) {
+        val oldQty = item.qty
+
     }
 
     private fun addSaleItem(stock: Stock, qty: Double = 1.0)
@@ -1154,7 +1179,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun onProductItemClick(animatedProductCard: AnimatedProductCard) {
         viewModelScope.launch {
             val stock = animatedProductCard.product
-            //println("clicked_menu:$stock")
             addToCartItem(stock=stock)
         }
     }

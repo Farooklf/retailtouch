@@ -135,6 +135,7 @@ data class PosUIState(
     val promotionActive :Boolean=false,
 
     //Payment
+    val isFastPayment: Boolean = false,
     val showPaymentSuccessDialog: Boolean = false,
     var isPaymentScreen: Boolean = false,
     var isError : Boolean = false,

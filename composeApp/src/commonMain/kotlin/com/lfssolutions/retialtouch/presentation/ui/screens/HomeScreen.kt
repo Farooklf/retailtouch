@@ -35,6 +35,8 @@ import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
 import com.lfssolutions.retialtouch.presentation.ui.common.GradientBackgroundScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListGridItems
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionTextFiledDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -42,6 +44,8 @@ import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.lfssolutions.retialtouch.utils.exitApp
+import com.outsidesource.oskitcompose.router.KMPBackHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -52,7 +56,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.clear_scanned_message
+import retailtouch.composeapp.generated.resources.exit_app_message
 import retailtouch.composeapp.generated.resources.home_header
+import retailtouch.composeapp.generated.resources.retail_pos
 
 
 data class HomeScreen(val isSplash: Boolean): Screen{
@@ -74,7 +81,6 @@ fun Home(
     onLogout: @Composable () -> Unit
     )
 {
-
     val navigator = LocalNavigator.currentOrThrow
     val currentTime by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
     val showColon by remember { mutableStateOf(true) }
@@ -83,21 +89,15 @@ fun Home(
     val appState = LocalAppState.current
     val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
 
+    KMPBackHandler(true, onBack = {
+        homeViewModel.updateExitFormDialogState(true)
+    })
+
     LaunchedEffect(Unit){
         println("${homeViewModel.isCallCompleteSync()}")
         syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
     }
 
-    /*DisposableEffect(Unit) {
-        //println("${homeViewModel.isCallCompleteSync()}")
-        // Start the periodic timer
-        //syncViewModel.startPeriodicSync()
-        syncViewModel.reSync(completeSync = true)
-        onDispose {
-            // Stop the timer when the composable is removed from the composition
-            syncViewModel.stopPeriodicSync()
-        }
-    }*/
 
     LaunchedEffect(isFromSplash) {
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
@@ -105,12 +105,6 @@ fun Home(
             homeViewModel.initialiseEmpScreen(isFromSplash)
         }
     }
-
-    /*LaunchedEffect(homeUIState.hasEmployeeLoggedIn) {
-        if (homeUIState.hasEmployeeLoggedIn) {
-            homeViewModel.prepareHomeData()
-        }
-    }*/
 
 
     LaunchedEffect(syncDataState.syncInProgress){
@@ -206,6 +200,22 @@ fun Home(
             )
         }
     }
+
+    ActionDialog(
+        isVisible = homeUIState.showExitConfirmationDialog,
+        dialogTitle = stringResource(Res.string.retail_pos),
+        dialogMessage = stringResource(Res.string.exit_app_message),
+        onDismissRequest = {
+            homeViewModel.updateExitFormDialogState(false)
+        },
+        onCancel = {
+            homeViewModel.updateExitFormDialogState(false)
+        },
+        onConfirm = {
+            homeViewModel.updateExitFormDialogState(false)
+            exitApp() // Calls the platform-specific `exitApp` implementation
+        }
+    )
 
 
 }
