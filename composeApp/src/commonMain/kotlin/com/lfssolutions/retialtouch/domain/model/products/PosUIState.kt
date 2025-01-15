@@ -63,10 +63,11 @@ data class PosUIState(
     val globalDiscountIsInPercent :Boolean=false,
     val globalDiscount: Double = 0.0,
     val quantityTotal: Double = 0.0,
-    val cartTotal: Double = 0.0,
+    val cartSubTotal: Double = 0.0,
     val cartTotalWithoutDiscount: Double = 0.0,
     val cartPromotionDiscount: Double = 0.0,
     var cartItemsDiscount : Double = 0.0,
+    var cartTotalDiscount : Double = 0.0,
     val grandTotal: Double = 0.0,
     val grandTotalWithoutDiscount :Double=0.0,
     val globalTax :Double=0.0,
@@ -79,13 +80,13 @@ data class PosUIState(
     var showDiscountDialog : Boolean = false,
     val stockList : List<Product> = listOf(),
     val dialogStockList : List<Product> = listOf(),
-    var selectedProduct : CRShoppingCartItem = CRShoppingCartItem(),
+    var selectedProduct : CartItem = CartItem(),
     var itemPosition : Int = 0,
     var isRemoveDialog : Boolean = false,
 
 
     val shoppingCart: List<ProductItem> = listOf(),
-    val cartList: MutableList<CRShoppingCartItem> = mutableListOf(),
+    val cartList: MutableList<CartItem> = mutableListOf(),
     var isCallScannedItems : Boolean = false,
 
 

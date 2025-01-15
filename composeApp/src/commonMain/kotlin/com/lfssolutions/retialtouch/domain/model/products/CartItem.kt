@@ -18,29 +18,41 @@ data class CRSaleOnHold(
     var ts : Long = getCurrentDateAndTimeInEpochMilliSeconds(),
     var grandTotal: Double=0.0,
     var member: MemberItem?=null,
-    val items: MutableList<CRShoppingCartItem> = mutableListOf(),
+    val items: MutableList<CartItem> = mutableListOf(),
 )
 
 @Serializable
-data class CRShoppingCartItem(
+data class CartItem(
     val index: Int = 0,
-    val id:Long=0,
     val stock: Stock = Stock(),
+    val id: Long = stock.id,
+    val name: String= stock.name,
+    val categoryId: Int = stock.categoryId,
+    val productId: Long = stock.productId,
+    var price: Double = stock.price,
+    var tax: Double = stock.tax,
+    var qty: Double = 1.0,
+    val inventoryCode: String = stock.inventoryCode,
+    val barcode: String = stock.barcode,
+    val imagePath: String = stock.imagePath,
+    val fgColor: String = stock.fgColor,
+    val bgColor: String = stock.bgColor,
+    val sortOrder: Int = stock.sortOrder,
+    //Promotions
     var promotion: PromotionDetails? = null,
     var promotionName: String? = null,
-    var price: Double = stock.price,
     var oldPrice: Double = 0.0,
     var amount: Double? = 0.0,
-    var qty: Double = 1.0,
     var exchange: Boolean = false,
     var salesTaxInclusive: Boolean = false,
     var promotionActive: Boolean = false,
     var promotionByQuantity: Boolean = false,
     var discountIsInPercent: Boolean = false,
+    var isCombo: Boolean = false,
     var discount: Double = 0.0,
     var promoDiscount: Double = 0.0,
-    var tax: Double = stock.tax,
-    var code: String = stock.barcode
+
+    var currencySymbol: String = "$",
 ){
 
     // Calculate the current price (with promotion if active)
@@ -60,7 +72,7 @@ data class CRShoppingCartItem(
         if (promotionActive) {
             val y = getFinalPrice()
             val discountAmount = (price * qty) - y
-            return discountAmount.roundTo(2)
+            return discountAmount/*.roundTo(2)*/
         } else {
             return if (discountIsInPercent) {
                 ((currentPrice * discount / 100) * qty)
@@ -70,8 +82,6 @@ data class CRShoppingCartItem(
         }
     }
 
-
-    // Get the promo discount if promotion is active
     fun getPromotionDiscount(): Double {
         return if (promotionActive) {
             val discountAmount = (price * qty) - getFinalPrice()
@@ -136,10 +146,10 @@ data class CRShoppingCartItem(
     // Calculate the final price with all conditions applied
      fun getFinalPrice(): Double {
         var amt = if (promotionByQuantity) amount?.times(qty) else currentPrice * qty
-        println("current Amt: $amt")
+        //println("current Amt: $amt")
 
         if (amt != null) {
-            if (amt > 0 || exchange) {
+            if (amt > 0 ) {
                 if (discount > 0) {
                     if (discountIsInPercent) {
                         // Apply percentage discount directly, ensuring discount is valid

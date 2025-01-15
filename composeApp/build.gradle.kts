@@ -51,12 +51,14 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android)
             implementation(libs.kotlinx.coroutines.android)
+            implementation (libs.androidx.constraintlayout)
             implementation (libs.gson)
             //implementation(libs.template)
             implementation(libs.kotlin.mustache)
             implementation(libs.mustache.compiler)
             implementation(project(":escposprinter"))
             implementation(project(":PaymentsLibrary"))
+            implementation (libs.denzcoskun.imageslideshow)
         }
 
         commonMain.dependencies {

@@ -1,3 +1,12 @@
 <resources>
     <string name="android_app_short_name" translatable="false">RetailTouch</string>
+    <string name="powered_by" translatable="false">Powered By</string>
+    <string name="no_product_added" >No Products Added</string>
+    <string name="balance" >Balance</string>
+    <string name="paid" >Paid</string>
+    <string name="sub_total" >Sub Total</string>
+    <string name="discount" >Discount</string>
+    <string name="tax" >Tax</string>
+    <string name="change_due" >Change Due</string>
+    <string name="grand_total" >Grand Total : %1$s</string>
 </resources>

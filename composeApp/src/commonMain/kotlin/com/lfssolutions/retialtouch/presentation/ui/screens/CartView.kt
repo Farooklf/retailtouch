@@ -10,15 +10,22 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -33,17 +40,28 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.CartHeaderImageButton
 import com.lfssolutions.retialtouch.presentation.ui.common.CartListItem
+import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.DiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.MemberListDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import com.lfssolutions.retialtouch.utils.formatPrice
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
+import com.outsidesource.oskitcompose.lib.rememberValRef
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.discount_value
 import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.hold_sale
@@ -54,6 +72,7 @@ import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.price
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
+import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.review_cart
 import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.selected_member
@@ -67,6 +86,26 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
     val state by viewModel.posUIState.collectAsStateWithLifecycle()
     val appState = LocalAppState.current
     val navigator = LocalNavigator.currentOrThrow
+    val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
+
+    LaunchedEffect(state.cartList) {
+        viewModel.recomputeSale()
+       // viewModel.updateSecondDisplay()
+    }
+
+    LaunchedEffect(state) {
+        //viewModel.recomputeSale()
+        viewModel.updateSecondDisplay()
+    }
+
+    LaunchedEffect(state.isError) {
+        if (state.isError) {
+            snackbarHostState.value.showSnackbar(state.errorMsg)
+            delay(1000)
+            viewModel.resetError()
+        }
+    }
 
     val (holdSaleText,icon) = if(state.cartList.isEmpty() && state.salesOnHold.isEmpty()){
         stringResource(Res.string.hold_sale) to AppIcons.pauseIcon
@@ -90,238 +129,348 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
         true
     }
 
-    Column(
+
+    CashierBasicScreen(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(AppTheme.colors.secondaryBg)
-            .padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
-        verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10)
-    ){
-
-        Row(modifier = Modifier
-            .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding15)
+            .systemBarsPadding(),
+        isScrollable = false,
+        contentMaxWidth = Int.MAX_VALUE.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .background(AppTheme.colors.secondaryBg)
+                .padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
+            verticalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding10)
         ){
-
-            Text(
-                text = stringResource(Res.string.review_cart),
-                modifier = Modifier
-                    .weight(1f),
-                style = AppTheme.typography.header().copy(fontSize = 20.sp),
-                color = AppTheme.colors.primaryText
-            )
-
-            CartHeaderImageButton(
-                icon = AppIcons.percentageIcon,
-                isVisible = state.cartList.isNotEmpty(),
-                onClick = {
-                    viewModel.updateDiscountDialog(true)
-                }
-            )
-
-            CartHeaderImageButton(
-                icon = AppIcons.addCustomer,
-                boxColor = AppTheme.colors.appGreen,
-                isVisible = state.cartList.isNotEmpty(),
-                onClick = {
-                    viewModel.updateMemberDialogState(true)
-                }
-            )
-
-            CartHeaderImageButton(
-                icon = AppIcons.removeIcon,
-                boxColor = AppTheme.colors.appRed,
-                isVisible = state.cartList.isNotEmpty(),
-                onClick = {
-                    viewModel.updateClearCartDialogVisibility(state.cartList.isNotEmpty())
-                }
-            )
-        }
-
-        if(appState.isPortrait){
-            Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)) {
-
-                //Top Search Bar
-                SearchableTextWithBg(
-                    value = state.searchQuery,
-                    leadingIcon = AppIcons.searchIcon,
-                    placeholder = stringResource(Res.string.search_items),
-                    label = stringResource(Res.string.search_items),
-                    modifier = Modifier.weight(1f).wrapContentHeight(),
-                    backgroundColor = AppTheme.colors.screenBackground,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            // When done is pressed, open the dialog
-                            viewModel.scanBarcode()
-                        }
-                    ),
-                    onValueChange = {
-                        viewModel.updateSearchQuery(it)
-                    })
-            }
-        }
-        val textStyleHeader= AppTheme.typography.captionBold()
-        val btnStyle= AppTheme.typography.bodyMedium()
-
-        //List UI Header
-        Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding20),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ){
-            //ListCenterText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.weight(.2f))
-            ListCenterText(label = stringResource(Res.string.items).uppercase(), textStyle = textStyleHeader, arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
-            ListCenterText(label = stringResource(Res.string.price).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
-            ListCenterText(label = stringResource(Res.string.qty).uppercase(), textStyle = textStyleHeader,arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
-            ListCenterText(label = stringResource(Res.string.sub_total).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
-        }
-
-        if (state.cartList.isEmpty()) {
-            EmptyCartForm(modifier = Modifier.weight(1f))
-        }else{
-            LazyColumn(modifier = Modifier.weight(1f)){
-                itemsIndexed(state.cartList
-                ){index, product ->
-                    CartListItem(
-                        index = index,
-                        item = product,
-                        isPortrait = true,
-                        horizontalPadding= AppTheme.dimensions.padding10,
-                        verticalPadding= AppTheme.dimensions.padding10,
-                        posViewModel=viewModel
-                    )
-                }
-            }
-        }
-
-        //Bottom fix content
-        Column(modifier = Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)){
-
-            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
-                BottomTex(
-                    label = stringResource(Res.string.qty_value,":"),
-                    textStyle = textStyleHeader,
-                    color = AppTheme.colors.textDarkGrey,
-                    isPortrait = true,
-                    modifier = Modifier.wrapContentWidth()
-                )
-
-                BottomTex(
-                    label = "${state.quantityTotal}",
-                    textStyle = textStyleHeader,
-                    color = AppTheme.colors.textDarkGrey,
-                    modifier = Modifier.wrapContentWidth()
-                )
-            }
-
-
-
-            if(state.globalDiscount>0){
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    BottomTex(
-                        label = stringResource(Res.string.discount_value,":"),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appRed)
-
-                    BottomTex(
-                        label = viewModel.getDiscountValue(), //state.cartItemsDiscount+state.cartPromotionDiscount
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appRed)
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                BottomTex(
-                    label = stringResource(Res.string.tax_value,":"),
-                    textStyle = textStyleHeader,
-                    color = AppTheme.colors.textDarkGrey)
-
-                BottomTex(
-                    label = viewModel.formatPriceForUI(state.globalTax),
-                    textStyle = textStyleHeader,
-                    color = AppTheme.colors.textDarkGrey)
-            }
-
-            if(state.selectedMemberId>0 && state.cartList.isNotEmpty()){
-                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    BottomTex(
-                        label = stringResource(Res.string.selected_member,":"),
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appGreen)
-
-                    BottomTex(
-                        label = state.selectedMember,
-                        textStyle = textStyleHeader,
-                        color = AppTheme.colors.appGreen)
-                }
-            }
-
-            //Total Value
-
-            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding10),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-
-                BottomTex(
-                    label = stringResource(Res.string.total_value,":"),
-                    textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
-                    color = AppTheme.colors.textPrimary
-                )
-
-                BottomTex(
-                    label = viewModel.formatPriceForUI(state.grandTotal),
-                    textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
-                    color = AppTheme.colors.textPrimary)
-            }
 
             Row(modifier = Modifier
-                .wrapContentHeight()
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding15)
+            ){
 
-                //Hold Button
-                AppPrimaryButton(
-                    enabled = holdSaleClickable,
-                    label = holdSaleText,
-                    leftIcon = icon,
-                    backgroundColor = AppTheme.colors.appRed,
-                    disabledBackgroundColor = AppTheme.colors.appRed,
-                    style = btnStyle,
+                Text(
+                    text = stringResource(Res.string.review_cart),
                     modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight(),
-                    onClick = {
-                        if(state.cartList.isNotEmpty())
-                            viewModel.holdCurrentSale()
-                        else if(state.cartList.isEmpty() && state.salesOnHold.isNotEmpty())
-                            viewModel.updateHoldSalePopupState(true)
+                        .weight(1f),
+                    style = AppTheme.typography.header().copy(fontSize = 20.sp),
+                    color = AppTheme.colors.primaryText
+                )
 
+                CartHeaderImageButton(
+                    icon = AppIcons.percentageIcon,
+                    isVisible = state.cartList.isNotEmpty(),
+                    onClick = {
+                        viewModel.updateDiscountDialog(true)
                     }
                 )
 
-
-                //Payment Button
-                AppPrimaryButton(
-                    enabled = state.cartList.isNotEmpty(),
-                    label = stringResource(Res.string.payment),
-                    leftIcon = AppIcons.paymentIcon,
-                    backgroundColor = AppTheme.colors.appGreen,
-                    disabledBackgroundColor = AppTheme.colors.appGreen,
-                    style = btnStyle,
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight(),
+                CartHeaderImageButton(
+                    icon = AppIcons.addCustomer,
+                    boxColor = AppTheme.colors.appGreen,
+                    isVisible = state.cartList.isNotEmpty(),
                     onClick = {
-                        NavigatorActions.navigateToPaymentScreen(navigator)
+                        viewModel.updateMemberDialogState(true)
                     }
                 )
 
+                CartHeaderImageButton(
+                    icon = AppIcons.removeIcon,
+                    boxColor = AppTheme.colors.appRed,
+                    isVisible = state.cartList.isNotEmpty(),
+                    onClick = {
+                        viewModel.updateClearCartDialogVisibility(state.cartList.isNotEmpty())
+                    }
+                )
+            }
+
+            if(appState.isPortrait){
+                Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(AppTheme.dimensions.padding5)) {
+
+                    //Top Search Bar
+                    SearchableTextWithBg(
+                        value = state.searchQuery,
+                        leadingIcon = AppIcons.searchIcon,
+                        placeholder = stringResource(Res.string.search_items),
+                        label = stringResource(Res.string.search_items),
+                        modifier = Modifier.weight(1f).wrapContentHeight(),
+                        backgroundColor = AppTheme.colors.screenBackground,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                // When done is pressed, open the dialog
+                                viewModel.scanBarcode()
+                            }
+                        ),
+                        onValueChange = {
+                            viewModel.updateSearchQuery(it)
+                        })
+                }
+            }
+            val textStyleHeader= AppTheme.typography.captionBold()
+            val btnStyle= AppTheme.typography.bodyMedium()
+
+            //List UI Header
+            Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding20),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ){
+                //ListCenterText(label = stringResource(Res.string.hash), textStyle = textStyleHeader, modifier = Modifier.weight(.2f))
+                ListCenterText(label = stringResource(Res.string.items).uppercase(), textStyle = textStyleHeader, arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
+                ListCenterText(label = stringResource(Res.string.price).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
+                ListCenterText(label = stringResource(Res.string.qty).uppercase(), textStyle = textStyleHeader,arrangement = Arrangement.Start,modifier = Modifier.weight(1f))
+                ListCenterText(label = stringResource(Res.string.sub_total).uppercase(),textStyle = textStyleHeader,arrangement = Arrangement.Start, modifier = Modifier.weight(1f))
+            }
+
+            if (state.cartList.isEmpty()) {
+                EmptyCartForm(modifier = Modifier.weight(1f))
+            }else{
+                LazyColumn(modifier = Modifier.weight(1f)){
+                    itemsIndexed(state.cartList
+                    ){index, product ->
+                        CartListItem(
+                            index = index,
+                            item = product,
+                            isPortrait = true,
+                            horizontalPadding= AppTheme.dimensions.padding10,
+                            verticalPadding= AppTheme.dimensions.padding10,
+                            posViewModel=viewModel
+                        )
+                    }
+                }
+            }
+
+            //Bottom fix content
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)){
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp)) {
+                    BottomTex(
+                        label = stringResource(Res.string.qty_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                        isPortrait = true,
+                        modifier = Modifier.wrapContentWidth()
+                    )
+
+                    BottomTex(
+                        label = "${state.quantityTotal}",
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.wrapContentWidth()
+                    )
+                }
+
+
+
+                if(state.globalDiscount>0.0){
+                    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        BottomTex(
+                            label = stringResource(Res.string.discount_value,":"),
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appRed)
+
+                        BottomTex(
+                            label = viewModel.getDiscountValue()/*viewModel.getDiscountValue()*/, //state.cartItemsDiscount+state.cartPromotionDiscount
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appRed)
+                    }
+                }
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.tax_value,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+
+                    BottomTex(
+                        label =formatPrice(state.globalTax,currencySymbol) /*viewModel.formatPriceForUI(state.globalTax)*/,
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+                }
+
+                if(state.selectedMemberId>0 && state.cartList.isNotEmpty()){
+                    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        BottomTex(
+                            label = stringResource(Res.string.selected_member,":"),
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appGreen)
+
+                        BottomTex(
+                            label = state.selectedMember,
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appGreen)
+                    }
+                }
+
+                //Total Value
+
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(top = AppTheme.dimensions.padding10),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+
+                    BottomTex(
+                        label = stringResource(Res.string.total_value,":"),
+                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
+                        color = AppTheme.colors.textPrimary
+                    )
+
+                    BottomTex(
+                        label =formatPrice(state.grandTotal,currencySymbol) /*viewModel.formatPriceForUI(state.grandTotal)*/,
+                        textStyle = AppTheme.typography.h1Bold().copy(fontSize = 24.sp),
+                        color = AppTheme.colors.textPrimary)
+                }
+
+                Row(modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                    //Hold Button
+                    AppPrimaryButton(
+                        enabled = holdSaleClickable,
+                        label = holdSaleText,
+                        leftIcon = icon,
+                        backgroundColor = AppTheme.colors.appRed,
+                        disabledBackgroundColor = AppTheme.colors.appRed,
+                        style = btnStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            if(state.cartList.isNotEmpty())
+                                viewModel.holdCurrentSale()
+                            else if(state.cartList.isEmpty() && state.salesOnHold.isNotEmpty())
+                                viewModel.updateHoldSalePopupState(true)
+
+                        }
+                    )
+
+
+                    //Payment Button
+                    AppPrimaryButton(
+                        enabled = state.cartList.isNotEmpty(),
+                        label = stringResource(Res.string.payment),
+                        leftIcon = AppIcons.paymentIcon,
+                        backgroundColor = AppTheme.colors.appGreen,
+                        disabledBackgroundColor = AppTheme.colors.appGreen,
+                        style = btnStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            NavigatorActions.navigateToPaymentScreen(navigator)
+                        }
+                    )
+
+                }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState.value,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+
+        )
     }
+
+    StockDialog(
+        isVisible = state.showDialog,
+        interactorRef = rememberValRef(viewModel),
+        onDismiss = {
+            viewModel.updateDialogState(false)
+        },
+        onItemClick = {selectedItem->
+            viewModel.updateDialogState(false)
+            viewModel.clearSearch()
+            viewModel.addSearchProduct(selectedItem)
+        }
+    )
+
+    MemberListDialog(
+        isVisible = state.isMemberDialog,
+        interactorRef = rememberValRef(viewModel),
+        onDismissRequest = {
+            viewModel.updateMemberDialogState(false)
+        })
+
+    //Discount Content
+    DiscountDialog(
+        isVisible = state.showDiscountDialog,
+        promotions=state.promotions,
+        isPortrait=true,
+        onDismiss = {
+            viewModel.updateDiscountDialog(false)
+        },
+        onItemClick = {promotion->
+            viewModel.updateDiscountDialog(false)
+            viewModel.updateDiscount(promotion)
+        }
+    )
+
+    ActionDialog(
+        isVisible = state.isRemoveDialog,
+        dialogTitle = stringResource(Res.string.retail_pos),
+        dialogMessage = stringResource(Res.string.clear_scanned_message),
+        onDismissRequest = {
+            viewModel.updateClearCartDialogVisibility(false)
+        },
+        onCancel = {
+            viewModel.updateClearCartDialogVisibility(false)
+        },
+        onConfirm = {
+            viewModel.removedScannedItem()
+        }
+    )
+
+    //Cart Item Discount Content
+    ItemDiscountDialog(
+        isVisible = state.showItemDiscountDialog,
+        inputValue = state.inputDiscount,
+        inputError = state.inputDiscountError,
+        trailingIcon= viewModel.getDiscountTypeIcon(),
+        isPortrait=true,
+        selectedDiscountType = state.selectedDiscountType,
+        onDismissRequest = {
+            viewModel.dismissDiscountDialog()
+        },
+        onTabClick = {discountType->
+            viewModel.updateDiscountType(discountType)
+        },
+        onDiscountChange = { discount->
+            viewModel.updateDiscountValue(discount)
+        },
+        onApply = {
+            viewModel.onApplyDiscountClick()
+        },
+        onCancel = {
+            viewModel.dismissDiscountDialog()
+        },
+        onNumberPadClick = {symbol->
+            viewModel.onNumberPadClick(symbol)
+        }
+    )
+
+
+    HoldSaleDialog(
+        posState=state,
+        isVisible = state.showHoldSalePopup,
+        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
+        onDismiss = {
+            viewModel.updateHoldSalePopupState(false)
+        },
+        onRemove = { id->
+            viewModel.removeHoldSale(id)
+        },
+        onItemClick = {collection->
+            viewModel.reCallHoldSale(collection)
+            if(state.salesOnHold.isEmpty()){
+                viewModel.updateHoldSalePopupState(false)
+            }
+        }
+    )
 }
 
 @Composable

@@ -105,7 +105,6 @@ fun Payment(
 
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
-
     LaunchedEffect(Unit){
         viewModel.fetchPaymentList()
         viewModel.getEmployee()
@@ -142,7 +141,7 @@ fun Payment(
             val errorTitle=getString(Res.string.error_title)
             snackbarHostState.value.showSnackbar("$errorTitle ${state.errorMsg}")
             delay(1000)
-            viewModel.dismissErrorDialog()
+            viewModel.resetError()
         }
     }
 
@@ -312,7 +311,7 @@ private fun PortraitPaymentScreen(
                 viewModel.updateDeletePaymentModeDialog(true)
                 viewModel.updateSelectedPaymentToDeleteId(id)
             },
-            subTotal = state.cartTotal,
+            subTotal = state.cartSubTotal,
             appliedTax = state.globalTax,
             granTotal = state.grandTotal,
             appliedDiscountTotal = ((state.globalDiscount)),
@@ -382,7 +381,7 @@ fun LandscapePaymentScreen(
                     viewModel.updateDeletePaymentModeDialog(true)
                     viewModel.updateSelectedPaymentToDeleteId(id)
                 },
-                subTotal = state.cartTotal,
+                subTotal = state.cartSubTotal,
                 appliedTax = state.globalTax,
                 granTotal = state.grandTotal,
                 appliedDiscountTotal = ((state.globalDiscount)),

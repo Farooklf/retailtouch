@@ -50,7 +50,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
-import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.products.CartItem
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
@@ -136,7 +136,7 @@ fun Pos(
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
     LaunchedEffect(Unit){
-       posViewModel.initialState()
+       //posViewModel.initialState()
     }
 
     LaunchedEffect(authUser){
@@ -550,7 +550,7 @@ fun Pos(
 @Composable
 fun POSTaxItem(
     index:Int,
-    item: CRShoppingCartItem,
+    item: CartItem,
     isPortrait:Boolean,
     horizontalPadding: Dp,
     verticalPadding:Dp,

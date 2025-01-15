@@ -11,7 +11,7 @@ import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
-import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.products.CartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
@@ -41,6 +41,7 @@ import com.lfssolutions.retialtouch.utils.formatAmountForPrint
 import com.lfssolutions.retialtouch.utils.printer.ItemData
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
+import com.lfssolutions.retialtouch.utils.secondDisplay.SecondaryDisplayServiceProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -84,13 +85,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun initialState(){
-        viewModelScope.launch {
-            _posUIState.update {
-                it.copy(isPaymentClose=false, cartTotal = 0.0)
-            }
-        }
-    }
 
     //Load data from DataBase
     fun loadCategoryAndMenuItems() {
@@ -384,7 +378,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun updateSaleItem(item: MutableList<CRShoppingCartItem>) {
+    private fun updateSaleItem(item: MutableList<CartItem>) {
         viewModelScope.launch {
             item.isEmpty()
             _posUIState.update { it.copy(cartList = item,searchQuery = "") }
@@ -404,22 +398,25 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun addSearchProduct(product: Product){
-        val qty = 1.0
-        val stock= Stock(
-            id = product.id,
-            name = product.name,
-            categoryId = 0,
-            productId = product.id,
-            sortOrder = 0,
-            imagePath = product.image,
-            price = product.price,
-            tax = product.tax,
-            barcode = product.barcode,
-            inventoryCode = product.productCode
-        )
+     fun addSearchProduct(product: Product){
+         viewModelScope.launch {
+             val qty = 1.0
+             val stock= Stock(
+                 id = product.id,
+                 name = product.name,
+                 categoryId = 0,
+                 productId = product.id,
+                 sortOrder = 0,
+                 imagePath = product.image,
+                 price = product.price,
+                 tax = product.tax,
+                 barcode = product.barcode,
+                 inventoryCode = product.productCode
+             )
+             //addSaleItem(stock=stock, qty = qty)
+             addToCartItem(stock)
+         }
 
-        addSaleItem(stock=stock, qty = qty)
     }
 
     private suspend fun addToCartItem(stock: Stock) {
@@ -437,12 +434,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
             }.toMutableList()
         }else{
-            val newCartItem=CRShoppingCartItem(
+            val newCartItem=CartItem(
                 id = stock.id,
                 stock = stock,
                 exchange = state.globalExchangeActivator,
                 qty = adjustedQty,
-                salesTaxInclusive = state.isSalesTaxInclusive
+                salesTaxInclusive = state.isSalesTaxInclusive,
+                currencySymbol = state.currencySymbol,
             )
             mutableListOf(newCartItem).apply { addAll(state.cartList) }
         }
@@ -450,6 +448,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         updateSaleItem(updatedCartList)
         loadTotal()
         applyDiscountsIfEligible(updatedCartList)
+        updateGlobalExchangeActivator(false)
     }
 
     private suspend fun cartItemExists(product: Stock): Boolean {
@@ -463,7 +462,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun updateItemQty(item: CRShoppingCartItem, qty: Double) {
+    private fun updateItemQty(item: CartItem, qty: Double) {
         val oldQty = item.qty
 
     }
@@ -486,11 +485,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         }
                     }.toMutableList()
                 } else {
-                    val newItem = CRShoppingCartItem(
+                    val newItem = CartItem(
                         stock = stock,
                         exchange = globalExchangeActivator,
                         qty = adjustedQty,
-                        salesTaxInclusive = isSalesTaxInclusive
+                        salesTaxInclusive = isSalesTaxInclusive,
+                        currencySymbol = currencySymbol
                     )
                     mutableListOf(newItem).apply { addAll(cartList) }
                 }
@@ -500,7 +500,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun findCartItem(stock: Stock, shoppingCart: List<CRShoppingCartItem>): CRShoppingCartItem? {
+    private fun findCartItem(stock: Stock, shoppingCart: List<CartItem>): CartItem? {
         return shoppingCart.firstOrNull { itm ->
             val sameBarcode = stock.barcode.length > 3 && (itm.stock.barcode == stock.barcode || itm.stock.inventoryCode == stock.barcode)
             itm.stock.id == stock.id || sameBarcode
@@ -548,10 +548,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 _posUIState.update { currentState->
                     currentState.copy(
                         quantityTotal = itemTotalQty,
-                        cartTotal = cartTotal,
+                        cartSubTotal = cartTotal,
                         cartTotalWithoutDiscount = cartWithoutDiscount,
                         cartItemsDiscount = cartItemDiscount,
                         cartPromotionDiscount = cartItemPromotionDiscount,
+                        cartTotalDiscount = getCartTotalDiscount(),
                         grandTotalWithoutDiscount = if(state.isSalesTaxInclusive) cartTotal else (cartTotal + itemTotalTax),
                         invoiceRounding= invoiceRounding,
                         grandTotal = grandTotal,
@@ -565,7 +566,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun calculateCartTotals(){
-        with(_posUIState.value){
+        with(posUIState.value){
             var qty = 0.0
             var total = 0.0
             var taxTotal = 0.0
@@ -614,7 +615,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { currentState->
                 currentState.copy(
                     quantityTotal = qty,
-                    cartTotal = total,
+                    cartSubTotal = total,
                     cartTotalWithoutDiscount = cartWithoutDiscount,
                     cartItemsDiscount = cartItemDiscount,
                     cartPromotionDiscount = cartItemPromotionDiscount,
@@ -639,14 +640,20 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     invoiceRounding= invoiceRounding,
                     grandTotal = grandTotal,
                     globalTax = globalTax,
+                    cartTotalDiscount = getCartTotalDiscount(),
                     remainingBalance = grandTotal
                 )
             }
-
         }
     }
 
-    private fun applyDiscountsIfEligible(cartList: MutableList<CRShoppingCartItem>) {
+    fun updateSecondDisplay(){
+        val state=posUIState.value
+        println("cartItems: ${state.cartList} | cartSubTotal: ${state.cartSubTotal} | cartTotalTax : ${state.globalTax} |cartTotalDiscount : ${state.cartTotalDiscount}")
+        SecondaryDisplayServiceProvider().updateCartItems(cartItems = state.cartList, cartTotal = state.grandTotal, cartSubTotal = state.cartSubTotal, cartTotalTax = state.globalTax, cartTotalDiscount = state.cartTotalDiscount, currencySymbol = state.currencySymbol)
+    }
+
+    private fun applyDiscountsIfEligible(cartList: MutableList<CartItem>) {
         val currentState=posUIState.value
         if (currentState.isDiscountGranted) {
             currentState.promoByPriceBreak.clear()
@@ -684,7 +691,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun applyQuantityPromotion(item: CRShoppingCartItem, promotion: PromotionDetails?) {
+    private fun applyQuantityPromotion(item: CartItem, promotion: PromotionDetails?) {
         with(_posUIState.value){
             val promoId = promotion?.promotionId
             // Check if promoBy quantity contains the promoId
@@ -698,7 +705,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     // Check if the quantity condition meets the promotion requirement
                     if (promoData.qty >= promoData.promoQty){
                         // Find the specific item in the promotion list
-                        val thisItem = promoData.items.firstOrNull { it.code == item.code }
+                        val thisItem = promoData.items.firstOrNull { it.code == item.inventoryCode }
                         val thisItemQty = thisItem?.qty ?: 0.0
                         // Calculate the remaining promotion quantity
                         // Determine how many items can be included in the promotion
@@ -758,7 +765,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun applyPriceBreakPromotion(item: CRShoppingCartItem, promotion: PromotionDetails?) {
+    private fun applyPriceBreakPromotion(item: CartItem, promotion: PromotionDetails?) {
         with(_posUIState.value){
             val promoId = promotion?.promotionId
             if (promoByPriceBreak.containsKey(promoId)){
@@ -780,7 +787,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun tryApplyPromo(promo: PromotionDetails, item: CRShoppingCartItem) {
+    private fun tryApplyPromo(promo: PromotionDetails, item: CartItem) {
         //println("Matched promo")
         when (promo.promotionTypeName) {
             "PromotionByQty" -> tryApplyPromoByQty(promo, item)
@@ -790,7 +797,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun tryApplyPromoByQty(promo: PromotionDetails, item: CRShoppingCartItem){
+    private fun tryApplyPromoByQty(promo: PromotionDetails, item: CartItem){
         item.promotion=promo
         println("PromoTypeDetails: ${item.promotion}")
         val id = item.promotion?.promotionId ?: 0
@@ -814,13 +821,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
                 promoData.percentage = percentage
                 promoData.items.add(CRPromotionByQuantityItem(
-                code= item.code, price=item.price, qty=item.qty, checked = false))
+                code= item.inventoryCode, price=item.price, qty=item.qty, checked = false))
             }
 
         }
     }
 
-    private fun tryApplyPromoByPrice(promo: PromotionDetails, item: CRShoppingCartItem) {
+    private fun tryApplyPromoByPrice(promo: PromotionDetails, item: CartItem) {
         item.promotion = promo
         println("PromoTypeDetails: ${item.promotion}")
         if (promo.qty <= item.qty) {
@@ -836,7 +843,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun tryApplyPromoByPriceBreak(promo: PromotionDetails, item: CRShoppingCartItem){
+    private fun tryApplyPromoByPriceBreak(promo: PromotionDetails, item: CartItem){
         item.promotion = promo
         var quantity = 0.0
         var priceB = 0.0
@@ -939,7 +946,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun calculateDiscount(item: CRShoppingCartItem): String {
+    fun calculateDiscount(item: CartItem): String {
         return when {
             item.discount > 0 -> {
                 if (item.currentDiscount > 0) {
@@ -1086,7 +1093,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         _posUIState.update { it.copy(showCartLoader = value) }
     }
 
-    fun dismissErrorDialog(){
+    fun resetError(){
         viewModelScope.launch {
             _posUIState.update { it.copy(isError = false, errorMsg = "") }
         }
@@ -1228,20 +1235,29 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             //updateGlobalDiscounts(isInPercent = promotion.promotionValueType==1, discount = promotion.amount)
             _posUIState.update { state->
 
-                val finalTotal=if (promotion.promotionValueType==1) {
-                    if (promotion.amount < 100.0) {
-                        state.grandTotal - ((state.grandTotal * promotion.amount) / 100.0)
-                    } else state.grandTotal
+                val (finalTotal,discountAmount)=if (promotion.promotionValueType==1) {
+                    val discountAmount=(state.grandTotal * promotion.amount) / 100
+                     state.grandTotal - discountAmount to discountAmount
                 } else {
-                    max(0.0, state.grandTotal - promotion.amount) // Ensure total doesn't go negative
+                    max(0.0, state.grandTotal - promotion.amount) to promotion.amount
                 }
 
-                state.copy(grandTotal = finalTotal, globalDiscountIsInPercent = promotion.promotionValueType==1, globalDiscount = promotion.amount)
-
+                state.copy(grandTotal = finalTotal, globalDiscountIsInPercent = promotion.promotionValueType==1, globalDiscount = promotion.amount, cartTotalDiscount = discountAmount+state.cartItemsDiscount)
             }
-
-
         }
+    }
+
+    private fun getCartTotalDiscount():Double{
+        val state=posUIState.value
+        val globalDiscountAmount= when(state.globalDiscountIsInPercent){
+            true->{
+                (state.grandTotal * state.globalDiscount) / 100.0
+            }
+            else ->{
+                state.globalDiscount
+            }
+        }
+        return state.cartItemsDiscount+globalDiscountAmount
     }
 
     fun getDiscountValue():String{
@@ -1302,7 +1318,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun onPriceItemClick(selectedItem: CRShoppingCartItem, index: Int) {
+    fun onPriceItemClick(selectedItem: CartItem, index: Int) {
         viewModelScope.launch {
             _posUIState.update { it.copy(showItemDiscountDialog = true, selectedDiscountApplied = DiscountApplied.SUB_ITEMS,itemPosition=index, selectedProduct = selectedItem, inputDiscount = "") }
         }
@@ -1317,7 +1333,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun increaseQty(item: CRShoppingCartItem){
+    fun increaseQty(item: CartItem){
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 val updatedProductList = currentState.cartList.map { element ->
@@ -1333,7 +1349,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun decreaseQty(item: CRShoppingCartItem){
+    fun decreaseQty(item: CartItem){
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 val updatedProductList = currentState.cartList.map { element ->
@@ -1350,7 +1366,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun applyCustomQty(item: CRShoppingCartItem){
+    fun applyCustomQty(item: CartItem){
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 val updatedProductList = currentState.cartList.map { element ->
@@ -1432,7 +1448,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    fun removedListItem(selectedItem: CRShoppingCartItem) {
+    fun removedListItem(selectedItem: CartItem) {
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 val updatedCartList = currentState.cartList.filter { it.stock.id != selectedItem.stock.id }.toMutableList()
@@ -1453,7 +1469,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun removedScannedItem() {
-
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 currentState.copy(cartList = mutableListOf(), selectedMember = "Select Member", holdSaleCollections = hashMapOf(), isRemoveDialog = false)
@@ -1553,11 +1568,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun applyPaymentValue(tenderAmount: Double) {
-        println("tenderAmount: $tenderAmount")
+        //println("tenderAmount: $tenderAmount")
         val state=_posUIState.value
         if(tenderAmount!=0.0){
             //val paymentAmount=state.inputDiscount.toDouble()
-
             val existingPayment = state.createdPayments.find { it.id==state.selectedPayment.id }
 
             // Update the amount of the existing payment
@@ -1587,7 +1601,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 }
 
                 val remaining = ((it.grandTotal - (it.paymentTotal + tenderAmount))).roundTo(2)
-                println("remaining : $remaining")
+                //println("remaining : $remaining")
                 it.copy(
                     paymentTotal = ((it.paymentTotal + tenderAmount)).roundTo(2),
                     remainingBalance = remaining,
@@ -1622,7 +1636,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     private fun updateUnSyncedInvoices(value: Long) {
         _posUIState.update { state -> state.copy(unSyncInvoices = value) }
     }
-
 
 
     private fun createTicketRequest() {
@@ -1704,7 +1717,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceNo = "${location?.code}-C${getCurrentDateTime()}",
                 isRetailWebRequest=true,
                 invoiceDate= getCurrentDate(),
-                invoiceTotal = cartTotal, //before Tax
+                invoiceTotal = cartSubTotal, //before Tax
                 invoiceItemDiscount = itemDiscount,
                 invoiceTotalValue= netCost,
                 invoiceNetDiscountPerc= if(globalDiscountIsInPercent)globalDiscount else 0.0,

@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
-import com.lfssolutions.retialtouch.domain.model.products.CRShoppingCartItem
+import com.lfssolutions.retialtouch.domain.model.products.CartItem
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.presentation.ui.screens.CommonListRow
@@ -362,7 +362,7 @@ fun ProductItemAnimation(
 @Composable
 fun CartListItem(
     index:Int,
-    item: CRShoppingCartItem,
+    item: CartItem,
     isPortrait:Boolean,
     horizontalPadding: Dp,
     verticalPadding: Dp,

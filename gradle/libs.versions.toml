@@ -5,6 +5,8 @@ android-minSdk = "24"
 android-targetSdk = "34"
 androidx-activityCompose = "1.9.2"
 androidx-lifecycle = "2.8.2"
+constraintlayoutVersion = "2.2.0"
+imageslideshowVersion = "0.1.2"
 mustache_compilerVersion = "0.9.5"
 compose-plugin = "1.7.0-alpha02"
 junit = "4.13.2"
@@ -64,6 +66,8 @@ google-play-services = "4.4.1"
 
 [libraries]
 #template = { module = "app.cash.barber:barber", version.ref = "template" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
+denzcoskun-imageslideshow = { module = "com.github.denzcoskun:ImageSlideshow", version.ref = "imageslideshowVersion" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }

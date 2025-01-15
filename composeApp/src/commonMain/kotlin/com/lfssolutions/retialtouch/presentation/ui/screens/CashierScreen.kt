@@ -116,17 +116,6 @@ fun CashierUI(
         viewModel.loadDbData()
     }
 
-    LaunchedEffect(state.cartList) {
-        viewModel.recomputeSale()
-    }
-
-    LaunchedEffect(state.isError) {
-        if (state.isError) {
-            snackbarHostState.value.showSnackbar(state.errorMsg)
-            delay(2000)
-            viewModel.dismissErrorDialog()
-        }
-    }
 
     CartLoader(
         isVisible = state.showCartLoader
@@ -161,7 +150,7 @@ fun CashierUI(
         )
     }
 
-    StockDialog(
+    /*StockDialog(
         isVisible = state.showDialog,
         interactorRef = rememberValRef(viewModel),
         onDismiss = {
@@ -255,7 +244,7 @@ fun CashierUI(
                 viewModel.updateHoldSalePopupState(false)
             }
         }
-    )
+    )*/
 }
 
 @Composable
