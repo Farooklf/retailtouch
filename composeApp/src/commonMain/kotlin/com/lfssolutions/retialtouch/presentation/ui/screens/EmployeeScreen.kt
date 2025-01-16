@@ -1,5 +1,6 @@
 package com.lfssolutions.retialtouch.presentation.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,9 +67,8 @@ fun EmployeeScreen(
     }
 
     ResponsiveBox(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(Color.Transparent),
         isForm = true,
-        bgColor = Color.Transparent
     ){
 
         Column(modifier = Modifier

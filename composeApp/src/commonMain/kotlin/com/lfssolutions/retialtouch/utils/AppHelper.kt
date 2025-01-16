@@ -12,9 +12,11 @@ import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.Module
 import org.koin.core.qualifier.Qualifier
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.amount_error
 import retailtouch.composeapp.generated.resources.cashier
 import retailtouch.composeapp.generated.resources.delivered
 import retailtouch.composeapp.generated.resources.delivery
+import retailtouch.composeapp.generated.resources.desc_error
 import retailtouch.composeapp.generated.resources.drawer
 import retailtouch.composeapp.generated.resources.ic_add
 import retailtouch.composeapp.generated.resources.ic_app_version
@@ -80,6 +82,7 @@ import retailtouch.composeapp.generated.resources.ic_user_add
 import retailtouch.composeapp.generated.resources.ic_wifi
 import retailtouch.composeapp.generated.resources.logout
 import retailtouch.composeapp.generated.resources.members
+import retailtouch.composeapp.generated.resources.pay_to_error
 import retailtouch.composeapp.generated.resources.payout
 import retailtouch.composeapp.generated.resources.pending
 import retailtouch.composeapp.generated.resources.printer
@@ -95,9 +98,12 @@ import retailtouch.composeapp.generated.resources.stock
 import retailtouch.composeapp.generated.resources.sync
 import kotlin.math.pow
 import kotlin.math.round
+import kotlin.random.Random
 
 val JsonObj = Json { encodeDefaults = true }
 // Define the LocalAppState CompositionLocal
+const val chars = "1234567890"
+val random = Random.Default
 
 val LocalAppState = compositionLocalOf<AppState> {
     error("No AppState provided")
@@ -107,6 +113,32 @@ fun String?.capitalizeFirstChar(): String {
     return this?.replaceFirstChar {
         if (it.isLowerCase()) it.titlecase() else it.toString()
     } ?: ""
+}
+
+fun getRandomString(length: Int): String {
+    return (1..length)
+        .map { chars[random.nextInt(chars.length)] }
+        .joinToString("")
+}
+
+fun formatAmountForPrint(amount: Double?) :String{
+    return NumberFormatter().format(amount?:0.0)
+}
+
+fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
+    return  "${currencySymbol}${amount?.roundTo(2)}"
+}
+
+fun formatPrice(amount: Double?,currencySymbol:String) : String {
+    return "${NumberFormatter().format(amount?:0.0)}$currencySymbol"
+}
+
+fun roundTwoDecimalPlaces(amount:Double) :Double{
+    return amount.roundTo(2)
+}
+
+fun roundFourDecimalPlaces(amount:Double) :Double{
+    return amount.roundTo(4)
 }
 
 object AppIcons {
@@ -215,6 +247,10 @@ object AppStrings{
     val delivered = Res.string.delivered
     val self_connected = Res.string.self_connected
     val returned = Res.string.returned
+    val errorAmount by lazy { Res.string.amount_error}
+    val errorDescription by lazy { Res.string.desc_error}
+    val errorPayTo  by lazy { Res.string.pay_to_error}
+
 
 }
 
@@ -288,27 +324,6 @@ object DoubleExtension{
 
 
 
-}
-
-
-fun formatAmountForPrint(amount: Double?) :String{
-    return NumberFormatter().format(amount?:0.0)
-}
-
-fun formatAmountForUI(amount: Double?,currencySymbol: String) :String{
-    return  "${currencySymbol}${amount?.roundTo(2)}"
-}
-
-fun formatPrice(amount: Double?,currencySymbol:String) : String {
-    return "${NumberFormatter().format(amount?:0.0)}$currencySymbol"
-}
-
-fun roundTwoDecimalPlaces(amount:Double) :Double{
-    return amount.roundTo(2)
-}
-
-fun roundFourDecimalPlaces(amount:Double) :Double{
-    return amount.roundTo(4)
 }
 
 expect inline fun <reified T : ViewModel> Module.viewModelDefinition(

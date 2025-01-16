@@ -1,19 +1,17 @@
 package com.lfssolutions.retialtouch.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
-import com.lfssolutions.retialtouch.domain.model.AppState
-import com.lfssolutions.retialtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
-import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_PHONE_MAX_WIDTH
-import com.lfssolutions.retialtouch.utils.AppConstants.SMALL_TABLET_MAX_WIDTH
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lfssolutions.retialtouch.navigation.Route
+import com.lfssolutions.retialtouch.navigation.toVoyagerScreen
 import com.lfssolutions.retialtouch.utils.getScreenWidthHeight
 
 sealed class Language(val isoFormat : String) {
@@ -42,7 +40,7 @@ enum class Orientation {
 }
 
 enum class Device {
-    Tablet, Phone
+    SMALL_TABLET,LARGE_TABLET, PHONE
 }
 
 data class AppShape(
@@ -53,21 +51,45 @@ data class AppShape(
     val dialog: Shape,
 )
 
-private val designAppShape = AppShape(
-    card = RoundedCornerShape(8.dp),
-    cardRound = RoundedCornerShape(100.dp),
-    button = RoundedCornerShape(10.dp),
-    textField = RoundedCornerShape(6.dp),
-    dialog = RoundedCornerShape(10.dp),
-)
 
-val LocalTypography = staticCompositionLocalOf { DesignTypography }
-val LocalDimensions = staticCompositionLocalOf { DesignDimensions() }
+val LocalTypography = staticCompositionLocalOf { ComposeDesignTypography }
+val LocalDimensions = staticCompositionLocalOf { ComposeDesignDimensions() }
 val LocalColors = staticCompositionLocalOf { designColorPaletteBlue() }
 val LocalAppShape = staticCompositionLocalOf { designAppShape() }
 val LocalOrientationMode = staticCompositionLocalOf { Orientation.Portrait }
 val LocalLocalization = staticCompositionLocalOf { Language.English.isoFormat }
-val LocalDeviceType = staticCompositionLocalOf { Device.Phone }
+val LocalDeviceType = staticCompositionLocalOf { Device.PHONE }
+val LocalAppState = staticCompositionLocalOf { false }
+
+data class AppThemeContext(
+    val colors: ComposeDesignColors,
+    val dimensions: ComposeDesignDimensions,
+    val typography: ComposeDesignTypography,
+    val appShape: ComposeDesignShape,
+    val orientation: Orientation,
+    val language: String,
+    val deviceType: Device,
+    val isTablet: Boolean,
+){
+    @Composable
+    fun getAppNavigator():Navigator{
+       return LocalNavigator.currentOrThrow
+    }
+
+    fun navigateBack(navigator: Navigator) {
+        navigator.pop()
+    }
+
+    fun navigateBackToHomeScreen(navigator: Navigator,isSplash: Boolean) {
+        navigator.popUntilRoot() // Clear the back stack
+        navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
+    }
+
+    fun navigateToPayoutScreen(navigator: Navigator) {
+        navigator.push(Route.Payout.toVoyagerScreen())
+    }
+}
+
 
 object AppTheme{
 
@@ -102,13 +124,32 @@ object AppTheme{
         @Composable
         get() = LocalDeviceType.current
 
+
+    val isTablet
+        @Composable
+        get() = LocalAppState.current
+
+    // Add this property
+    val context: AppThemeContext
+        @Composable
+        get() = AppThemeContext(
+            colors = colors,
+            dimensions = dimensions,
+            typography = typography,
+            appShape = appShape,
+            orientation = appOrientation,
+            language = appLanguage,
+            deviceType = deviceType,
+            isTablet = isTablet
+        )
+
 }
 
 @Composable
 fun rememberWindowSizeClass(): WindowSizeClass {
 
     val screenWidthHeight = getScreenWidthHeight()
-    println("screenWidthHeight $screenWidthHeight")
+    //println("screenWidthHeight $screenWidthHeight")
     val width=screenWidthHeight.first
     val height=screenWidthHeight.second
 
@@ -130,8 +171,6 @@ fun rememberWindowSizeClass(): WindowSizeClass {
 
 }
 
-
-
 @Composable
 fun AppTheme(
     windowSizeClass: WindowSizeClass = rememberWindowSizeClass(),
@@ -151,23 +190,10 @@ fun AppTheme(
         else -> Orientation.Portrait
     }
 
-    val deviceType = when(windowSizeClass.width) {
-        is WindowSize.Small -> {
-            Device.Phone
-        }
 
-        is WindowSize.Compact -> {
-            Device.Phone
-        }
+    val deviceType = getDeviceType(windowSizeClass)
 
-        is WindowSize.Large -> {
-            Device.Tablet
-        }
-
-        is WindowSize.Medium -> {
-            Device.Tablet
-        }
-    }
+    val isTablet=Device.PHONE != deviceType
 
     CompositionLocalProvider(
         LocalColors provides colors,
@@ -177,10 +203,19 @@ fun AppTheme(
         LocalOrientationMode provides orientation,
         LocalDeviceType provides deviceType,
         LocalLocalization provides language,
+        LocalAppState provides isTablet
     ) {
         MaterialTheme(
-            typography = DesignTypography.getMaterialTypography(),
+            typography = ComposeDesignTypography.getMaterialTypography(),
             content = content
         )
+    }
+}
+
+fun getDeviceType(windowSizeClass: WindowSizeClass): Device {
+    return when (windowSizeClass.width) {
+        is WindowSize.Small, is WindowSize.Compact -> Device.PHONE
+        is WindowSize.Medium -> Device.SMALL_TABLET
+        is WindowSize.Large -> Device.LARGE_TABLET
     }
 }

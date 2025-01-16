@@ -10,6 +10,10 @@ actual fun changeLang(lang: String) {
     NSUserDefaults.standardUserDefaults.setObject(arrayListOf(lang),"AppleLanguages")
 }
 
+actual fun getDeviceName(): String {
+    return UIDevice.currentDevice.name
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 actual fun getScreenWidthHeight(): Pair<Int, Int> {
@@ -28,4 +32,8 @@ actual fun getScreenWidthHeight(): Pair<Int, Int> {
 
 actual fun exitApp() {
     throw RuntimeException("Exit app requested") // Optional; generally discouraged in production
+}
+
+actual fun getAppName(): String {
+    return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleName") as? String ?: "Unknown"
 }

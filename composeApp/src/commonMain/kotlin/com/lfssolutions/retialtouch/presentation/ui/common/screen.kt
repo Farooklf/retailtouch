@@ -241,11 +241,13 @@ fun BasicScreen(
     statusBarIconColor: SystemBarIconColor = SystemBarIconColor.Light,
     navigationBarColor: Color = Color.Transparent,
     screenBackground: Color = AppTheme.colors.secondaryBg,
+    gradientBg: Brush? = null,
     contentMaxWidth: Dp = AppTheme.dimensions.screenDefaultMaxWidth,
     contentColor: Color = AppTheme.colors.appBarContent,
     contentAlignment: Alignment = Alignment.Center,
     showBackButton: Boolean = true,
     isTablet: Boolean = false,
+    isForm : Boolean = false,
     isScrollable: Boolean = true,
     onBackClick: () -> Unit = { },
     content: @Composable BoxScope.() -> Unit,
@@ -255,7 +257,7 @@ fun BasicScreen(
         navigationBarColor = navigationBarColor,
         statusBarIconColor = statusBarIconColor,
     )
-    var showMenu by remember { mutableStateOf(false) }
+    //var showMenu by remember { mutableStateOf(false) }
 
     val textStyle = if(isTablet)
         AppTheme.typography.titleBold().copy(fontSize = 20.sp)
@@ -296,18 +298,23 @@ fun BasicScreen(
         )
     }) { innerPadding ->
         // screen content.
+            val modifierValue = if (gradientBg != null) {
+                Modifier.weight(1f).widthIn(max = contentMaxWidth).fillMaxWidth().background(gradientBg).padding(innerPadding)
+            }
+            else{
+                Modifier.weight(1f).widthIn(max = contentMaxWidth).fillMaxWidth().background(screenBackground).padding(innerPadding)
+            }
+
             ResponsiveBox(
-                modifier = Modifier
-                    .weight(1f)
-                    .widthIn(max = contentMaxWidth)
-                    .fillMaxWidth()
-                    .padding(innerPadding),
-                bgColor = screenBackground
+                modifier = modifierValue,
+                isForm = isForm
             ){
                 content()
             }
     }
 }
+
+
 
 
 @Composable
@@ -365,6 +372,7 @@ fun TopAppBarContent(
     }
 }
 
+//screenBackground: Brush = AppTheme.colors.screenGradientHorizontalBg,
 
 @Composable
 fun TopAppBarButton(

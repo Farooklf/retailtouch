@@ -104,7 +104,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
 
 
 
-    fun getPendingSales() {
+    private fun getPendingSales() {
         viewModelScope.launch {
             dataBaseRepository.getPosPendingSales().collectLatest { sale ->
                 println("sale:$sale")

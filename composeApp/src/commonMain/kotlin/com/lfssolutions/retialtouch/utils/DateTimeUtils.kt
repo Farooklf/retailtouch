@@ -69,7 +69,7 @@ object DateTimeUtils{
         val currentTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val hours = currentTime.hour.toString().padStart(2, '0')
         val minutes = currentTime.minute.toString().padStart(2, '0')
-        return "$hours $minutes"
+        return "$hours : $minutes"
     }
 
 

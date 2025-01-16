@@ -8,6 +8,7 @@ import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
+import com.lfssolutions.retialtouch.presentation.ui.payout.PayoutViewModel
 import com.lfssolutions.retialtouch.presentation.ui.settings.SettingViewModel
 import com.lfssolutions.retialtouch.utils.viewModelDefinition
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
@@ -16,7 +17,6 @@ import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.LoginViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentCollectorViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PaymentTypeViewModel
-import com.lfssolutions.retialtouch.presentation.viewModels.PayoutViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.PrinterViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.SettlementViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.TransactionViewModel
@@ -93,7 +93,7 @@ fun appModule() = module {
     viewModelDefinition { PaymentTypeViewModel() }
     viewModelDefinition { TransactionViewModel() }
     viewModelDefinition { TransactionDetailsViewModel() }
-    viewModelDefinition { PayoutViewModel() }
     viewModelDefinition { SettlementViewModel() }
     viewModelDefinition { SettingViewModel() }
+    viewModelDefinition { PayoutViewModel() }
 }

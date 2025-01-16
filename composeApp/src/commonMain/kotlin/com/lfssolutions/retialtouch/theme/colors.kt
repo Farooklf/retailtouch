@@ -15,7 +15,7 @@ val APPGradientColor4 = Color(0xFF0e2e3b)
 val TextWhite = Color(0xFFFFFFFF)
 val ProgressPrimary = Color(0xFFED1C24)
 
-interface SystemDesignColors {
+interface ComposeDesignColors {
     val backgroundWindow: Color
     val backgroundDialog: Color
     val backgroundMenu: Color
@@ -84,7 +84,7 @@ interface SystemDesignColors {
 
 }
 
-fun designColorPaletteBlue() : SystemDesignColors = object : SystemDesignColors{
+fun designColorPaletteBlue() : ComposeDesignColors = object : ComposeDesignColors{
     override val primaryColor= Color(0xFF005ce5)
     override val primaryDarkColor= Color(0xFF1954a0)
     override val secondaryColor= Color(0xFFbcdffb)
@@ -183,7 +183,7 @@ fun designColorPaletteBlue() : SystemDesignColors = object : SystemDesignColors{
     )
 }
 
-fun designColorPaletteDark() : SystemDesignColors = object : SystemDesignColors{
+fun designColorPaletteDark() : ComposeDesignColors = object : ComposeDesignColors{
     override val backgroundMenu: Color = BrandGrey
     override val backgroundNavbar: Color = BrandDarkBlue
     override val primaryColor= Color(0xFF005ce5)

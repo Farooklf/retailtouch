@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.payout.CreateExpensesRequest
 import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionRequest
@@ -101,5 +102,8 @@ class NetworkRepository : KoinComponent {
 
     fun createOrUpdatePosSettlement(mRequest: CreateEditPOSSettlementRequest) =
         api.createOrUpdatePosSettlementOutput(mRequest)
+
+    fun createOrUpdatePayoutIn(mRequest: CreateExpensesRequest) =
+        api.createOrUpdatePayoutIn(mRequest)
 
 }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,11 +37,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.lfssolutions.retialtouch.domain.model.AppState
 import com.lfssolutions.retialtouch.domain.model.home.HomeScreenItem
-import com.lfssolutions.retialtouch.domain.model.home.HomeUIState
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.theme.Device
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.LocalAppState
@@ -253,8 +251,9 @@ fun <T> LazyVerticalGridG(
     onClick: (T) -> Unit,
     modifier:Modifier=Modifier.fillMaxSize()
 ) {
-    val appState = LocalAppState.current
-    val gridCell=getGridCell(appState)
+    val appThemeContext = AppTheme.context
+    //val appState = LocalAppState.current
+    val gridCell=getGridCell(appThemeContext.deviceType)
 
 
     LazyVerticalGrid(
@@ -266,7 +265,7 @@ fun <T> LazyVerticalGridG(
 
             LazyVerticalItem(
                  item=item,
-                isTab=appState.isTablet,
+                 isTab=appThemeContext.isTablet,
                  onClick = {
                      onClick(item)
                  }
@@ -342,21 +341,15 @@ fun <T> LazyVerticalItem(item: T,isTab:Boolean, onClick: () -> Unit) {
     }
 }
 
-fun getGridCell(appState: AppState): Int {
-    return when (appState.deviceType) {
-        DeviceType.SMALL_PHONE -> {
+fun getGridCell(deviceType: Device): Int {
+    return when (deviceType) {
+        Device.PHONE -> {
             2
         }
-
-        DeviceType.LARGE_PHONE -> {
-            2
-        }
-
-        DeviceType.SMALL_TABLET -> {
+        Device.SMALL_TABLET -> {
             4
         }
-
-        DeviceType.LARGE_TABLET -> {
+        Device.LARGE_TABLET -> {
             5
         }
     }

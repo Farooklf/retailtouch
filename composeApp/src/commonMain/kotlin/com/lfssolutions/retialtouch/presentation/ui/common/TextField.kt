@@ -47,7 +47,9 @@ import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.ic_error
@@ -267,7 +269,7 @@ fun AppOutlinedTextFieldWithOuterIcon(
     unfocusedColor: Color =AppTheme.colors.appOffWhite,
     label: String? = null,
     placeholder: String? = null,
-    error: String? = null,
+    error: StringResource? = null,
     leadingIcon: DrawableResource,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -276,15 +278,16 @@ fun AppOutlinedTextFieldWithOuterIcon(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
 ) {
+    val appThemeContext=AppTheme.context
     Row (
         modifier = Modifier.wrapContentWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             imageVector = vectorResource(leadingIcon),
-            contentDescription = "employee code",
-            modifier = Modifier.size(30.dp).padding(top = 5.dp),
+            contentDescription = label,
+            modifier = Modifier.size(appThemeContext.dimensions.small24Icon).padding(top = 5.dp),
             colorFilter = ColorFilter.tint(AppTheme.colors.appWhite)
         )
         Column (
@@ -319,7 +322,7 @@ fun AppOutlinedTextFieldWithOuterIcon(
                 singleLine = singleLine,
                 maxLines = maxLines,
                 minLines = minLines,
-                shape = AppTheme.appShape.textField,
+                shape = appThemeContext.appShape.textField,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     textColor = primaryText,
                     focusedBorderColor = focusedColor,
@@ -327,12 +330,13 @@ fun AppOutlinedTextFieldWithOuterIcon(
                     cursorColor = focusedColor,
                     unfocusedLabelColor = unfocusedColor,
                     unfocusedBorderColor = unfocusedColor,
+                    placeholderColor = unfocusedColor
                 )
             )
 
             error?.let {
                 Text(
-                    text = it,
+                    text = stringResource(it),
                     modifier = Modifier.padding(start = 15.dp),
                     style = AppTheme.typography.captionNormal(),
                     color = errorColor

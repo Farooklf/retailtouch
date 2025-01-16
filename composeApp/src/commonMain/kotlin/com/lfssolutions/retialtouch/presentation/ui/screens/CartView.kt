@@ -91,7 +91,6 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
 
     LaunchedEffect(state.cartList) {
         viewModel.recomputeSale()
-       // viewModel.updateSecondDisplay()
     }
 
     LaunchedEffect(state) {

@@ -3,7 +3,7 @@ package com.lfssolutions.retialtouch.theme
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-data class DesignDimensions internal constructor(
+data class ComposeDesignDimensions internal constructor(
 
     val contentMaxWidth: Dp = 1000.dp,
     val contentMaxMidWidth: Dp = 800.dp,
@@ -68,5 +68,6 @@ data class DesignDimensions internal constructor(
     val icon16: Dp = 16.dp,
     val icon70: Dp = 70.dp,
     val icon60: Dp = 60.dp,
+    val _200sdp: Dp = 200.dp,
 
 )

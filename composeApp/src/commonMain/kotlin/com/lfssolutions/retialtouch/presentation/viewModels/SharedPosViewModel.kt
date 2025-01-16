@@ -24,7 +24,6 @@ import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantit
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantityItem
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
-import com.lfssolutions.retialtouch.utils.AppBasicsDetails
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDate
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
@@ -38,6 +37,7 @@ import com.lfssolutions.retialtouch.utils.TemplateType
 import com.lfssolutions.retialtouch.utils.defaultTemplate
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
 import com.lfssolutions.retialtouch.utils.formatAmountForPrint
+import com.lfssolutions.retialtouch.utils.getAppName
 import com.lfssolutions.retialtouch.utils.printer.ItemData
 import com.lfssolutions.retialtouch.utils.printer.PrinterServiceProvider
 import com.lfssolutions.retialtouch.utils.printer.TemplateRenderer
@@ -1713,7 +1713,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 locationId=location?.locationId?:0,
                 locationCode = location?.code?:"",
                 terminalId = location?.locationId?:0,
-                terminalName = AppBasicsDetails().getAppName(),
+                terminalName = getAppName(),
                 invoiceNo = "${location?.code}-C${getCurrentDateTime()}",
                 isRetailWebRequest=true,
                 invoiceDate= getCurrentDate(),

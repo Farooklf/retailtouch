@@ -15,7 +15,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 import org.koin.core.component.KoinComponent
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.employee_code_error
+import retailtouch.composeapp.generated.resources.invalid_employee_error
+import retailtouch.composeapp.generated.resources.invalid_pin_error
+import retailtouch.composeapp.generated.resources.pin_error
 
 class EmployeeViewModel : BaseViewModel(), KoinComponent {
 
@@ -41,17 +47,11 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun updateEmpCodeError(error: String?) {
-        _employeeScreenState.update { it.copy(employeeCodeError = error) }
-    }
-
-    private fun updateEmpPinError(error: String?) {
+    private fun updateEmpPinError(error: StringResource?) {
         viewModelScope.launch {
             _employeeScreenState.update { it.copy(pinError = error) }
         }
     }
-
-
 
     fun onClick() {
         val errors = validateInputs()
@@ -66,15 +66,15 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-    private fun validateInputs(): Map<String, String?> {
-        val errors = mutableMapOf<String, String?>()
+    private fun validateInputs(): Map<String, StringResource?> {
+        val errors = mutableMapOf<String, StringResource?>()
 
         if (_employeeScreenState.value.employeeCode.isBlank()) {
-            errors["empCode"] = "employee code is required"
+            errors["empCode"] = Res.string.employee_code_error
         }
 
         if (_employeeScreenState.value.pin.isBlank()) {
-            errors["empPin"] = "pin is required"
+            errors["empPin"] = Res.string.pin_error
         }
         return errors
     }
@@ -92,10 +92,10 @@ class EmployeeViewModel : BaseViewModel(), KoinComponent {
                     getEmployeeRights()
                     updateEmployeeLogin(true)
                 } else {
-                    updateEmpPinError("PIN is not correct")
+                    updateEmpPinError(Res.string.invalid_pin_error)
                 }
             }else{
-                updateEmpPinError("It seems you are not a valid user")
+                updateEmpPinError(Res.string.invalid_employee_error)
             }
         }
     }

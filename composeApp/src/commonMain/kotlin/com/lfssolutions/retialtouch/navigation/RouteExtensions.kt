@@ -1,12 +1,12 @@
 package com.lfssolutions.retialtouch.navigation
 
 import cafe.adriel.voyager.core.screen.Screen
+import com.lfssolutions.retialtouch.presentation.ui.payout.PayoutScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.CartScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.CashierScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.HomeScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.LoginScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.PaymentTypeScreen
-import com.lfssolutions.retialtouch.presentation.ui.screens.PayoutScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.PrinterScreen
 import com.lfssolutions.retialtouch.presentation.ui.settings.SettingScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.SettlementScreen

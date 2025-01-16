@@ -240,4 +240,19 @@
     <string name="sync_progress">Sync In Progress</string>
     <string name="run_complete_sync">Run Complete Sync</string>
 
+    <!--payout-->
+    <string name="add_expense">Add Expense</string>
+    <string name="pay_to">pay To</string>
+    <string name="amount">Amount</string>
+    <string name="description_place_holder">Enter Description...</string>
+    <string name="amount_place_holder">Enter Amount...</string>
+    <string name="pay_place_holder">Enter Pay To ...</string>
+    <string name="desc_error">Description field is required!</string>
+    <string name="amount_error">Amount field is required!</string>
+    <string name="pay_to_error">Pay To field is required!</string>
+    <string name="employee_code_error">employee code is required!</string>
+    <string name="pin_error">pin is required!</string>
+    <string name="invalid_pin_error">you enter wrong pin</string>
+    <string name="invalid_employee_error">It seems you are not a valid user</string>
+
 </resources>

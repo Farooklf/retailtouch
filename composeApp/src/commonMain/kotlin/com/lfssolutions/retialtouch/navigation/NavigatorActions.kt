@@ -58,9 +58,6 @@ object NavigatorActions {
         navigator.push(Route.TransactionDetails(mSaleRecord).toVoyagerScreen())
     }
 
-    fun navigateToPayoutScreen(navigator: Navigator) {
-        navigator.push(Route.Payout.toVoyagerScreen())
-    }
 
     fun navigateToSettlementScreen(navigator: Navigator) {
         navigator.push(Route.Settlement.toVoyagerScreen())

@@ -25,6 +25,8 @@ import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateRequest
 import com.lfssolutions.retialtouch.domain.model.printer.GetPrintTemplateResult
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
+import com.lfssolutions.retialtouch.domain.model.payout.CreateExpensesRequest
+import com.lfssolutions.retialtouch.domain.model.payout.GetExpensesResult
 import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditRequest
 import com.lfssolutions.retialtouch.domain.model.posInvoices.GetPosInvoiceForEditResult
 import com.lfssolutions.retialtouch.domain.model.productBarCode.ProductBarCodeResponse
@@ -371,6 +373,16 @@ import kotlinx.coroutines.withContext
              requestBody = mBasicApiRequest
          ) { response ->
              handleApiResponse<CreateEditPOSSettlementResult>(response)
+         }
+     }
+
+     override fun createOrUpdatePayoutIn(mBasicApiRequest: CreateExpensesRequest): Flow<RequestState<GetExpensesResult>> {
+         return performApiRequestWithBaseUrl(
+             httpClient=httpClient,
+             apiUrl = ApiRoutes.CREATE_UPDATE_PAYOUTIN,
+             requestBody = mBasicApiRequest
+         ) { response ->
+             handleApiResponse<GetExpensesResult>(response)
          }
      }
  }

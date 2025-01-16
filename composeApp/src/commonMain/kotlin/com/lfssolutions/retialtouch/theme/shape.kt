@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 
-interface SystemDesignShape{
+interface ComposeDesignShape{
     val card: Shape
     val cardRound: Shape
     val button: Shape
@@ -13,7 +13,7 @@ interface SystemDesignShape{
     val dialog: Shape
 }
 
-fun designAppShape() : SystemDesignShape = object : SystemDesignShape{
+fun designAppShape() : ComposeDesignShape = object : ComposeDesignShape{
     override val card: Shape
         get() = RoundedCornerShape(8.dp)
     override val cardRound: Shape

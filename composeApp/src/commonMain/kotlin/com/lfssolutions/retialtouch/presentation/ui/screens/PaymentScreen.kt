@@ -399,8 +399,9 @@ private fun PaymentSelectionView(
     availablePayments: List<PaymentMethod>,
     onPaymentClick: (PaymentMethod) -> Unit = {},
 ) {
-    val appState = LocalAppState.current
-    val gridCount=getGridCell(appState)
+    //val appState = LocalAppState.current
+    val appThemeContext=AppTheme.context
+    val gridCount=getGridCell(appThemeContext.deviceType)
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridCount),
         modifier = modifier

@@ -11,7 +11,7 @@ import retailtouch.composeapp.generated.resources.Rubik_Bold
 import retailtouch.composeapp.generated.resources.Rubik_Medium
 import retailtouch.composeapp.generated.resources.Rubik_Regular
 
-object DesignTypography{
+object ComposeDesignTypography{
 
     @Composable
     fun amountLarge(): TextStyle = TextStyle(

@@ -12,32 +12,34 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import com.lfssolutions.retialtouch.theme.AppTheme
+import com.lfssolutions.retialtouch.theme.Device
 import com.lfssolutions.retialtouch.utils.DeviceType
 import com.lfssolutions.retialtouch.utils.LocalAppState
 
 @Composable
 fun ResponsiveBox(
     modifier:Modifier=Modifier.fillMaxSize(),
-    bgColor:Color=AppTheme.colors.backgroundWindow,
     isForm:Boolean=false,
     content: @Composable BoxScope.() -> Unit
 ){
+
     BoxWithConstraints(
         modifier = modifier
-            .background(bgColor)
     ){
-        val appState = LocalAppState.current
+        val appThemeContext = AppTheme.context
 
-        val boxWidth = when(appState.deviceType){
-            DeviceType.SMALL_PHONE -> maxWidth
-            DeviceType.SMALL_TABLET -> maxWidth/1
-            DeviceType.LARGE_PHONE -> maxWidth/1
-            DeviceType.LARGE_TABLET -> if(isForm)maxWidth/2 else maxWidth/1
+        //val appState = LocalAppState.current
+
+        val boxWidth = when(appThemeContext.deviceType){
+            Device.PHONE -> maxWidth
+            Device.SMALL_TABLET -> maxWidth/1
+            Device.LARGE_TABLET -> if(isForm) maxWidth/2 else maxWidth/1
         }
-        val paddingValues = if (appState.isTablet) {
+        val paddingValues = if (appThemeContext.isTablet) {
             AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
         } else{
             AppTheme.dimensions.padding10 to AppTheme.dimensions.padding10

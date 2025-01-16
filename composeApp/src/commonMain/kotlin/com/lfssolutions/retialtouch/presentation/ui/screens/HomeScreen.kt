@@ -16,12 +16,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -32,31 +30,24 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
+import com.lfssolutions.retialtouch.navigation.NavigatorActions.navigateToSettlementScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.AppScreenPadding
 import com.lfssolutions.retialtouch.presentation.ui.common.GradientBackgroundScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListGridItems
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionTextFiledDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.getGridCell
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.HomeViewModel
 import com.lfssolutions.retialtouch.sync.SyncViewModel
+import com.lfssolutions.retialtouch.utils.DateTimeUtils
 import com.lfssolutions.retialtouch.utils.HomeItemId
-import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.exitApp
 import com.outsidesource.oskitcompose.router.KMPBackHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
-import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.exit_app_message
 import retailtouch.composeapp.generated.resources.home_header
 import retailtouch.composeapp.generated.resources.retail_pos
@@ -81,12 +72,10 @@ fun Home(
     onLogout: @Composable () -> Unit
     )
 {
-    val navigator = LocalNavigator.currentOrThrow
-    val currentTime by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
-    val showColon by remember { mutableStateOf(true) }
-
+    val appThemeContext = AppTheme.context
+    val navigator=appThemeContext.getAppNavigator()
     val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
-    val appState = LocalAppState.current
+    //val appState = LocalAppState.current
     val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
 
     KMPBackHandler(true, onBack = {
@@ -137,15 +126,15 @@ fun Home(
 
 
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed( getGridCell(appState)),
+                            columns = GridCells.Fixed( getGridCell(appThemeContext.deviceType)),
                             modifier = Modifier.fillMaxSize().padding(vertical = AppTheme.dimensions.padding10),
                             horizontalArrangement = Arrangement.Center,
                             verticalArrangement=Arrangement.SpaceEvenly
                             ) {
-                             item(span = { GridItemSpan(getGridCell(appState)) }) {
-                                 CurrentTimeDisplay(currentTime, showColon)
+                             item(span = { GridItemSpan(getGridCell(appThemeContext.deviceType)) }) {
+                                 CurrentTimeDisplay()
                              }
-                             item(span = { GridItemSpan(getGridCell(appState))}) {
+                             item(span = { GridItemSpan(getGridCell(appThemeContext.deviceType))}) {
                                 Text(text = stringResource(Res.string.home_header),
                                     style = AppTheme.typography.titleBold(),
                                     color = AppTheme.colors.appWhite,
@@ -167,7 +156,10 @@ fun Home(
                                         NavigatorActions.navigateToTransactionScreen(navigator)
                                     }
                                     HomeItemId.SETTLEMENT_ID->{
-                                        NavigatorActions.navigateToSettlementScreen(navigator)
+                                       navigateToSettlementScreen(navigator)
+                                    }
+                                    HomeItemId.PAYOUT_ID->{
+                                        appThemeContext.navigateToPayoutScreen(navigator)
                                     }
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
@@ -265,15 +257,14 @@ fun TopSection(modifier : Modifier, user: AuthenticateDao) {
 
 // Get the current time
 @Composable
-fun CurrentTimeDisplay(currentTime: LocalDateTime, showColon: Boolean) {
+fun CurrentTimeDisplay() {
 
-    // Format hours and minutes
-    val hours = currentTime.hour.toString().padStart(2, '0')
-    val minutes = currentTime.minute.toString().padStart(2, '0')
+    val currentTime by remember { mutableStateOf(DateTimeUtils.getCurrentTime()) }
+    //val showColon by remember { mutableStateOf(true) }
 
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Text(
-            text = if (showColon) "$hours : $minutes" else "$hours : $minutes",
+            text = currentTime,
             style = AppTheme.typography.timerHeader()
         )
     }
