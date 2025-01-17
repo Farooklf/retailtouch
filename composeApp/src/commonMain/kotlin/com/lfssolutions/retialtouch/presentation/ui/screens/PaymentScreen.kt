@@ -69,6 +69,7 @@ import com.lfssolutions.retialtouch.utils.payment.PaymentLibTypes
 import com.lfssolutions.retialtouch.utils.payment.PaymentProvider
 import com.outsidesource.oskitcompose.layout.FlexRowLayoutScope.weight
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
+import com.outsidesource.oskitcompose.lib.rememberValRef
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.delay
@@ -177,49 +178,14 @@ fun Payment(
         )
     }
 
-    /*AppLeftSideMenu(
-        syncInProgress = state.isLoading,
-        modifier = Modifier.fillMaxSize(),
-        content = {
-
-            AppScreenPadding(
-                content = { horizontalPadding, verticalPadding ->
-                    Box(modifier = Modifier.fillMaxSize().padding(horizontal = horizontalPadding, vertical = verticalPadding)) {
-
-                        if (!appState.isPortrait) {
-                            LandscapePaymentScreen(
-                                state,
-                                viewModel
-                            )
-                        } else {
-                            PortraitPaymentScreen(
-                                state,
-                                viewModel
-                            )
-                        }
-
-                        AppCircleProgressIndicator(
-                            isVisible=state.isLoading
-                        )
-
-                        SnackbarHost(
-                            hostState = snackbarHostState.value,
-                            modifier = Modifier.align(Alignment.TopCenter)
-                        )
-                    }
-                })
-
-        }
-    )*/
-
     if(state.showPaymentCollectorDialog){
-        println("state_remainingBalance:${state.remainingBalance}")
+        //println("state_remainingBalance:${state.remainingBalance}")
         PaymentCollectorDialog(
             isVisible = state.showPaymentCollectorDialog,
             paymentAmount = state.remainingBalance,
             paymentName = state.availablePayments.find { it.id == state.selectedPaymentTypesId }?.name ?: "Payment Amount",
             onPayClick = {payment->
-                println("dialogAmount:$payment")
+                //println("dialogAmount:$payment")
                 viewModel.updatePaymentCollectorDialogVisibility(false)
                 viewModel.applyPaymentValue(payment)
             },
@@ -240,12 +206,12 @@ fun Payment(
 
     PaymentSuccessDialog(
         isVisible = state.showPaymentSuccessDialog,
+        interactorRef=rememberValRef(viewModel),
         onDismiss = {
             viewModel.updatePaymentSuccessDialog(false)
             viewModel.clearSale()
         },
-
-        appliedPayments =abs(state.paymentTotal),
+        appliedPayments = state.createdPayments.sumOf { it.amount },
         balance = abs(state.remainingBalance),
         onPrinting = {
             viewModel.updatePaymentSuccessDialog(false)
@@ -320,31 +286,6 @@ private fun PortraitPaymentScreen(
             payments = state.createdPayments
         )
 
-        /*AppPrimaryButton(
-            onClick = {
-                viewModel.onPaymentClose()
-            },
-            backgroundColor = AppTheme.colors.primaryColor,
-            rightIcon = AppIcons.addIcon,
-            label = stringResource(Res.string.add_more),
-            isPortrait = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-        )*/
-
-        /*ButtonRowCard(
-            modifier = Modifier.fillMaxWidth().height(AppTheme.dimensions.defaultButtonSize).padding(vertical = 10.dp),
-            label = stringResource(Res.string.add_more),
-            icons = AppIcons.addIcon,
-            iconSize = AppTheme.dimensions.smallIcon,
-            backgroundColor=AppTheme.colors.primaryColor,
-
-            onClick = {
-                viewModel.onPaymentClose()
-            }
-            //innerPaddingValues = PaddingValues(horizontal = AppTheme.dimensions.buttonHorizontalPadding, vertical = AppTheme.dimensions.buttonVerticalPadding),
-        )*/
     }
 }
 
@@ -518,29 +459,6 @@ private fun OrderSummary(
                 textAlign = TextAlign.Center
             )
 
-            /*OrderSummaryRow(
-                label = stringResource(Res.string.subtotal),
-                value = subTotal,
-                textStyle = textStyleHeader,
-                viewModel=viewModel
-            )*/
-            /*if (appliedDiscountTotal >0.0) {
-                OrderSummaryRow(
-                    label = "Discount",
-                    value = appliedDiscountTotal,
-                    primaryText=AppTheme.colors.appRed,
-                    textStyle = textStyleHeader,
-                    viewModel=viewModel
-                )
-            }*/
-
-
-            /*OrderSummaryRow(
-                label = stringResource(Res.string.tax),
-                value = appliedTax,
-                textStyle = textStyleHeader,
-                viewModel=viewModel
-            )*/
 
             OrderSummaryRow(
                 label = stringResource(Res.string.grand_total),
@@ -660,218 +578,7 @@ fun PaymentView(
     }
 }
 
-@Composable
-fun ScreenTopContent(
-    state : PosUIState,
-    viewModel:SharedPosViewModel,
-    appState: AppState,
-    onSelection: (Any) -> Unit,
-    onValueChange: (String) -> Unit,
-    onTenderClick: () -> Unit,
-    onListItemClick: (PaymentMethod) -> Unit,
-    onDeletePaymentClick: (Int) -> Unit = {},
-) {
-    val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
-    val (primaryText, textLabel) = when {
-        state.remainingBalance == 0.0 -> {
-            AppTheme.colors.secondaryText to "Amount Cleared"
-        }
-        state.remainingBalance < state.grandTotal -> {
-            AppTheme.colors.textError to "Remaining"
-        }
-        state.remainingBalance == state.grandTotal -> {
-            AppTheme.colors.textError to "Remaining"
-        }
-        else -> {
-            AppTheme.colors.textError to "Unknown State"
-        }
-    }
-
-
-    AppScreenPadding(
-        content = { horizontalPadding, verticalPadding ->
-            Box(modifier = Modifier.fillMaxSize().padding(horizontal = horizontalPadding, vertical = verticalPadding)) {
-
-                Column(modifier=Modifier
-                    .fillMaxHeight()
-                    .weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
-
-                    /*Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top){
-
-                        AppOutlinedDropDown(
-                            selectedValue = state.selectedDeliveryType.name,
-                            options = state.deliveryTypeList,
-                            label = stringResource(Res.string.type),
-                            labelExtractor = {it.name},
-                            modifier = Modifier.wrapContentHeight().weight(1f),
-                            onValueChangedEvent = {selectedValue ->
-                                onSelection.invoke(selectedValue)
-                            }
-                        )
-
-                        AppOutlinedDropDown(
-                            selectedValue = state.selectedStatusType.name,
-                            options = state.statusTypeList,
-                            label = stringResource(Res.string.status),
-                            labelExtractor = {it.name},
-                            modifier = Modifier.wrapContentHeight().weight(1f),
-                            onValueChangedEvent = {selectedValue ->
-                                onSelection.invoke(selectedValue)
-                            }
-                        )
-                    }
-
-                    Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top){
-
-                        AppOutlinedTextField(
-                            modifier = Modifier
-                                .wrapContentHeight()
-                                .weight(1f),
-                            value = state.remark,
-                            onValueChange = { remark ->
-                                onValueChange(remark)
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType= KeyboardType.Text
-                            ),
-                            label = stringResource(Res.string.remarks),
-                            singleLine = false,
-                            minLines = 2,
-                            focusedBorderColor = AppTheme.colors.primaryColor,
-                            unfocusedBorderColor = AppTheme.colors.primaryColor,
-                            error = null,
-                            enabled = !state.isLoading
-                        )
-
-                        ClickableAppOutlinedTextField(
-                            modifier = Modifier
-                                .wrapContentHeight()
-                                .weight(1f),
-                            value = state.selectedDateTime,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done,
-                                keyboardType= KeyboardType.Text
-                            ),
-                            label = stringResource(Res.string.collection_date_time),
-                            singleLine = true,
-                            error = null,
-                            leadingIcon = AppIcons.calenderIcon,
-                            onClick = {
-                                //open Calender
-                            })
-                    }*/
-
-                    Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp), verticalAlignment = Alignment.Top) {
-
-                        Text(
-                            text = viewModel.formatPriceForUI(state.remainingBalance),
-                            style = AppTheme.typography.amountLarge(),
-                            color = primaryText,
-                            minLines=1,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                        )
-
-
-                        Text(
-                            text = viewModel.formatPriceForUI(state.grandTotal),
-                            style = AppTheme.typography.amountLarge(),
-                            color = AppTheme.colors.primaryText,
-                            minLines=1,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                        )
-                    }
-
-                    Row(modifier=Modifier.fillMaxWidth().wrapContentHeight(), horizontalArrangement = Arrangement.spaceBetweenPadded(5.dp), verticalAlignment = Alignment.Top) {
-
-                        Text(
-                            text = textLabel,
-                            style = AppTheme.typography.titleNormal(),
-                            color = primaryText,
-                            minLines=1,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                        )
-
-                        Text(
-                            text = state.totalLabel,
-                            style = AppTheme.typography.titleNormal(),
-                            color = AppTheme.colors.primaryText,
-                            minLines=1,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-                        )
-                    }
-
-                    if (state.createdPayments.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = AppTheme.dimensions.paddingV)
-                                .horizontalScroll(rememberScrollState()),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ){
-                            /*state.createdPayments.forEach { payment ->
-                                PaymentView(
-                                    onDeleteClick = {
-                                        onDeletePaymentClick.invoke(it)
-                                    },
-                                    payment = payment
-                                )
-                            }*/
-                        }
-                    }
-
-                    LazyVerticalGridG(
-                        modifier = Modifier.weight(1f),
-                        items=state.availablePayments,
-                        onClick = {item->
-                            onListItemClick.invoke(item)
-                        },
-                    )
-
-                    BottomButton(modifier  = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                        appState=appState,
-                        onTenderClick = {
-                            onTenderClick.invoke()
-                        },
-                        onCancelClick = {
-                        },
-                        onScanClick = {
-
-                        }
-                    )
-
-                }
-
-                AppCircleProgressIndicator(
-                    isVisible=state.isLoading
-                )
-
-                SnackbarHost(
-                    hostState = snackbarHostState.value,
-                    modifier = Modifier.align(Alignment.TopCenter)
-
-                )
-            }
-        }
-    )
-}
 
 @Composable
 fun BottomButton(modifier: Modifier, appState: AppState,  onTenderClick: () -> Unit, onCancelClick: () -> Unit, onScanClick: () -> Unit) {

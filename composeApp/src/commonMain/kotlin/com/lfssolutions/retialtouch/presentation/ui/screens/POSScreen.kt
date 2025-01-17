@@ -468,7 +468,6 @@ fun Pos(
         inputValue = posUIState.itemDiscount,
         inputError = posUIState.inputDiscountError,
         trailingIcon= posViewModel.getDiscountTypeIcon(),
-        isPortrait=appState.isPortrait,
         selectedDiscountType = posUIState.selectedDiscountType,
         onDismissRequest = {
             posViewModel.updateItemRemoveDialogState(false)
@@ -1304,6 +1303,9 @@ fun DiscountContent(
                onApply.invoke()
            }, onCancelClick = {
                onCancel.invoke()
+           },
+           onClearDiscountClick = {
+
            }
        )
    }

@@ -1337,33 +1337,33 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun onApplyDiscountClick(){
         viewModelScope.launch {
             with(posUIState.value){
-                if(itemDiscount.isEmpty()){
+                val itemDiscount=if(itemDiscount.isEmpty()) 0.0 else itemDiscount.toDouble()
+                val finalAmountStr = when(selectedDiscountApplied){
+                    DiscountApplied.GLOBAL -> {
+                        updateGlobalDiscounts(getDiscountInPercent(),itemDiscount)
+                        "$itemDiscount${getDiscountSymbol()}"
+                    }
+                    DiscountApplied.SUB_ITEMS -> {
+                        if (itemDiscount < selectedCartItem.price){
+                            // Create a new item with the updated discount
+                            //updateSubItemDiscount()
+                            val updatedItem = selectedCartItem.copy(discount = itemDiscount, discountIsInPercent = getDiscountInPercent())
+                            // Update the shopping cart list with the updated item
+                            cartList[itemPosition] = updatedItem
+                            //updateSaleItem(cartList)
+                            println("updatedItem : $updatedItem")
+                        }
+                        "${itemPosition}-$itemDiscount${getDiscountSymbol()}"
+                    }
+                }
+                recomputeSale()
+                /*if(itemDiscount.isEmpty()){
                     inputDiscountError="Enter input amount"
                 }else{
                     inputDiscountError=null
 
                     val discountValue = itemDiscount.toDouble()
-
-                    val finalAmountStr = when(selectedDiscountApplied){
-                        DiscountApplied.GLOBAL -> {
-                            updateGlobalDiscounts(getDiscountInPercent(),discountValue)
-                            "$discountValue${getDiscountSymbol()}"
-                        }
-                        DiscountApplied.SUB_ITEMS -> {
-                            if (discountValue < selectedCartItem.price){
-                                // Create a new item with the updated discount
-                                //updateSubItemDiscount()
-                                val updatedItem = selectedCartItem.copy(discount = discountValue, discountIsInPercent = getDiscountInPercent())
-                                // Update the shopping cart list with the updated item
-                                cartList[itemPosition] = updatedItem
-                                //updateSaleItem(cartList)
-                                println("updatedItem : $updatedItem")
-                            }
-                            "${itemPosition}-$discountValue${getDiscountSymbol()}"
-                        }
-                    }
-                    recomputeSale()
-                }
+                }*/
             }
         }
     }
@@ -1375,6 +1375,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 val restoredPrice = findCartItem.price + calculateDiscount(findCartItem.discount, findCartItem.discountIsInPercent, findCartItem.price)
                 println("restoredPrice $restoredPrice")
                 val updatedItem = findCartItem.copy(price = restoredPrice, discount = 0.0, discountIsInPercent = false)*/
+                //val findCartItem = state.cartList[state.itemPosition]
+                //val updatedItem=findCartItem.copy(discount = 0.0, discountIsInPercent = false)
+                //state.cartList[state.itemPosition] = updatedItem
                 state.copy(
                     itemDiscount = "",
                     selectedDiscountApplied = DiscountApplied.SUB_ITEMS,
@@ -1382,6 +1385,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     selectedDiscountType=DiscountType.FIXED_AMOUNT
                 )
             }
+            onApplyDiscountClick()
         }
     }
 
@@ -1691,6 +1695,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun callTender(value: Boolean) {
         if (value) {
             createTicketRequest()
+            updatePaymentSuccessDialog(true)
         }
     }
 
@@ -1863,7 +1868,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     isSynced = isSync
                 ))
                 constructReceiptAndPrintTemplate(posInvoice)
-                clearSale()
+                //clearSale()
 
             }catch (ex:Exception){
                 val errorMsg="Error Saving Data \n${ex.message}"

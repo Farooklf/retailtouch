@@ -47,6 +47,7 @@ import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -1287,13 +1288,15 @@ fun DeletePaymentModeDialog(
 @Composable
 fun PaymentSuccessDialog(
     isVisible: Boolean = false,
+    interactorRef: ValRef<SharedPosViewModel>,
     onDismiss: () -> Unit = {},
     onPrinting: () -> Unit = {},
     appliedPayments: Double,
     balance: Double,
 
 ) {
-
+    val viewModel=interactorRef.value
+    val state by viewModel.posUIState.collectAsState()
     /*CustomerDetailsDialog(
         isVisible = state.showEmailReceiptsDialog,
         type = CustomerDetailsDialogType.Email,
@@ -1306,11 +1309,12 @@ fun PaymentSuccessDialog(
         onCancelClick = { viewModel.updatePhoneReceiptsDialogVisibility(false) }
     )*/
 
-    val dialogText = if (balance>0) {
-        "Change :$balance \n\n Out of $appliedPayments"
 
-    }else {
-        "Total :$appliedPayments"
+    val dialogText = if (balance > 0) {
+        "Change :${state.currencySymbol} $balance \n\n Out of $appliedPayments"
+
+    } else {
+        "Total : ${state.currencySymbol} $appliedPayments"
     }
 
     AppDialog(
@@ -1390,12 +1394,12 @@ fun PaymentSuccessDialog(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                DialogButton(
+                /*DialogButton(
                     onClick = {onPrinting.invoke()},
                     modifier = Modifier.weight(1f).height(IntrinsicSize.Max),
                     label = stringResource(Res.string.print_receipts),
                     icon = Res.drawable.ic_printer
-                )
+                )*/
 
                 DialogButton(
                     onClick = {
