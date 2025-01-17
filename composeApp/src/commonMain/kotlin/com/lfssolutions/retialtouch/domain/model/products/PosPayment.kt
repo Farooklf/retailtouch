@@ -17,5 +17,7 @@ data class PosPayment(
     @SerialName("paymentTypeName")
     val paymentTypeName: String? = null,
     @SerialName("posInvoiceId")
-    val posInvoiceId: Int = 0
+    val posInvoiceId: Int = 0,
+
+    val tenderedAmount: Double = 0.0
 )

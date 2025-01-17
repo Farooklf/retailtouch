@@ -33,6 +33,8 @@ import retailtouch.composeapp.generated.resources.amount_label
 import retailtouch.composeapp.generated.resources.amount_placeholder
 import retailtouch.composeapp.generated.resources.apply
 import retailtouch.composeapp.generated.resources.cancel
+import retailtouch.composeapp.generated.resources.clear_discount
+import retailtouch.composeapp.generated.resources.clear_promotions
 import retailtouch.composeapp.generated.resources.payment
 
 @Composable
@@ -40,10 +42,10 @@ fun NumberPad(
     textValue: String = "",
     trailingIcon: DrawableResource? = null,
     inputError: String?=null,
-    isPortrait: Boolean = false,
     onValueChange: (String) -> Unit,
     onNumberPadClick: (String) -> Unit,
     onApplyClick: () -> Unit,
+    onClearDiscountClick: () -> Unit,
     onCancelClick: () -> Unit,
 ){
 
@@ -129,6 +131,19 @@ fun NumberPad(
                     .wrapContentHeight(),
                 onClick = {
                     onApplyClick.invoke()
+                }
+            )
+
+            AppPrimaryButton(
+                label = stringResource(Res.string.clear_discount),
+                leftIcon = AppIcons.removeIcon,
+                backgroundColor = AppTheme.colors.primaryColor,
+                disabledBackgroundColor = AppTheme.colors.primaryColor,
+                modifier = Modifier
+                    .weight(1f)
+                    .wrapContentHeight(),
+                onClick = {
+                    onClearDiscountClick.invoke()
                 }
             )
 

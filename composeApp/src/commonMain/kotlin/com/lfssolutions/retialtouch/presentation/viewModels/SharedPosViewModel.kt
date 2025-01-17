@@ -550,7 +550,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         quantityTotal = itemTotalQty,
                         cartSubTotal = cartTotal,
                         cartTotalWithoutDiscount = cartWithoutDiscount,
-                        cartItemsDiscount = cartItemDiscount,
+                        cartItemTotalDiscounts = cartItemDiscount,
                         cartPromotionDiscount = cartItemPromotionDiscount,
                         cartTotalDiscount = getCartTotalDiscount(),
                         grandTotalWithoutDiscount = if(state.isSalesTaxInclusive) cartTotal else (cartTotal + itemTotalTax),
@@ -617,25 +617,24 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     quantityTotal = qty,
                     cartSubTotal = total,
                     cartTotalWithoutDiscount = cartWithoutDiscount,
-                    cartItemsDiscount = cartItemDiscount,
+                    cartItemTotalDiscounts = cartItemDiscount,
                     cartPromotionDiscount = cartItemPromotionDiscount,
                     grandTotalWithoutDiscount = if(isSalesTaxInclusive) total else (total + taxTotal),
                     promotionDiscount=promoDiscount,
-                    itemTotal=itemTotal,
-                    itemDiscount=itemDiscount
+                    itemTotal=itemTotal
                 )
             }
 
             // Apply global discount logic
-            total = applyGlobalDiscount(total,globalDiscount, globalDiscountIsInPercent)
-            println("total :$total | posInvoiceRounded: $posInvoiceRounded")
+            //total = applyGlobalDiscount(total,globalDiscount, globalDiscountIsInPercent)
+            //println("total :$total | posInvoiceRounded: $posInvoiceRounded")
             val roundingTotal = posRounding(total, posInvoiceRounded)
             val (invoiceRounding, grandTotal) = calculateGrandTotal(
                 total, roundingTotal, taxTotal, isSalesTaxInclusive
             )
             val globalTax = calculateGlobalTax(isSalesTaxInclusive, grandTotal, apiTax)
+            println("total: $total | grandTotal: $grandTotal | globalTax : $globalTax |remainingBalance : $remainingBalance")
             _posUIState.update { currentState->
-                println("total: $total | grandTotal: $grandTotal | globalTax : $globalTax |remainingBalance : $remainingBalance")
                 currentState.copy(
                     invoiceRounding= invoiceRounding,
                     grandTotal = grandTotal,
@@ -649,7 +648,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun updateSecondDisplay(){
         val state=posUIState.value
-        println("cartItems: ${state.cartList} | cartSubTotal: ${state.cartSubTotal} | cartTotalTax : ${state.globalTax} |cartTotalDiscount : ${state.cartTotalDiscount}")
+       /* println("cartItems: ${state.cartList} | cartSubTotal: ${state.cartSubTotal} | cartTotalTax : ${state.globalTax} |cartTotalDiscount : ${state.cartTotalDiscount}")*/
         SecondaryDisplayServiceProvider().updateCartItems(cartItems = state.cartList, cartTotal = state.grandTotal, cartSubTotal = state.cartSubTotal, cartTotalTax = state.globalTax, cartTotalDiscount = state.cartTotalDiscount, currencySymbol = state.currencySymbol)
     }
 
@@ -935,7 +934,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
         }
 
-        return Pair(invoiceRounding, grandTotal)
+        return Pair(invoiceRounding, grandTotal.roundTo(2))
     }
 
     private fun calculateGlobalTax(salesTaxInclusive: Boolean, amount: Double, tax: Double): Double {
@@ -963,57 +962,24 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun onNumberPadClick(symbol: String) {
-        with(_posUIState.value){
+        with(posUIState.value){
             when (symbol) {
-                "." -> if (!inputDiscount.contains('.')) {
-                    updateEnterAmountValue(("$inputDiscount."))
+                "." -> if (!itemDiscount.contains('.')) {
+                    updateEnterAmountValue(("$itemDiscount."))
                 }
-                "x" -> if (inputDiscount.isNotEmpty()) {
-                    val newDiscount = inputDiscount.dropLast(1)
+                "x" -> if (itemDiscount.isNotEmpty()) {
+                    val newDiscount = itemDiscount.dropLast(1)
                     updateEnterAmountValue(newDiscount)
                 }
                 else -> {
-                    val updatedDiscount = (inputDiscount + symbol)
+                    val updatedDiscount = (itemDiscount + symbol)
                     updateEnterAmountValue(updatedDiscount)
                 }
             }
         }
     }
 
-    fun onApplyDiscountClick(){
-        viewModelScope.launch {
-            with(_posUIState.value){
-                if(inputDiscount.isEmpty()){
-                    inputDiscountError="Enter input amount"
-                }else{
-                    inputDiscountError=null
 
-                    val discountValue=inputDiscount.toDouble()
-
-                    val finalAmountStr = when(selectedDiscountApplied){
-                        DiscountApplied.GLOBAL -> {
-                            updateGlobalDiscounts(getDiscountInPercent(),discountValue)
-                            "$discountValue${getDiscountSymbol()}"
-                        }
-                        DiscountApplied.SUB_ITEMS -> {
-                            if (discountValue < selectedProduct.price){
-                                // Create a new item with the updated discount
-                                //updateSubItemDiscount()
-                                val updatedItem = selectedProduct.copy(discount = discountValue, discountIsInPercent = getDiscountInPercent())
-                                // Update the shopping cart list with the updated item
-                                cartList[itemPosition] = updatedItem
-                                //updateSaleItem(cartList)
-                                println("updatedItem : $updatedItem")
-                            }
-                            "${itemPosition}-$discountValue${getDiscountSymbol()}"
-                        }
-                    }
-                    dismissDiscountDialog()
-                    recomputeSale()
-                }
-            }
-        }
-    }
 
     private fun insertPosListItem(item: Product) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -1153,7 +1119,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             val selectedCatProducts = mutableListOf<Stock>()
             _posUIState.update { state ->
                 selectedCatProducts.addAll(state.menuProducts.filter { it.categoryId == categoryId })
-                println("selectedCatProducts:$selectedCatProducts")
                 updateMenuProducts(selectedCatProducts.sortedBy { it.sortOrder })
                 state.copy(
                     selectedCategoryId = categoryId
@@ -1210,41 +1175,63 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
       return  "${_posUIState.value.currencySymbol}${NumberFormatter().format(amount)}"
     }
 
-    fun updateDiscountType(discountType: DiscountType) {
-        viewModelScope.launch {
-            _posUIState.update { it.copy(selectedDiscountType = discountType) }
-        }
-    }
 
-    fun updateDiscountValue(discount: String) {
-        viewModelScope.launch {
-            _posUIState.update { it.copy(inputDiscount = discount) }
-        }
-    }
-    
+
     //Promotion Dialog Code
-
     fun updateDiscountDialog(value:Boolean){
         viewModelScope.launch {
             _posUIState.update { it.copy(showDiscountDialog = value) }
         }
     }
 
-    fun updateDiscount(promotion:Promotion){
+    fun applyPromotionDiscounts(promotion:Promotion) {
         viewModelScope.launch {
-            //updateGlobalDiscounts(isInPercent = promotion.promotionValueType==1, discount = promotion.amount)
-            _posUIState.update { state->
+            _posUIState.update { state ->
+                // Restore grandTotal to the original value by undoing the current discount
+                val previousTotal = state.grandTotal + calculateDiscount(state.globalDiscount, state.globalDiscountIsInPercent, state.grandTotal)
 
-                val (finalTotal,discountAmount)=if (promotion.promotionValueType==1) {
-                    val discountAmount=(state.grandTotal * promotion.amount) / 100
-                     state.grandTotal - discountAmount to discountAmount
-                } else {
-                    max(0.0, state.grandTotal - promotion.amount) to promotion.amount
-                }
-
-                state.copy(grandTotal = finalTotal, globalDiscountIsInPercent = promotion.promotionValueType==1, globalDiscount = promotion.amount, cartTotalDiscount = discountAmount+state.cartItemsDiscount)
+                println("previousGrandTotal $previousTotal")
+                // Calculate the new discount amount
+                val newDiscountAmount = calculateDiscount(promotion.amount, promotion.promotionValueType == 1, previousTotal)
+                println("newDiscountAmount $newDiscountAmount")
+                println("currentGrandTotal ${previousTotal - newDiscountAmount}")
+                // Update the state with the new discount applied
+                state.copy(
+                    globalDiscountIsInPercent = promotion.promotionValueType == 1,
+                    globalDiscount = promotion.amount.roundTo(2),
+                    grandTotal = (previousTotal - newDiscountAmount).roundTo(2),
+                    cartTotalDiscount = state.cartItemTotalDiscounts + newDiscountAmount
+                )
             }
         }
+    }
+
+    fun clearAppliedPromotions(){
+       viewModelScope.launch {
+           _posUIState.update { state->
+               // Restore the grand total by adding back the global discount
+               val restoredGrandTotal = state.grandTotal + calculateDiscount(state.globalDiscount, state.globalDiscountIsInPercent, state.grandTotal)
+               println("restoredGrandTotal $restoredGrandTotal")
+               state.copy(
+                   globalDiscount = 0.0,
+                   globalDiscountIsInPercent = false,
+                   grandTotal = restoredGrandTotal,
+                   cartTotalDiscount = state.cartItemTotalDiscounts // Reset to only item-level discounts
+               )
+           }
+       }
+    }
+
+
+    private fun calculateDiscount(discount: Double, isPercent: Boolean, grandTotal: Double): Double {
+        val newDiscount= if (isPercent) {
+            (grandTotal * discount) / 100.0
+
+        } else {
+            discount
+        }
+        println("discount ${newDiscount.roundTo(2)}")
+        return newDiscount.roundTo(2)
     }
 
     private fun getCartTotalDiscount():Double{
@@ -1257,7 +1244,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 state.globalDiscount
             }
         }
-        return state.cartItemsDiscount+globalDiscountAmount
+        return state.cartItemTotalDiscounts+globalDiscountAmount
     }
 
     fun getDiscountValue():String{
@@ -1273,7 +1260,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun getDiscountInPercent() : Boolean{
-        return when(_posUIState.value.selectedDiscountType){
+        return when(posUIState.value.selectedDiscountType){
             DiscountType.PERCENTAGE ->{
                 true
             }
@@ -1312,26 +1299,93 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 it.copy(
                     showItemDiscountDialog = true,
                     selectedDiscountApplied = DiscountApplied.GLOBAL,
-                    inputDiscount = ""
+                    itemDiscount = ""
                 )
             }
         }
     }
 
-    fun onPriceItemClick(selectedItem: CartItem, index: Int) {
-        viewModelScope.launch {
-            _posUIState.update { it.copy(showItemDiscountDialog = true, selectedDiscountApplied = DiscountApplied.SUB_ITEMS,itemPosition=index, selectedProduct = selectedItem, inputDiscount = "") }
-        }
+    /*-----------Item Discount Dialog----------*/
 
-    }
-
-    fun dismissDiscountDialog() {
+    fun updateItemDiscountDialogState(value:Boolean) {
         viewModelScope.launch {
             _posUIState.update {
-                it.copy(showItemDiscountDialog = false)
+                it.copy(showItemDiscountDialog = value)
             }
         }
     }
+
+    fun updateDiscountType(discountType: DiscountType) {
+        viewModelScope.launch {
+            _posUIState.update { it.copy(selectedDiscountType = discountType) }
+        }
+    }
+
+    fun updateDiscountValue(discount: String) {
+        viewModelScope.launch {
+            _posUIState.update { it.copy(itemDiscount = discount) }
+        }
+    }
+
+    fun onPriceItemClick(selectedItem: CartItem, index: Int) {
+        viewModelScope.launch {
+            updateSelectedItem(selectedItem)
+            _posUIState.update { it.copy(selectedDiscountApplied = DiscountApplied.SUB_ITEMS,itemPosition=index, selectedProduct = selectedItem) }
+        }
+    }
+
+    fun onApplyDiscountClick(){
+        viewModelScope.launch {
+            with(posUIState.value){
+                if(itemDiscount.isEmpty()){
+                    inputDiscountError="Enter input amount"
+                }else{
+                    inputDiscountError=null
+
+                    val discountValue = itemDiscount.toDouble()
+
+                    val finalAmountStr = when(selectedDiscountApplied){
+                        DiscountApplied.GLOBAL -> {
+                            updateGlobalDiscounts(getDiscountInPercent(),discountValue)
+                            "$discountValue${getDiscountSymbol()}"
+                        }
+                        DiscountApplied.SUB_ITEMS -> {
+                            if (discountValue < selectedCartItem.price){
+                                // Create a new item with the updated discount
+                                //updateSubItemDiscount()
+                                val updatedItem = selectedCartItem.copy(discount = discountValue, discountIsInPercent = getDiscountInPercent())
+                                // Update the shopping cart list with the updated item
+                                cartList[itemPosition] = updatedItem
+                                //updateSaleItem(cartList)
+                                println("updatedItem : $updatedItem")
+                            }
+                            "${itemPosition}-$discountValue${getDiscountSymbol()}"
+                        }
+                    }
+                    recomputeSale()
+                }
+            }
+        }
+    }
+
+    fun clearAppliedItemDiscounts(){
+        viewModelScope.launch {
+            _posUIState.update{state->
+               /* val findCartItem = state.cartList[state.itemPosition]
+                val restoredPrice = findCartItem.price + calculateDiscount(findCartItem.discount, findCartItem.discountIsInPercent, findCartItem.price)
+                println("restoredPrice $restoredPrice")
+                val updatedItem = findCartItem.copy(price = restoredPrice, discount = 0.0, discountIsInPercent = false)*/
+                state.copy(
+                    itemDiscount = "",
+                    selectedDiscountApplied = DiscountApplied.SUB_ITEMS,
+                    discountIsInPercent = false,
+                    selectedDiscountType=DiscountType.FIXED_AMOUNT
+                )
+            }
+        }
+    }
+
+    /*-----------QTY-------------*/
 
     fun increaseQty(item: CartItem){
         viewModelScope.launch {
@@ -1371,7 +1425,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { currentState ->
                 val updatedProductList = currentState.cartList.map { element ->
                     if (element.stock.id == item.stock.id){
-                        val newQty = if(currentState.inputDiscount.isNotEmpty())currentState.inputDiscount.toDouble() else element.qty
+                        val newQty = if(currentState.itemDiscount.isNotEmpty())currentState.itemDiscount.toDouble() else element.qty
                         element.copy(qty = newQty)
                     }
                     else element
@@ -1386,7 +1440,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { it.copy(isCreateMemberDialog = value) }
         }
     }
-
 
     fun updateClearCartDialogVisibility(value:Boolean){
         viewModelScope.launch {
@@ -1447,23 +1500,41 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+     /*------Item Remove Action----------*/
 
-    fun removedListItem(selectedItem: CartItem) {
+    fun updateItemRemoveDialogState(value:Boolean){
+        viewModelScope.launch {
+            _posUIState.update { it.copy(showItemRemoveDialog = value) }
+        }
+    }
+
+    fun updateSelectedItem(mCartItem:CartItem){
+        viewModelScope.launch {
+            _posUIState.update { it.copy(selectedCartItem = mCartItem) }
+        }
+    }
+
+    fun removedListItem() {
         viewModelScope.launch {
             _posUIState.update { currentState ->
-                val updatedCartList = currentState.cartList.filter { it.stock.id != selectedItem.stock.id }.toMutableList()
+                // Filter the cart list to exclude the item to be removed
+                val updatedCartList = currentState.cartList.filterNot { item ->
+                    item.productId == currentState.selectedCartItem.productId
+                }.toMutableList()
+                // Update the state with the new list
                 currentState.copy(cartList = updatedCartList)
             }
+
             /*_posUIState.update { currentState ->
                 //dataBaseRepository.removeScannedItemById(selectedItem.id.toLong())
                 //currentState.copy(isCallScannedItems = !currentState.isCallScannedItems)
-                currentState.cartList.map { item->
-                    if(item.id==selectedItem.id){
-                        currentState.cartList.remove(selectedItem)
+                val updatedCartList=currentState.cartList.map { item->
+                    if(item.productId==currentState.selectedCartItem.productId){
+                        currentState.cartList.remove(item)
                     }else
                         item
                 }
-                currentState.copy(cartList = )
+                currentState.copy(cartList =updatedCartList )
             }*/
         }
     }
@@ -1485,9 +1556,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     //Payment
-
     fun updatePaymentStatus(transactionAmount: Double) {
-          println("transactionAmount $transactionAmount")
+        println("transactionAmount $transactionAmount")
         _posUIState.update {
             it.copy(
                 paymentFromLib = true,
@@ -1502,14 +1572,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun onPaymentClicked(item: PaymentMethod ) {
+    fun onPaymentClicked(item: PaymentMethod) {
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 currentState.copy(
                     selectedPaymentTypesId=item.id,
                     selectedPayment = item,
                     startPaymentLib = true
-                    //showPaymentCollectorDialog = true
                 )
             }
         }
@@ -1562,7 +1631,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     }
                 }
 
-                it.copy(inputDiscount = value, inputDiscountError = errorMessage )
+                it.copy(itemDiscount = value, inputDiscountError = errorMessage )
             }
         }
     }
@@ -1670,7 +1739,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private suspend fun executePosPayment(posInvoice: PosInvoice) {
         try {
-            networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collectLatest { apiResponse->
+            networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
                 observeResponseNew(apiResponse,
                     onLoading = {
                         updateLoader(true)
@@ -1718,9 +1787,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 isRetailWebRequest=true,
                 invoiceDate= getCurrentDate(),
                 invoiceTotal = cartSubTotal, //before Tax
-                invoiceItemDiscount = itemDiscount,
+                invoiceItemDiscount = cartItemTotalDiscounts,
                 invoiceTotalValue= netCost,
-                invoiceNetDiscountPerc= if(globalDiscountIsInPercent)globalDiscount else 0.0,
+                invoiceNetDiscountPerc= if(globalDiscountIsInPercent) globalDiscount else 0.0,
                 invoiceNetDiscount= invoiceNetDiscount.roundTo(4),
                 invoiceTotalAmount=netCost,
                 invoiceSubTotal= (netCost - globalTax).roundTo(4),
@@ -1744,7 +1813,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     val total = cart.qty * cart.price
                     val subTotal = total - disc - cart.calculateDiscount()
                     val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotal, cart.tax)
-                    println("cart.qty ${cart.qty}")
+                    //println("cart.qty ${cart.qty}")
                     PosInvoiceDetail(
                         productId = cart.stock.productId,
                         posInvoiceId = 0,

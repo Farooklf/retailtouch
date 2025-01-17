@@ -65,7 +65,6 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CreateMemberDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.DiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.GreyButtonWithElevation
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
@@ -80,6 +79,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.StokesListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PromotionAndDiscountDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -323,7 +323,7 @@ fun Pos(
                         color = AppTheme.colors.appRed)
 
                     BottomTex(
-                        label = posViewModel.formatPriceForUI(posUIState.cartItemsDiscount+posUIState.cartPromotionDiscount),
+                        label = posViewModel.formatPriceForUI(posUIState.cartItemTotalDiscounts+posUIState.cartPromotionDiscount),
                         textStyle = textStyleHeader,
                         color = AppTheme.colors.appRed)
                 }
@@ -446,7 +446,7 @@ fun Pos(
     )
 
     //Discount Content
-    DiscountDialog(
+    PromotionAndDiscountDialog(
         isVisible = posUIState.showDiscountDialog,
         promotions=posUIState.promotions,
         isPortrait=appState.isPortrait,
@@ -455,20 +455,23 @@ fun Pos(
         },
         onItemClick = {promotion->
             posViewModel.updateDiscountDialog(false)
-            posViewModel.updateDiscount(promotion)
+            posViewModel.applyPromotionDiscounts(promotion)
+        },
+        onClearPromotionClick = {
+
         }
     )
 
     //Cart Item Discount Content
     ItemDiscountDialog(
         isVisible = posUIState.showItemDiscountDialog,
-        inputValue = posUIState.inputDiscount,
+        inputValue = posUIState.itemDiscount,
         inputError = posUIState.inputDiscountError,
         trailingIcon= posViewModel.getDiscountTypeIcon(),
         isPortrait=appState.isPortrait,
         selectedDiscountType = posUIState.selectedDiscountType,
         onDismissRequest = {
-            posViewModel.dismissDiscountDialog()
+            posViewModel.updateItemRemoveDialogState(false)
         },
         onTabClick = {discountType->
             posViewModel.updateDiscountType(discountType)
@@ -480,7 +483,7 @@ fun Pos(
             posViewModel.onApplyDiscountClick()
         },
         onCancel = {
-            posViewModel.dismissDiscountDialog()
+            posViewModel.updateItemRemoveDialogState(false)
         },
         onNumberPadClick = {symbol->
             posViewModel.onNumberPadClick(symbol)
@@ -612,7 +615,7 @@ fun POSTaxItem(
                     VectorIcons(icons = AppIcons.cancelIcon,
                         modifier = Modifier.weight(.5f),
                         onClick = {
-                            posViewModel.removedListItem(item)
+                            posViewModel.removedListItem()
                         }
                     )
                 }
@@ -781,7 +784,7 @@ fun POSTaxItem(
                     VectorIcons(icons = AppIcons.cancelIcon,
                         modifier = Modifier.weight(.5f),
                         onClick = {
-                            posViewModel.removedListItem(item)
+                            posViewModel.removedListItem()
                         }
                     )
 
@@ -889,7 +892,7 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
                     )
 
                     BottomTex(
-                        label = posViewModel.formatPriceForUI(posUIState.cartItemsDiscount),
+                        label = posViewModel.formatPriceForUI(posUIState.cartItemTotalDiscounts),
                         textStyle = AppTheme.typography.titleMedium().copy(fontSize = 20.sp)
                     )
                 }

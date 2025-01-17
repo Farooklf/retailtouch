@@ -76,6 +76,7 @@ import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
+import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCloseButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogTextField
@@ -120,6 +121,7 @@ import retailtouch.composeapp.generated.resources.app_logo
 import retailtouch.composeapp.generated.resources.barcode
 import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.choose_printer_template
+import retailtouch.composeapp.generated.resources.clear_promotions
 import retailtouch.composeapp.generated.resources.close
 import retailtouch.composeapp.generated.resources.confirm
 import retailtouch.composeapp.generated.resources.date
@@ -1046,13 +1048,13 @@ fun ItemDiscountDialog(
     inputError:String?,
     contentMaxWidth: Dp = AppTheme.dimensions.contentMaxSmallWidth,
     isFullScreen: Boolean = false,
-    isPortrait: Boolean = false,
     trailingIcon:DrawableResource?=null,
     selectedDiscountType : DiscountType=DiscountType.FIXED_AMOUNT,
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: () -> Unit={},
     onTabClick: (DiscountType) -> Unit={},
     onApply: () -> Unit={},
+    onClearDiscountClick: () -> Unit={},
     onCancel: () -> Unit={},
     onDiscountChange: (discount: String) -> Unit={},
     onNumberPadClick: (symbol: String) -> Unit={},
@@ -1088,7 +1090,6 @@ fun ItemDiscountDialog(
 
             NumberPad(
                 textValue=inputValue,
-                isPortrait=isPortrait,
                 onValueChange = {discount->
                     onDiscountChange.invoke(discount)
                 },
@@ -1100,6 +1101,9 @@ fun ItemDiscountDialog(
                     onApply.invoke()
                 }, onCancelClick = {
                     onCancel.invoke()
+                },
+                onClearDiscountClick = {
+                    onClearDiscountClick.invoke()
                 }
             )
         }
@@ -1107,16 +1111,17 @@ fun ItemDiscountDialog(
 }
 
 @Composable
-fun DiscountDialog(
+fun PromotionAndDiscountDialog(
     isVisible: Boolean,
     isPortrait: Boolean=true,
     promotions : MutableList<Promotion>,
     modifier: Modifier = Modifier.wrapContentHeight().wrapContentWidth(),
-    contentMaxWidth: Dp = 600.dp,
+    contentMaxWidth: Dp = AppTheme.dimensions.contentMaxSmallWidth,
     isFullScreen: Boolean = false,
     properties: DialogProperties = DialogProperties(dismissOnBackPress = true,dismissOnClickOutside = false,usePlatformDefaultWidth = false),
     onDismiss: () -> Unit,
     onItemClick: (Promotion) -> Unit,
+    onClearPromotionClick: () -> Unit,
 ){
     val (vertPadding,horPadding)=if(isPortrait)
         AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
@@ -1136,44 +1141,76 @@ fun DiscountDialog(
         contentMaxWidth = contentMaxWidth,
         isFullScreen = isFullScreen,
     ){
-       LazyColumn(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding10)){
-           item{
-               Column(modifier=Modifier.fillMaxWidth().wrapContentHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                   VectorIcons(icons = AppIcons.cancelIcon,
-                       modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                       iconSize = AppTheme.dimensions.smallIcon,
-                       iconColor=AppTheme.colors.appRed,
-                       onClick = {
-                       onDismiss.invoke()
-                   })
+        Column(modifier=Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            VectorIcons(icons = AppIcons.cancelIcon,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                iconSize = AppTheme.dimensions.smallIcon,
+                iconColor=AppTheme.colors.appRed,
+                onClick = {
+                    onDismiss.invoke()
+                })
 
-                   Icon(
-                       imageVector = vectorResource(AppIcons.promotionIcon),
-                       contentDescription = "Discount",
-                       tint = AppTheme.colors.appRed,
-                       modifier = Modifier.width(AppTheme.dimensions.mediumIcon)
-                   )
+            Icon(
+                imageVector = vectorResource(AppIcons.promotionIcon),
+                contentDescription = "Discounts",
+                tint = AppTheme.colors.appRed,
+                modifier = Modifier.width(AppTheme.dimensions.mediumIcon)
+            )
 
-                   Text(
-                       text = stringResource(Res.string.promotion_discounts),
-                       color = AppTheme.colors.textBlack,
-                       style = textStyleHeader
-                   )
-               } }
-           val filteredPromotion = promotions.filter { it.promotionType ==3 }.toMutableList()
-           itemsIndexed(filteredPromotion
-           ){index, promotion ->
+            Text(
+                text = stringResource(Res.string.promotion_discounts),
+                color = AppTheme.colors.textBlack,
+                style = textStyleHeader
+            )
 
-               PromotionListItem(
-                   index = index,
-                   item = promotion,
-                   isPortrait = isPortrait,
-                   horizontalPadding=horPadding,
-                   verticalPadding=vertPadding,
-                   onClick = {onItemClick.invoke(promotion)}
-               )
-           }
-       }
+            /*Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ){
+
+                filteredPromotion.forEachIndexed { index, promotion ->
+                    PromotionListItem(
+                        index = index,
+                        item = promotion,
+                        isPortrait = isPortrait,
+                        horizontalPadding=horPadding,
+                        verticalPadding=vertPadding,
+                        onClick = {onItemClick.invoke(promotion)}
+                    )
+                }
+            }*/
+            LazyColumn(modifier =Modifier.fillMaxWidth().wrapContentHeight().padding(AppTheme.dimensions.padding5)){
+                val filteredPromotion = promotions.filter { it.promotionType ==3 }.toMutableList()
+                itemsIndexed(filteredPromotion){index, promotion ->
+                    PromotionListItem(
+                        index = index,
+                        item = promotion,
+                        isPortrait = isPortrait,
+                        horizontalPadding=horPadding,
+                        verticalPadding=vertPadding,
+                        onClick = {onItemClick.invoke(promotion)}
+                    )
+                }
+            }
+            AppPrimaryButton(
+                enabled = promotions.isNotEmpty(),
+                label = stringResource(Res.string.clear_promotions),
+                leftIcon = AppIcons.removeIcon,
+                backgroundColor = AppTheme.colors.appRed,
+                disabledBackgroundColor = AppTheme.colors.appRed,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(AppTheme.dimensions.padding10),
+                onClick = {
+                    onClearPromotionClick.invoke()
+                }
+            )
+
+        }
+
     }
 }
 
@@ -1193,7 +1230,7 @@ fun PromotionListItem(
         AppTheme.typography.titleMedium()
 
     AppBaseCard(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = horizontalPadding, vertical = verticalPadding).clickable{onClick.invoke()},
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = verticalPadding).clickable{onClick.invoke()},
             horizontalArrangement = Arrangement.spaceBetweenPadded(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${index+1}. ${item.name.uppercase()}",

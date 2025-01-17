@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import coil3.load
 import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
@@ -43,17 +44,17 @@ class WelcomePresentationDisplay(
     }
 
     private fun displayDefaultImage() {
-        findViewById<LinearLayout>(R.id.display_layout).visibility = View.VISIBLE
+        findViewById<ConstraintLayout>(R.id.display_layout).visibility = View.VISIBLE
         findViewById<LinearLayout>(R.id.product_view).visibility = View.GONE
         val imageView = findViewById<ImageView>(R.id.online_image_iv)
-        val relativeView = findViewById<RelativeLayout>(R.id.default_image_layout)
+        val imageLayout = findViewById<ConstraintLayout>(R.id.default_image_layout)
 
         if (defaultImageUrl.isBlank()) {
             imageView.visibility = View.GONE
-            relativeView.visibility = View.VISIBLE
+            imageLayout.visibility = View.VISIBLE
         } else {
             imageView.visibility = View.VISIBLE
-            relativeView.visibility = View.GONE
+            imageLayout.visibility = View.GONE
             imageView.load(defaultImageUrl)
         }
     }
@@ -68,9 +69,9 @@ class WelcomePresentationDisplay(
     )
     {
         if (currentCarts.isNotEmpty()) {
-            findViewById<LinearLayout>(R.id.cart_display_layout).visibility = View.VISIBLE
-            findViewById<LinearLayout>(R.id.display_layout).visibility = View.GONE
-            findViewById<RelativeLayout>(R.id.change_layout).visibility = View.GONE
+            findViewById<ConstraintLayout>(R.id.cart_display_layout).visibility = View.VISIBLE
+            findViewById<ConstraintLayout>(R.id.display_layout).visibility = View.GONE
+            findViewById<ConstraintLayout>(R.id.change_layout).visibility = View.GONE
             findViewById<LinearLayout>(R.id.product_view).visibility = View.VISIBLE
             val imageSlider = findViewById<ImageSlider>(R.id.image_slider)
             val array = currentCarts.reversedArray()

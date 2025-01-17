@@ -107,7 +107,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
     private fun getPendingSales() {
         viewModelScope.launch {
             dataBaseRepository.getPosPendingSales().collectLatest { sale ->
-                println("sale:$sale")
+                //println("sale:$sale")
                 _settlementState.update { it.copy(pendingSales = sale) }
             }
         }

@@ -55,20 +55,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCartButton
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CartLoader
 import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.CategoryListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.CustomSwitch
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.DiscountDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductItemAnimation
 import com.lfssolutions.retialtouch.presentation.ui.common.ProductListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.fillScreenHeight
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -77,16 +71,13 @@ import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.lib.rememberValRef
 import com.outsidesource.oskitcompose.router.KMPBackHandler
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
-import retailtouch.composeapp.generated.resources.clear_scanned_message
 import retailtouch.composeapp.generated.resources.ic_grid
 import retailtouch.composeapp.generated.resources.ic_list
-import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.rtl
 import retailtouch.composeapp.generated.resources.search_items
 

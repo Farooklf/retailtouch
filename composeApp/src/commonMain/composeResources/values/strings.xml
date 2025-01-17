@@ -74,7 +74,8 @@
     <string name="name">Member Name</string>
     <string name="yes">Yes</string>
     <string name="dialog_message">Do you want to %1$s?</string>
-    <string name="clear_scanned_message">Do you want to clear the scanned items</string>
+    <string name="clear_scanned_message">Do you want to clear the scanned items?</string>
+
 
     //payment
     <string name="delivery">Delivery</string>
@@ -254,5 +255,7 @@
     <string name="pin_error">pin is required!</string>
     <string name="invalid_pin_error">you enter wrong pin</string>
     <string name="invalid_employee_error">It seems you are not a valid user</string>
-
+    <string name="clear_promotions">Clear Promotions</string>
+    <string name="clear_discount">Clear Discount</string>
+    <string name="clear_item_message">Do you really want to clear the this items?</string>
 </resources>

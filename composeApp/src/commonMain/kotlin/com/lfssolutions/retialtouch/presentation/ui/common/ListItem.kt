@@ -291,7 +291,6 @@ private fun ListProductItem(
             }
         }
     }
-
 }
 
 @Composable
@@ -429,7 +428,8 @@ fun CartListItem(
                 VectorIcons(icons = AppIcons.cancelIcon,
                     modifier = Modifier.wrapContentWidth(),
                     onClick = {
-                        posViewModel.removedListItem(item)
+                        posViewModel.updateItemRemoveDialogState(true)
+                        posViewModel.updateSelectedItem(item)
                     }
                 )
             }
@@ -444,12 +444,18 @@ fun CartListItem(
                         contentColor = textColor,
                         buttonBgdColor = buttonBgColor,
                         textStyle =textStyle,
-                        onClick = {posViewModel.onPriceItemClick(item,index)}
+                        onClick = {
+                            posViewModel.updateItemDiscountDialogState(true)
+                            posViewModel.onPriceItemClick(item,index)
+                        }
                     )
                 }
 
                 //Qty
-                Row(modifier = Modifier.weight(1f),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)){
+                Row(modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(1.dp)
+                ){
                     QtyItemText(
                         label = "${item.qty}",
                         textStyle = textStyle,

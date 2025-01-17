@@ -25,7 +25,7 @@ data class PosUIState(
     var isAppliedDiscountOnTotal : Boolean = false,
     val loginUser: LoginResponse = LoginResponse(),
     var currencySymbol : String = "$",
-    var inputDiscount : String = "",
+    var itemDiscount : String = "",
     var inputDiscountError : String? =null,
     var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
     var selectedDiscountApplied : DiscountApplied = DiscountApplied.GLOBAL,
@@ -66,16 +66,18 @@ data class PosUIState(
     val cartSubTotal: Double = 0.0,
     val cartTotalWithoutDiscount: Double = 0.0,
     val cartPromotionDiscount: Double = 0.0,
-    var cartItemsDiscount : Double = 0.0,
+    var cartItemTotalDiscounts : Double = 0.0,
     var cartTotalDiscount : Double = 0.0,
     val grandTotal: Double = 0.0,
     val grandTotalWithoutDiscount :Double=0.0,
     val globalTax :Double=0.0,
     val itemTotal :Double=0.0,
-    val itemDiscount :Double=0.0,
     val discountIsInPercent :Boolean=false,
     val promoDiscount :Double?=0.0,
 
+    val shoppingCart: List<ProductItem> = listOf(),
+    val cartList: MutableList<CartItem> = mutableListOf(),
+    var selectedCartItem : CartItem = CartItem(),
     //Dialog
     var showDiscountDialog : Boolean = false,
     val stockList : List<Product> = listOf(),
@@ -83,16 +85,11 @@ data class PosUIState(
     var selectedProduct : CartItem = CartItem(),
     var itemPosition : Int = 0,
     var isRemoveDialog : Boolean = false,
-
-
-    val shoppingCart: List<ProductItem> = listOf(),
-    val cartList: MutableList<CartItem> = mutableListOf(),
     var isCallScannedItems : Boolean = false,
-
-
-
     var discounts: Double = 0.0,
     val originalTotal: Double = 0.0,
+    var showItemRemoveDialog : Boolean = false,
+
 
     //Hold
     var isHoldSaleDialog : Boolean = false,
