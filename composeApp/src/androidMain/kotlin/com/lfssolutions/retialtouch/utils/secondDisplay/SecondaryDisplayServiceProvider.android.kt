@@ -4,7 +4,7 @@ import com.lfssolutions.retialtouch.ShareDisplayObject
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
 
 actual class SecondaryDisplayServiceProvider actual constructor() {
-    val secondaryDisplay = ShareDisplayObject.secondaryDisplayInstance
+    private val secondaryDisplay = ShareDisplayObject.secondaryDisplayInstance
 
     actual fun updateDefaultImage(imageUrl: String) {
         secondaryDisplay?.updateDefaultImageUrl(imageUrl)
@@ -18,7 +18,7 @@ actual class SecondaryDisplayServiceProvider actual constructor() {
         cartTotalDiscount: Double,
         currencySymbol: String
     ){
-        secondaryDisplay?.checkAndUpdateCartDetails(cartItems.toTypedArray(),cartTotal,cartSubTotal,cartTotalTax,cartTotalDiscount,currencySymbol)
+        secondaryDisplay?.checkAndUpdateCartDetails(cartItems,cartTotal,cartSubTotal,cartTotalTax,cartTotalDiscount,currencySymbol)
      }
 
 }

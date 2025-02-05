@@ -62,6 +62,7 @@ coil3 = "3.0.0-alpha06"
 firebase-bom = "32.7.4"
 firebase-crashlytics-plugin = "2.9.9"
 google-play-services = "4.4.1"
+recyclerview = "1.4.0"
 
 
 [libraries]
@@ -85,6 +86,7 @@ mustache-compiler= { module = "com.github.spullara.mustache.java:compiler", vers
 kotlin-mustache = { module = "net.pwall.mustache:kotlin-mustache", version.ref = "kotlinMustache" }
 oskit-compose = { module = "com.outsidesource:oskit-compose", version.ref = "oskitCompose" }
 oskit-kmp = { module = "com.outsidesource:oskit-kmp", version.ref = "oskitKmp" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 
 #DI Koin
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }

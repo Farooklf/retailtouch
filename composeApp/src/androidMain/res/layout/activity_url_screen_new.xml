@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/display_layout"
@@ -84,18 +84,22 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
+                android:paddingStart="@dimen/_5dp"
+                android:paddingEnd="@dimen/_5dp"
                 app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:textColor="@color/primary_color"
+                    android:textStyle="bold|italic"
+                    style="@style/TextAppearance.AppCompat.Subhead"
                     android:text="@string/powered_by" />
 
                 <ImageView
-                    android:layout_width="@dimen/_100dp"
-                    android:layout_height="@dimen/_100dp"
-                    android:layout_marginStart="@dimen/_10dp"
+                    android:layout_width="@dimen/_60dp"
+                    android:layout_height="@dimen/_60dp"
+                    android:layout_marginStart="@dimen/_2dp"
                     android:src="@drawable/app_logo" />
             </LinearLayout>
 
@@ -104,11 +108,13 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cart_right_view"
             android:layout_width="@dimen/_0sdp"
-            android:layout_height="match_parent"
+            android:layout_height="@dimen/_0sdp"
             android:background="@color/white_color"
             app:layout_constraintHorizontal_weight="0.6"
             app:layout_constraintStart_toEndOf="@+id/cart_left_view"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <LinearLayout
                 android:id="@+id/empty_screen_layout"
@@ -118,7 +124,8 @@
                 android:layout_centerVertical="true"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:visibility="gone">
+                android:visibility="gone"
+                >
 
                 <ImageView
                     android:layout_width="200dp"
@@ -141,23 +148,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <LinearLayout
-                    android:id="@+id/order_holder_layout"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/cartItemRv"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_0sdp"
-                    android:orientation="vertical"
-                    android:background="@color/white_color"
-                    android:layout_marginTop="@dimen/_5dp"
-                    android:layout_marginBottom="@dimen/_5dp"
+                    tools:listitem="@layout/payment_item"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:itemCount="2"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toTopOf="@+id/payment_total_layout">
+                    app:layout_constraintBottom_toTopOf="@+id/payment_total_layout"/>
 
-                    <include
-                        layout="@layout/payment_item"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                    </include>
-                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/payment_total_layout"
@@ -166,44 +166,112 @@
                     android:gravity="center"
                     android:orientation="vertical"
                     android:padding="@dimen/_10dp"
+                    android:background="@drawable/card10_gradient_style"
                     app:layout_constraintBottom_toBottomOf="parent">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="@dimen/_5dp"
-                        android:layout_marginRight="@dimen/_5dp"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/subtotal_tv"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:autoSizeTextType="uniform"
-                            android:text="@string/sub_total"
-                            android:textAlignment="textStart"
-                            style="@style/TextAppearance.AppCompat.Subhead"/>
+                            android:gravity="center_vertical"
+                            android:padding="@dimen/_5dp">
 
-                        <TextView
-                            android:id="@+id/discount_tv"
+                            <TextView
+                                android:id="@+id/subtotal"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/sub_total"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+                            <TextView
+                                android:id="@+id/subtotal_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="100$"
+                                android:gravity="end"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1dp"
+                            android:background="@color/row_border_color"/>
+
+
+                        <LinearLayout
+                            android:id="@+id/tax_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:autoSizeTextType="uniform"
-                            android:text="@string/discount"
-                            android:textAlignment="textStart"
-                            style="@style/TextAppearance.AppCompat.Subhead" />
+                            android:gravity="center_vertical"
+                            android:padding="@dimen/_5dp">
 
-                        <TextView
-                            android:id="@+id/tax_tv"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/tax"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+                            <TextView
+                                android:id="@+id/tax_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="10$"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Subhead" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/tax_line"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1dp"
+                            android:background="@color/row_border_color"/>
+
+                        <LinearLayout
+                            android:id="@+id/discount_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:autoSizeTextType="uniform"
-                            android:textAlignment="textStart"
-                            android:text="@string/tax"
-                            style="@style/TextAppearance.AppCompat.Subhead" />
+                            android:gravity="center_vertical"
+                            android:padding="@dimen/_5dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/discount"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+                            <TextView
+                                android:id="@+id/discount_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="20$"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Subhead" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/discount_line"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1dp"
+                            android:background="@color/row_border_color"/>
+
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -218,10 +286,10 @@
                             android:id="@+id/total_tv"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:gravity="end"
                             android:text="@string/grand_total"
-                            android:textAlignment="textStart"
-                            android:layout_weight="0.8"
-                            style="@style/TextAppearance.AppCompat.Subhead" />
+                            android:textColor="@color/white_color"
+                            style="@style/TextAppearance.AppCompat.Title" />
 
                         <TextView
                             android:id="@+id/paid_due_tv"
@@ -231,7 +299,8 @@
                             android:text="@string/paid"
                             android:textAlignment="textStart"
                             android:textColor="@color/red_color"
-                            style="@style/TextAppearance.AppCompat.Body1" />
+                            style="@style/TextAppearance.AppCompat.Body1"
+                            android:visibility="gone"/>
 
                         <TextView
                             android:id="@+id/balance_tv"
@@ -241,7 +310,8 @@
                             android:text="@string/balance"
                             android:textAlignment="textStart"
                             android:textColor="@color/red_color"
-                            style="@style/TextAppearance.AppCompat.Body2" />
+                            style="@style/TextAppearance.AppCompat.Body2"
+                            android:visibility="gone"/>
 
 
                     </LinearLayout>

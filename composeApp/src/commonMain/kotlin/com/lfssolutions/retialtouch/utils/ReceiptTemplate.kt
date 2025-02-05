@@ -107,6 +107,7 @@ val defaultTemplate2 = """
 [[{8,4}:Sub Total |{{invoiceSubTotal}}]]
 [[{8,4}:Gst |{{invoiceTax}}]]
 [[{8,4}:Net Total |{{invoiceNetTotal}}]]
+[[{8,4}: |{{invoiceNetTotal}}]]
 [[Line]]
 [[{8,4}:Outstanding Amt |{{invoiceNetTotal}}]]
 [[Line]]

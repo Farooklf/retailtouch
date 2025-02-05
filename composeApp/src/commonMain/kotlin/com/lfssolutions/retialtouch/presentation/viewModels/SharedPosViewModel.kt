@@ -199,7 +199,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun getEmployee(){
         viewModelScope.launch {
             employee.collect { empDao->
-                print("empDao: $empDao")
+                //print("empDao: $empDao")
                 if(empDao!=null){
                     employeeId.update {
                         empDao.employeeId
@@ -620,7 +620,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     cartItemTotalDiscounts = cartItemDiscount,
                     cartPromotionDiscount = cartItemPromotionDiscount,
                     grandTotalWithoutDiscount = if(isSalesTaxInclusive) total else (total + taxTotal),
-                    promotionDiscount=promoDiscount,
+                    promotionDiscount = promoDiscount,
                     itemTotal=itemTotal
                 )
             }
@@ -648,7 +648,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun updateSecondDisplay(){
         val state=posUIState.value
-       /* println("cartItems: ${state.cartList} | cartSubTotal: ${state.cartSubTotal} | cartTotalTax : ${state.globalTax} |cartTotalDiscount : ${state.cartTotalDiscount}")*/
+        println("cartItems: ${state.cartList} | cartSubTotal: ${state.cartSubTotal} | cartTotalTax : ${state.globalTax} |cartTotalDiscount : ${state.cartTotalDiscount}")
         SecondaryDisplayServiceProvider().updateCartItems(cartItems = state.cartList, cartTotal = state.grandTotal, cartSubTotal = state.cartSubTotal, cartTotalTax = state.globalTax, cartTotalDiscount = state.cartTotalDiscount, currencySymbol = state.currencySymbol)
     }
 
@@ -1176,7 +1176,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-
     //Promotion Dialog Code
     fun updateDiscountDialog(value:Boolean){
         viewModelScope.launch {
@@ -1200,6 +1199,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     globalDiscountIsInPercent = promotion.promotionValueType == 1,
                     globalDiscount = promotion.amount.roundTo(2),
                     grandTotal = (previousTotal - newDiscountAmount).roundTo(2),
+                    remainingBalance = (previousTotal - newDiscountAmount).roundTo(2),
                     cartTotalDiscount = state.cartItemTotalDiscounts + newDiscountAmount
                 )
             }
@@ -1235,7 +1235,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun getCartTotalDiscount():Double{
-        val state=posUIState.value
+        val state= posUIState.value
         val globalDiscountAmount= when(state.globalDiscountIsInPercent){
             true->{
                 (state.grandTotal * state.globalDiscount) / 100.0
@@ -1775,7 +1775,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             } else {
                 globalDiscount
             }
-            val itemDiscountPercentage= ((globalDiscount / netTotal) * 100).roundTo(4)
+            val itemDiscountPercentage= ((globalDiscount / netTotal) * 100).roundTo(2)//
             val posInvoice=PosInvoice(
                 tenantId = loginUser.tenantId?:0,
                 employeeId = employeeId.value,
@@ -1790,10 +1790,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceItemDiscount = cartItemTotalDiscounts,
                 invoiceTotalValue= netCost,
                 invoiceNetDiscountPerc= if(globalDiscountIsInPercent) globalDiscount else 0.0,
-                invoiceNetDiscount= invoiceNetDiscount.roundTo(4),
+                invoiceNetDiscount= invoiceNetDiscount.roundTo(2),//
                 invoiceTotalAmount=netCost,
-                invoiceSubTotal= (netCost - globalTax).roundTo(4),
-                invoiceTax= globalTax.roundTo(4),
+                invoiceSubTotal= (netCost - globalTax).roundTo(2),//
+                invoiceTax= globalTax.roundTo(2),//
                 invoiceRoundingAmount=0.0,
                 invoiceNetTotal= netCost,
                 invoiceNetCost= netTotal,

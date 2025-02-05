@@ -135,7 +135,6 @@ fun Payment(
         }
     }
 
-
     LaunchedEffect(state.isError) {
         if (state.isError) {
             val errorTitle=getString(Res.string.error_title)
@@ -219,7 +218,7 @@ fun Payment(
             paymentAmount = state.remainingBalance,
             paymentName = state.availablePayments.find { it.id == state.selectedPaymentTypesId }?.name ?: "Payment Amount",
             onPayClick = {payment->
-                println("dialogAmount:$payment")
+                //println("dialogAmount:$payment")
                 viewModel.updatePaymentCollectorDialogVisibility(false)
                 viewModel.applyPaymentValue(payment)
             },
