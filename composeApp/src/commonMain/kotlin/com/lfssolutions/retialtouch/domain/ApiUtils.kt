@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.domain
 
 
 import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
+import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.utils.DateFormatter
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import io.ktor.client.HttpClient
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -36,24 +39,53 @@ object ApiUtils : KoinComponent {
     // Inject PreferencesRepository and ApiService using Koin
     val preferences: PreferencesRepository by inject()
     private val apiService: ApiService by inject()
-
+    private val tokenMutex = Mutex() // Define Mutex globally
 
     private suspend fun getBaseUrl(): String {
         return preferences.getBaseURL().first()  // Collects the first emitted value from Flow
     }
 
-    private suspend fun getBearerToken(): String {
-        return if (isLoggedIn())
-            "Bearer ${refreshToken()}"
-        else
+    private suspend fun BearerToken(): String {
+        return if (isLoggedIn()) {
+            tokenMutex.withLock { // Ensure only one coroutine refreshes the token
+                "Bearer ${refreshToken1()}"
+            }
+        }
+        else{
             "Bearer ${preferences.getToken().first()}"
+        }
+
     }
 
-    suspend fun isLoggedIn() : Boolean {
+    private suspend fun isLoggedIn() : Boolean {
         val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
         val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
+    }
+    private suspend fun refreshToken1(): String {
+        return withContext(Dispatchers.IO) { // Use withContext instead of runBlocking
+            try {
+                var result = ""
+
+                apiService.hitLoginAPI(getLoginDetails()).collect { response ->
+                    when (response) {
+                        is RequestState.Success -> {
+                            val token = response.data.result
+                            preferences.setToken(token ?: "")
+                            result = token ?: ""
+                        }
+                        else -> {
+
+                        }
+                    }
+                }
+                result
+            } catch (e: Exception) {
+                e.printStackTrace()
+                ""
+            }
+        }
     }
 
     private suspend fun refreshToken(): String {

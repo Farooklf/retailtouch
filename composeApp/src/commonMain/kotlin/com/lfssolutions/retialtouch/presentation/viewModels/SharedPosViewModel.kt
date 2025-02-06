@@ -510,59 +510,59 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     fun recomputeSale(){
         viewModelScope.launch {
-            calculateCartTotals()
-            //loadCartTotals()
+            //calculateCartTotals()
+            loadCartTotals()
         }
     }
 
      private fun loadCartTotals(){
-        viewModelScope.launch{
-            posUIState.collect{ state->
-                val itemTotalQty=state.cartList.sumOf { if (it.qty < 0) (it.qty * -1) else it.qty }
-                val itemTotalTax = state.cartList.sumOf {  it.calculateTax() }
-                val cartWithoutDiscount = state.cartList.sumOf {  it.getFinalPriceWithoutTax() }
-                //val itemTotal = state.cartList.sumOf { (it.currentPrice * it.qty) }
-                //val itemDiscount = state.cartList.sumOf { it.calculateDiscount() }
-                val cartItemDiscount = state.cartList.sumOf { it.calculateDiscount() }
-                val cartItemPromotionDiscount = state.cartList.sumOf { it.getPromotionDiscount() }
+         println("loadCartTotals calling")
+         _posUIState.update{ state->
+             val itemTotalQty=state.cartList.sumOf { if (it.qty < 0) (it.qty * -1) else it.qty }
+             val itemTotalTax = state.cartList.sumOf {  it.calculateTax() }
+             val cartWithoutDiscount = state.cartList.sumOf {  it.getFinalPriceWithoutTax() }
+             //val itemTotal = state.cartList.sumOf { (it.currentPrice * it.qty) }
+             //val itemDiscount = state.cartList.sumOf { it.calculateDiscount() }
+             val cartItemDiscount = state.cartList.sumOf { it.calculateDiscount() }
+             val cartItemPromotionDiscount = state.cartList.sumOf { it.getPromotionDiscount() }
 
-               var cartTotal= if (state.isSalesTaxInclusive){
-                     state.cartList.sumOf {  it.getFinalPrice() }
-                }else{
-                    state.cartList.sumOf {  it.getFinalPriceWithoutTax() }
-                }
-                val apiTax = if(state.cartList.isNotEmpty())
-                     if (state.isSalesTaxInclusive) state.cartList.first().tax else 0.0
-                else 0.0
+             var cartSubTotal= if (state.isSalesTaxInclusive){
+                 state.cartList.sumOf {  it.getFinalPrice() }
+             }else{
+                 state.cartList.sumOf {  it.getFinalPriceWithoutTax() }
+             }
 
-                // Apply global discount logic
-                cartTotal = applyGlobalDiscount(cartTotal,state.globalDiscount, state.globalDiscountIsInPercent)
-                val roundingTotal = posRounding(cartTotal, state.posInvoiceRounded)
-                val (invoiceRounding, grandTotal) = calculateGrandTotal(
-                    cartTotal, roundingTotal, itemTotalTax, state.isSalesTaxInclusive
-                )
-                val globalTax = calculateGlobalTax(state.isSalesTaxInclusive, grandTotal, apiTax)
-                // After this loop, you can now work with your totals
-                println("TotalQuantity: $itemTotalQty | TotalTax: $itemTotalTax | SubTotal: $cartTotal | SubTotalWithoutDiscount:  $cartWithoutDiscount | PromoDiscount : $cartItemPromotionDiscount | ItemDiscount : $cartItemDiscount | SubTotalAfterDiscount: $cartTotal | RoundingTotal: $roundingTotal | GrandTotal: $grandTotal | GlobalTax : $globalTax | InvoiceRounding: $invoiceRounding")
+             val apiTax = if(state.cartList.isNotEmpty())
+                 if (state.isSalesTaxInclusive) state.cartList.first().tax else 0.0
+             else 0.0
 
-                _posUIState.update { currentState->
-                    currentState.copy(
-                        quantityTotal = itemTotalQty,
-                        cartSubTotal = cartTotal,
-                        cartTotalWithoutDiscount = cartWithoutDiscount,
-                        cartItemTotalDiscounts = cartItemDiscount,
-                        cartPromotionDiscount = cartItemPromotionDiscount,
-                        cartTotalDiscount = getCartTotalDiscount(),
-                        grandTotalWithoutDiscount = if(state.isSalesTaxInclusive) cartTotal else (cartTotal + itemTotalTax),
-                        invoiceRounding= invoiceRounding,
-                        grandTotal = grandTotal,
-                        globalTax = globalTax,
-                        remainingBalance = grandTotal
-                    )
-                }
+             // Apply global discount logic
+             cartSubTotal = applyGlobalDiscount(cartSubTotal,state.globalDiscount, state.globalDiscountIsInPercent)
 
-            }
-        }
+             val roundingTotal = posRounding(cartSubTotal, state.posInvoiceRounded)
+             val (invoiceRounding, grandTotal) = calculateGrandTotal(
+                 cartSubTotal, roundingTotal, itemTotalTax, state.isSalesTaxInclusive
+             )
+             val remainingBalance=grandTotal
+             val globalTax = calculateGlobalTax(state.isSalesTaxInclusive, grandTotal, apiTax)
+             // After this loop, you can now work with your totals
+             println("TotalQuantity: $itemTotalQty | TotalTax: $itemTotalTax | SubTotal: $cartSubTotal | SubTotalWithoutDiscount:  $cartWithoutDiscount | PromoDiscount : $cartItemPromotionDiscount | ItemDiscount : $cartItemDiscount | SubTotalAfterDiscount: $cartSubTotal | RoundingTotal: $roundingTotal | GrandTotal: $grandTotal | GlobalTax : $globalTax | InvoiceRounding: $invoiceRounding | Remaining Balance : $remainingBalance")
+
+             state.copy(
+                 quantityTotal = itemTotalQty,
+                 cartSubTotal = cartSubTotal,
+                 cartTotalWithoutDiscount = cartWithoutDiscount,
+                 cartItemTotalDiscounts = cartItemDiscount,
+                 cartPromotionDiscount = cartItemPromotionDiscount,
+                 cartTotalDiscount = getCartTotalDiscount(),
+                 grandTotalWithoutDiscount = if(state.isSalesTaxInclusive) cartWithoutDiscount else (cartSubTotal + itemTotalTax),
+                 invoiceRounding= invoiceRounding,
+                 grandTotal = grandTotal,
+                 globalTax = globalTax,
+                 remainingBalance = remainingBalance
+             )
+
+         }
     }
 
     private fun calculateCartTotals(){
@@ -765,7 +765,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun applyPriceBreakPromotion(item: CartItem, promotion: PromotionDetails?) {
-        with(_posUIState.value){
+        with(posUIState.value){
             val promoId = promotion?.promotionId
             if (promoByPriceBreak.containsKey(promoId)){
                 val promoData = promoByPriceBreak[promoId]
@@ -872,7 +872,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     private fun applyGlobalDiscount(subTotal: Double, globalDiscount: Double, isPercent: Boolean): Double {
-        return if (globalDiscount > 0) {
+        return if (globalDiscount > 0.0) {
             if (isPercent) {
                 if (globalDiscount < 100.0) {
                     subTotal - ((subTotal * globalDiscount) / 100.0)
@@ -1518,15 +1518,18 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             _posUIState.update { currentState ->
                 // Filter the cart list to exclude the item to be removed
-                val updatedCartList = currentState.cartList.filterNot { item ->
+                 //currentState.cartList.remove(currentState.selectedCartItem)
+
+                 val updatedCartList = currentState.cartList.filterNot { item ->
                     item.productId == currentState.selectedCartItem.productId
                 }.toMutableList()
                 // Update the state with the new list
-                currentState.copy(cartList = updatedCartList)
+               val globalDiscount= if(updatedCartList.isEmpty()) 0.0 else currentState.globalDiscount
+                currentState.copy(cartList = updatedCartList, globalDiscount = globalDiscount)
             }
 
             /*_posUIState.update { currentState ->
-                //dataBaseRepository.removeScannedItemById(selectedItem.id.toLong())
+                //dataBaseRepository.removeScannedItemById(selectedItemid.toLong())
                 //currentState.copy(isCallScannedItems = !currentState.isCallScannedItems)
                 val updatedCartList=currentState.cartList.map { item->
                     if(item.productId==currentState.selectedCartItem.productId){
@@ -1766,16 +1769,22 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tenderPosInvoice(posState: PosUIState) : PosInvoice{
         posState.run {
-            val netCost=grandTotal.roundTo(4)
-            val netTotal= grandTotalWithoutDiscount.roundTo(4)
-            val subTotal= grandTotal.roundTo(4)
-            val invoiceTotalValue= (subTotal + globalTax).roundTo(4)
+            val netCost=grandTotal.roundTo(2)//4
+            val netTotal= grandTotalWithoutDiscount.roundTo(2)//4
+            val subTotal= grandTotal.roundTo(2)//4
+            val invoiceTotalValue= (subTotal + globalTax).roundTo(2)//4
             val invoiceNetDiscount = if (globalDiscountIsInPercent) {
                 (netTotal.times(globalDiscount)).div(100.0)
             } else {
                 globalDiscount
             }
-            val itemDiscountPercentage= ((globalDiscount / netTotal) * 100).roundTo(2)//
+            val itemDiscountPercentage = if (globalDiscountIsInPercent) {
+                globalDiscount
+            } else {
+                ((invoiceNetDiscount / netTotal) * 100).roundTo(2)//4
+            }
+            println("itemDiscountPercentage : $itemDiscountPercentage")
+            //val itemDiscountPercentage= ((invoiceNetDiscount / netTotal) * 100).roundTo(2)//4
             val posInvoice=PosInvoice(
                 tenantId = loginUser.tenantId?:0,
                 employeeId = employeeId.value,
@@ -1790,10 +1799,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceItemDiscount = cartItemTotalDiscounts,
                 invoiceTotalValue= netCost,
                 invoiceNetDiscountPerc= if(globalDiscountIsInPercent) globalDiscount else 0.0,
-                invoiceNetDiscount= invoiceNetDiscount.roundTo(2),//
+                invoiceNetDiscount= invoiceNetDiscount.roundTo(2),//4
                 invoiceTotalAmount=netCost,
-                invoiceSubTotal= (netCost - globalTax).roundTo(2),//
-                invoiceTax= globalTax.roundTo(2),//
+                invoiceSubTotal= (netCost - globalTax).roundTo(2),//4
+                invoiceTax= globalTax.roundTo(2),//4
                 invoiceRoundingAmount=0.0,
                 invoiceNetTotal= netCost,
                 invoiceNetCost= netTotal,
@@ -1802,14 +1811,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 memberId = selectedMemberId,
                 posInvoiceDetails = cartList.map {cart->
                     var disc = 0.0
-                    val itemPrice = cart.getFinalPrice().roundTo(4)
+                    val itemPrice = cart.getFinalPrice().roundTo(2)//4
+                    println("itemPrice :- $itemPrice")
                     // Determine discount percentage based on global or item-level logic
-                    val discountPercentage = if (globalDiscountIsInPercent) {
-                        globalDiscount
-                    } else {
-                        itemDiscountPercentage
-                    }
-                    disc = (itemPrice * discountPercentage) / 100.0
+                    disc = ((itemPrice * itemDiscountPercentage) / 100.0).roundTo(2)
+                    println("discount :- $disc")
                     val total = cart.qty * cart.price
                     val subTotal = total - disc - cart.calculateDiscount()
                     val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotal, cart.tax)
@@ -1824,15 +1830,15 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         total = total,
                         totalAmount = itemPrice,
                         totalValue = itemPrice,
-                        netTotal = (itemPrice - disc).roundTo(4),
+                        netTotal = (itemPrice - disc).roundTo(2),//4
                         netCost = itemPrice,
-                        netDiscount = disc,
-                        subTotal = (subTotal - itemTax).roundTo(4),
+                        subTotal = (subTotal - itemTax).roundTo(2),//4
                         itemDiscountPerc = if (cart.discountIsInPercent) cart.discount else disc,
+                        netDiscount = disc,
                         itemDiscount = cart.calculateDiscount(),
                         averageCost = itemPrice,
                         roundingAmount = 0.0,
-                        tax = itemTax.roundTo(4),
+                        tax = itemTax.roundTo(2),//4
                         taxPercentage = cart.tax
                     )
                 }.toList(),

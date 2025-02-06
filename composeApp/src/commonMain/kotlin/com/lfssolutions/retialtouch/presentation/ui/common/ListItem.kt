@@ -417,7 +417,7 @@ fun CartListItem(
                     }
                     //Items name
                     ListText(
-                        label = "${item.stock.name} [${item.stock.inventoryCode?:""}]",
+                        label = "${item.stock.name} [${item.stock.inventoryCode}]",
                         textStyle =textStyle,
                         color = AppTheme.colors.textBlack,
                         modifier = Modifier.wrapContentWidth()

@@ -62,7 +62,7 @@ coil3 = "3.0.0-alpha06"
 firebase-bom = "32.7.4"
 firebase-crashlytics-plugin = "2.9.9"
 google-play-services = "4.4.1"
-recyclerview = "1.4.0"
+recyclerview = "1.2.0"
 
 
 [libraries]

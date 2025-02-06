@@ -105,6 +105,7 @@ val defaultTemplate2 = """
 [[{4,8}:Qty|{{qty}}]]
 [[Line]]
 [[{8,4}:Sub Total |{{invoiceSubTotal}}]]
+[[{8,4}:Net Discount |{{invoiceNetDiscount}}]]
 [[{8,4}:Gst |{{invoiceTax}}]]
 [[{8,4}:Net Total |{{invoiceNetTotal}}]]
 [[{8,4}: |{{invoiceNetTotal}}]]

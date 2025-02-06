@@ -39,9 +39,9 @@ class PaymentCartListView(
             val subTotalTv: TextView = itemView.findViewById<TextView>(R.id.product_subtotal_tv)
             // var lineItemHolder: LinearLayout = itemView.findViewById<LinearLayout>(R.id.combo_item_hold_ll)
             val parentLinearLayout: LinearLayout = itemView.findViewById(R.id.parent_layout)
-            var discountLinearLayout: LinearLayout = itemView.findViewById(R.id.discount_ll)
+            var discountLinearLayout: LinearLayout = itemView.findViewById(R.id.discount_layout)
             var discountLabelTv: TextView = itemView.findViewById(R.id.discount_label_tv)
-            var discountPrePriceTv: TextView = itemView.findViewById(R.id.pre_discount_price_tv)
+            var discountPrePriceTv: TextView = itemView.findViewById(R.id.discount_price_tv)
 
            // lineItemHolder.removeAllViews()
             if ((position % 2) == 0) {

@@ -5,6 +5,7 @@ import android.util.Log
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -17,9 +18,8 @@ import java.util.Locale
 
 class ObjectToReceiptTemplateV1 {
 
-
     companion object {
-
+        private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob()) // Background thread
         /**
          * Process HTML template by replacing placeholders with values from any data class
          */
@@ -82,21 +82,24 @@ class ObjectToReceiptTemplateV1 {
                 }
                 Log.e("template", "before table processed text $processedText")
                 //Apply image
+                processImageTemplate(processedText, callback = {updatedText->
+                    println("ReplacedURLTemplate :$updatedText")
+                    processedText=updatedText
+                })
+
                 /*val imageRegex = "@@@(.*?)@@@".toRegex()
                 if(imageRegex.containsMatchIn(processedText)){
                     val match = imageRegex.find(processedText) // Finds the first match
                     val matchResults = match?.groupValues?.get(1)
                     println("ExtractUrl :$matchResults")
                     matchResults?.let {imageUrl ->
-                        runBlocking {
-                            val imageBitmap = loadImageFromUrl(imageUrl) // Load image from URL
-                            imageBitmap?.let { image->
-                                val hexString=processUrlImage(image)
-                                processedText=processedText.replace(
-                                    imageRegex,
-                                    hexString
-                                )
-                            }
+                        val imageBitmap = loadImageFromUrl(imageUrl) // Load image from URL
+                        imageBitmap?.let { image->
+                            val hexString=processUrlImage(image)
+                            processedText=processedText.replace(
+                                imageRegex,
+                                hexString
+                            )
                         }
                     }
                 }*/
@@ -104,14 +107,12 @@ class ObjectToReceiptTemplateV1 {
                 //Apply weight to columns
                 val tableWeightRegex = Regex("\\[\\[(.*?):(.*)\\]\\]")
                 val matchResults = tableWeightRegex.findAll(processedText)
-                if (matchResults != null) {
-                    matchResults.forEach {
-                        println("Match found: ${it.value}") // Print the matched string
-                        processedText = processedText.replace(
-                            it.value,
-                            processWeightTableTexts(it, printerWidth)
-                        )
-                    }
+                matchResults.forEach {
+                    println("Match found: ${it.value}") // Print the matched string
+                    processedText = processedText.replace(
+                        it.value,
+                        processWeightTableTexts(it, printerWidth)
+                    )
                 }
 
                 //Apply lines
@@ -133,7 +134,38 @@ class ObjectToReceiptTemplateV1 {
             return processedText
         }
 
+        /*
+        *Process Image Url
+        * */
+        private fun processImageTemplate(processedText: String, callback: (String) -> Unit) {
+            scope.launch {
+                val processedText = extractAndReplaceImageUrl(processedText)
+                withContext(Dispatchers.Main) {
+                    callback(processedText) // Return result to UI
+                }
+            }
+        }
 
+        private suspend fun extractAndReplaceImageUrl(processedText: String): String {
+            val imageRegex = """@@@(http[s]?://\S+)""".toRegex()
+            var updatedText = processedText
+
+            val match = imageRegex.find(processedText)
+            val imageUrl = match?.groupValues?.get(1)
+            println("Extracted URL: $imageUrl")
+
+            imageUrl?.let { url ->
+                val imageBitmap = loadImageFromUrl(url) // Load image from URL
+                imageBitmap?.let { bitmap ->
+                    val hexString = bitmapToBase64(bitmap) // Convert to Base64
+                    val replaceCode = "[C]<img>$hexString</img>\n"
+                    // Replace original @@@URL with the new image tag
+                    updatedText = updatedText.replace(imageRegex, replaceCode)
+                    //println(updatedText)
+                }
+            }
+            return updatedText
+        }
         /**
          * Process each item in a list using the item template, including nested lists
          */

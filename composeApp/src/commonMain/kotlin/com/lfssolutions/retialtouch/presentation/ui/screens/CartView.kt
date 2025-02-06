@@ -265,7 +265,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
 
 
 
-                if(state.globalDiscount>0.0){
+                if(state.globalDiscount>0.0 && state.cartList.isNotEmpty()){
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         BottomTex(
                             label = stringResource(Res.string.discount_value,":"),
