@@ -24,6 +24,7 @@ import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -40,13 +41,16 @@ object ApiUtils : KoinComponent {
     val preferences: PreferencesRepository by inject()
     private val apiService: ApiService by inject()
     private val tokenMutex = Mutex() // Define Mutex globally
+    private val tokenState = MutableStateFlow<String?>(null)
 
     private suspend fun getBaseUrl(): String {
         return preferences.getBaseURL().first()  // Collects the first emitted value from Flow
     }
 
-    private suspend fun BearerToken(): String {
-        return if (isLoggedIn()) {
+
+
+    suspend fun getBearerToken(): String {
+        return if (!isLoggedIn()) {
             tokenMutex.withLock { // Ensure only one coroutine refreshes the token
                 "Bearer ${refreshToken1()}"
             }
@@ -57,13 +61,13 @@ object ApiUtils : KoinComponent {
 
     }
 
-    private suspend fun isLoggedIn() : Boolean {
+     suspend fun isLoggedIn() : Boolean {
         val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
         val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
     }
-    private suspend fun refreshToken1(): String {
+     suspend fun refreshToken1(): String {
         return withContext(Dispatchers.IO) { // Use withContext instead of runBlocking
             try {
                 var result = ""
