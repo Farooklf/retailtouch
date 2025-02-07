@@ -1,16 +1,13 @@
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
-import android.util.DisplayMetrics
 import android.util.Log
-import com.dantsu.escposprinter.textparser.PrinterTextParserImg
-import com.lfssolutions.retialtouch.utils.AppStrings.printer
+import com.dantsu.escposprinter.EscPosPrinterCommands
+import com.dantsu.escposprinter.EscPosPrinterSize
 import com.lfssolutions.retialtouch.utils.defaultTemplate2
-import comlfssolutionsretialtouch.Printers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.net.URL
@@ -95,7 +92,7 @@ class ObjectToReceiptTemplateV1 {
                     matchResults?.let {imageUrl ->
                         val imageBitmap = loadImageFromUrl(imageUrl) // Load image from URL
                         imageBitmap?.let { image->
-                            val hexString=processUrlImage(image)
+                            val hexString = processUrlImage(image, printerWidth)
                             processedText=processedText.replace(
                                 imageRegex,
                                 hexString
@@ -129,7 +126,7 @@ class ObjectToReceiptTemplateV1 {
                 Log.e("Netemplate", "After processedHtml $processedText")
             }
 
-            return processedText
+            return processedText.trim()
         }
 
         /**
@@ -217,9 +214,10 @@ class ObjectToReceiptTemplateV1 {
                 null
             }
         }
-        private  fun processUrlImage(imageBitmap: Bitmap):String {
-            val hexString = bitmapToBase64(imageBitmap)
-            val replaceCode= "[C]<img>$hexString</img>\n"
+        private fun processUrlImage(imageBitmap: Bitmap, printerWidthPx: Float): String {
+            val hexString =
+                bytesToHexadecimalString(bitmapToBytes(imageBitmap, true, printerWidthPx))
+            val replaceCode = "[C]<img>$hexString</img>\n"
             //println("HexStringWithImage :- $replaceCode")
             return replaceCode
         }
@@ -448,6 +446,10 @@ class ObjectToReceiptTemplateV1 {
         }
 
         fun String.trimEmptyLines() = trim().replace("\n+".toRegex(), replacement = "\n")
+        fun mmToPx(mmSize: Float): Int {
+            return Math.round(mmSize * (203.toFloat()) / EscPosPrinterSize.INCH_TO_MM)
+                .toInt()
+        }
 
         private fun processLine(printerWidth: Float): String {
             return if (printerWidth == 80f) {
@@ -456,6 +458,48 @@ class ObjectToReceiptTemplateV1 {
                 "-".repeat(32)
             }
         }
+        fun bitmapToBytes(bitmap: Bitmap, gradient: Boolean, printerWidthPx: Float): ByteArray {
+            val printingWidthPx: Int = this.mmToPx(printerWidthPx)
 
+            var bitmap = bitmap
+            var isSizeEdit = false
+            var bitmapWidth = bitmap.width
+            var bitmapHeight = bitmap.height
+            val maxWidth: Int = printingWidthPx
+            val maxHeight = 256
+
+            if (bitmapWidth > maxWidth) {
+                bitmapHeight =
+                    Math.round((bitmapHeight.toFloat()) * (maxWidth.toFloat()) / (bitmapWidth.toFloat()))
+                bitmapWidth = maxWidth
+                isSizeEdit = true
+            }
+            if (bitmapHeight > maxHeight) {
+                bitmapWidth =
+                    Math.round((bitmapWidth.toFloat()) * (maxHeight.toFloat()) / (bitmapHeight.toFloat()))
+                bitmapHeight = maxHeight
+                isSizeEdit = true
+            }
+
+            if (isSizeEdit) {
+                bitmap = Bitmap.createScaledBitmap(bitmap, bitmapWidth, bitmapHeight, true)
+            }
+
+            return EscPosPrinterCommands.bitmapToBytes(bitmap, gradient)
+        }
+
+        fun bytesToHexadecimalString(bytes: ByteArray): String {
+            val imageHexString = java.lang.StringBuilder()
+            for (aByte in bytes) {
+                val hexString = Integer.toHexString(aByte.toInt() and 0xFF)
+                if (hexString.length == 1) {
+                    imageHexString.append("0")
+                }
+                imageHexString.append(hexString)
+            }
+            return imageHexString.toString()
+        }
     }
+
+
 }
