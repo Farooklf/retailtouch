@@ -75,7 +75,6 @@ import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.review_cart
-import retailtouch.composeapp.generated.resources.search_items
 import retailtouch.composeapp.generated.resources.selected_member
 import retailtouch.composeapp.generated.resources.sub_total
 import retailtouch.composeapp.generated.resources.tax_value
@@ -95,7 +94,6 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
     }
 
     LaunchedEffect(state) {
-        //viewModel.recomputeSale()
         viewModel.updateSecondDisplay()
     }
 
@@ -211,6 +209,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                         })
                 }
             }*/
+
             val textStyleHeader= AppTheme.typography.captionBold()
             val btnStyle= AppTheme.typography.bodyMedium()
 
@@ -266,7 +265,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
 
 
 
-                if(state.globalDiscount>0.0){
+                if(state.globalDiscount>0.0 && state.cartList.isNotEmpty()){
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         BottomTex(
                             label = stringResource(Res.string.discount_value,":"),

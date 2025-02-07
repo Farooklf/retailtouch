@@ -6,5 +6,6 @@
     <dimen name="_5dp">5dp</dimen>
     <dimen name="_10dp">10dp</dimen>
     <dimen name="_12dp">12dp</dimen>
+    <dimen name="_60dp">60dp</dimen>
     <dimen name="_100dp">100dp</dimen>
 </resources>

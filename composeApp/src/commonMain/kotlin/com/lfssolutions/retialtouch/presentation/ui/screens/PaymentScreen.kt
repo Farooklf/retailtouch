@@ -136,7 +136,6 @@ fun Payment(
         }
     }
 
-
     LaunchedEffect(state.isError) {
         if (state.isError) {
             val errorTitle=getString(Res.string.error_title)

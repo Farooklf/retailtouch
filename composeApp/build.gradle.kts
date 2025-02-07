@@ -54,6 +54,7 @@ kotlin {
             implementation (libs.androidx.constraintlayout)
             implementation (libs.gson)
             //implementation(libs.template)
+            implementation(libs.androidx.recyclerview)
             implementation(libs.kotlin.mustache)
             implementation(libs.mustache.compiler)
             implementation(project(":escposprinter"))

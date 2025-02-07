@@ -9,4 +9,6 @@
     <color name="white_color">#FFFFFF</color>
     <color name="row_bg_color">#f4f4f4</color>
     <color name="row_border_color">#e1e1e1</color>
+    <color name="discount_color">#81C784</color>
+    <color name="primary_light_color">#5E005CE5</color>
 </resources>

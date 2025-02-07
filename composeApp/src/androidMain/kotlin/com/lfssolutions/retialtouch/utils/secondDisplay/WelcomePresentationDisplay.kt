@@ -12,6 +12,8 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.denzcoskun.imageslider.ImageSlider
 import com.denzcoskun.imageslider.constants.ScaleTypes
@@ -60,7 +62,7 @@ class WelcomePresentationDisplay(
     }
 
     fun checkAndUpdateCartDetails(
-        currentCarts: Array<CartItem>,
+        currentCarts: List<CartItem>,
         cartTotal: Double,
         cartSubTotal: Double,
         cartTotalTax: Double,
@@ -74,15 +76,22 @@ class WelcomePresentationDisplay(
             findViewById<ConstraintLayout>(R.id.change_layout).visibility = View.GONE
             findViewById<LinearLayout>(R.id.product_view).visibility = View.VISIBLE
             val imageSlider = findViewById<ImageSlider>(R.id.image_slider)
-            val array = currentCarts.reversedArray()
+            val cartItemRv = findViewById<RecyclerView>(R.id.cartItemRv)
+            val discountView = findViewById<LinearLayout>(R.id.discount_view)
+            val discountDivider = findViewById<View>(R.id.discount_line)
+            val totalTv = findViewById<TextView>(R.id.total_tv)
+            val subTotalTv = findViewById<TextView>(R.id.subtotal_tv)
+            val taxTv = findViewById<TextView>(R.id.total_tv)
+            val discountTv = findViewById<TextView>(R.id.discount_tv)
+
+            val array = currentCarts.reversed()
             val imageList = ArrayList<SlideModel>()
             array.forEach { cartItem ->
-
                 if (cartItem.stock.imagePath.isBlank()) {
                     imageList.add(
                         SlideModel(
                             R.drawable.app_logo,
-                            cartItem.stock.name,
+                            cartItem.stock.name.uppercase(),
                             ScaleTypes.CENTER_CROP
                         )
                     )
@@ -90,7 +99,7 @@ class WelcomePresentationDisplay(
                     imageList.add(
                         SlideModel(
                             cartItem.stock.imagePath,
-                            cartItem.stock.name,
+                            cartItem.stock.name.uppercase(),
                             ScaleTypes.CENTER_CROP
                         )
                     )
@@ -98,47 +107,29 @@ class WelcomePresentationDisplay(
             }
             imageSlider.setImageList(imageList.toList(), ScaleTypes.CENTER_CROP)
 
-//            var rv = findViewById<RecyclerView>(R.id.order_holder_rv)
-//            val layout = LinearLayoutManager(context_)
-//            layout.reverseLayout = false
-//            rv.layoutManager = layout
-//            val dividerItemDecoration = DividerItemDecoration(
-//                context_,
-//                layout.orientation
-//            )
-//            findViewById<RecyclerView>(R.id.order_holder_rv).addItemDecoration(
-//                dividerItemDecoration
-//            )
+            //Bind Cart List
+            cartItemRv.layoutManager= LinearLayoutManager(context_)
+            cartItemRv.adapter=CartItemAdapter(currentCarts)
+            cartItemRv.isNestedScrollingEnabled=false
 
-            val order_ll = findViewById<LinearLayout>(R.id.order_holder_layout)
-            order_ll.removeAllViews()
-            val array_ = ArrayList<CartItem>()
-            array_.addAll(array)
-            PaymentCartListView(context_, array_).getViews().forEach { view ->
-                order_ll.addView(view)
+            subTotalTv.text = "$currencySymbol $cartSubTotal"
+            taxTv.text = "$currencySymbol $cartTotalTax"
+
+            if(cartTotalDiscount>0.0){
+                discountView.visibility = View.VISIBLE
+                discountDivider.visibility = View.VISIBLE
+                discountTv.text = "$currencySymbol  $cartTotalDiscount"
+
+            }else{
+                discountView.visibility = View.GONE
+                discountDivider.visibility = View.GONE
             }
 
-            findViewById<TextView>(R.id.total_tv).text = "$currencySymbol $cartTotal"
+            val cartGrandTotal="$currencySymbol $cartTotal"
+            totalTv.text = context_.getString(R.string.grand_total,cartGrandTotal)
+            //findViewById<TextView>(R.id.balance_tv).text = "0"
 
-            findViewById<TextView>(R.id.subtotal_tv).text = "$currencySymbol $cartSubTotal"
-
-
-            cartTotalDiscount.let {
-                findViewById<TextView>(R.id.discount_tv).text = "$currencySymbol $cartTotalDiscount"
-            } ?: run {
-                findViewById<TextView>(R.id.discount_tv).visibility = View.GONE
-            }
-
-
-            cartTotalTax.let {
-                findViewById<TextView>(R.id.tax_tv).text = "$currencySymbol  $cartTotalTax"
-            } ?: run {
-                findViewById<TextView>(R.id.tax_tv).visibility = View.GONE
-            }
-
-            findViewById<TextView>(R.id.balance_tv).text = "0"
-
-            findViewById<TextView>(R.id.paid_due_tv).text = "0"
+            //findViewById<TextView>(R.id.paid_due_tv).text = "0"
 
             //getTotalPrice(array_,taxesResponse, findViewById(R.id.total_tv))
 

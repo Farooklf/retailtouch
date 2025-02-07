@@ -42,7 +42,7 @@ data class CartItem(
     var promotion: PromotionDetails? = null,
     var promotionName: String? = null,
     var oldPrice: Double = 0.0,
-    var amount: Double? = 0.0,
+    var amount: Double = 0.0,
     var exchange: Boolean = false,
     var salesTaxInclusive: Boolean = false,
     var promotionActive: Boolean = false,
@@ -168,9 +168,13 @@ data class CartItem(
         return 0.0
     }
 
+    fun getFinalPriceWithoutDiscounts():Double{
+        return if (promotionByQuantity) amount.times(qty) else currentPrice * qty
+    }
+
     // Calculate the final price without tax
     fun getFinalPriceWithoutTax(): Double {
-        var amt = if (promotionByQuantity) (amount!! * qty) else (currentPrice * qty)
+        var amt = if (promotionByQuantity) (amount * qty) else (currentPrice * qty)
 
         if (amt > 0) {
             if(discount>0){

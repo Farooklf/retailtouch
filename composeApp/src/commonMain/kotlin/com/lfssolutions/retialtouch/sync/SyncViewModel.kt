@@ -2,9 +2,9 @@ package com.lfssolutions.retialtouch.sync
 
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.ApiUtils
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponse
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
-import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.RequestState
 import com.lfssolutions.retialtouch.domain.model.ApiLoaderStateResponse
 import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
@@ -39,8 +39,10 @@ import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTION
 import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.lfssolutions.retialtouch.utils.DateFormatter
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getLastSyncDateTime
+import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +61,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -109,7 +112,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             syncEveryThing()
         } else {
             println("start reSyncItems")
-                reSyncItems()
+            syncEveryThing()
+                //reSyncItems()
         }
     }
 
@@ -119,6 +123,16 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncProgress(true)
                 updateSyncCompleteStatus(false)
                 updateError(syncError = false, errorMsg = "", errorTitle = "")
+                /*val refferdJob=async {
+                     if (!ApiUtils.isLoggedIn()) {
+                        tokenMutex.withLock { // Ensure only one coroutine refreshes the token
+                            "Bearer ${refreshToken1()}"
+                        }
+                    }
+                    else{
+                        "Bearer ${ApiUtils.preferences.getToken().first()}"
+                    }
+                }.await()*/
                 val syncJob= listOf(
                     async {
                         val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
@@ -152,6 +166,13 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncCompleteStatus(false)
             }
         }
+    }
+
+    suspend fun getLoggedIn() : Boolean {
+        val tokenTime : Long = ApiUtils.preferences.getTokenTime().first()
+        val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
+        val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
+        return hoursPassed > TOKEN_EXPIRY_THRESHOLD
     }
 
     // Update reSync time and restart timer

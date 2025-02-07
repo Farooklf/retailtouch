@@ -7,8 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.Modifier
 import com.lfssolutions.retialtouch.R
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
+import com.lfssolutions.retialtouch.presentation.ui.common.ListText
+import com.lfssolutions.retialtouch.theme.AppTheme
 import java.util.ArrayList
 
 class PaymentCartListView(
@@ -32,12 +37,11 @@ class PaymentCartListView(
             val productNameTv: TextView = itemView.findViewById<TextView>(R.id.product_name_tv)
             val productPriceTv: TextView = itemView.findViewById<TextView>(R.id.product_price_tv)
             val subTotalTv: TextView = itemView.findViewById<TextView>(R.id.product_subtotal_tv)
-           // var lineItemHolder: LinearLayout = itemView.findViewById<LinearLayout>(R.id.combo_item_hold_ll)
+            // var lineItemHolder: LinearLayout = itemView.findViewById<LinearLayout>(R.id.combo_item_hold_ll)
             val parentLinearLayout: LinearLayout = itemView.findViewById(R.id.parent_layout)
-            var discountLinearLayout: LinearLayout = itemView.findViewById(R.id.discount_ll)
+            var discountLinearLayout: LinearLayout = itemView.findViewById(R.id.discount_layout)
             var discountLabelTv: TextView = itemView.findViewById(R.id.discount_label_tv)
-            var discountPrePriceTv: TextView = itemView.findViewById(R.id.pre_discount_price_tv)
-
+            var discountPrePriceTv: TextView = itemView.findViewById(R.id.discount_price_tv)
 
            // lineItemHolder.removeAllViews()
             if ((position % 2) == 0) {
@@ -47,7 +51,10 @@ class PaymentCartListView(
             }
             val cartItem = cartItemsArray[position]
             productNameTv.text = "${cartItem.stock.name}"
-
+            if(cartItem.discount > 0 || cartItem.currentDiscount > 0){
+                discountLinearLayout.visibility=View.VISIBLE
+                discountPrePriceTv.text="${cartItem.currencySymbol}${cartItem.calculateDiscount()}"
+            }
             if (cartItem.isCombo) {
 
                 //lineItemHolder.visibility = View.VISIBLE
@@ -229,7 +236,6 @@ class PaymentCartListView(
 //
 //                     }
             }
-
             views.add(itemView)
 
         }
