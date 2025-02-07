@@ -1664,7 +1664,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 state.createdPayments + PaymentMethod(
                     id = state.selectedPayment.id,
                     name = state.availablePayments.find { it.id == state.selectedPaymentTypesId }?.name ?: "",
-                    amount = tenderAmount
+                    amount = if (tenderAmount > state.grandTotal) state.grandTotal else tenderAmount
                 )
             }.toMutableList()
 
@@ -1698,7 +1698,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun callTender(value: Boolean) {
         if (value) {
             createTicketRequest()
-            updatePaymentSuccessDialog(true)
         }
     }
 
@@ -1717,7 +1716,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun createTicketRequest() {
         if (employeeId.value== 0 || posUIState.value.location==null) {
-            updatePOSError("POS Locked Exception")
+            updatePOSError("POS Locked Exception,login again to start service")
             return
         }
 
@@ -1744,34 +1743,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             executePosPayment(posInvoice)
         }
     }
-
-    private suspend fun executePosPayment(posInvoice: PosInvoice) {
-        try {
-            networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
-                observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateLoader(true)
-                        updateSyncInProgress(true)
-                    },
-                    onSuccess = { apiData ->
-                        if(apiData.result?.posInvoice != null)
-                             holdCurrentSync(posInvoice,true)
-                        else
-                            holdCurrentSync(posInvoice, false)
-                    },
-                    onError = { errorMsg ->
-                        holdCurrentSync(posInvoice, false)
-                        println(errorMsg)
-                    }
-                )
-            }
-        }catch (e: Exception){
-            holdCurrentSync(posInvoice, false)
-            val errorMsg="${e.message}"
-            println(errorMsg)
-        }
-    }
-
     private fun tenderPosInvoice(posState: PosUIState) : PosInvoice{
         posState.run {
             val netCost=grandTotal.roundTo(2)//4
@@ -1865,6 +1836,48 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    private suspend fun executePosPayment(posInvoice: PosInvoice) {
+        try {
+            networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateLoader(true)
+                        updateSyncInProgress(true)
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.result?.posInvoice != null)
+                        {
+                            holdCurrentSync(posInvoice,true)
+                            ticketCompleted()
+                        }
+                        else
+                        {
+                            holdCurrentSync(posInvoice, false)
+                            ticketCompleted()
+                        }
+                    },
+                    onError = { errorMsg ->
+                        holdCurrentSync(posInvoice, false)
+                        println(errorMsg)
+                        ticketCompleted()
+                    }
+                )
+            }
+        }catch (e: Exception){
+            holdCurrentSync(posInvoice, false)
+            val errorMsg="${e.message}"
+            println(errorMsg)
+        }
+    }
+    fun ticketCompleted(){
+        updatePaymentSuccessDialog(true)
+        /*if (state.showPaymentConfirmationPopUp) {
+            updatePaymentSuccessDialogVisibility(true)
+        }else{
+            clearSale()
+        }*/
+    }
+
     private fun holdCurrentSync(posInvoice: PosInvoice, isSync: Boolean) {
         viewModelScope.launch {
             try {
@@ -1874,8 +1887,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     isSynced = isSync
                 ))
                 constructReceiptAndPrintTemplate(posInvoice)
-                //clearSale()
-
             }catch (ex:Exception){
                 val errorMsg="Error Saving Data \n${ex.message}"
                 updatePOSError(errorMsg)
@@ -1883,7 +1894,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 updateSyncInProgress(false)
             }
         }
-
     }
 
     private fun constructReceiptAndPrint(ticket: PosInvoice){
@@ -2013,6 +2023,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun clearSale(){
+        _posInvoice.update { PosInvoice() }
+        _posUIState.update { PosUIState() }
+        onPaymentClose()
+    }
+
     private fun updatePaymentInvoiceState(transaction: PosInvoice) {
         _posInvoice.update { transaction }
     }
@@ -2023,12 +2039,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun onPaymentClose() {
         _posUIState.update { state -> state.copy(isPaymentClose = true) }
-    }
-
-     fun clearSale(){
-         _posInvoice.update { PosInvoice() }
-         _posUIState.update { PosUIState() }
-         onPaymentClose()
     }
 
 

@@ -32,7 +32,7 @@ actual class PrinterServiceProvider actual constructor(){
         printer.connectPrinter(printers, printerType, textToPrint)
     }
 
-    actual fun getPrintTextForReceiptTemplate(
+    actual suspend fun getPrintTextForReceiptTemplate(
         posInvoice: PosInvoice,
         template: String,
         printers: Printers
@@ -40,7 +40,7 @@ actual class PrinterServiceProvider actual constructor(){
         return printer.applyDynamicReceiptTemplate(posInvoice,template,printers)
     }
 
-    actual fun getFormattedTemplateForSettlement(
+    actual suspend fun getFormattedTemplateForSettlement(
         posSettlement: PosSettlement,
         template: String,
         printers: Printers

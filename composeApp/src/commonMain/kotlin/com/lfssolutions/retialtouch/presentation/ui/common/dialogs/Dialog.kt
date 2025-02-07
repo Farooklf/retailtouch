@@ -1405,12 +1405,11 @@ fun PaymentSuccessDialog(
                     onClick = {
                         onDismiss()
                     },
-                    modifier = Modifier.weight(1f).height(IntrinsicSize.Max),
+                    modifier = Modifier.wrapContentWidth().height(IntrinsicSize.Max),
                     label = stringResource(Res.string.new_order),
                     primaryText = AppTheme.colors.appWhite,
                     textStyle = AppTheme.typography.bodyBold(),
-                    backgroundColor = AppTheme.colors.appGreen,
-                    icon = Res.drawable.ic_add
+                    backgroundColor = AppTheme.colors.appGreen
                 )
             }
         }

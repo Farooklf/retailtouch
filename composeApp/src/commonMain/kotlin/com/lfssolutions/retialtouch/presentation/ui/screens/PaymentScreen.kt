@@ -94,8 +94,8 @@ object PaymentTypeScreen:Screen{
     override fun Content() {
         Payment()
     }
-
 }
+
 @Composable
 fun Payment(
     viewModel: SharedPosViewModel = koinInject()
@@ -214,7 +214,7 @@ fun Payment(
         balance = abs(state.remainingBalance),
         onPrinting = {
             viewModel.updatePaymentSuccessDialog(false)
-            //viewModel.printPosPaymentReceipt()
+
         }
     )
 }
@@ -495,7 +495,7 @@ private fun OrderSummary(
                 label = stringResource(Res.string.balance),
                 value = balance,
                 textStyle = AppTheme.typography.titleBold().copy(fontSize = 20.sp),
-                primaryText = AppTheme.colors.textBlack,
+                primaryText = AppTheme.colors.appRed,
                 viewModel=viewModel
             )
         }
