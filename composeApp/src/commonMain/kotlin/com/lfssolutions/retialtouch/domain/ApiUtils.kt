@@ -50,15 +50,16 @@ object ApiUtils : KoinComponent {
 
 
     suspend fun getBearerToken(): String {
-        return if (!isLoggedIn()) {
+        /*return if (!isLoggedIn()) {
             tokenMutex.withLock { // Ensure only one coroutine refreshes the token
                 "Bearer ${refreshToken1()}"
             }
         }
         else{
             "Bearer ${preferences.getToken().first()}"
-        }
+        }*/
 
+        return "Bearer ${preferences.getToken().first()}"
     }
 
      suspend fun isLoggedIn() : Boolean {

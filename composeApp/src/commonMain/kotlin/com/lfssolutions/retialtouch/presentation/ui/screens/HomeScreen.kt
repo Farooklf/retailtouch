@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +45,7 @@ import com.lfssolutions.retialtouch.utils.DateTimeUtils
 import com.lfssolutions.retialtouch.utils.HomeItemId
 import com.lfssolutions.retialtouch.utils.exitApp
 import com.outsidesource.oskitcompose.router.KMPBackHandler
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
@@ -77,6 +79,7 @@ fun Home(
     val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
     //val appState = LocalAppState.current
     val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
+    val coroutineScope= rememberCoroutineScope()
 
     KMPBackHandler(true, onBack = {
         homeViewModel.updateExitFormDialogState(true)
@@ -163,7 +166,10 @@ fun Home(
                                     }
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
-                                        syncViewModel.reSync(true)
+                                        coroutineScope.launch {
+                                            syncViewModel.reSync(true)
+                                        }
+
                                     }
                                     HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)

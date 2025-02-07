@@ -1309,7 +1309,6 @@ fun PaymentSuccessDialog(
         onCancelClick = { viewModel.updatePhoneReceiptsDialogVisibility(false) }
     )*/
 
-
     val dialogText = if (balance > 0) {
         "Change :${state.currencySymbol} $balance \n\n Out of $appliedPayments"
 

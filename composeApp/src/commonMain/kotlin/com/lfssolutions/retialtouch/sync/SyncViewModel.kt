@@ -11,6 +11,7 @@ import com.lfssolutions.retialtouch.domain.model.basic.BasicApiRequest
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.lfssolutions.retialtouch.domain.model.location.Location
+import com.lfssolutions.retialtouch.domain.model.login.LoginRequest
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryItem
 import com.lfssolutions.retialtouch.domain.model.menu.MenuItem
 import com.lfssolutions.retialtouch.domain.model.products.Stock
@@ -40,7 +41,6 @@ import com.lfssolutions.retialtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.lfssolutions.retialtouch.utils.DateFormatter
-import com.lfssolutions.retialtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.lfssolutions.retialtouch.utils.DateTimeUtils.getLastSyncDateTime
 import com.lfssolutions.retialtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
 import com.lfssolutions.retialtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
@@ -61,9 +61,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SyncViewModel : BaseViewModel() , KoinComponent {
 
@@ -105,15 +104,15 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }*/
 
-    fun reSync(completeSync: Boolean = false) {
+     fun reSync(completeSync: Boolean = false) {
         if (syncDataState.value.syncInProgress) return
         if (completeSync) {
             println("start syncEveryThing")
             syncEveryThing()
         } else {
             println("start reSyncItems")
-            syncEveryThing()
-                //reSyncItems()
+            //syncEveryThing()
+            reSyncItems()
         }
     }
 
@@ -123,16 +122,10 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateSyncProgress(true)
                 updateSyncCompleteStatus(false)
                 updateError(syncError = false, errorMsg = "", errorTitle = "")
-                /*val refferdJob=async {
-                     if (!ApiUtils.isLoggedIn()) {
-                        tokenMutex.withLock { // Ensure only one coroutine refreshes the token
-                            "Bearer ${refreshToken1()}"
-                        }
-                    }
-                    else{
-                        "Bearer ${ApiUtils.preferences.getToken().first()}"
-                    }
-                }.await()*/
+
+                if (loginRequired()) {
+                    refreshToken()
+                }
                 val syncJob= listOf(
                     async {
                         val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
@@ -168,11 +161,47 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    suspend fun getLoggedIn() : Boolean {
-        val tokenTime : Long = ApiUtils.preferences.getTokenTime().first()
+     private suspend fun loginRequired() : Boolean {
+         println("LoginRequired")
+        val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
         val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
+         println("hoursPassed ${hoursPassed}")
         return hoursPassed > TOKEN_EXPIRY_THRESHOLD
+    }
+
+    private suspend fun refreshToken(): String {
+        return withContext(Dispatchers.IO) { // Use withContext instead of runBlocking
+            try {
+                var result = ""
+                 networkRepository.hitLoginAPI(getLoginDetails()).collect { response ->
+                    when (response) {
+                        is RequestState.Success -> {
+                            val token = response.data.result
+                            ApiUtils.preferences.setToken(token ?: "")
+                            result = token ?: ""
+                        }
+                        else -> {
+
+                        }
+                    }
+                }
+                result
+            } catch (e: Exception) {
+                e.printStackTrace()
+                ""
+            }
+        }
+    }
+
+    private suspend fun getLoginDetails(): LoginRequest {
+        val loginRequest = LoginRequest(
+            usernameOrEmailAddress = ApiUtils.preferences.getUserName().first(),
+            tenancyName = ApiUtils.preferences.getTenancyName().first(),
+            password = ApiUtils.preferences.getUserPass().first(),
+        )
+        return loginRequest
+
     }
 
     // Update reSync time and restart timer
@@ -214,6 +243,11 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 if (!silent) {
                     updateSyncProgress(true)
                 }
+                if (loginRequired()){
+                    println("LoginRequired")
+                    refreshToken()
+                }
+                refreshToken()
                 networkRepository.syncAllApis(getBasicRequest()).collect { apiResponse ->
                     observeResponseNew(apiResponse,
                         onLoading = {
@@ -252,6 +286,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                         }
                     )
                 }
+
             } catch (e: Exception) {
                 handleError(
                     errorTitle = SYNC_CHANGES_ERROR_TITLE,

@@ -473,7 +473,7 @@ class Printer(val receiptWidth: Int = 1600) {
                         var ipaddress = ""
                         var port = "8080"
                         if (ethernetIPAddress.contains(":")) {
-                            var splited = ethernetIPAddress.split(":")
+                            val splited = ethernetIPAddress.split(":")
                             ipaddress = splited[0]
                             port = splited[1]
                         }
