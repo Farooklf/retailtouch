@@ -1991,7 +1991,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    println("printer_paperSize ${printer.paperSize}")
+                    //println("printer_paperSize ${printer.paperSize}")
                     val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2,printer)
                     println("finalTextToPrint :$finalTextToPrint")
 

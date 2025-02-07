@@ -70,6 +70,7 @@ import com.lfssolutions.retialtouch.sync.SyncViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import com.lfssolutions.retialtouch.utils.LocalAppState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
@@ -140,6 +141,7 @@ object SettingScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val appState = LocalAppState.current
         val state by viewModel.settingUiState.collectAsStateWithLifecycle()
+        val coroutineScope = rememberCoroutineScope()
 
         BasicScreen(
             modifier = Modifier.systemBarsPadding(),
@@ -521,7 +523,7 @@ object SettingScreen : Screen {
     @Composable
     fun SettingDataStatsPage(state: SettingUIState, viewModel: SettingViewModel,syncViewModel: SyncViewModel= koinInject()) {
         val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
-
+        val coroutineScope= rememberCoroutineScope()
         LaunchedEffect(syncDataState.syncComplete){
             if(syncDataState.syncComplete){
                 viewModel._readStats()
@@ -634,7 +636,9 @@ object SettingScreen : Screen {
                     .fillMaxWidth(.8f)
                     .wrapContentHeight(),
                 onClick = {
-                    syncViewModel.reSync(true)
+                    coroutineScope.launch {
+                        syncViewModel.reSync(true)
+                    }
                 }
             )
 
