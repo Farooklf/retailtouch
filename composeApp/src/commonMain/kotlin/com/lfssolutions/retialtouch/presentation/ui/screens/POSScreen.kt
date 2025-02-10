@@ -67,7 +67,6 @@ import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CreateMemberD
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
 import com.lfssolutions.retialtouch.presentation.ui.common.GreyButtonWithElevation
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.ListItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.MemberListDialog
@@ -80,6 +79,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.StokesListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PromotionAndDiscountDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.TicketDiscountDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -395,8 +395,8 @@ fun Pos(
                             .weight(1f)
                             .wrapContentHeight(),
                         onClick = {
-                            //posViewModel.onTotalDiscountItemClick()
-                            posViewModel.updateDiscountDialog(true)
+                           // posViewModel.onGlobalDiscountClick()
+                            posViewModel.onGlobalDiscountClick()
                         }
                     )
 
@@ -447,14 +447,14 @@ fun Pos(
 
     //Discount Content
     PromotionAndDiscountDialog(
-        isVisible = posUIState.showDiscountDialog,
+        isVisible = posUIState.showPromotionDiscountDialog,
         promotions=posUIState.promotions,
         isPortrait=appState.isPortrait,
         onDismiss = {
-            posViewModel.updateDiscountDialog(false)
+            posViewModel.updatePromotionDiscountDialog(false)
         },
         onItemClick = {promotion->
-            posViewModel.updateDiscountDialog(false)
+            posViewModel.updatePromotionDiscountDialog(false)
             posViewModel.applyPromotionDiscounts(promotion)
         },
         onClearPromotionClick = {
@@ -463,8 +463,8 @@ fun Pos(
     )
 
     //Cart Item Discount Content
-    ItemDiscountDialog(
-        isVisible = posUIState.showItemDiscountDialog,
+    TicketDiscountDialog(
+        isVisible = posUIState.showDiscountDialog,
         inputValue = posUIState.itemDiscount,
         inputError = posUIState.inputDiscountError,
         trailingIcon= posViewModel.getDiscountTypeIcon(),
@@ -629,7 +629,9 @@ fun POSTaxItem(
                             contentColor = textColor,
                             buttonBgdColor = buttonBgColor,
                             textStyle = AppTheme.typography.bodyNormal(),
-                            onClick = {posViewModel.onPriceItemClick(item,index)}
+                            onClick = {
+                                posViewModel.onItemDiscountClick(item,index)
+                            }
                         )
                     }
 
@@ -733,7 +735,7 @@ fun POSTaxItem(
                             contentColor = textColor,
                             buttonBgdColor = buttonBgColor,
                             textStyle = AppTheme.typography.bodyNormal(),
-                            onClick = {posViewModel.onPriceItemClick(item,index)}
+                            onClick = {posViewModel.onItemDiscountClick(item,index)}
                         )
                     }
 
@@ -964,7 +966,7 @@ fun BottomContent(modifier: Modifier, posUIState: PosUIState, posViewModel: Shar
 
                 TexWithClickableBg(onClick = {
                     //open discount pad
-                    posViewModel.onTotalDiscountItemClick()
+                    posViewModel.onGlobalDiscountClick()
 
                 }){
                     BottomTex(label = stringResource(Res.string.discount_value, posViewModel.getDiscountValue()), color = AppTheme.colors.appWhite)

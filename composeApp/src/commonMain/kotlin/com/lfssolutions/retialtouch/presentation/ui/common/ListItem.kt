@@ -445,8 +445,7 @@ fun CartListItem(
                         buttonBgdColor = buttonBgColor,
                         textStyle =textStyle,
                         onClick = {
-                            posViewModel.updateItemDiscountDialogState(true)
-                            posViewModel.onPriceItemClick(item,index)
+                            posViewModel.onItemDiscountClick(selectedItem = item, index = index)
                         }
                     )
                 }

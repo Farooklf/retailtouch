@@ -14,7 +14,7 @@
         android:id="@+id/product_name_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Demo1 \n[10039]"
+        android:text=""
         android:textColor="@color/black_color"
         style="@style/TextAppearance.AppCompat.Title"/>
 
@@ -34,7 +34,7 @@
                 android:id="@+id/product_price_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1.0x20"
+                android:text=""
                 android:textColor="@color/black_color"
                 style="@style/TextAppearance.AppCompat.Medium" />
 
@@ -42,7 +42,7 @@
                 android:id="@+id/product_subtotal_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="20$"
+                android:text=""
                 android:textColor="@color/red_color"
                 android:layout_marginStart="@dimen/_5dp"
                 android:textStyle="bold"
@@ -58,7 +58,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|center_vertical"
             android:gravity="end|bottom"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/discount_label_tv"
@@ -75,7 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_2dp"
-                android:text="10$"
+                android:text=""
                 android:textColor="@color/discount_color"
                 android:textStyle="bold"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"

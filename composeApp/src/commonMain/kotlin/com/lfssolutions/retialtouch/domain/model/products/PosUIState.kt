@@ -21,15 +21,7 @@ data class PosUIState(
     var isLoading : Boolean = false,
     var searchQuery :String = "",
     var showDialog : Boolean = false,
-    var showItemDiscountDialog : Boolean = false,
-    var isAppliedDiscountOnTotal : Boolean = false,
-    val loginUser: LoginResponse = LoginResponse(),
     var currencySymbol : String = "$",
-    var itemDiscount : String = "",
-    var inputDiscountError : String? =null,
-    var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
-    var selectedDiscountApplied : DiscountApplied = DiscountApplied.GLOBAL,
-
 
     //CATEGORY AND MENU
     val showCartLoader: Boolean = false,
@@ -45,9 +37,19 @@ data class PosUIState(
     val menuItemIndex: MutableMap<Int, Int> = mutableMapOf(),
     val loadingProductContent: Boolean = true,
     val animatedProductCard: AnimatedProductCard? = null,
-
+    val shoppingCart: List<ProductItem> = listOf(),
+    val cartList: MutableList<CartItem> = mutableListOf(),
+    val stockList : List<Product> = listOf(),
+    val dialogStockList : List<Product> = listOf(),
+    var selectedProduct : CartItem = CartItem(),
+    var itemPosition : Int = 0,
+    var isRemoveDialog : Boolean = false,
+    var isCallScannedItems : Boolean = false,
+    val originalTotal: Double = 0.0,
+    var showItemRemoveDialog : Boolean = false,
 
     //auth
+    val loginUser: LoginResponse = LoginResponse(),
     val isDiscountGranted :Boolean=false,
     val posInvoiceRounded :Double?=0.0,
     val isSalesTaxInclusive :Boolean=false,
@@ -60,8 +62,6 @@ data class PosUIState(
     val exchange :Boolean=false,
     val globalExchangeActivator :Boolean=false,
     val isPrinterEnable :Boolean=false,
-    val globalDiscountIsInPercent :Boolean=false,
-    val globalDiscount: Double = 0.0,
     val quantityTotal: Double = 0.0,
     val cartSubTotal: Double = 0.0,
     val cartTotalWithoutDiscount: Double = 0.0,
@@ -75,23 +75,30 @@ data class PosUIState(
     val discountIsInPercent :Boolean=false,
     val promoDiscount :Double?=0.0,
 
-    val shoppingCart: List<ProductItem> = listOf(),
-    val cartList: MutableList<CartItem> = mutableListOf(),
-    var selectedCartItem : CartItem = CartItem(),
-    //Dialog
+    //Discount Dialog
     var showDiscountDialog : Boolean = false,
-    val stockList : List<Product> = listOf(),
-    val dialogStockList : List<Product> = listOf(),
-    var selectedProduct : CartItem = CartItem(),
-    var itemPosition : Int = 0,
-    var isRemoveDialog : Boolean = false,
-    var isCallScannedItems : Boolean = false,
+    var isAppliedDiscountOnTotal : Boolean = false,
+    var selectedDiscountType : DiscountType = DiscountType.FIXED_AMOUNT,
+    var selectedDiscountApplied : DiscountApplied = DiscountApplied.GLOBAL,
+    var selectedCartItem : CartItem = CartItem(),
+    val globalDiscountIsInPercent :Boolean=false,
+    val globalDiscount: Double = 0.0,
+    var itemDiscount : String = "",
     var discounts: Double = 0.0,
-    val originalTotal: Double = 0.0,
-    var showItemRemoveDialog : Boolean = false,
+    var inputDiscountError : String? =null,
 
+    //promotion
+    var showPromotionDiscountDialog : Boolean = false,
+    val promotions : MutableList<Promotion> = mutableListOf(),
+    val promotionDetails : MutableList<PromotionDetails> = mutableListOf(),
+    val promoByPriceBreak :MutableMap<Int, CRPromotionByPriceBreak> = HashMap(emptyMap()),
+    val promoByQuantity : MutableMap<Int, CRPromotionByQuantity> = HashMap(emptyMap()),
+    val promotionByQuantity :Boolean=false,
+    val promotionActive :Boolean=false,
+    val promotionDiscountIsInPercent :Boolean=false,
+    val promotionDiscount: Double = 0.0,
 
-    //Hold
+    //Hold Sale
     var isHoldSaleDialog : Boolean = false,
     var showHoldSalePopup : Boolean = false,
     var salesOnHold : MutableMap<Long, CRSaleOnHold> = hashMapOf(),
@@ -122,15 +129,6 @@ data class PosUIState(
 
     //location
     val location : Location? =Location(),
-
-    //promotion
-    val promotions : MutableList<Promotion> = mutableListOf(),
-    val promotionDetails : MutableList<PromotionDetails> = mutableListOf(),
-    val promoByPriceBreak :MutableMap<Int, CRPromotionByPriceBreak> = HashMap(emptyMap()),
-    val promoByQuantity : MutableMap<Int, CRPromotionByQuantity> = HashMap(emptyMap()),
-    var promotionDiscount : Double=0.0,
-    val promotionByQuantity :Boolean=false,
-    val promotionActive :Boolean=false,
 
     //Payment
     val isFastPayment: Boolean = false,

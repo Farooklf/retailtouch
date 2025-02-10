@@ -178,7 +178,7 @@ fun CashierUI(
 
     //Discount Content
     DiscountDialog(
-        isVisible = state.showDiscountDialog,
+        isVisible = state.showPromotionDiscountDialog,
         promotions=state.promotions,
         isPortrait=appState.isPortrait,
         onDismiss = {

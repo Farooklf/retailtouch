@@ -194,7 +194,7 @@
                                 android:id="@+id/subtotal_tv"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="100$"
+                                android:text=""
                                 android:gravity="end"
                                 android:textStyle="bold"
                                 android:textColor="@color/white_color"
@@ -227,7 +227,7 @@
                                 android:id="@+id/tax_tv"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="10$"
+                                android:text=""
                                 android:textStyle="bold"
                                 android:textColor="@color/white_color"
                                 style="@style/TextAppearance.AppCompat.Subhead" />
@@ -259,7 +259,7 @@
                                 android:id="@+id/discount_tv"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="20$"
+                                android:text=""
                                 android:textStyle="bold"
                                 android:textColor="@color/white_color"
                                 style="@style/TextAppearance.AppCompat.Subhead" />

@@ -15,20 +15,16 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,13 +38,12 @@ import com.lfssolutions.retialtouch.presentation.ui.common.CartHeaderImageButton
 import com.lfssolutions.retialtouch.presentation.ui.common.CartListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.CashierBasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
-import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.HoldSaleDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ItemDiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.MemberListDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PromotionAndDiscountDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
+import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.TicketDiscountDialog
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -63,14 +58,20 @@ import org.jetbrains.compose.resources.stringResource
 import retailtouch.composeapp.generated.resources.Res
 import retailtouch.composeapp.generated.resources.clear_item_message
 import retailtouch.composeapp.generated.resources.clear_scanned_message
+import retailtouch.composeapp.generated.resources.discount
+import retailtouch.composeapp.generated.resources.discount_str
 import retailtouch.composeapp.generated.resources.discount_value
 import retailtouch.composeapp.generated.resources.held_tickets
 import retailtouch.composeapp.generated.resources.hold_sale
 import retailtouch.composeapp.generated.resources.img_empty_cart
 import retailtouch.composeapp.generated.resources.items
+import retailtouch.composeapp.generated.resources.items_discount
 import retailtouch.composeapp.generated.resources.no_products_added
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.price
+import retailtouch.composeapp.generated.resources.promo_discount
+import retailtouch.composeapp.generated.resources.promotion_discount
+import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
@@ -127,6 +128,11 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
         true
     }
 
+    val discountText=if(state.globalDiscount>0){
+        stringResource(Res.string.discount_str, viewModel.getDiscountValue())
+    }else{
+        stringResource(Res.string.discount)
+    }
 
     CashierBasicScreen(
         modifier = Modifier
@@ -161,7 +167,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                     icon = AppIcons.percentageIcon,
                     isVisible = state.cartList.isNotEmpty(),
                     onClick = {
-                        viewModel.updateDiscountDialog(true)
+                        viewModel.updatePromotionDiscountDialog(true)
                     }
                 )
 
@@ -263,17 +269,29 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                     )
                 }
 
-
-
-                if(state.globalDiscount>0.0 && state.cartList.isNotEmpty()){
+                if(state.cartItemTotalDiscounts>0.0 && state.cartList.isNotEmpty()){
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         BottomTex(
-                            label = stringResource(Res.string.discount_value,":"),
+                            label = stringResource(Res.string.items_discount,":"),
                             textStyle = textStyleHeader,
                             color = AppTheme.colors.appRed)
 
                         BottomTex(
-                            label = viewModel.getDiscountValue()/*viewModel.getDiscountValue()*/, //state.cartItemsDiscount+state.cartPromotionDiscount
+                            label = viewModel.formatPriceForUI(state.cartItemTotalDiscounts,),
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appRed)
+                    }
+                }
+
+                if(state.promotionDiscount>0.0 && state.cartList.isNotEmpty()){
+                    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        BottomTex(
+                            label = stringResource(Res.string.promotion_discount,":"),
+                            textStyle = textStyleHeader,
+                            color = AppTheme.colors.appRed)
+
+                        BottomTex(
+                            label = viewModel.getPromotionDiscountValue()/*viewModel.getDiscountValue()*/, //state.cartItemsDiscount+state.cartPromotionDiscount
                             textStyle = textStyleHeader,
                             color = AppTheme.colors.appRed)
                     }
@@ -347,7 +365,23 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                         }
                     )
 
-
+                    //Discount Button
+                    AppPrimaryButton(
+                        enabled = state.cartList.isNotEmpty(),
+                        label = discountText,
+                        leftIcon = AppIcons.discountIcon,
+                        backgroundColor = AppTheme.colors.appRed,
+                        disabledBackgroundColor = AppTheme.colors.appRed,
+                        style = btnStyle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        onClick = {
+                            //posViewModel.onTotalDiscountItemClick()
+                            viewModel.onGlobalDiscountClick()
+                        }
+                    )
+                    
                     //Payment Button
                     AppPrimaryButton(
                         enabled = state.cartList.isNotEmpty(),
@@ -397,18 +431,18 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
 
     //Discount Content
     PromotionAndDiscountDialog(
-        isVisible = state.showDiscountDialog,
+        isVisible = state.showPromotionDiscountDialog,
         promotions=state.promotions,
         isPortrait=true,
         onDismiss = {
-            viewModel.updateDiscountDialog(false)
+            viewModel.updatePromotionDiscountDialog(false)
         },
         onItemClick = {promotion->
-            viewModel.updateDiscountDialog(false)
+            viewModel.updatePromotionDiscountDialog(false)
             viewModel.applyPromotionDiscounts(promotion)
         },
         onClearPromotionClick = {
-            viewModel.updateDiscountDialog(false)
+            viewModel.updatePromotionDiscountDialog(false)
             viewModel.clearAppliedPromotions()
         }
     )
@@ -445,14 +479,14 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
     )
 
     //Cart Item Discount Content
-    ItemDiscountDialog(
-        isVisible = state.showItemDiscountDialog,
+    TicketDiscountDialog(
+        isVisible = state.showDiscountDialog,
         inputValue = state.itemDiscount,
         inputError = state.inputDiscountError,
         trailingIcon= viewModel.getDiscountTypeIcon(),
         selectedDiscountType = state.selectedDiscountType,
         onDismissRequest = {
-            viewModel.updateItemDiscountDialogState(false)
+            viewModel.resetDiscountDialog()
         },
         onTabClick = {discountType->
             viewModel.updateDiscountType(discountType)
@@ -461,11 +495,11 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
             viewModel.updateDiscountValue(discount)
         },
         onApply = {
-            viewModel.updateItemDiscountDialogState(false)
+            viewModel.resetDiscountDialog()
             viewModel.onApplyDiscountClick()
         },
         onCancel = {
-            viewModel.updateItemDiscountDialogState(false)
+            viewModel.resetDiscountDialog()
         },
         onNumberPadClick = {symbol->
             viewModel.onNumberPadClick(symbol)

@@ -1043,7 +1043,7 @@ fun PaymentModeListItem(
 }
 
 @Composable
-fun ItemDiscountDialog(
+fun TicketDiscountDialog(
     isVisible: Boolean,
     inputValue:String,
     inputError:String?,

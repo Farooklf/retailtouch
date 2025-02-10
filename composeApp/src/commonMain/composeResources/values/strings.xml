@@ -48,13 +48,14 @@
     <string name="qty">Qty</string>
     <string name="discount">Discount</string>
     <string name="sub_total">Subtotal</string>
-    <string name="items_discount">Items Discount</string>
+    <string name="items_discount">Items Discount:</string>
     <string name="promo_discount">Promo Discount</string>
     <string name="qty_value">Qty : </string><!--%1$s-->
     <string name="items_value">Items :</string>
     <string name="tax_value">Tax : </string>
     <string name="total_value">Total :</string>
     <string name="discount_value">Discount :</string>
+    <string name="promotion_discount">Promotion Discount: </string> <!--extra added-->
     <string name="discount_str">Dis: %1$s</string>
 
     <string name="hold_sale">Hold Sale</string>
