@@ -153,7 +153,7 @@ fun Home(
 
                                     }
                                     HomeItemId.STOCK_ID->{
-
+                                        appThemeContext.navigateToStockScreen(navigator)
                                     }
                                     HomeItemId.RECEIPT_ID->{
                                         NavigatorActions.navigateToTransactionScreen(navigator)

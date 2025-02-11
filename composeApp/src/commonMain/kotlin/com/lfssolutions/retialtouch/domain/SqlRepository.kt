@@ -113,6 +113,7 @@ interface SqlRepository {
     suspend fun updateProduct(productDao: ProductDao)
     suspend fun updateProductQuantity(productCode: String,quantity:Double)
     fun getAllProduct(): Flow<List<Product>>
+    fun getProducts(): Flow<Product>
     fun getProductById(id: Long): Flow<Product?>
     fun getProductByCode(code: String): Flow<Product?>
     fun getProductQty(code: String) : Flow<Double>

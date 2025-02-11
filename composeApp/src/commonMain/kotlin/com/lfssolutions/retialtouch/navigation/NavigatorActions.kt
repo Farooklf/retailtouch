@@ -66,4 +66,6 @@ object NavigatorActions {
     fun navigateToSettingScreen(navigator: Navigator) {
         navigator.push(Route.Setting.toVoyagerScreen())
     }
+
+
 }

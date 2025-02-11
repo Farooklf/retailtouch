@@ -17,4 +17,5 @@ sealed class Route {
     data object Payout : Route()
     data object Settlement : Route()
     data object Setting : Route()
+    data object Stock : Route()
 }

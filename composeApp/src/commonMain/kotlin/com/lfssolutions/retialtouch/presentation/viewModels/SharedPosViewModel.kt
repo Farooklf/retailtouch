@@ -115,7 +115,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             menuProducts.collectLatest { menu->
                 updateMenuProducts(menu)
             }
-
            // updateLoader(false)
         }
     }

@@ -7,7 +7,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -539,6 +538,129 @@ fun StokesListItem(position :Int, product: Product, currencySymbol: String, onCl
                 CommonListRow(product=product,currencySymbol=currencySymbol)
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
+        }
+    }
+}
+
+
+@Composable
+fun StockProductListItem(
+    position: Int,
+    product: Product,
+    currencySymbol: String,
+    isTablet: Boolean,
+    onClick: (Product) -> Unit
+) {
+    //val appState = LocalAppState.current
+    val (borderColor,rowBgColor)=when(position%2 != 0){
+        true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
+        false ->AppTheme.colors.appWhite to AppTheme.colors.appWhite
+    }
+
+    val horizontalPadding=if(isTablet)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    if(!isTablet){
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor).clickable{onClick(product)},
+                verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                CommonListRow(product=product, currencySymbol=currencySymbol)
+                ListText(
+                    label = product.name?:"",
+                    textStyle = AppTheme.typography.bodyMedium(),
+                    color = AppTheme.colors.textBlack,
+                    modifier = Modifier.wrapContentWidth().padding(start = horizontalPadding)
+                )
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+    else{
+        Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(rowBgColor)
+                .clickable{onClick(product)},
+                verticalArrangement =Arrangement.spaceBetweenPadded(10.dp)
+            ) {
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+                Row {
+
+                }
+                CommonListRow(product=product,currencySymbol=currencySymbol,)
+                AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
+            }
+        }
+    }
+}
+
+@Composable
+fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean,checked: Boolean,
+                  onClick: () -> Unit = {}){
+    //val appState = LocalAppState.current
+    val appState = AppTheme.context
+    val textStyle=if(!appState.isTablet)
+        AppTheme.typography.bodyMedium()
+    else
+        AppTheme.typography.titleMedium()
+
+    val horizontalPadding=if(!appState.isTablet)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+
+    ){
+        //checkBox
+        AppCheckBox(
+            checked = checked,
+            onCheckedChange = { onClick() }
+        )
+        //SKU
+        ListText(
+            label = product.productCode.uppercase(),
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1.2f)
+        )
+
+        //barCode
+        ListText(
+            label = product.barcode?:"",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey.copy(alpha = .8f),
+            modifier = Modifier.weight(1.2f)
+        )
+
+        ListText(
+            label = "$currencySymbol${product.price}",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1f)
+        )
+
+
+        ListText(
+            label = "${product.qtyOnHand}",
+            textStyle = textStyle,
+            color = AppTheme.colors.textDarkGrey,
+            modifier = Modifier.weight(1f)
+        )
+
+        if(appState.isTablet){
+            ListText(
+                label = product.name?:"",
+                textStyle =textStyle,
+                color = AppTheme.colors.textBlack,
+                modifier = Modifier.weight(1.5f)
+            )
         }
     }
 }

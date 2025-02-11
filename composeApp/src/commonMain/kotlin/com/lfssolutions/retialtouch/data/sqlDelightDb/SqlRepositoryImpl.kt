@@ -58,7 +58,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 
- class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository {
+
+class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository {
 
 
     override suspend fun insertAuthentication(authenticateDao: AuthenticateDao) {
@@ -575,7 +576,24 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override fun getProductById(id: Long) : Flow<Product?> = flow{
+     override fun getProducts(): Flow<Product> = flow {
+         retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
+             list.map { product ->
+                 emit(Product(
+                     id = product.productId,
+                     productCode = product.inventoryCode,
+                     name = product.name,
+                     barcode = product.barcode,
+                     image = product.image,
+                     tax = product.tax,
+                     price = product.price,
+                     qtyOnHand = product.quantity,
+                     itemDiscount = product.itemDiscount
+                 ))
+             }}
+     }
+
+     override fun getProductById(id: Long) : Flow<Product?> = flow{
         retailTouch.productsQueries.getProductById(id).executeAsOneOrNull().let { product->
             //println("product_db_data : $product")
             if(product!=null){

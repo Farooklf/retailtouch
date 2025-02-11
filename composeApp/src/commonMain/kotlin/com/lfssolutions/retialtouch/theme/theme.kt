@@ -88,6 +88,10 @@ data class AppThemeContext(
     fun navigateToPayoutScreen(navigator: Navigator) {
         navigator.push(Route.Payout.toVoyagerScreen())
     }
+
+    fun navigateToStockScreen(navigator: Navigator) {
+        navigator.push(Route.Stock.toVoyagerScreen())
+    }
 }
 
 

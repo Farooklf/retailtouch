@@ -10,6 +10,7 @@ import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
 import com.lfssolutions.retialtouch.presentation.ui.payout.PayoutViewModel
 import com.lfssolutions.retialtouch.presentation.ui.settings.SettingViewModel
+import com.lfssolutions.retialtouch.presentation.ui.stocks.StockViewModel
 import com.lfssolutions.retialtouch.utils.viewModelDefinition
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
 import com.lfssolutions.retialtouch.presentation.viewModels.EmployeeViewModel
@@ -83,7 +84,6 @@ fun appModule() = module {
     //ViewModels
     single { SharedPosViewModel() }
     single { HomeViewModel() }
-    single { PrinterViewModel() }
 
     viewModelDefinition { BaseViewModel() }
     viewModelDefinition { SyncViewModel() }
@@ -96,4 +96,6 @@ fun appModule() = module {
     viewModelDefinition { SettlementViewModel() }
     viewModelDefinition { SettingViewModel() }
     viewModelDefinition { PayoutViewModel() }
+    viewModelDefinition { PrinterViewModel() }
+    viewModelDefinition { StockViewModel() }
 }

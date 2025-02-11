@@ -13,6 +13,7 @@ import com.lfssolutions.retialtouch.presentation.ui.screens.SettlementScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.SplashScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.TransactionDetailsScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.TransactionScreen
+import com.lfssolutions.retialtouch.presentation.ui.stocks.StockScreen
 
 fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.SplashScreen -> SplashScreen
@@ -27,4 +28,5 @@ fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.Payout-> PayoutScreen
     is Route.Settlement-> SettlementScreen
     is Route.Setting-> SettingScreen
+    is Route.Stock-> StockScreen
 }

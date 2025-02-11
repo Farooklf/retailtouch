@@ -62,6 +62,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
+import com.lfssolutions.retialtouch.presentation.ui.common.CommonListRow
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CreateMemberDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
@@ -135,9 +136,6 @@ fun Pos(
 
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
 
-    LaunchedEffect(Unit){
-       //posViewModel.initialState()
-    }
 
     LaunchedEffect(authUser){
         //posViewModel.getPrinterEnable()
@@ -1175,65 +1173,7 @@ fun DialogListItem(position :Int,product: Product, currencySymbol: String, onCli
     }
 }
 
-@Composable
-fun CommonListRow(product: Product,currencySymbol: String){
-    val appState = LocalAppState.current
-    val textStyle=if(appState.isPortrait)
-        AppTheme.typography.bodyMedium()
-      else
-        AppTheme.typography.titleMedium()
 
-    val horizontalPadding=if(appState.isPortrait)
-        AppTheme.dimensions.padding10
-    else
-        AppTheme.dimensions.padding20
-
-    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-
-    ){
-        //SKU
-        ListText(
-            label = product.productCode?.uppercase()?:"",
-            textStyle = textStyle,
-            color = AppTheme.colors.textDarkGrey,
-            modifier = Modifier.weight(1.2f)
-        )
-
-        //barCode
-        ListText(
-            label = product.barcode?:"",
-            textStyle = textStyle,
-            color = AppTheme.colors.textDarkGrey.copy(alpha = .8f),
-            modifier = Modifier.weight(1.2f)
-        )
-
-        ListText(
-            label = "$currencySymbol${product.price}",
-            textStyle = textStyle,
-            color = AppTheme.colors.textDarkGrey,
-            modifier = Modifier.weight(1f)
-        )
-
-
-        ListText(
-            label = "${product.qtyOnHand}",
-            textStyle = textStyle,
-            color = AppTheme.colors.textDarkGrey,
-            modifier = Modifier.weight(1f)
-        )
-
-        if(!appState.isPortrait){
-            ListText(
-                label = product.name?:"",
-                textStyle =textStyle,
-                color = AppTheme.colors.textBlack,
-                modifier = Modifier.weight(1.5f)
-            )
-        }
-    }
-}
 
 @Composable
 fun DiscountContent(
