@@ -4,9 +4,11 @@
     <string name="no_product_added" >No Products Added</string>
     <string name="balance" >Balance</string>
     <string name="paid" >Paid</string>
-    <string name="sub_total" >Sub Total</string>
-    <string name="discount" >Discount</string>
-    <string name="tax" >Tax</string>
+    <string name="total_qty" >Total Quantity : </string>
+    <string name="sub_total" >Sub Total : </string>
+    <string name="discount" >Discount : </string>
+    <string name="item_discount" >Item Discount : </string>
+    <string name="tax" >Tax : </string>
     <string name="change_due" >Change Due</string>
     <string name="grand_total" >Grand Total : %1$s</string>
 </resources>

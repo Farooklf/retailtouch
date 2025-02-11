@@ -182,6 +182,37 @@
                             android:padding="@dimen/_5dp">
 
                             <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/total_qty"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+                            <TextView
+                                android:id="@+id/qty_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:gravity="end"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1dp"
+                            android:background="@color/row_border_color"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:padding="@dimen/_5dp">
+
+                            <TextView
                                 android:id="@+id/subtotal"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -203,6 +234,38 @@
                         </LinearLayout>
 
                         <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1dp"
+                            android:background="@color/row_border_color"/>
+
+                        <LinearLayout
+                            android:id="@+id/item_discount_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:padding="@dimen/_5dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/item_discount"
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Medium"/>
+                            <TextView
+                                android:id="@+id/item_discount_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=""
+                                android:textStyle="bold"
+                                android:textColor="@color/white_color"
+                                style="@style/TextAppearance.AppCompat.Subhead" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/item_discount_divider"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/_1dp"
                             android:background="@color/row_border_color"/>

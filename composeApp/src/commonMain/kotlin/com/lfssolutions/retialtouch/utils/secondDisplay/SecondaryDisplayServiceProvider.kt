@@ -8,10 +8,12 @@ expect class SecondaryDisplayServiceProvider() {
 
     fun updateCartItems(
         cartItems: List<CartItem>,
+        cartTotalQty: Double,
         cartSubTotal: Double,
         cartTotal: Double,
         cartTotalTax: Double,
-        cartTotalDiscount: Double,
+        cartItemTotalDiscount: Double,
+        cartNetDiscounts: Double,
         currencySymbol: String
     )
 }

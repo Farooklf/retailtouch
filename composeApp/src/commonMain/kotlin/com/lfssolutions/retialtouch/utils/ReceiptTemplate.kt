@@ -93,7 +93,6 @@ val defaultTemplate2 = """
 
 [L]Invoice No: {{invoiceNo}}
 [L]Date: {{invoiceDate}}
-{posPayments}
 [[{4,8}:Customer|{{customerName}}]]
 [[{4,8}:Address|{{address1}}]]
 [[{4,8}: |{{address2}}]]
@@ -105,12 +104,14 @@ val defaultTemplate2 = """
 [[{4,8}:Qty|{{qty}}]]
 [[Line]]
 [[{8,4}:Sub Total |{{invoiceSubTotal}}]]
+[[{8,4}:Item Discount |{{invoiceItemDiscount}}]]
 [[{8,4}:Net Discount |{{invoiceNetDiscount}}]]
 [[{8,4}:Gst |{{invoiceTax}}]]
 [[{8,4}:Net Total |{{invoiceNetTotal}}]]
-[[{8,4}: |{{invoiceNetTotal}}]]
 [[Line]]
-[[{8,4}:Outstanding Amt |{{invoiceNetTotal}}]]
+[L]Payment Mode: {posPayments}
+[[Line]]
+
 [[Line]]
 [[{6,6}:Received By |Delivered By]]
 [[{6,6}:[L] | [R]]]
@@ -121,8 +122,8 @@ val defaultTemplate2 = """
 ###{{invoice.qrUrl}}
 
 <!-- posPayments Table -->
-<ListItem>
-[L]Terms: {{name}}
+<ListItem> 
+[L]{{name}}-{{amount}}
 </ListItem>
 
 <!-- posInvoiceDetails Table -->
@@ -131,6 +132,6 @@ val defaultTemplate2 = """
 [[{6,6}:{{qty}} X PCS {{price}} |[R]{{netTotal}}]]
 </ListItem>
 """
-
-
+/*[[{8,4}:Outstanding Amt |{{invoiceOutstandingAmt}}]]*/
+/*[[{8,4}:Promotion Discount |{{invoicePromotionDiscount}}]]*/
 

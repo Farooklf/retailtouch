@@ -82,4 +82,6 @@ data class PosInvoice(
     val customerName :String = "",
     val address1 :String = "",
     val address2 :String = "",
+    val invoicePromotionDiscount:Double=0.0,
+    val invoiceOutstandingAmt:Double=0.0
 )

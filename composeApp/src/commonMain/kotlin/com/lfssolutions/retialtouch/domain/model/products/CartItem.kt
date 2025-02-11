@@ -145,27 +145,22 @@ data class CartItem(
 
     // Calculate the final price with all conditions applied
      fun getFinalPrice(): Double {
-        var amt = if (promotionByQuantity) amount?.times(qty) else currentPrice * qty
+        var amt = if (promotionByQuantity) amount.times(qty) else currentPrice * qty
         //println("current Amt: $amt")
 
-        if (amt != null) {
-            if (amt > 0 ) {
-                if (discount > 0) {
-                    if (discountIsInPercent) {
-                        // Apply percentage discount directly, ensuring discount is valid
-                        amt -= (amt * discount / 100.0).coerceAtMost(amt)
-                    } else {
-                        // Apply flat discount, ensuring it doesn’t exceed the amount
-                        val totalDiscount = (discount).coerceAtMost(amt)
-                        amt -= totalDiscount
-                    }
+        if (amt > 0 ) {
+            if (discount > 0) {
+                if (discountIsInPercent) {
+                    // Apply percentage discount directly, ensuring discount is valid
+                    amt -= (amt * discount / 100.0).coerceAtMost(amt)
+                } else {
+                    // Apply flat discount, ensuring it doesn’t exceed the amount
+                    val totalDiscount = (discount).coerceAtMost(amt)
+                    amt -= totalDiscount
                 }
             }
         }
-        if (amt != null) {
-            return amt.coerceAtLeast(0.0)
-        }
-        return 0.0
+        return amt.coerceAtLeast(0.0)
     }
 
     fun getFinalPriceWithoutDiscounts():Double{

@@ -12,13 +12,24 @@ actual class SecondaryDisplayServiceProvider actual constructor() {
 
     actual fun updateCartItems(
         cartItems: List<CartItem>,
+        cartTotalQty: Double,
         cartSubTotal: Double,
         cartTotal: Double,
         cartTotalTax: Double,
-        cartTotalDiscount: Double,
+        cartItemTotalDiscount: Double,
+        cartNetDiscounts: Double,
         currencySymbol: String
     ){
-        secondaryDisplay?.checkAndUpdateCartDetails(cartItems,cartTotal,cartSubTotal,cartTotalTax,cartTotalDiscount,currencySymbol)
+
+        secondaryDisplay?.checkAndUpdateCartDetails(
+            currentCarts=cartItems,
+            cartTotalQty=cartTotalQty,
+            cartTotal = cartTotal,
+            cartSubTotal = cartSubTotal,
+            cartTotalTax = cartTotalTax,
+            cartNetDiscounts = cartNetDiscounts,
+            cartItemTotalDiscount = cartItemTotalDiscount,
+            currencySymbol = currencySymbol)
      }
 
 }

@@ -47,7 +47,6 @@ import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.TicketDiscoun
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
-import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.formatPrice
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
@@ -69,9 +68,7 @@ import retailtouch.composeapp.generated.resources.items_discount
 import retailtouch.composeapp.generated.resources.no_products_added
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.price
-import retailtouch.composeapp.generated.resources.promo_discount
 import retailtouch.composeapp.generated.resources.promotion_discount
-import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.qty_value
 import retailtouch.composeapp.generated.resources.retail_pos
@@ -85,7 +82,6 @@ import retailtouch.composeapp.generated.resources.total_value
 fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
     val viewModel = interactorRef.value
     val state by viewModel.posUIState.collectAsStateWithLifecycle()
-    val appState = LocalAppState.current
     val navigator = LocalNavigator.currentOrThrow
     val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
@@ -269,6 +265,18 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                     )
                 }
 
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    BottomTex(
+                        label = stringResource(Res.string.sub_total,":"),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+
+                    BottomTex(
+                        label = viewModel.formatPriceForUI(state.cartSubTotal),
+                        textStyle = textStyleHeader,
+                        color = AppTheme.colors.textDarkGrey)
+                }
+
                 if(state.cartItemTotalDiscounts>0.0 && state.cartList.isNotEmpty()){
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         BottomTex(
@@ -277,21 +285,21 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                             color = AppTheme.colors.appRed)
 
                         BottomTex(
-                            label = viewModel.formatPriceForUI(state.cartItemTotalDiscounts,),
+                            label = viewModel.formatPriceForUI(state.cartItemTotalDiscounts),
                             textStyle = textStyleHeader,
                             color = AppTheme.colors.appRed)
                     }
                 }
 
-                if(state.promotionDiscount>0.0 && state.cartList.isNotEmpty()){
+                if(state.globalDiscount>0.0 && state.cartList.isNotEmpty()){
                     Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         BottomTex(
-                            label = stringResource(Res.string.promotion_discount,":"),
+                            label = stringResource(Res.string.discount_value,":"),
                             textStyle = textStyleHeader,
                             color = AppTheme.colors.appRed)
 
                         BottomTex(
-                            label = viewModel.getPromotionDiscountValue()/*viewModel.getDiscountValue()*/, //state.cartItemsDiscount+state.cartPromotionDiscount
+                            label = viewModel.getDiscountValue()/*viewModel.getDiscountValue()*/, //state.cartItemsDiscount+state.cartPromotionDiscount
                             textStyle = textStyleHeader,
                             color = AppTheme.colors.appRed)
                     }
@@ -368,7 +376,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
                     //Discount Button
                     AppPrimaryButton(
                         enabled = state.cartList.isNotEmpty(),
-                        label = discountText,
+                        label = stringResource(Res.string.discount),
                         leftIcon = AppIcons.discountIcon,
                         backgroundColor = AppTheme.colors.appRed,
                         disabledBackgroundColor = AppTheme.colors.appRed,

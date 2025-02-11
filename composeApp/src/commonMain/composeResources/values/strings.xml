@@ -56,6 +56,7 @@
     <string name="total_value">Total :</string>
     <string name="discount_value">Discount :</string>
     <string name="promotion_discount">Promotion Discount: </string> <!--extra added-->
+    <string name="sub_total_value">Subtotal: </string> <!--extra added-->
     <string name="discount_str">Dis: %1$s</string>
 
     <string name="hold_sale">Hold Sale</string>

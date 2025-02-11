@@ -11,6 +11,7 @@ actual class SecondaryDisplayServiceProvider actual constructor() {
         cartSubTotal: Double,
         cartTotal: Double,
         cartTotalTax: Double,
+        cartItemTotalDiscount: Double,
         cartTotalDiscount: Double,
         currencySymbol: String
     ) {

@@ -67,7 +67,7 @@ data class PosUIState(
     val cartTotalWithoutDiscount: Double = 0.0,
     val cartPromotionDiscount: Double = 0.0,
     var cartItemTotalDiscounts : Double = 0.0,
-    var cartTotalDiscount : Double = 0.0,
+    var cartNetDiscounts : Double = 0.0,
     val grandTotal: Double = 0.0,
     val grandTotalWithoutDiscount :Double=0.0,
     val globalTax :Double=0.0,

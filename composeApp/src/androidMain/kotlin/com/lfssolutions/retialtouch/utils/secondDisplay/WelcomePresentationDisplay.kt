@@ -1,5 +1,6 @@
 package com.lfssolutions.retialtouch.utils.secondDisplay
 
+import android.annotation.SuppressLint
 import android.app.Presentation
 import android.content.Context
 import android.os.Build
@@ -61,15 +62,19 @@ class WelcomePresentationDisplay(
         }
     }
 
+    @SuppressLint("SetTextI18n")
     fun checkAndUpdateCartDetails(
         currentCarts: List<CartItem>,
+        cartTotalQty: Double,
         cartTotal: Double,
         cartSubTotal: Double,
         cartTotalTax: Double,
-        cartTotalDiscount: Double,
+        cartItemTotalDiscount: Double,
+        cartNetDiscounts: Double,
         currencySymbol: String,
     )
     {
+        println("cartTotalQty: $cartTotalQty | cartSubTotal: $cartSubTotal | GrandTotal : $cartTotal | TotalTax : $cartTotalTax | TotalDiscount : $cartNetDiscounts | ItemTotalDiscount: $cartItemTotalDiscount  | cartItems: $currentCarts ")
         if (currentCarts.isNotEmpty()) {
             findViewById<ConstraintLayout>(R.id.cart_display_layout).visibility = View.VISIBLE
             findViewById<ConstraintLayout>(R.id.display_layout).visibility = View.GONE
@@ -78,10 +83,14 @@ class WelcomePresentationDisplay(
             val imageSlider = findViewById<ImageSlider>(R.id.image_slider)
             val cartItemRv = findViewById<RecyclerView>(R.id.cartItemRv)
             val discountView = findViewById<LinearLayout>(R.id.discount_view)
+            val itemDiscountView = findViewById<LinearLayout>(R.id.item_discount_view)
             val discountDivider = findViewById<View>(R.id.discount_line)
+            val itemDiscountDivider = findViewById<View>(R.id.item_discount_divider)
             val totalTv = findViewById<TextView>(R.id.total_tv)
+            val qtyTv = findViewById<TextView>(R.id.qty_tv)
             val subTotalTv = findViewById<TextView>(R.id.subtotal_tv)
-            val taxTv = findViewById<TextView>(R.id.total_tv)
+            val itemDiscountTv = findViewById<TextView>(R.id.item_discount_tv)
+            val taxTv = findViewById<TextView>(R.id.tax_tv)
             val discountTv = findViewById<TextView>(R.id.discount_tv)
 
             val array = currentCarts.reversed()
@@ -112,13 +121,24 @@ class WelcomePresentationDisplay(
             cartItemRv.adapter=CartItemAdapter(currentCarts)
             cartItemRv.isNestedScrollingEnabled=false
 
+            qtyTv.text = "$cartTotalQty"
             subTotalTv.text = "$currencySymbol $cartSubTotal"
             taxTv.text = "$currencySymbol $cartTotalTax"
 
-            if(cartTotalDiscount>0.0){
+            if(cartItemTotalDiscount>0.0){
+                itemDiscountView.visibility = View.VISIBLE
+                itemDiscountDivider.visibility = View.VISIBLE
+                itemDiscountTv.text = "$currencySymbol  $cartItemTotalDiscount"
+
+            }else{
+                itemDiscountView.visibility = View.GONE
+                itemDiscountDivider.visibility = View.GONE
+            }
+
+            if(cartNetDiscounts>0.0){
                 discountView.visibility = View.VISIBLE
                 discountDivider.visibility = View.VISIBLE
-                discountTv.text = "$currencySymbol  $cartTotalDiscount"
+                discountTv.text = "$currencySymbol  $cartNetDiscounts"
 
             }else{
                 discountView.visibility = View.GONE
@@ -127,12 +147,6 @@ class WelcomePresentationDisplay(
 
             val cartGrandTotal="$currencySymbol $cartTotal"
             totalTv.text = context_.getString(R.string.grand_total,cartGrandTotal)
-            //findViewById<TextView>(R.id.balance_tv).text = "0"
-
-            //findViewById<TextView>(R.id.paid_due_tv).text = "0"
-
-            //getTotalPrice(array_,taxesResponse, findViewById(R.id.total_tv))
-
         }
         else {
             displayDefaultImage()

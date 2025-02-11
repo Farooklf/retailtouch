@@ -39,7 +39,8 @@ class ObjectToReceiptTemplateV1 {
                     if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()
-
+                        val actualValue = prop.get(data) // Extract the actual value from data
+                        //println("actualValue: $actualValue")
                         if (datePlaceHolder.containsMatchIn(processedText)) {
                             processedText = applyDateFormat(
                                 processedText,
@@ -52,6 +53,13 @@ class ObjectToReceiptTemplateV1 {
                                 formatValue(value, decimalPoints)
                             )
                         }
+                        /*if(checkValueIsDisplay(actualValue)){
+
+                        }else
+                        {
+                            // Remove the entire placeholder if value is 0.0
+                            processedText = processedText.replace(placeholder, "")
+                        }*/
                     }
                     if (value.isListType()) {
                         val listItems = value as? List<*>
@@ -265,6 +273,15 @@ class ObjectToReceiptTemplateV1 {
                 null -> ""
                 is Double -> String.format("%.${decimalPoints}f", value)
                 else -> value.toString()
+            }
+        }
+
+        fun checkValueIsDisplay(value: Any?): Boolean {
+            return when (value) {
+                null -> false
+                is String -> value != "0.0" && value.isNotBlank()
+                is Number -> value.toDouble() != 0.0
+                else -> true
             }
         }
 
