@@ -60,6 +60,7 @@ val LocalOrientationMode = staticCompositionLocalOf { Orientation.Portrait }
 val LocalLocalization = staticCompositionLocalOf { Language.English.isoFormat }
 val LocalDeviceType = staticCompositionLocalOf { Device.PHONE }
 val LocalAppState = staticCompositionLocalOf { false }
+val LocalAppOrientationMode = staticCompositionLocalOf { false }
 
 data class AppThemeContext(
     val colors: ComposeDesignColors,
@@ -70,6 +71,7 @@ data class AppThemeContext(
     val language: String,
     val deviceType: Device,
     val isTablet: Boolean,
+    val isPortrait: Boolean,
 ){
     @Composable
     fun getAppNavigator():Navigator{
@@ -133,6 +135,10 @@ object AppTheme{
         @Composable
         get() = LocalAppState.current
 
+    val isPortrait
+        @Composable
+        get() = LocalAppOrientationMode.current
+
     // Add this property
     val context: AppThemeContext
         @Composable
@@ -144,7 +150,8 @@ object AppTheme{
             orientation = appOrientation,
             language = appLanguage,
             deviceType = deviceType,
-            isTablet = isTablet
+            isTablet = isTablet,
+            isPortrait = isPortrait,
         )
 
 }
@@ -198,6 +205,7 @@ fun AppTheme(
     val deviceType = getDeviceType(windowSizeClass)
 
     val isTablet=Device.PHONE != deviceType
+    val isPortrait=orientation==Orientation.Portrait
 
     CompositionLocalProvider(
         LocalColors provides colors,
@@ -207,7 +215,8 @@ fun AppTheme(
         LocalOrientationMode provides orientation,
         LocalDeviceType provides deviceType,
         LocalLocalization provides language,
-        LocalAppState provides isTablet
+        LocalAppState provides isTablet,
+        LocalAppOrientationMode provides isPortrait
     ) {
         MaterialTheme(
             typography = ComposeDesignTypography.getMaterialTypography(),

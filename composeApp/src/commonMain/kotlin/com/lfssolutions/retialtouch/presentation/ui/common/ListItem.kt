@@ -30,6 +30,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material.Text
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,7 +55,6 @@ import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.domain.model.products.Stock
-import com.lfssolutions.retialtouch.presentation.ui.screens.CommonListRow
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
@@ -61,8 +62,15 @@ import com.lfssolutions.retialtouch.utils.LocalAppState
 import com.lfssolutions.retialtouch.utils.capitalizeFirstChar
 import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.barcode
+import retailtouch.composeapp.generated.resources.description
 import retailtouch.composeapp.generated.resources.ic_star
+import retailtouch.composeapp.generated.resources.in_stock
+import retailtouch.composeapp.generated.resources.price
+import retailtouch.composeapp.generated.resources.sku
 
 
 @Composable
@@ -497,7 +505,7 @@ fun CartListItem(
 }
 
 @Composable
-fun StokesListItem(position :Int, product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+fun StocksListItem(position :Int, product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
     val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
         true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
@@ -549,7 +557,8 @@ fun StockProductListItem(
     product: Product,
     currencySymbol: String,
     isTablet: Boolean,
-    onClick: (Product) -> Unit
+    isChecked: Boolean=false,
+    onCheckedChange : (Product) -> Unit
 ) {
     //val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
@@ -564,12 +573,14 @@ fun StockProductListItem(
 
     if(!isTablet){
         Box(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(AppTheme.colors.appWhite)){
-            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor).clickable{onClick(product)},
+            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().background(rowBgColor).clickable{onCheckedChange (product)},
                 verticalArrangement = Arrangement.spaceBetweenPadded(10.dp)) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
-                CommonListRow(product=product, currencySymbol=currencySymbol)
+                CommonListRow(product=product, currencySymbol=currencySymbol,showCheckBox = true,checked = isChecked, onCheckedChange = {
+                    onCheckedChange.invoke(product)
+                })
                 ListText(
-                    label = product.name?:"",
+                    label = product.name,
                     textStyle = AppTheme.typography.bodyMedium(),
                     color = AppTheme.colors.textBlack,
                     modifier = Modifier.wrapContentWidth().padding(start = horizontalPadding)
@@ -584,14 +595,14 @@ fun StockProductListItem(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(rowBgColor)
-                .clickable{onClick(product)},
+                .clickable{onCheckedChange.invoke(product)},
                 verticalArrangement =Arrangement.spaceBetweenPadded(10.dp)
             ) {
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
-                Row {
 
-                }
-                CommonListRow(product=product,currencySymbol=currencySymbol,)
+                CommonListRow(product=product,currencySymbol=currencySymbol,showCheckBox = true, checked = isChecked,onCheckedChange ={
+                    onCheckedChange.invoke(product)
+                })
                 AppHorizontalDivider(color = borderColor, modifier = Modifier.fillMaxWidth().padding(start = horizontalPadding))
             }
         }
@@ -599,16 +610,16 @@ fun StockProductListItem(
 }
 
 @Composable
-fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean,checked: Boolean,
-                  onClick: () -> Unit = {}){
+fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean=false,checked: Boolean=false,
+                  onCheckedChange : () -> Unit = {}){
     //val appState = LocalAppState.current
     val appState = AppTheme.context
-    val textStyle=if(!appState.isTablet)
+    val textStyle=if(appState.isPortrait)
         AppTheme.typography.bodyMedium()
     else
         AppTheme.typography.titleMedium()
 
-    val horizontalPadding=if(!appState.isTablet)
+    val horizontalPadding=if(appState.isPortrait)
         AppTheme.dimensions.padding10
     else
         AppTheme.dimensions.padding20
@@ -619,10 +630,14 @@ fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean,
 
     ){
         //checkBox
-        AppCheckBox(
-            checked = checked,
-            onCheckedChange = { onClick() }
-        )
+        if(showCheckBox){
+            AppCheckBox(
+                checked = checked,
+                modifier = Modifier.size(appState.dimensions.standerIcon),
+                onCheckedChange = { onCheckedChange() }
+            )
+        }
+
         //SKU
         ListText(
             label = product.productCode.uppercase(),
@@ -661,6 +676,67 @@ fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean,
                 color = AppTheme.colors.textBlack,
                 modifier = Modifier.weight(1.5f)
             )
+        }
+    }
+}
+
+
+@Composable
+fun CommonListHeader(showCancel: Boolean =false,onClearSelection:() -> Unit = {}){
+   // val appState = LocalAppState.current
+    val mAppThemeContext = AppTheme.context
+    val textStyle=if(mAppThemeContext.isPortrait)
+        AppTheme.typography.bodyBold()
+    else
+        AppTheme.typography.titleBold()
+
+    val horizontalPadding=if(mAppThemeContext.isPortrait)
+        AppTheme.dimensions.padding10
+    else
+        AppTheme.dimensions.padding20
+
+    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+
+    ){
+        //checkBox
+        if(showCancel){
+            IconButton(onClick = { onClearSelection.invoke() }) {
+                Icon(imageVector = vectorResource(AppIcons.cancelIcon), contentDescription = "Clear Selection", modifier = Modifier.size(mAppThemeContext.dimensions.standerIcon))
+            }
+        }
+        //SKU
+        // Adjust the weight proportions
+        ListText(
+            label = stringResource(Res.string.sku).uppercase(),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1.2f)
+        )
+        ListText(
+            label = stringResource(Res.string.barcode),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1.2f))
+        ListText(
+            label = stringResource(Res.string.price),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1f))
+        ListText(
+            label = stringResource(Res.string.in_stock),
+            color = AppTheme.colors.textBlack,
+            textStyle = textStyle,
+            modifier = Modifier.weight(1f))
+
+        if(!mAppThemeContext.isPortrait)
+        {
+            ListText(
+                label = stringResource(Res.string.description),
+                color = AppTheme.colors.textBlack,
+                textStyle = textStyle,
+                modifier = Modifier.weight(1.5f))
         }
     }
 }

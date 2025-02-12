@@ -17,7 +17,7 @@ data class PosInvoice(
     @SerialName("creationTime")
     val creationTime: String? = null,
     @SerialName("invoiceItemDiscount")
-    val invoiceItemDiscount: Double? = 0.0,
+    val invoiceItemDiscount: Double = 0.0,
     @SerialName("invoiceNetCost")
     val invoiceNetCost: Double = 0.0,
     @SerialName("invoiceNetDiscount")
@@ -25,7 +25,7 @@ data class PosInvoice(
     @SerialName("invoiceNetDiscountPerc")
     val invoiceNetDiscountPerc: Double? = 0.0,
     @SerialName("invoiceNetTotal")
-    val invoiceNetTotal: Double? = 0.0,
+    val invoiceNetTotal: Double = 0.0,
     @SerialName("invoiceNo")
     val invoiceNo: String? = null,
     @SerialName("invoiceRoundingAmount")
@@ -59,9 +59,9 @@ data class PosInvoice(
     @SerialName("paid")
     val paid: Double = 0.0,
     @SerialName("posInvoiceDetails")
-    val posInvoiceDetails: List<PosInvoiceDetail>? = null,
+    val posInvoiceDetails: List<PosInvoiceDetail> = emptyList(),
     @SerialName("posPayments")
-    val posPayments: List<PosPayment>? = null,
+    val posPayments: List<PosPayment> = emptyList(),
     @SerialName("remarks")
     val remarks: String? = null,
     @SerialName("selfCollection")

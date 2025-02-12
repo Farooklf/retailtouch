@@ -62,8 +62,8 @@ import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
 import com.lfssolutions.retialtouch.presentation.ui.common.BottomTex
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonCard
 import com.lfssolutions.retialtouch.presentation.ui.common.ButtonRowCard
+import com.lfssolutions.retialtouch.presentation.ui.common.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.CommonListRow
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CreateMemberDialog
 import com.lfssolutions.retialtouch.presentation.ui.common.CreateMemberForm
 import com.lfssolutions.retialtouch.presentation.ui.common.GreyButtonWithElevation
@@ -75,8 +75,8 @@ import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.QtyItemText
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.SelectableRow
+import com.lfssolutions.retialtouch.presentation.ui.common.StocksListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.StockDialog
-import com.lfssolutions.retialtouch.presentation.ui.common.StokesListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.TexWithClickableBg
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.PromotionAndDiscountDialog
@@ -1117,7 +1117,7 @@ fun DialogStockScreen(
             // Filter the product tax list based on the search query
             val filteredProducts = state.stockList.filter { it.matches(searchQuery) }.toMutableList()
             itemsIndexed(filteredProducts){ index, product ->
-                StokesListItem(position=index,product=product,currencySymbol=currencySymbol, onClick = { selectedItem->
+                StocksListItem(position=index,product=product,currencySymbol=currencySymbol, onClick = { selectedItem->
                     onClick(selectedItem)
                 })
             }

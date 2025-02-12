@@ -22,7 +22,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
 
     private fun getProducts() {
         viewModelScope.launch {
-            delay(5000)
+            delay(1000)
             sqlRepository.getProducts()
                 .collect { product ->
                     _stockUiState.update { currentState ->
@@ -56,6 +56,22 @@ class StockViewModel :BaseViewModel() , KoinComponent {
        /* if (filteredList.isNotEmpty()) {
             insertPosListItem(filteredList[0]) // Add only the first matched item
         }*/
+    }
+
+    fun toggleProductSelection(productId: Long) {
+        _stockUiState.update { state ->
+            val newSelection = state.selectedProducts.toMutableSet()
+            if (newSelection.contains(productId)) {
+                newSelection.remove(productId)
+            } else {
+                newSelection.add(productId)
+            }
+            state.copy(selectedProducts = newSelection)
+        }
+    }
+
+    fun clearSelection() {
+        _stockUiState.update { it.copy(selectedProducts = emptySet()) }
     }
 
 }

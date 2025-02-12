@@ -13,6 +13,7 @@ import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
 import com.lfssolutions.retialtouch.domain.model.products.CreatePOSInvoiceRequest
+import com.lfssolutions.retialtouch.domain.model.products.POSInvoicePrint
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
 import com.lfssolutions.retialtouch.domain.model.products.PosPayment
@@ -1977,9 +1978,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun constructReceiptAndPrintTemplate(ticket: PosInvoice){
         updatePaymentInvoiceState(ticket)
-        viewModelScope.launch {
-           connectAndPrintTemplate(ticket)
-        }
+        connectAndPrintTemplate(ticket)
     }
 
     private fun prepareData(ticket: PosInvoice, state: PosUIState): Map<String, Any?> {
@@ -2049,11 +2048,26 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
         //println("finalText $finalTextToPrint")
         viewModelScope.launch {
+            val posInvoicePrint=POSInvoicePrint(
+                invoiceNo = posInvoice.invoiceNo?:"",
+                invoiceDate = posInvoice.invoiceDate?:"",
+                customerName = posInvoice.customerName,
+                address1 = posInvoice.address1,
+                address2 = posInvoice.address2,
+                qty = posInvoice.qty,
+                invoiceSubTotal = posInvoice.invoiceSubTotal,
+                invoiceItemDiscount = posInvoice.invoiceItemDiscount,
+                invoiceNetDiscount = posInvoice.invoiceNetDiscount,
+                invoiceTax = posInvoice.invoiceTax,
+                invoiceNetTotal = posInvoice.invoiceNetTotal,
+                posInvoiceDetails = posInvoice.posInvoiceDetails,
+                posPayments = posInvoice.posPayments,
+            )
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     //println("printer_paperSize ${printer.paperSize}")
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2,printer)
-                    println("finalTextToPrint :$finalTextToPrint")
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint, defaultTemplate2,printer)
+                    //println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,

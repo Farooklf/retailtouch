@@ -6,5 +6,6 @@ data class StockUIState(
     val isError:Boolean=false,
     val errorMsg:String="",
     val searchQuery:String="",
-    val products: List<Product>  = emptyList()
+    val products: List<Product>  = emptyList(),
+    val selectedProducts: Set<Long> = emptySet() // Store selected product IDs
 )

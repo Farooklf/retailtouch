@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.utils.printer
 
 import com.lfssolutions.retialtouch.AndroidApp
+import com.lfssolutions.retialtouch.domain.model.products.POSInvoicePrint
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.settlement.PosSettlement
 import com.lfssolutions.retialtouch.utils.PrinterType
@@ -33,7 +34,7 @@ actual class PrinterServiceProvider actual constructor(){
     }
 
     actual suspend fun getPrintTextForReceiptTemplate(
-        posInvoice: PosInvoice,
+        posInvoice: POSInvoicePrint,
         template: String,
         printers: Printers
     ): String {

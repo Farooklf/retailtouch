@@ -20,7 +20,7 @@ fun AppCheckBox(
         enabled = enabled,
         colors = CheckboxDefaults.colors(
             checkedColor = AppTheme.colors.primaryColor,
-            uncheckedColor = AppTheme.colors.textLightGrey,
+            uncheckedColor = AppTheme.colors.textBlack,
             checkmarkColor = AppTheme.colors.appWhite,
         ),
     )

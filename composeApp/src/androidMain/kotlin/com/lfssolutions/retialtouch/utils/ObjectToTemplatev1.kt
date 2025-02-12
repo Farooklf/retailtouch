@@ -35,33 +35,100 @@ class ObjectToReceiptTemplateV1 {
                 data::class.java.declaredFields.forEach { prop ->
                     prop.isAccessible = true
                     val value = prop.get(data)
-                    println("processTemplateValue: $value")
-                    if (!value.isListType()) {
+
+                    if (isZeroValue(value)) {
+                        val placeholder = "{{${prop.name}}"
+                        val escapedPlaceholder = "{{${Regex.escape(prop.name)}}}"
+                        println("prop.name: ${prop.name}")
+                        println("placeholder: $placeholder")
+                        println("Escaped placeholder: $escapedPlaceholder")
+                        // *** IMPROVED REGEX - ANCHORED TO ROW START AND END ***
+                        val rowRegex = """^\[\[.*?${escapedPlaceholder}.*?\]\]$""".toRegex()
+
+
+                        println("Regex: $rowRegex")
+                        println("Processed Text (before): $processedText")
+
+                        if (rowRegex.containsMatchIn(processedText)) {
+                            println("Match found!")
+                            processedText = processedText.replace(rowRegex, "")
+                            println("Processed Text (after): $processedText")
+                        } else {
+                            // If the specific row regex doesn't match, try removing just the placeholder
+                            val placeholderOnlyRegex = """${escapedPlaceholder}""".toRegex()
+                            if (placeholderOnlyRegex.containsMatchIn(processedText)) {
+                                println("Placeholder Only Match Found!")
+                                processedText = processedText.replace(placeholderOnlyRegex, "")
+                            } else {
+                                println("No match found!")
+                            }
+
+                        }
+                    }
+                    else if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()
-                        val actualValue = prop.get(data) // Extract the actual value from data
-                        //println("actualValue: $actualValue")
+
+                        //val formattedValue = formatValue(value, decimalPoints)
+
+                        // Regex pattern to match the full row containing the placeholder
+                        //val rowRegex = """\[\[.*?\|\s*\{\{${prop.name}\}\}\s*\]\](\n|\r\n)?""".toRegex()
+                        // Debugging
+
+
                         if (datePlaceHolder.containsMatchIn(processedText)) {
                             processedText = applyDateFormat(
                                 processedText,
                                 datePlaceHolder,
                                 value
                             )
-                        } else {
+                        }
+                        /*else if (isZeroValue(value)) { // Check for zero value
+                            // *** KEY CHANGE: Use prop.name, NOT the full field name ***
+                            //val placeholder = "{{${prop.name}}}"  // Get the placeholder string
+                            val rowRegex = """\[\[\s*\{\d+,\d+}:.*\|\s*${placeholder}\s*]](\r?\n)?""".toRegex() // More flexible whitespace //Use placeholder in regex
+
+                            //val rowRegex = """\[\[\s*\{\d+,\d+}:.*?\|\s*\{\{$prop.name\}\}\s*]](\r?\n)?""".toRegex()
+                            if (rowRegex.containsMatchIn(processedText)) {
+                                println("Removing row for: ${prop.name}, Value: $value, Regex: $rowRegex")
+                                processedText = processedText.replace(rowRegex, "")
+                            } else {
+                                // Handle cases where the placeholder might be alone in a row or structured differently
+                                val simplePlaceholderRegex = """\[\[.*?\{\{$prop.name\}\}.*?\]\](\r?\n)?""".toRegex()
+                                if (simplePlaceholderRegex.containsMatchIn(processedText)){
+                                    println("Removing row for: ${prop.name}, Value: $value, Regex: $simplePlaceholderRegex")
+                                    processedText = processedText.replace(simplePlaceholderRegex, "")
+                                }
+                                println("No match found for: ${prop.name}, Value: $value, Regex: $rowRegex or $simplePlaceholderRegex")
+                                processedText = processedText.replace(placeholder,"") //Remove placeholder if not in row
+                            }
+
+                        }*/
+                        /*else if (value == "0" || value == "0.0") {
+
+                            val testString = """[[{4,8}:Item Discount|{{invoiceItemDiscount}}]]"""
+                            //val testRegex = """\[\[\s*\{?\{[^}]*\}\}:[^|]*\|\s*\{\{invoiceItemDiscount\}\}\s*\}\]\](\r?\n)?""".toRegex()
+                            val rowRegex ="""\[\[\s*\{\d+,\d+}:.*?\|\s*\{\{$value\}\}\s*]](\r?\n)?""".toRegex()
+                            println("TestedRgx ${rowRegex.containsMatchIn(testString)}")  // Should print `true` if the match is successful
+
+                            // Log to see if the regex is working
+                            if (rowRegex.containsMatchIn(processedText)) {
+                                println("Removing row for: ${prop.name}, Regex: $rowRegex")
+                                processedText = processedText.replace(rowRegex, "")
+                            } else {
+                                println("No match found for: ${prop.name}, Regex: $rowRegex")
+                            }
+                        }*/
+                        else {
+                            // Normal replacement
+                            //processedText = processedText.replace(placeholder, formattedValue)
                             processedText = processedText.replace(
                                 placeholder,
                                 formatValue(value, decimalPoints)
                             )
                         }
-                        /*if(checkValueIsDisplay(actualValue)){
-
-                        }else
-                        {
-                            // Remove the entire placeholder if value is 0.0
-                            processedText = processedText.replace(placeholder, "")
-                        }*/
                     }
-                    if (value.isListType()) {
+                    else {
                         val listItems = value as? List<*>
                         if (!listItems.isNullOrEmpty()) {
                             val itemTemplate = extractListItemTemplate(template, prop.name)
@@ -88,7 +155,7 @@ class ObjectToReceiptTemplateV1 {
                     }
 
                 }
-                Log.e("template", "before table processed text $processedText")
+                //Log.e("template", "before table processed text $processedText")
                 //Apply image
 
                 //processedText=extractAndReplaceImageUrl(processedText,printer)
@@ -96,7 +163,7 @@ class ObjectToReceiptTemplateV1 {
                 if(imageRegex.containsMatchIn(processedText)){
                     val match = imageRegex.find(processedText) // Finds the first match
                     val matchResults = match?.groupValues?.get(1)
-                    println("ExtractUrl :$matchResults")
+                    //println("ExtractUrl :$matchResults")
                     matchResults?.let {imageUrl ->
                         val imageBitmap = loadImageFromUrl(imageUrl) // Load image from URL
                         imageBitmap?.let { image->
@@ -135,6 +202,17 @@ class ObjectToReceiptTemplateV1 {
             }
 
             return processedText.trim()
+        }
+
+        private fun isZeroValue(value: Any?): Boolean {
+            return when (value) {
+                is Int -> value == 0
+                is Long -> value == 0L
+                is Float -> value == 0.0f
+                is Double -> value == 0.0
+                is String -> value == "0" || value == "0.0"
+                else -> false // Or handle other numeric types as needed
+            }
         }
 
         /**

@@ -49,16 +49,16 @@ import cafe.adriel.voyager.core.screen.Screen
 import coil3.compose.AsyncImage
 import com.lfssolutions.retialtouch.domain.model.products.Product
 import com.lfssolutions.retialtouch.presentation.ui.common.BasicScreen
+import com.lfssolutions.retialtouch.presentation.ui.common.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
 import com.lfssolutions.retialtouch.presentation.ui.common.StockProductListItem
-import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.CommonListHeader
 import com.lfssolutions.retialtouch.theme.AppTheme
 import com.lfssolutions.retialtouch.utils.AppIcons
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
-import retailtouch.composeapp.generated.resources.payout
 import retailtouch.composeapp.generated.resources.search_items
+import retailtouch.composeapp.generated.resources.stock
 
 object StockScreen : Screen {
 
@@ -79,20 +79,18 @@ fun StockScreenContent(
     val navigator=appThemeContext.getAppNavigator()
 
     // Update last known count when products are loaded
-    LaunchedEffect(state.products) {
+   /* LaunchedEffect(state.products) {
         if (state.products.isNotEmpty()) {
             lastKnownCount = state.products.size
         }
      }
 
     val placeholderCount = if (state.products.isEmpty()) lastKnownCount else 0
-
+*/
     BasicScreen(
         modifier = Modifier.systemBarsPadding(),
-        gradientBg = AppTheme.colors.screenGradientVerticalBg,
-        title = stringResource(Res.string.payout),
+        title = stringResource(Res.string.stock),
         isTablet = appThemeContext.isTablet,
-        isForm = true,
         contentMaxWidth = Int.MAX_VALUE.dp,
         onBackClick = {
             appThemeContext.navigateBack(navigator)
@@ -113,21 +111,33 @@ fun StockScreenContent(
             )
 
             //List Content
-            CommonListHeader()
+            CommonListHeader(
+                showCancel = state.selectedProducts.isNotEmpty(),
+                onClearSelection={
+                    viewModel.clearSelection()
+                }
+            )
             // Display filtered products in a LazyColumn
-            LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight().background(AppTheme.colors.secondaryBg)){
+            LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight()){
                 // Filter the product tax list based on the search query
                 val filteredProducts = state.products.filter { it.matches(state.searchQuery) }.toMutableList()
                 itemsIndexed(filteredProducts){ index, product ->
-                    StockProductListItem(position=index,product=product,currencySymbol=currencySymbol,appThemeContext.isTablet, onClick = { selectedItem->
-                        //onItemClick.invoke(selectedItem)
-                    })
+                    StockProductListItem(
+                        position=index,
+                        product=product,
+                        isChecked = product.id in state.selectedProducts,
+                        currencySymbol=currencySymbol,
+                        isTablet = appThemeContext.isTablet,
+                        onCheckedChange = { product->
+                          viewModel.toggleProductSelection(product.id)
+                        }
+                    )
                 }
             }
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    /*Box(modifier = Modifier.fillMaxSize()) {
         if (state.products.isEmpty()) {
             LazyColumn {
                 items(placeholderCount) {
@@ -140,12 +150,10 @@ fun StockScreenContent(
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(stockUiState.products) { product ->
-                    StockProductItem(product)
-                }
+
             }
         }
-    }
+    }*/
 }
 
 @Composable

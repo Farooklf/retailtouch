@@ -85,6 +85,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.AppHorizontalDivider
 import com.lfssolutions.retialtouch.presentation.ui.common.AppPrimaryButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppRadioButtonWithText
 import com.lfssolutions.retialtouch.presentation.ui.common.BaseButton
+import com.lfssolutions.retialtouch.presentation.ui.common.CommonListHeader
 import com.lfssolutions.retialtouch.presentation.ui.common.DiscountTabCard
 import com.lfssolutions.retialtouch.presentation.ui.common.InputType
 import com.lfssolutions.retialtouch.presentation.ui.common.ListCenterText
@@ -92,7 +93,7 @@ import com.lfssolutions.retialtouch.presentation.ui.common.ListText
 import com.lfssolutions.retialtouch.presentation.ui.common.MemberList
 import com.lfssolutions.retialtouch.presentation.ui.common.NumberPad
 import com.lfssolutions.retialtouch.presentation.ui.common.SearchableTextWithBg
-import com.lfssolutions.retialtouch.presentation.ui.common.StokesListItem
+import com.lfssolutions.retialtouch.presentation.ui.common.StocksListItem
 import com.lfssolutions.retialtouch.presentation.ui.common.VectorIcons
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -343,67 +344,13 @@ fun StockDialog(
                 // Filter the product tax list based on the search query
                 val filteredProducts = state.stockList.filter { it.matches(state.searchQuery) }.toMutableList()
                 itemsIndexed(filteredProducts){ index, product ->
-                    StokesListItem(position=index,product=product,currencySymbol=state.currencySymbol, onClick = { selectedItem->
+                    StocksListItem(position=index,product=product,currencySymbol=state.currencySymbol, onClick = { selectedItem->
                         onItemClick.invoke(selectedItem)
                     })
                 }
             }
         }
 
-    }
-}
-
-
-@Composable
-fun CommonListHeader(){
-    val appState = LocalAppState.current
-    val textStyle=if(appState.isPortrait)
-        AppTheme.typography.bodyBold()
-    else
-        AppTheme.typography.titleBold()
-
-    val horizontalPadding=if(appState.isPortrait)
-        AppTheme.dimensions.padding10
-    else
-        AppTheme.dimensions.padding20
-
-    Row(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-
-    ){
-        //SKU
-        // Adjust the weight proportions
-        ListText(
-            label = stringResource(Res.string.sku).uppercase(),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1.2f)
-        )
-        ListText(
-            label = stringResource(Res.string.barcode),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1.2f))
-        ListText(
-            label = stringResource(Res.string.price),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1f))
-        ListText(
-            label = stringResource(Res.string.in_stock),
-            color = AppTheme.colors.textBlack,
-            textStyle = textStyle,
-            modifier = Modifier.weight(1f))
-
-        if(!appState.isPortrait)
-        {
-            ListText(
-                label = stringResource(Res.string.description),
-                color = AppTheme.colors.textBlack,
-                textStyle = textStyle,
-                modifier = Modifier.weight(1.5f))
-        }
     }
 }
 

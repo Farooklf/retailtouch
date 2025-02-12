@@ -95,7 +95,7 @@ val defaultTemplate2 = """
 [L]Date: {{invoiceDate}}
 [[{4,8}:Customer|{{customerName}}]]
 [[{4,8}:Address|{{address1}}]]
-[[{4,8}: |{{address2}}]]
+[[{4,8}:|{{address2}}]]
 [[Line]]
 [[{8,4}:Description|Amount]]
 [[Line]]
@@ -103,13 +103,13 @@ val defaultTemplate2 = """
 [[Line]]
 [[{4,8}:Qty|{{qty}}]]
 [[Line]]
-[[{8,4}:Sub Total |{{invoiceSubTotal}}]]
-[[{8,4}:Item Discount |{{invoiceItemDiscount}}]]
-[[{8,4}:Net Discount |{{invoiceNetDiscount}}]]
-[[{8,4}:Gst |{{invoiceTax}}]]
-[[{8,4}:Net Total |{{invoiceNetTotal}}]]
+[[{8,4}:Sub Total|{{invoiceSubTotal}}]]
+[[{8,4}:Item Discount|{{invoiceItemDiscount}}]]
+[[{8,4}:Net Discount|{{invoiceNetDiscount}}]]
+[[{8,4}:Gst|{{invoiceTax}}]]
+[[{8,4}:Net Total|{{invoiceNetTotal}}]]
 [[Line]]
-[L]Payment Mode: {posPayments}
+{posPayments}
 [[Line]]
 
 [[Line]]
@@ -123,7 +123,7 @@ val defaultTemplate2 = """
 
 <!-- posPayments Table -->
 <ListItem> 
-[L]{{name}}-{{amount}}
+[[{6,6}:[L]{{name}} |{{amount}}]]
 </ListItem>
 
 <!-- posInvoiceDetails Table -->

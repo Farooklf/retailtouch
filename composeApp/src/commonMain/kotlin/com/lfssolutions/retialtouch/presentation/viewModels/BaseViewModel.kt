@@ -388,8 +388,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             invoiceNetCost= data.invoiceNetCost,
             paid= data.paid, //netCost
             memberId = data.memberId,
-            posInvoiceDetails = data.posInvoiceDetailRecord,
-            posPayments = data.posPaymentConfigRecord,
+            posInvoiceDetails = data.posInvoiceDetailRecord?:emptyList(),
+            posPayments = data.posPaymentConfigRecord?:emptyList(),
             qty = data.qty,
             customerName = data.memberName,
             address1 = data.address1 ,
