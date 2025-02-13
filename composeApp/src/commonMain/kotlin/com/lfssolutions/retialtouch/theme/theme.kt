@@ -94,6 +94,10 @@ data class AppThemeContext(
     fun navigateToStockScreen(navigator: Navigator) {
         navigator.push(Route.Stock.toVoyagerScreen())
     }
+
+    fun navigateToMemberScreen(navigator: Navigator) {
+        navigator.push(Route.Member.toVoyagerScreen())
+    }
 }
 
 

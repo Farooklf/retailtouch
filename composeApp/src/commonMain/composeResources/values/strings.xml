@@ -69,11 +69,13 @@
     <string name="clear">Clear</string>
     <string name="create_new_member">Create New Member</string>
     <string name="member_code">Member Code</string>
+    <string name="code">Code</string><!--extra-->
+    <string name="member_name">Member Name</string>
     <string name="email">Email</string>
     <string name="mobile_number">Mobile Number</string>
     <string name="address">Address</string>
     <string name="zip_code">Zip Code</string>
-    <string name="name">Member Name</string>
+    <string name="name">Name</string>
     <string name="yes">Yes</string>
     <string name="dialog_message">Do you want to %1$s?</string>
     <string name="clear_scanned_message">Do you want to clear the scanned items?</string>

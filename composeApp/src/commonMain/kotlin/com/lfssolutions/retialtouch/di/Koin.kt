@@ -8,6 +8,7 @@ import com.lfssolutions.retialtouch.domain.repositories.NetworkRepository
 import com.lfssolutions.retialtouch.domain.ApiService
 import com.lfssolutions.retialtouch.domain.PreferencesRepository
 import com.lfssolutions.retialtouch.domain.repositories.DataBaseRepository
+import com.lfssolutions.retialtouch.presentation.ui.members.MemberViewModel
 import com.lfssolutions.retialtouch.presentation.ui.payout.PayoutViewModel
 import com.lfssolutions.retialtouch.presentation.ui.settings.SettingViewModel
 import com.lfssolutions.retialtouch.presentation.ui.stocks.StockViewModel
@@ -98,4 +99,5 @@ fun appModule() = module {
     viewModelDefinition { PayoutViewModel() }
     viewModelDefinition { PrinterViewModel() }
     viewModelDefinition { StockViewModel() }
+    viewModelDefinition { MemberViewModel() }
 }

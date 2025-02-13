@@ -4,6 +4,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.lfssolutions.retialtouch.theme.AppTheme
 
 @Composable
@@ -11,6 +12,9 @@ fun AppCheckBox(
     modifier: Modifier = Modifier,
     checked: Boolean,
     enabled: Boolean = true,
+    checkedColor:Color=AppTheme.colors.primaryColor,
+    uncheckedColor:Color=AppTheme.colors.textBlack,
+    checkmarkColor:Color=AppTheme.colors.appWhite,
     onCheckedChange: (Boolean) -> Unit = {},
 ) {
     Checkbox(
@@ -19,9 +23,9 @@ fun AppCheckBox(
         modifier = modifier,
         enabled = enabled,
         colors = CheckboxDefaults.colors(
-            checkedColor = AppTheme.colors.primaryColor,
-            uncheckedColor = AppTheme.colors.textBlack,
-            checkmarkColor = AppTheme.colors.appWhite,
+            checkedColor = checkedColor,
+            uncheckedColor = uncheckedColor,
+            checkmarkColor = checkmarkColor,
         ),
     )
 }

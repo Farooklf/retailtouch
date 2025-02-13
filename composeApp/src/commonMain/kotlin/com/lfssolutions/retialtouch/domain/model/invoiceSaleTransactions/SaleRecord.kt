@@ -15,7 +15,7 @@ data class SaleRecord(
     val date: LocalDate = getCurrentLocalDate(),
     val creationDate: LocalDateTime = getCurrentLocalDateTime(),
     val remarks: String? = "",
-    val memberId: Int = 0,
+    val memberId: Long = 0,
     val memberName: String? = "",
     val deliveryDate: String? = "",
     val delivery: Boolean? = false,

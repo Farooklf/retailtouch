@@ -18,4 +18,5 @@ sealed class Route {
     data object Settlement : Route()
     data object Setting : Route()
     data object Stock : Route()
+    data object Member : Route()
 }

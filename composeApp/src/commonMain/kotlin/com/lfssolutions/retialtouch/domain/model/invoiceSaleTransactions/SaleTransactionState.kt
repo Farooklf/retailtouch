@@ -40,7 +40,7 @@ data class SaleTransactionState(
     val statusType: StatusType = StatusType(),
     val type:Int=0,
     val status:Int=0,
-    val memberId:Int=0,
+    val memberId:Long=0,
     val isDatePickerDialog : Boolean = false,
     val isFromDate : Boolean = false,
     var startDate : String = getCurrentDate(),

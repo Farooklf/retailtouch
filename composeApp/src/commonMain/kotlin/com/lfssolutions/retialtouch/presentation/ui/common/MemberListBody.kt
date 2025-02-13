@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
@@ -99,7 +100,7 @@ fun MemberList(
 
             val filteredProducts = posUIState.memberList.filter { member ->
                 (searchQuery.isEmpty() || member.name.contains(searchQuery, ignoreCase = true)  ||
-                        member.memberCode?.contains(searchQuery, ignoreCase = true) == true)
+                        member.memberCode.contains(searchQuery, ignoreCase = true))
             }.sortedBy { it.name }
 
             items(filteredProducts){ member ->
@@ -113,7 +114,7 @@ fun MemberList(
 }
 
 @Composable
-fun MemberListItem(member: MemberItem, onClick: (MemberItem) -> Unit) {
+fun MemberListItem(member: Member, onClick: (Member) -> Unit) {
 
     Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(10.dp),
         horizontalAlignment = Alignment.Start

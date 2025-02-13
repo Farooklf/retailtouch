@@ -19,6 +19,7 @@ import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
 import com.lfssolutions.retialtouch.domain.model.promotions.PromotionDetails
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.lfssolutions.retialtouch.domain.model.location.Location
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.sync.SyncItem
 import com.lfssolutions.retialtouch.utils.JsonObj
 import kotlinx.serialization.encodeToString
@@ -46,9 +47,9 @@ fun Barcode.toJson(): String = JsonObj.encodeToString(this)
 
 fun String.toBarcode(): Barcode = JsonObj.decodeFromString(this)
 
-fun MemberItem.toJson(): String = JsonObj.encodeToString(this)
+fun Member.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toMemberItem(): MemberItem = JsonObj.decodeFromString(this)
+fun String.toMember(): Member = JsonObj.decodeFromString(this)
 
 fun MemberGroupItem.toJson(): String = JsonObj.encodeToString(this)
 

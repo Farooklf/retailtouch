@@ -11,7 +11,7 @@ import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
@@ -66,8 +66,8 @@ interface SqlRepository {
     suspend fun deleteEmpRights()
 
     //Member
-    suspend fun insertMembers(memberDao: MemberDao)
-    fun getAllMembers(): Flow<List<MemberDao>>
+    suspend fun insertMembers(member: Member)
+    fun getAllMembers(): Flow<List<Member>>
     suspend fun deleteMembers()
 
     //Member Group

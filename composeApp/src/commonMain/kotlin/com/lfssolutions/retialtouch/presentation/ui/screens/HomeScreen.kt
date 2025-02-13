@@ -150,7 +150,7 @@ fun Home(
                                         NavigatorActions.navigateToPOSScreen(navigator)
                                     }
                                     HomeItemId.MEMBER_ID->{
-
+                                        appThemeContext.navigateToMemberScreen(navigator)
                                     }
                                     HomeItemId.STOCK_ID->{
                                         appThemeContext.navigateToStockScreen(navigator)

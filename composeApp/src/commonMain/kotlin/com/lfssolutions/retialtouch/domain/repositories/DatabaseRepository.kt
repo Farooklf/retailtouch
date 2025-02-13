@@ -16,7 +16,7 @@ import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupResponse
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.members.MemberResponse
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryResponse
@@ -201,9 +201,18 @@ class DataBaseRepository: KoinComponent {
         try {
             withContext(Dispatchers.IO) {
                 response.result?.items?.forEach { item ->
-                    val dao = MemberDao(
+                    val dao = Member(
                         memberId = item.id.toLong(),
-                        rowItem = item,
+                        name = item.name,
+                        memberCode = item.memberCode?:"",
+                        mobileNo = item.mobileNo?:"",
+                        email = item.email?:"",
+                        address1 = item.address1?:"",
+                        address2 = item.address2?:"",
+                        address3 = item.address3?:"",
+                        postalCode = item.postalCode?:"",
+                        locationName = item.locationName?:"",
+                        active = item.active?:false,
                     )
                     dataBaseRepository.insertMembers(dao)
                 }
@@ -458,7 +467,7 @@ class DataBaseRepository: KoinComponent {
                         selfCollection = item.selfCollection?:false,
                         type = item.type?:0,
                         status = if (item.isCancelled == true) 666 else item.status?:0,
-                        memberId = item.memberId?.toInt()?:0,
+                        memberId = item.memberId?:0,
                         memberName = item.memberName?:"",
                         items = item
 
@@ -726,7 +735,7 @@ class DataBaseRepository: KoinComponent {
     }
 
 
-    fun getMember(): Flow<List<MemberDao>> {
+    fun getMember(): Flow<List<Member>> {
         return dataBaseRepository.getAllMembers()
             .flowOn(Dispatchers.IO)
     }

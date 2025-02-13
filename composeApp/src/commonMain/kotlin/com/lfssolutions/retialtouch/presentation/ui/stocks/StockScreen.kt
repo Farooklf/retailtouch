@@ -103,8 +103,7 @@ fun StockScreenContent(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
                 onValueChange = {
                     viewModel.updateSearchQuery(it)
-                }
-            )
+                })
 
             //List Content
             CommonListHeader(

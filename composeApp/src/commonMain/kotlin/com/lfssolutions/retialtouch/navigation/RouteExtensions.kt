@@ -1,6 +1,7 @@
 package com.lfssolutions.retialtouch.navigation
 
 import cafe.adriel.voyager.core.screen.Screen
+import com.lfssolutions.retialtouch.presentation.ui.members.MemberScreen
 import com.lfssolutions.retialtouch.presentation.ui.payout.PayoutScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.CartScreen
 import com.lfssolutions.retialtouch.presentation.ui.screens.CashierScreen
@@ -29,4 +30,5 @@ fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.Settlement-> SettlementScreen
     is Route.Setting-> SettingScreen
     is Route.Stock-> StockScreen
+    is Route.Member-> MemberScreen
 }

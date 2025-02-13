@@ -11,7 +11,7 @@ import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
@@ -36,8 +36,8 @@ import com.lfssolutions.retialtouch.retailTouchDB
 import com.lfssolutions.retialtouch.utils.serializers.db.toHoldSaleRecord
 import com.lfssolutions.retialtouch.utils.serializers.db.toJson
 import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
+import com.lfssolutions.retialtouch.utils.serializers.db.toMember
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toMemberItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPOSEmployeeRight
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
@@ -1001,21 +1001,31 @@ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository 
         retailTouch.promotionDetailsQueries.delete()
     }
 
-    override suspend fun insertMembers(memberDao: MemberDao) {
+    override suspend fun insertMembers(member: Member) {
         retailTouch.membersQueries.insert(
-            memberId = memberDao.memberId,
-            rowItem = memberDao.rowItem.toJson()
+            memberId = member.memberId,
+            rowItem = member.toJson()
         )
     }
 
-    override fun getAllMembers(): Flow<List<MemberDao>> = flow {
+    override fun getAllMembers(): Flow<List<Member>> = flow {
         retailTouch.membersQueries.getAll().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
-                        MemberDao(
-                            memberId = body.memberId,
-                            rowItem = body.rowItem.toMemberItem()
+                        val member=body.rowItem.toMember()
+                        Member(
+                            memberId = member.memberId,
+                            name = member.name,
+                            memberCode = member.memberCode,
+                            mobileNo = member.mobileNo,
+                            email = member.email,
+                            locationName = member.locationName,
+                            postalCode = member.postalCode,
+                            address1 = member.address1,
+                            address2 = member.address2,
+                            address3 = member.address3,
+                            active = member.active,
                         )
                     }
 

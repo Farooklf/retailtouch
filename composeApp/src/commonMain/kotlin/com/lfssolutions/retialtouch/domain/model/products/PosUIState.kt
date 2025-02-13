@@ -5,6 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.LoginResponse
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
@@ -124,7 +125,7 @@ data class PosUIState(
     var address : String = "",
     var zipCode : String = "",
     val memberItem:MemberItem=MemberItem(),
-    val memberList : List<MemberItem> = listOf(),
+    val memberList : List<Member> = listOf(),
     val memberGroupList : List<MemberGroupItem> = listOf(),
 
     //location

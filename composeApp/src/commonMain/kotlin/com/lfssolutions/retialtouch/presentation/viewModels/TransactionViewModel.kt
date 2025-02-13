@@ -5,7 +5,7 @@ import com.lfssolutions.retialtouch.domain.model.dropdown.DeliveryType
 import com.lfssolutions.retialtouch.domain.model.dropdown.MemberType
 import com.lfssolutions.retialtouch.domain.model.dropdown.StatusType
 import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleTransactionState
-import com.lfssolutions.retialtouch.domain.model.members.MemberDao
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.utils.NumberFormatter
 import com.lfssolutions.retialtouch.utils.getDeliveryType
@@ -77,8 +77,8 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
                         }else{
                             MemberType(
                                 id = index,
-                                memberId = member.rowItem.id,
-                                name = member.rowItem.name
+                                memberId = member.memberId,
+                                name = member.name
                             )
                         }
                     }
@@ -94,7 +94,7 @@ class TransactionViewModel : BaseViewModel(), KoinComponent {
     }
 
     data class LoadData(
-        val memberList: List<MemberDao>,
+        val memberList: List<Member>,
         val typeList: List<DeliveryType>,
         val statusList: List<StatusType>
     )

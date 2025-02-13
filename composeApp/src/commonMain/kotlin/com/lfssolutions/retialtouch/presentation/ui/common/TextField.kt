@@ -344,7 +344,6 @@ fun AppOutlinedTextFieldWithOuterIcon(
             }
         }
     }
-
 }
 
 
@@ -512,6 +511,93 @@ fun SearchableTextWithBg(
             shape = AppTheme.appShape.textField,
 
         )
+
+        error?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(start = 10.dp),
+                style = AppTheme.typography.captionNormal(),
+                color = errorColor
+            )
+        }
+
+    }
+
+}
+
+@Composable
+fun SearchableTextWithGradientBg(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    enabled: Boolean = true,
+    textStyle: TextStyle = LocalTextStyle.current,
+    errorColor: Color =AppTheme.colors.appWhite,
+    backgroundColor:Color = Color.Transparent,
+    label: String? = null,
+    placeholder: String? = null,
+    error: String? = null,
+    leadingIcon: DrawableResource? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    singleLine: Boolean = false,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
+) {
+    Column(modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+
+        TextField(
+            value=value,
+            onValueChange=onValueChange,
+            modifier = Modifier.fillMaxWidth().border(BorderStroke(width = 1.dp, color = AppTheme.colors.borderColor)),
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = backgroundColor,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                textColor = AppTheme.colors.textBlack,
+                placeholderColor = AppTheme.colors.textDarkGrey,
+                focusedLabelColor = AppTheme.colors.textDarkGrey,
+                cursorColor = AppTheme.colors.textBlack
+            ),
+            enabled = enabled,
+            textStyle = textStyle,
+            visualTransformation = visualTransformation,
+            label = {
+                label?.let {
+                    Text(
+                        text = it
+                    )
+                }
+            },
+            placeholder = {
+                placeholder?.let {
+                    Text(
+                        text = it
+                    )
+                }
+            },
+            leadingIcon = if (leadingIcon != null) {
+                {
+                    Icon(
+                        imageVector = vectorResource(leadingIcon),
+                        contentDescription = null,
+                        tint = AppTheme.colors.textDarkGrey,
+                        modifier = Modifier.size(AppTheme.dimensions.smallXIcon)
+                    )
+                }
+            } else null,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            isError = error != null,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            shape = AppTheme.appShape.textField,
+
+            )
 
         error?.let {
             Text(

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lfssolutions.retialtouch.domain.ApiUtils.observeResponseNew
 import com.lfssolutions.retialtouch.domain.model.LoadData
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
+import com.lfssolutions.retialtouch.domain.model.members.Member
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.menu.StockCategory
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
@@ -154,7 +155,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     val holdMap = holdSale.associateBy { item -> item.collectionId }.toMutableMap()
                     _posUIState.update {  it.copy(
                         location=location,
-                        memberList = members.map {member-> member.rowItem},
+                        memberList = members,
                         promotionDetails = details.toMutableList(),
                         promotions = promotion.toMutableList(),
                         salesOnHold = holdMap,
@@ -1506,9 +1507,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update { it.copy(searchMember = value) }
         }
     }
-    fun onSelectedMember(mMemberItem: MemberItem){
+    fun onSelectedMember(mMemberItem: Member){
         viewModelScope.launch {
-            _posUIState.update { it.copy(selectedMember = mMemberItem.name,selectedMemberId=mMemberItem.id, isMemberDialog = false)}
+            _posUIState.update { it.copy(selectedMember = mMemberItem.name,selectedMemberId=mMemberItem.memberId.toInt(), isMemberDialog = false)}
         }
     }
 
