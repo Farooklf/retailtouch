@@ -7,7 +7,7 @@ import com.lfssolutions.retialtouch.domain.model.invoiceSaleTransactions.SaleInv
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupItem
 import com.lfssolutions.retialtouch.domain.model.members.MemberItem
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentMethod
@@ -34,9 +34,9 @@ fun SaleRecord.toJson(): String = JsonObj.encodeToString(this)
 fun String.toSaleRecord(): SaleRecord = JsonObj.decodeFromString(this)
 fun String.toSaleInvoiceItem(): SaleInvoiceItem = JsonObj.decodeFromString(this)
 
-fun Product.toJson(): String = JsonObj.encodeToString(this)
+fun POSProduct.toJson(): String = JsonObj.encodeToString(this)
 
-fun String.toProduct(): Product = JsonObj.decodeFromString(this)
+fun String.toProduct(): POSProduct = JsonObj.decodeFromString(this)
 
 fun ProductLocationItem.toJson(): String = JsonObj.encodeToString(this)
 

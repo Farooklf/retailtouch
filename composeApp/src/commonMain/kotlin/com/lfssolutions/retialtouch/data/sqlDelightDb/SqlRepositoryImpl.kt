@@ -8,13 +8,12 @@ import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
@@ -40,7 +39,6 @@ import com.lfssolutions.retialtouch.utils.serializers.db.toLogin
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberGroupItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMemberItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toMenuProductItem
-import com.lfssolutions.retialtouch.utils.serializers.db.toNextPosSaleItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPOSEmployeeRight
 import com.lfssolutions.retialtouch.utils.serializers.db.toPaymentTypeItem
 import com.lfssolutions.retialtouch.utils.serializers.db.toPosInvoiceDetailRecord
@@ -555,11 +553,11 @@ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository 
          )
      }
 
-     override fun getAllProduct(): Flow<List<Product>> = flow{
+     override fun getAllProduct(): Flow<List<POSProduct>> = flow{
         retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
             emit(
                 list.map { product ->
-                    Product(
+                    POSProduct(
                         id = product.productId,
                         productCode = product.inventoryCode,
                         name = product.name,
@@ -576,10 +574,10 @@ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository 
         }
     }
 
-     override fun getProducts(): Flow<Product> = flow {
+     override fun getProducts(): Flow<POSProduct> = flow {
          retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
              list.map { product ->
-                 emit(Product(
+                 emit(POSProduct(
                      id = product.productId,
                      productCode = product.inventoryCode,
                      name = product.name,
@@ -593,13 +591,13 @@ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository 
              }}
      }
 
-     override fun getProductById(id: Long) : Flow<Product?> = flow{
+     override fun getProductById(id: Long) : Flow<POSProduct?> = flow{
         retailTouch.productsQueries.getProductById(id).executeAsOneOrNull().let { product->
             //println("product_db_data : $product")
             if(product!=null){
                 //val product=body.rowItem.toProduct()
                 emit(
-                Product(
+                POSProduct(
                     id = product.productId,
                     productCode = product.inventoryCode,
                     name = product.name,
@@ -617,12 +615,12 @@ class SqlRepositoryImpl(private val retailTouch: retailTouchDB) : SqlRepository 
         }
     }
 
-    override fun getProductByCode(code: String): Flow<Product?> = flow{
+    override fun getProductByCode(code: String): Flow<POSProduct?> = flow{
         retailTouch.productsQueries.getProductByInventory(code).executeAsOneOrNull().let { product->
             //println("product_db_data : $product")
             if(product!=null){
                 emit(
-                    Product(
+                    POSProduct(
                         id = product.productId,
                         productCode = product.inventoryCode,
                         name = product.name,

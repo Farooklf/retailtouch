@@ -35,37 +35,7 @@ class ObjectToReceiptTemplateV1 {
                 data::class.java.declaredFields.forEach { prop ->
                     prop.isAccessible = true
                     val value = prop.get(data)
-
-                    if (isZeroValue(value)) {
-                        val placeholder = "{{${prop.name}}"
-                        val escapedPlaceholder = "{{${Regex.escape(prop.name)}}}"
-                        println("prop.name: ${prop.name}")
-                        println("placeholder: $placeholder")
-                        println("Escaped placeholder: $escapedPlaceholder")
-                        // *** IMPROVED REGEX - ANCHORED TO ROW START AND END ***
-                        val rowRegex = """^\[\[.*?${escapedPlaceholder}.*?\]\]$""".toRegex()
-
-
-                        println("Regex: $rowRegex")
-                        println("Processed Text (before): $processedText")
-
-                        if (rowRegex.containsMatchIn(processedText)) {
-                            println("Match found!")
-                            processedText = processedText.replace(rowRegex, "")
-                            println("Processed Text (after): $processedText")
-                        } else {
-                            // If the specific row regex doesn't match, try removing just the placeholder
-                            val placeholderOnlyRegex = """${escapedPlaceholder}""".toRegex()
-                            if (placeholderOnlyRegex.containsMatchIn(processedText)) {
-                                println("Placeholder Only Match Found!")
-                                processedText = processedText.replace(placeholderOnlyRegex, "")
-                            } else {
-                                println("No match found!")
-                            }
-
-                        }
-                    }
-                    else if (!value.isListType()) {
+                     if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()
 
@@ -155,9 +125,17 @@ class ObjectToReceiptTemplateV1 {
                     }
 
                 }
-                //Log.e("template", "before table processed text $processedText")
-                //Apply image
+                Log.e("template", "before table processed text $processedText")
 
+                val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|0\\.00\\]\\]")
+                if(holdingZeroValuesRegex.containsMatchIn(processedText)){
+                    //processedText = removeZeroValueLines(processedText)
+                    processedText = processedText.replace(holdingZeroValuesRegex, "").replace("\n\n", "\n").trim() // Clean empty lines
+                    //println("cleanedTemplate : $processedText")
+                }
+
+
+                //Apply image
                 //processedText=extractAndReplaceImageUrl(processedText,printer)
                 val imageRegex = """@@@(http[s]?://\S+)""".toRegex()
                 if(imageRegex.containsMatchIn(processedText)){
@@ -202,6 +180,13 @@ class ObjectToReceiptTemplateV1 {
             }
 
             return processedText.trim()
+        }
+
+        private fun removeZeroValueLines(template: String): String {
+            return template
+                .lineSequence() // Process line by line
+                .filterNot { it.contains("|0.00]") } // Remove lines containing 0.00 values
+                .joinToString("\n") // Join back the filtered lines
         }
 
         private fun isZeroValue(value: Any?): Boolean {
@@ -595,6 +580,34 @@ class ObjectToReceiptTemplateV1 {
             return imageHexString.toString()
         }
     }
-
-
 }
+
+/*if (isZeroValue(value)) {
+                        val placeholder = "{{${prop.name}}"
+                        val escapedPlaceholder = "{{${Regex.escape(prop.name)}}}"
+                        println("prop.name: ${prop.name}")
+                        println("placeholder: $placeholder")
+                        println("Escaped placeholder: $escapedPlaceholder")
+                        // *** IMPROVED REGEX - ANCHORED TO ROW START AND END ***
+                        val rowRegex = """^\[\[.*?${escapedPlaceholder}.*?\]\]$""".toRegex()
+
+
+                        println("Regex: $rowRegex")
+                        println("Processed Text (before): $processedText")
+
+                        if (rowRegex.containsMatchIn(processedText)) {
+                            println("Match found!")
+                            processedText = processedText.replace(rowRegex, "")
+                            println("Processed Text (after): $processedText")
+                        } else {
+                            // If the specific row regex doesn't match, try removing just the placeholder
+                            val placeholderOnlyRegex = """${escapedPlaceholder}""".toRegex()
+                            if (placeholderOnlyRegex.containsMatchIn(processedText)) {
+                                println("Placeholder Only Match Found!")
+                                processedText = processedText.replace(placeholderOnlyRegex, "")
+                            } else {
+                                println("No match found!")
+                            }
+
+                        }
+                    }*/

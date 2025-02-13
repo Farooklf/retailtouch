@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.lfssolutions.retialtouch.domain.model.products.AnimatedProductCard
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.presentation.viewModels.SharedPosViewModel
 import com.lfssolutions.retialtouch.theme.AppTheme
@@ -505,7 +505,7 @@ fun CartListItem(
 }
 
 @Composable
-fun StocksListItem(position :Int, product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+fun StocksListItem(position :Int, product: POSProduct, currencySymbol: String, onClick: (POSProduct) -> Unit) {
     val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
         true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor
@@ -554,11 +554,11 @@ fun StocksListItem(position :Int, product: Product, currencySymbol: String, onCl
 @Composable
 fun StockProductListItem(
     position: Int,
-    product: Product,
+    product: POSProduct,
     currencySymbol: String,
     isTablet: Boolean,
     isChecked: Boolean=false,
-    onCheckedChange : (Product) -> Unit
+    onCheckedChange : (POSProduct) -> Unit
 ) {
     //val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
@@ -610,7 +610,7 @@ fun StockProductListItem(
 }
 
 @Composable
-fun CommonListRow(product: Product,currencySymbol: String, showCheckBox:Boolean=false,checked: Boolean=false,
+fun CommonListRow(product: POSProduct, currencySymbol: String, showCheckBox:Boolean=false, checked: Boolean=false,
                   onCheckedChange : () -> Unit = {}){
     //val appState = LocalAppState.current
     val appState = AppTheme.context

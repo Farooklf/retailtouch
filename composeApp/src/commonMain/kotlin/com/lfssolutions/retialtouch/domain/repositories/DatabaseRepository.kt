@@ -8,7 +8,7 @@ import com.lfssolutions.retialtouch.domain.model.employee.EmployeesRights
 import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSaleDao
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.location.LocationResponse
@@ -235,7 +235,7 @@ class DataBaseRepository: KoinComponent {
                 response.result?.items?.map { item ->
                     val dao = ProductDao(
                         productId = item.id.toLong(),
-                        product = Product(
+                        product = POSProduct(
                             id = item.id.toLong(),
                             name = item.name?:"",
                             productCode = item.inventoryCode?:"",
@@ -475,7 +475,7 @@ class DataBaseRepository: KoinComponent {
 
 
 
-    suspend fun insertOrUpdateScannedProduct(item: Product) {
+    suspend fun insertOrUpdateScannedProduct(item: POSProduct) {
         // Switch to the IO dispatcher to perform the database operation
         withContext(Dispatchers.IO) {
             val subtotal = item.price?.times(item.qtyOnHand) ?: 0.0
@@ -713,11 +713,11 @@ class DataBaseRepository: KoinComponent {
       return dataBaseRepository.getItemByBarcode(code)
     }
 
-    fun getProductById(id: Long) : Flow<Product?> {
+    fun getProductById(id: Long) : Flow<POSProduct?> {
          return dataBaseRepository.getProductById(id)
     }
 
-    fun getProductByCode(code: String): Flow<Product?> {
+    fun getProductByCode(code: String): Flow<POSProduct?> {
         return dataBaseRepository.getProductByCode(code)
     }
 
@@ -731,7 +731,7 @@ class DataBaseRepository: KoinComponent {
             .flowOn(Dispatchers.IO)
     }
 
-    fun getProduct(): Flow<List<Product>> {
+    fun getProduct(): Flow<List<POSProduct>> {
         return dataBaseRepository.getAllProduct()
             .flowOn(Dispatchers.IO) // Ensure the flow runs on the IO thread
     }

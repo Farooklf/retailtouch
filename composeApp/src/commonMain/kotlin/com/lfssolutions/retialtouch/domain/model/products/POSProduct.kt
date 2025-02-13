@@ -3,7 +3,7 @@ package com.lfssolutions.retialtouch.domain.model.products
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Product(
+data class POSProduct(
     val id: Long = 0,
     val name: String = "",
     val productCode: String = "",

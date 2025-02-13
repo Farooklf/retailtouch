@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class ProductDao(
     val productId: Long = 0L,
     val isScanned :Boolean = false,
-    val product: Product = Product(),
+    val product: POSProduct = POSProduct(),
 )

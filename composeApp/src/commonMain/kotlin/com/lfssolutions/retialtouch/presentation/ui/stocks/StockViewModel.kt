@@ -2,6 +2,7 @@ package com.lfssolutions.retialtouch.presentation.ui.stocks
 
 
 import androidx.lifecycle.viewModelScope
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.presentation.viewModels.BaseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
 
     private val _stockUiState = MutableStateFlow(StockUIState())
     val stockUiState: StateFlow<StockUIState> = _stockUiState.asStateFlow()
+    private var originalProductList: List<POSProduct> = emptyList()
 
     init {
         getProducts()
@@ -26,6 +28,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
             sqlRepository.getProducts()
                 .collect { product ->
                     _stockUiState.update { currentState ->
+                        originalProductList = currentState.products + product
                         currentState.copy(products = currentState.products + product)
                     } }
         }
@@ -33,11 +36,18 @@ class StockViewModel :BaseViewModel() , KoinComponent {
 
     fun updateSearchQuery(query:String){
         viewModelScope.launch {
-            _stockUiState.update {
-                if (isCode(query)) {
-                    filterListByCode(query) // Filter by barcode or inventory code
+            _stockUiState.update { currentState->
+                if (query.isEmpty()) {
+                    // Restore full list when query is cleared
+                    currentState.copy(products = originalProductList, searchQuery = query)
+                } else if (isCode(query)) {
+                    val filteredList = stockUiState.value.products.filter {
+                        it.barcode.contains(query) || it.productCode.contains(query)
+                    }
+                    currentState.copy(products = filteredList,searchQuery = query)
+                }else{
+                    currentState.copy(searchQuery = query)
                 }
-                it.copy(searchQuery = query)
             }
         }
     }
@@ -47,6 +57,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
         return query.all { it.isDigit() } /*&& query.length <= 10 // Adjust length if needed*/
     }
 
+    // Filter by barcode or inventory code
     private fun filterListByCode(query: String) {
         val filteredList = stockUiState.value.products.filter {
             it.barcode.contains(query) || it.productCode.contains(query)

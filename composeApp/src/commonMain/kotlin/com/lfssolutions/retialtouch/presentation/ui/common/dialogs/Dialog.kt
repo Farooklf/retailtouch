@@ -75,9 +75,8 @@ import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterTemplates
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.promotions.Promotion
-import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.AppBaseCard
 import com.lfssolutions.retialtouch.presentation.ui.common.AppCloseButton
 import com.lfssolutions.retialtouch.presentation.ui.common.AppDialogTextField
@@ -120,7 +119,6 @@ import retailtouch.composeapp.generated.resources.alert_ok
 import retailtouch.composeapp.generated.resources.alert_save
 import retailtouch.composeapp.generated.resources.alert_yes
 import retailtouch.composeapp.generated.resources.app_logo
-import retailtouch.composeapp.generated.resources.barcode
 import retailtouch.composeapp.generated.resources.cancel
 import retailtouch.composeapp.generated.resources.choose_printer_template
 import retailtouch.composeapp.generated.resources.clear_promotions
@@ -128,28 +126,22 @@ import retailtouch.composeapp.generated.resources.close
 import retailtouch.composeapp.generated.resources.confirm
 import retailtouch.composeapp.generated.resources.date
 import retailtouch.composeapp.generated.resources.delete_payment
-import retailtouch.composeapp.generated.resources.description
 import retailtouch.composeapp.generated.resources.enter_terminal_code
 import retailtouch.composeapp.generated.resources.error
 import retailtouch.composeapp.generated.resources.grid_view_option_value
 import retailtouch.composeapp.generated.resources.held_tickets
-import retailtouch.composeapp.generated.resources.ic_add
-import retailtouch.composeapp.generated.resources.ic_printer
 import retailtouch.composeapp.generated.resources.ic_success
-import retailtouch.composeapp.generated.resources.in_stock
 import retailtouch.composeapp.generated.resources.network_dialog_hint
 import retailtouch.composeapp.generated.resources.network_dialog_title
 import retailtouch.composeapp.generated.resources.new_order
 import retailtouch.composeapp.generated.resources.payment
 import retailtouch.composeapp.generated.resources.payment_success
 import retailtouch.composeapp.generated.resources.price
-import retailtouch.composeapp.generated.resources.print_receipts
 import retailtouch.composeapp.generated.resources.promotion_discounts
 import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.receipt_no
 import retailtouch.composeapp.generated.resources.round_off_description
 import retailtouch.composeapp.generated.resources.search_items
-import retailtouch.composeapp.generated.resources.sku
 import retailtouch.composeapp.generated.resources.sync_all
 import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.yes
@@ -297,7 +289,7 @@ fun StockDialog(
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp = AppTheme.dimensions.contentMaxWidth,
     onDismiss: () -> Unit,
-    onItemClick: (Product) -> Unit,
+    onItemClick: (POSProduct) -> Unit,
 ){
     val state by interactorRef.value.posUIState.collectAsStateWithLifecycle()
     val viewModel =interactorRef.value

@@ -7,14 +7,13 @@ import com.lfssolutions.retialtouch.domain.model.employee.POSEmployeeRight
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSalePayment
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PosSaleDetails
 import com.lfssolutions.retialtouch.domain.model.posInvoices.PendingSale
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.location.Location
 import com.lfssolutions.retialtouch.domain.model.login.AuthenticateDao
 import com.lfssolutions.retialtouch.domain.model.memberGroup.MemberGroupDao
 import com.lfssolutions.retialtouch.domain.model.members.MemberDao
 import com.lfssolutions.retialtouch.domain.model.menu.CategoryDao
 import com.lfssolutions.retialtouch.domain.model.menu.MenuDao
-import com.lfssolutions.retialtouch.domain.model.nextPOSSaleInvoiceNo.NextPOSSaleDao
 import com.lfssolutions.retialtouch.domain.model.paymentType.PaymentTypeDao
 import com.lfssolutions.retialtouch.domain.model.printer.PrinterDao
 import com.lfssolutions.retialtouch.domain.model.productBarCode.Barcode
@@ -112,10 +111,10 @@ interface SqlRepository {
     suspend fun insertProduct(productDao: ProductDao)
     suspend fun updateProduct(productDao: ProductDao)
     suspend fun updateProductQuantity(productCode: String,quantity:Double)
-    fun getAllProduct(): Flow<List<Product>>
-    fun getProducts(): Flow<Product>
-    fun getProductById(id: Long): Flow<Product?>
-    fun getProductByCode(code: String): Flow<Product?>
+    fun getAllProduct(): Flow<List<POSProduct>>
+    fun getProducts(): Flow<POSProduct>
+    fun getProductById(id: Long): Flow<POSProduct?>
+    fun getProductByCode(code: String): Flow<POSProduct?>
     fun getProductQty(code: String) : Flow<Double>
     fun getProductCount():Flow<Int>
     suspend fun deleteProduct()

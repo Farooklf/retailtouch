@@ -51,7 +51,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lfssolutions.retialtouch.domain.model.products.CRSaleOnHold
 import com.lfssolutions.retialtouch.domain.model.products.CartItem
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
 import com.lfssolutions.retialtouch.navigation.NavigatorActions
 import com.lfssolutions.retialtouch.presentation.ui.common.dialogs.ActionDialog
@@ -1086,10 +1086,10 @@ fun HoldSaleCollectionItem(
 @Composable
 fun DialogStockScreen(
     state:PosUIState, searchQuery: String, currencySymbol: String,
-    onClick: (Product) -> Unit,
+    onClick: (POSProduct) -> Unit,
     onQueryChange: (String) -> Unit,
 
-){
+    ){
     val appState = LocalAppState.current
     val horizontalPadding=if(appState.isPortrait)
         AppTheme.dimensions.padding10
@@ -1128,7 +1128,7 @@ fun DialogStockScreen(
 
 
 @Composable
-fun DialogListItem(position :Int,product: Product, currencySymbol: String, onClick: (Product) -> Unit) {
+fun DialogListItem(position :Int, product: POSProduct, currencySymbol: String, onClick: (POSProduct) -> Unit) {
     val appState = LocalAppState.current
     val (borderColor,rowBgColor)=when(position%2 != 0){
         true->  AppTheme.colors.borderColor to AppTheme.colors.listRowBgColor

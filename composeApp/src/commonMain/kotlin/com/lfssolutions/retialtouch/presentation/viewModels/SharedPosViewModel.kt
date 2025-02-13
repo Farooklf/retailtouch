@@ -18,7 +18,7 @@ import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoiceDetail
 import com.lfssolutions.retialtouch.domain.model.products.PosPayment
 import com.lfssolutions.retialtouch.domain.model.products.PosUIState
-import com.lfssolutions.retialtouch.domain.model.products.Product
+import com.lfssolutions.retialtouch.domain.model.products.POSProduct
 import com.lfssolutions.retialtouch.domain.model.products.Stock
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByPriceBreak
 import com.lfssolutions.retialtouch.domain.model.promotions.CRPromotionByQuantity
@@ -340,7 +340,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    private fun processFoundProduct(product: Product, qty: Double) {
+    private fun processFoundProduct(product: POSProduct, qty: Double) {
         // Your logic to process the found product
         val stock= Stock(
             id = product.id ?: 0,
@@ -403,7 +403,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
 
-     fun addSearchProduct(product: Product){
+     fun addSearchProduct(product: POSProduct){
          viewModelScope.launch {
              val qty = 1.0
              val stock= Stock(
@@ -1003,7 +1003,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
 
 
-    private fun insertPosListItem(item: Product) {
+    private fun insertPosListItem(item: POSProduct) {
         viewModelScope.launch(Dispatchers.IO) {
             val qty = if (item.qtyOnHand ==0.0) 1.0 else item.qtyOnHand
             val updatedItem = item.copy(qtyOnHand = qty)
