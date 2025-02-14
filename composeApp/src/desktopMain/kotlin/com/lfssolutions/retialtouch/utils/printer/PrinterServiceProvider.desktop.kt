@@ -2,7 +2,7 @@ package com.lfssolutions.retialtouch.utils.printer
 
 import com.lfssolutions.retialtouch.domain.model.products.PosInvoice
 import com.lfssolutions.retialtouch.utils.PrinterType
-import comlfssolutionsretialtouch.Printers
+import comhashmatoretailtouchsqldelight.Printers
 
 actual class PrinterServiceProvider actual constructor() {
     actual fun getAllBluetoothDevices(): List<Pair<String, String>> {

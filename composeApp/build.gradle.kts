@@ -127,7 +127,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.lfssolutions.retialtouch"
+    namespace = libs.versions.app.id.get()
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
@@ -135,11 +135,11 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        applicationId = "com.lfssolutions.retialtouch"
+        applicationId = libs.versions.app.id.get()
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = libs.versions.app.versionCode.get().toInt()
+        versionName = libs.versions.app.versionName.get()
     }
     packaging {
         resources {
@@ -196,8 +196,10 @@ compose.desktop {
 kotlin {
     sqldelight {
         databases {
-            create("retailTouchDB") {
-                packageName = "com.lfssolutions.retialtouch"
+            create("retailtouch") {
+                packageName.set("com.hashmato.retailtouch.sqldelight")
+                version = 1
+                /*packageName = "com.lfssolutions.retialtouch"*/
             }
         }
     }
