@@ -467,7 +467,7 @@ class DataBaseRepository: KoinComponent {
                         selfCollection = item.selfCollection?:false,
                         type = item.type?:0,
                         status = if (item.isCancelled == true) 666 else item.status?:0,
-                        memberId = item.memberId?:0,
+                        memberId = item.memberId?.toLong()?:0,
                         memberName = item.memberName?:"",
                         items = item
 
@@ -487,8 +487,8 @@ class DataBaseRepository: KoinComponent {
     suspend fun insertOrUpdateScannedProduct(item: POSProduct) {
         // Switch to the IO dispatcher to perform the database operation
         withContext(Dispatchers.IO) {
-            val subtotal = item.price?.times(item.qtyOnHand) ?: 0.0
-            val taxValue = subtotal.calculatePercentage(item.tax ?: 0.0)
+            val subtotal = item.price.times(item.qtyOnHand) ?: 0.0
+            val taxValue = subtotal.calculatePercentage(item.tax)
             val dao = ScannedProductDao(
                 productId = item.id?.toLong()?:0,
                 name = item.name ?: "",

@@ -615,7 +615,7 @@ class Printer(val receiptWidth: Int = 1600) {
         }
     }
 
-    suspend fun applyDynamicReceiptTemplate(ticket: Any?, template:String,printer: Printers):String{
-        return ObjectToReceiptTemplateV1.processTemplate(template = template,data = ticket,printerWidth=printer.paperSize?.toFloat()?:80f)
+    suspend fun applyDynamicReceiptTemplate(ticket: Any?,currencyCode:String="", template:String,printer: Printers):String{
+        return ObjectToReceiptTemplateV1.processTemplate(template = template,data = ticket,currencyCode=currencyCode,printerWidth=printer.paperSize?.toFloat()?:80f)
     }
 }

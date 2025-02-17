@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -83,6 +84,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                     _settlementState.update { state ->
                         state.copy(
                             location = location ?: Location(),
+                            currencyCode = preferences.getCurrencySymbol().first(),
                             isLoading = false
                         )
                     }
@@ -452,13 +454,14 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
   private suspend fun connectAndPrintTemplate(posSettlement: PosSettlement) {
       dataBaseRepository.getPrinter().collect { printer ->
           if(printer!=null){
-              println("printer_paperSize ${printer.paperSize}")
-              val finalTextToPrint = PrinterServiceProvider().getFormattedTemplateForSettlement(
-                  posSettlement=posSettlement,
+              //println("printer_paperSize ${printer.paperSize}")
+              val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(
+                  ticket=posSettlement,
+                  currencyCode = settlementState.value.currencyCode,
                   template = posSettlementDefaultTemplate,
                   printers = printer
               )
-              println("finalTextToPrint :\n $finalTextToPrint")
+              //println("finalTextToPrint :\n $finalTextToPrint")
 
               PrinterServiceProvider().connectPrinterAndPrint(
                   printers = printer,

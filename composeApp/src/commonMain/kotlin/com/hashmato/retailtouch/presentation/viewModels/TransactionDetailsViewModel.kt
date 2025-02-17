@@ -236,7 +236,7 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
             )
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,screenState.value.currencySymbol, defaultTemplate2,printer)
                    // println("finalTextToPrint :$finalTextToPrint")
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,

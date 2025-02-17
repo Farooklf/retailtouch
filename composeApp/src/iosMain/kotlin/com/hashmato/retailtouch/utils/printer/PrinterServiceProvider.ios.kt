@@ -21,16 +21,17 @@ actual class PrinterServiceProvider actual constructor() {
     ) {
     }
 
-    actual fun getPrintTextForReceiptTemplate(
-        posInvoice: PosInvoice,
+
+
+    /*actual fun getFormattedTemplateForSettlement(
+        posSettlement: PosSettlement,
         template: String,
         printers: Printers
     ): String {
         return ""
-    }
-
-    actual fun getFormattedTemplateForSettlement(
-        posSettlement: PosSettlement,
+    }*/
+    actual suspend fun getPrintTextForReceiptTemplate(
+        ticket: Any?,
         template: String,
         printers: Printers
     ): String {

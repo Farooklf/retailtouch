@@ -426,7 +426,6 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                          },
                          onError = { errorMsg ->
                              updateLoginError(INVENTORY_ERROR_TITLE, errorMsg)
-
                          }
                      )
                  } }.await()
@@ -454,9 +453,15 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                          observeResponseNew(barcodesResponse,
                              onLoading = {  },
                              onSuccess = { apiData ->
+
                                  viewModelScope.launch {
                                      dataBaseRepository.insertUpdateBarcode(apiResponse = apiData,lastSyncDateTime=lastSyncTime)
                                  }
+                                 /*if(apiData.result.items.isNotEmpty()){
+
+                                 }else{
+                                     updateLoginError(INVENTORY_ERROR_TITLE,"Empty barCode data")
+                                 }*/
                              },
                              onError = { errorMsg ->
                                  updateLoginError(INVENTORY_ERROR_TITLE,errorMsg)
@@ -464,7 +469,6 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                          )
                      }
                  }.await()
-
                  syncPromotion()
              }
 

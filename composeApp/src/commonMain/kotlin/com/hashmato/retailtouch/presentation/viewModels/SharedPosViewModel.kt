@@ -2067,7 +2067,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     //println("printer_paperSize ${printer.paperSize}")
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,posUIState.value.currencySymbol, defaultTemplate2,printer)
                     //println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(

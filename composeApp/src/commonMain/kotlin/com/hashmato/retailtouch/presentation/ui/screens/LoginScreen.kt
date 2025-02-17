@@ -56,8 +56,6 @@ fun Login(
     loginViewModel: LoginViewModel = koinInject()
 ){
     val loginScreenState by loginViewModel.loginScreenState.collectAsState()
-    //val appState = LocalAppState.current
-
 
 
     ResponsiveBox(
@@ -187,7 +185,7 @@ fun Login(
         if (loginScreenState.isLoading ) {
             AppCircleProgressIndicatorWithMessage(
                 isError = loginScreenState.isLoginError,
-                modifier = Modifier.size(100.dp),
+                modifier = Modifier.size(200.dp),
                 errorTitle = loginScreenState.loginErrorTitle,
                 message = loginScreenState.loadingMessage,
                 errorMsg = if (loginScreenState.isLoginError) loginScreenState.loginErrorMessage else null,

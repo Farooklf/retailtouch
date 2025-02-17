@@ -9,6 +9,7 @@ data class SettlementUIState(
     var isError : Boolean = false,
     var errorDesc : String = "",
     var enteredAmount : Double = 0.0,
+    val currencyCode:String="$",
     val location : Location = Location(),
     val tenantId : Int = 0,
     var callPosSettlement : Boolean = false,

@@ -33,18 +33,19 @@ actual class PrinterServiceProvider actual constructor(){
     }
 
     actual suspend fun getPrintTextForReceiptTemplate(
-        posInvoice: POSInvoicePrint,
+        ticket: Any?,
+        currencyCode:String,
         template: String,
         printers: Printers
     ): String {
-        return printer.applyDynamicReceiptTemplate(posInvoice,template,printers)
+        return printer.applyDynamicReceiptTemplate(ticket,currencyCode,template,printers)
     }
 
-    actual suspend fun getFormattedTemplateForSettlement(
+    /*actual suspend fun getFormattedTemplateForSettlement(
         posSettlement: PosSettlement,
         template: String,
         printers: Printers
     ): String {
         return printer.applyDynamicReceiptTemplate(posSettlement,template,printers)
-    }
+    }*/
 }

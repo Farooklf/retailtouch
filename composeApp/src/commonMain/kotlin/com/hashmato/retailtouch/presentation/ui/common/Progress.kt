@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -23,10 +25,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.hashmato.retailtouch.theme.AppTheme
-import com.hashmato.retailtouch.utils.AppIcons.closeIcon
-import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.vectorResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import retailtouch.composeapp.generated.resources.Res
+import retailtouch.composeapp.generated.resources.close
+import retailtouch.composeapp.generated.resources.error_not_found
+import retailtouch.composeapp.generated.resources.ic_error
+
 
 @Composable
 fun AppCircleProgressIndicator(
@@ -92,15 +99,15 @@ fun AppCircleProgressIndicatorWithMessage(
     errorMsg: String? = null,
     errorTitle: String? = null,
     modifier: Modifier = Modifier,
-    onErrorTimeout: (() -> Unit)? = null // Callback for resetting error
+    onErrorTimeout: () -> Unit = {} // Callback for resetting error
 ) {
     // LaunchedEffect to clear error after a delay
-    if (errorMsg != null) {
+    /*if (errorMsg != null) {
         LaunchedEffect(key1 = errorMsg) {
             delay(5000)
             onErrorTimeout?.invoke()
         }
-    }
+    }*/
 
     Box(
         modifier = Modifier.fillMaxSize().background(AppTheme.colors.loaderBgColor),
@@ -113,6 +120,11 @@ fun AppCircleProgressIndicatorWithMessage(
                     modifier = modifier.padding(20.dp),
                     color = color
                 )
+
+                /*GifImageLoader(
+                    imageName = "loading",
+                    modifier=modifier.padding(20.dp)
+                )*/
                 Spacer(modifier = Modifier.height(20.dp))
 
                 message?.let {
@@ -130,11 +142,16 @@ fun AppCircleProgressIndicatorWithMessage(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     Image(
-                        imageVector = vectorResource(closeIcon),
+                        painter = painterResource(Res.drawable.error_not_found),
                         contentDescription = "close",
-                        modifier = Modifier.size(100.dp).padding(top = 5.dp),
-                        colorFilter = ColorFilter.tint(AppTheme.colors.textError)
+                        modifier = Modifier.size(200.dp).padding(top = 5.dp)
                     )
+
+                    /*AsyncImage(
+                        model = Res.drawable.error_anim, // Replace with your actual GIF name
+                        contentDescription = "GIF Image",
+                        modifier = Modifier.size(100.dp).padding(top = 5.dp),
+                    )*/
 
                     errorTitle?.let {
                         Text(
@@ -150,6 +167,16 @@ fun AppCircleProgressIndicatorWithMessage(
                             style = AppTheme.typography.titleMedium()
                         )
                     }
+
+                    AppCloseButton(
+                        onClick = {
+                            onErrorTimeout.invoke()
+                        },
+                        label = stringResource(Res.string.close) ,
+                        modifier = Modifier
+                            .fillMaxWidth(.8f)
+                            .padding(vertical = 10.dp)
+                    )
                 }
             }
         }

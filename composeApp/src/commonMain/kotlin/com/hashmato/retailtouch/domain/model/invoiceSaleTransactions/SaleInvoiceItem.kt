@@ -56,7 +56,7 @@ data class SaleInvoiceItem(
     @SerialName("locationId")
     val locationId: Long? = 0,
     @SerialName("memberId")
-    val memberId: Long? = null,
+    val memberId: Double? = null,
     @SerialName("memberName")
     val memberName: String? = null,
     @SerialName("paid")

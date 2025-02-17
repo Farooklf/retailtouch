@@ -14,6 +14,15 @@ expect class PrinterServiceProvider(){
         textToPrint: String,
     )
 
-    suspend fun getPrintTextForReceiptTemplate(posInvoice: POSInvoicePrint, template:String, printers: Printers):String
-    suspend fun getFormattedTemplateForSettlement(posSettlement: PosSettlement, template:String, printers: Printers):String
+    //suspend fun getPrintTextForReceiptTemplate(ticket: Any?,currencyCode:String, template:String, printers: Printers):String
+    //suspend fun getFormattedTemplateForSettlement(posSettlement: PosSettlement, template:String, printers: Printers):String
+
+
+    suspend fun getPrintTextForReceiptTemplate(
+        ticket: Any?,
+        currencyCode: String,
+        template: String,
+        printers: Printers
+    ): String
+
 }

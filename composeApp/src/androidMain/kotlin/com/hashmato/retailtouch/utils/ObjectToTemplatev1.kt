@@ -26,6 +26,7 @@ class ObjectToReceiptTemplateV1 {
         suspend fun processTemplate(
             template: String = defaultTemplate2,
             data: Any?,
+            currencyCode:String="",
             printerWidth: Float = 80f,
             decimalPoints: Int = 2
         ): String {
@@ -94,7 +95,7 @@ class ObjectToReceiptTemplateV1 {
                             //processedText = processedText.replace(placeholder, formattedValue)
                             processedText = processedText.replace(
                                 placeholder,
-                                formatValue(value, decimalPoints)
+                                formatValue(value, decimalPoints,currencyCode)
                             )
                         }
                     }
@@ -108,6 +109,7 @@ class ObjectToReceiptTemplateV1 {
                                         listItems,
                                         itemTemplate,
                                         template,
+                                        currencyCode,
                                         decimalPoints
                                     )
                                 processedText =
@@ -127,7 +129,8 @@ class ObjectToReceiptTemplateV1 {
                 }
                 Log.e("template", "before table processed text $processedText")
 
-                val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|0\\.00\\]\\]")
+                //val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|0\\.00\\]\\]")
+                val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|\\$0\\.00\\]\\]")
                 if(holdingZeroValuesRegex.containsMatchIn(processedText)){
                     //processedText = removeZeroValueLines(processedText)
                     processedText = processedText.replace(holdingZeroValuesRegex, "").replace("\n\n", "\n").trim() // Clean empty lines
@@ -207,6 +210,7 @@ class ObjectToReceiptTemplateV1 {
             items: List<*>,
             itemTemplate: String,
             fullTemplate: String,
+            currencyCode: String,
             decimalPoints: Int
         ): String {
             return items.mapNotNull { item ->
@@ -226,7 +230,7 @@ class ObjectToReceiptTemplateV1 {
                                     processedItem =
                                         processedItem.replace(
                                             placeholder,
-                                            formatValue(value, decimalPoints)
+                                            formatValue(value, decimalPoints, currencyCode = currencyCode)
                                         )
                                 } else {
                                     // Process nested list
@@ -239,6 +243,7 @@ class ObjectToReceiptTemplateV1 {
                                                 nestedList,
                                                 nestedTemplate,
                                                 fullTemplate,
+                                                currencyCode,
                                                 decimalPoints
                                             )
                                             processedItem = processedItem.replace(
@@ -331,10 +336,10 @@ class ObjectToReceiptTemplateV1 {
          *
          * @return The formatted string representation of the value.
          */
-        private fun formatValue(value: Any?, decimalPoints: Int): String {
+        private fun formatValue(value: Any?, decimalPoints: Int,currencyCode:String): String {
             return when (value) {
                 null -> ""
-                is Double -> String.format("%.${decimalPoints}f", value)
+                is Double -> { currencyCode+String.format("%.${decimalPoints}f", value)}
                 else -> value.toString()
             }
         }

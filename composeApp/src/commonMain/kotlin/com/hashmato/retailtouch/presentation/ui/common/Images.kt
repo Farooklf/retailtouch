@@ -14,6 +14,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import com.hashmato.retailtouch.theme.AppTheme
+import com.hashmato.retailtouch.utils.isAndroid
+import com.hashmato.retailtouch.utils.isIos
+import com.hashmato.retailtouch.utils.loadGifImage
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.vectorResource
@@ -62,4 +65,17 @@ fun ImagePlaceholderWithUrl() {
         modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.Crop
     )
+}
+
+/*@Composable
+fun GifImageLoader(imageName: String, modifier: Modifier = Modifier) {
+    when {
+        isAndroid() -> AndroidGifImage(imageName, modifier)
+        isIos() -> IosGifImage(imageName, modifier)
+    }
+}*/
+
+@Composable
+fun GifImageLoader(imageName: String, modifier: Modifier = Modifier) {
+    loadGifImage(imageName, modifier).invoke()
 }
