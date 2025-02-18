@@ -132,7 +132,7 @@ object SettingScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val appState = LocalAppState.current
         val state by viewModel.settingUiState.collectAsStateWithLifecycle()
-        val coroutineScope = rememberCoroutineScope()
+        //val coroutineScope = rememberCoroutineScope()
 
         BasicScreen(
             modifier = Modifier.systemBarsPadding(),
