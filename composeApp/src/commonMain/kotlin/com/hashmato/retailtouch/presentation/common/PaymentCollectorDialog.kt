@@ -1,4 +1,4 @@
-package com.hashmato.retailtouch.presentation.ui.common
+package com.hashmato.retailtouch.presentation.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hashmato.retailtouch.presentation.ui.common.dialogs.AppDialog
+import com.hashmato.retailtouch.presentation.common.dialogs.AppDialog
 import com.hashmato.retailtouch.presentation.viewModels.PaymentCollectorViewModel
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons

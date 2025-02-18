@@ -1,4 +1,4 @@
-package com.hashmato.retailtouch.presentation.ui.common
+package com.hashmato.retailtouch.presentation.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState

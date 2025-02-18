@@ -105,14 +105,14 @@ val defaultTemplate2 = """
 [[Line]]
 [[{8,4}:Sub Total|{{invoiceSubTotal}}]]
 [[{8,4}:Item Discount|{{invoiceItemDiscount}}]]
-[[{8,4}:Net Discount|{{invoiceNetDiscount}}]]
+[[{8,4}:Discount{{invoiceNetDiscountPer}}|{{invoiceNetDiscount}}]]
 [[{8,4}:Gst|{{invoiceTax}}]]
 [[{8,4}:Net Total|{{invoiceNetTotal}}]]
 [[Line]]
 {posPayments}
 [[Line]]
 
-[[Line]]
+
 [[{6,6}:Received By |Delivered By]]
 [[{6,6}:[L] | [R]]]
 
@@ -129,9 +129,11 @@ val defaultTemplate2 = """
 <!-- posInvoiceDetails Table -->
 <ListItem>
 [L]{{inventoryName}}
-[[{6,6}:{{qty}} X PCS {{price}} |[R]{{netTotal}}]]
+[[{6,6}:{{qty}} X {{price}} {{netDiscount}} |[R]{{netTotal}}]]
 </ListItem>
 """
-/*[[{8,4}:Outstanding Amt |{{invoiceOutstandingAmt}}]]*/
+/*
+[[{6,6}:{{qty}} X PCS {{price}} |[R]{{netTotal}}]]
+[[{8,4}:Outstanding Amt |{{invoiceOutstandingAmt}}]]*/
 /*[[{8,4}:Promotion Discount |{{invoicePromotionDiscount}}]]*/
 

@@ -1,4 +1,4 @@
-package com.hashmato.retailtouch.presentation.ui.common.dialogs.language
+package com.hashmato.retailtouch.presentation.common.dialogs.language
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

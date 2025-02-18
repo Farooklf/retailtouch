@@ -30,12 +30,18 @@ actual class PrinterServiceProvider actual constructor() {
     ): String {
         return ""
     }*/
+
+
     actual suspend fun getPrintTextForReceiptTemplate(
         ticket: Any?,
+        currencyCode: String,
         template: String,
         printers: Printers
     ): String {
-        return ""
+      return ""
+    }
+
+    actual fun openCashDrawer() {
     }
 
 }

@@ -38,16 +38,18 @@ class ObjectToReceiptTemplateV1 {
                     val value = prop.get(data)
                      if (!value.isListType()) {
                         val placeholder = "{{${prop.name}}}"
+                        val discountPlaceHolder = "{{${prop.name}%}}"
                         val datePlaceHolder = "\\{\\{${prop.name}:(.+?)\\}\\}".toRegex()
 
-                        //val formattedValue = formatValue(value, decimalPoints)
-
-                        // Regex pattern to match the full row containing the placeholder
-                        //val rowRegex = """\[\[.*?\|\s*\{\{${prop.name}\}\}\s*\]\](\n|\r\n)?""".toRegex()
-                        // Debugging
-
-
-                        if (datePlaceHolder.containsMatchIn(processedText)) {
+                         // Handle discount logic only when discountPercentage is greater than 0
+                         /*if(prop.name == "invoiceNetDiscountPer" && value is Number && value.toDouble() > 0) {
+                           println("InvoiceNetDiscountPercentage: $value")
+                             val placeholder = "{{${prop.name}}}"
+                             // Format the discount percentage value
+                             val formattedDiscount = "(${value}%)"
+                             // Replace discount placeholder with the formatted value
+                             processedText = processedText.replace(placeholder, formattedDiscount)
+                         }else*/ if (datePlaceHolder.containsMatchIn(processedText)) {
                             processedText = applyDateFormat(
                                 processedText,
                                 datePlaceHolder,
@@ -130,10 +132,12 @@ class ObjectToReceiptTemplateV1 {
                 Log.e("template", "before table processed text $processedText")
 
                 //val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|0\\.00\\]\\]")
+                //val lineToRemoveRegex = """\[\[\{\d+,\d+\}:(.*?)\{\{([^}]+)\}\}\|\{\{([^}]+)\}\}\]\]""".toRegex()
                 val holdingZeroValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:[^\\]|]+\\|\\$0\\.00\\]\\]")
-                if(holdingZeroValuesRegex.containsMatchIn(processedText)){
+                val holdingEmptyValuesRegex = Regex("\\[\\[\\{\\d+,\\d+\\}:(.*?)\\|\\]\\]|\\[\\[\\{\\d+,\\d+\\}:(.*?)\\|\\{\\{([^}]+)\\}\\}\\]\\]")
+                if(holdingEmptyValuesRegex.containsMatchIn(processedText)){
                     //processedText = removeZeroValueLines(processedText)
-                    processedText = processedText.replace(holdingZeroValuesRegex, "").replace("\n\n", "\n").trim() // Clean empty lines
+                    processedText = processedText.replace(holdingEmptyValuesRegex, "").replace("\n\n", "\n").trim() // Clean empty lines
                     //println("cleanedTemplate : $processedText")
                 }
 
@@ -339,7 +343,9 @@ class ObjectToReceiptTemplateV1 {
         private fun formatValue(value: Any?, decimalPoints: Int,currencyCode:String): String {
             return when (value) {
                 null -> ""
-                is Double -> { currencyCode+String.format("%.${decimalPoints}f", value)}
+                is Double -> {
+                    if(value>0.0) currencyCode+String.format("%.${decimalPoints}f", value) else ""
+                }
                 else -> value.toString()
             }
         }

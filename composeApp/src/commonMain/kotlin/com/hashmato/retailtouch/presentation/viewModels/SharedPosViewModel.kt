@@ -1800,6 +1800,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             val netTotal= grandTotalWithoutDiscount.roundTo(2)//4
             val subTotal= grandTotal.roundTo(2)//4
             val invoiceTotalValue= (subTotal + globalTax).roundTo(2)//4
+
+            val discountPercentage = if (globalDiscountIsInPercent) {
+                globalDiscount
+            } else {
+                ((globalDiscount / netTotal) * 100).roundTo(2)//4
+            }
+
             //invoicePromotionDiscount
             val invoicePromotionDiscount = if (promotionDiscountIsInPercent) {
                 (netTotal.times(promotionDiscount)).div(100.0)
@@ -1818,6 +1825,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             } else {
                 ((invoiceNetDiscount / netTotal) * 100).roundTo(2)//4
             }
+
             val invoiceOutstandingAmt= netCost-(invoiceNetDiscount+invoicePromotionDiscount)
             println("itemDiscountPercentage : $itemDiscountPercentage")
             //val itemDiscountPercentage= ((invoiceNetDiscount / netTotal) * 100).roundTo(2)//4
@@ -1834,7 +1842,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceTotal = cartSubTotal, //before Tax
                 invoiceItemDiscount = cartItemTotalDiscounts,
                 invoiceTotalValue= netCost,
-                invoiceNetDiscountPerc= if(globalDiscountIsInPercent) globalDiscount else 0.0,
+                invoiceNetDiscountPerc=discountPercentage /*if(globalDiscountIsInPercent) globalDiscount else 0.0*/,
                 invoiceNetDiscount= invoiceNetDiscount.roundTo(2),//4
                 invoicePromotionDiscount= invoicePromotionDiscount.roundTo(2),//4
                 invoiceTotalAmount=netCost,
@@ -2047,7 +2055,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
         //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
-        //println("finalText $finalTextToPrint")
+        println("posInvoice $posInvoice")
         viewModelScope.launch {
             val posInvoicePrint=POSInvoicePrint(
                 invoiceNo = posInvoice.invoiceNo?:"",
@@ -2059,6 +2067,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceSubTotal = posInvoice.invoiceSubTotal,
                 invoiceItemDiscount = posInvoice.invoiceItemDiscount,
                 invoiceNetDiscount = posInvoice.invoiceNetDiscount,
+                invoiceNetDiscountPer = "(${posInvoice.invoiceNetDiscountPerc}%)",
                 invoiceTax = posInvoice.invoiceTax,
                 invoiceNetTotal = posInvoice.invoiceNetTotal,
                 posInvoiceDetails = posInvoice.posInvoiceDetails,

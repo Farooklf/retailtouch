@@ -34,11 +34,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.hashmato.retailtouch.domain.model.login.AuthenticateDao
 import com.hashmato.retailtouch.navigation.NavigatorActions
 import com.hashmato.retailtouch.navigation.NavigatorActions.navigateToSettlementScreen
-import com.hashmato.retailtouch.presentation.ui.common.AppScreenPadding
-import com.hashmato.retailtouch.presentation.ui.common.GradientBackgroundScreen
-import com.hashmato.retailtouch.presentation.ui.common.ListGridItems
-import com.hashmato.retailtouch.presentation.ui.common.dialogs.ActionDialog
-import com.hashmato.retailtouch.presentation.ui.common.getGridCell
+import com.hashmato.retailtouch.presentation.common.AppScreenPadding
+import com.hashmato.retailtouch.presentation.common.GradientBackgroundScreen
+import com.hashmato.retailtouch.presentation.common.ListGridItems
+import com.hashmato.retailtouch.presentation.common.dialogs.ActionDialog
+import com.hashmato.retailtouch.presentation.common.getGridCell
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons
 import com.hashmato.retailtouch.presentation.viewModels.HomeViewModel
@@ -189,6 +189,7 @@ fun Home(
                                     HomeItemId.PAYOUT_ID->{
                                         appThemeContext.navigateToPayoutScreen(navigator)
                                     }
+
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
                                         coroutineScope.launch {
@@ -197,6 +198,9 @@ fun Home(
                                     }
                                     HomeItemId.PRINTER_ID->{
                                         NavigatorActions.navigateToPrinterScreen(navigator)
+                                    }
+                                    HomeItemId.DRAWER_ID->{
+
                                     }
                                     HomeItemId.SETTING_ID->{
                                         NavigatorActions.navigateToSettingScreen(navigator)
@@ -209,7 +213,7 @@ fun Home(
                         }
 
                         Text(
-                            text = "App Version : ${appVersion}",
+                            text = "App Version : $appVersion",
                             style = AppTheme.typography.titleMedium(),
                             color = AppTheme.colors.appWhite,
                             textAlign = TextAlign.Center
@@ -257,8 +261,6 @@ fun Home(
             exitApp() // Calls the platform-specific `exitApp` implementation
         }
     )
-
-
 }
 
 

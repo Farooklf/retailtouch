@@ -19,8 +19,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.hashmato.retailtouch.navigation.NavigatorActions
-import com.hashmato.retailtouch.presentation.ui.common.AppCircleProgressIndicator
-import com.hashmato.retailtouch.presentation.ui.common.SmallTextComponent
+import com.hashmato.retailtouch.presentation.common.AppCircleProgressIndicator
+import com.hashmato.retailtouch.presentation.common.SmallTextComponent
 import com.hashmato.retailtouch.presentation.viewModels.BaseViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject

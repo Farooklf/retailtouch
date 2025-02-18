@@ -1,4 +1,4 @@
-package com.hashmato.retailtouch.presentation.ui.common
+package com.hashmato.retailtouch.presentation.common
 
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults

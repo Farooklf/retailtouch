@@ -29,8 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hashmato.retailtouch.presentation.ui.common.AppOutlinedTextFieldWithOuterIcon
-import com.hashmato.retailtouch.presentation.ui.common.ResponsiveBox
+import com.hashmato.retailtouch.presentation.common.AppOutlinedTextFieldWithOuterIcon
+import com.hashmato.retailtouch.presentation.common.ResponsiveBox
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons
 import com.hashmato.retailtouch.presentation.viewModels.EmployeeViewModel

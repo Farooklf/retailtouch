@@ -23,7 +23,7 @@ data class PosInvoice(
     @SerialName("invoiceNetDiscount")
     val invoiceNetDiscount: Double = 0.0,
     @SerialName("invoiceNetDiscountPerc")
-    val invoiceNetDiscountPerc: Double? = 0.0,
+    val invoiceNetDiscountPerc: Double = 0.0,
     @SerialName("invoiceNetTotal")
     val invoiceNetTotal: Double = 0.0,
     @SerialName("invoiceNo")

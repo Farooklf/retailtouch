@@ -119,6 +119,8 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
        }
     }
 
+    //open cash D
+
     // Called when employee logs in
     fun onEmployeeLoggedIn() {
         viewModelScope.launch {

@@ -1,7 +1,7 @@
 package com.hashmato.retailtouch.presentation.viewModels
 
 import androidx.lifecycle.ViewModel
-import com.hashmato.retailtouch.presentation.ui.common.PaymentCollectorDialogState
+import com.hashmato.retailtouch.presentation.common.PaymentCollectorDialogState
 import com.hashmato.retailtouch.utils.DoubleExtension.roundTo
 import com.hashmato.retailtouch.utils.PaymentCollectorButtonType
 import kotlinx.coroutines.flow.MutableStateFlow

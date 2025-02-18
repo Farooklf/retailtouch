@@ -1,7 +1,7 @@
-package com.hashmato.retailtouch.presentation.ui.common.dialogs.language
+package com.hashmato.retailtouch.presentation.common.dialogs.language
 
 import androidx.compose.runtime.Composable
-import com.hashmato.retailtouch.presentation.ui.common.dialogs.AppDialogChoiceFromList
+import com.hashmato.retailtouch.presentation.common.dialogs.AppDialogChoiceFromList
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppLanguage
 import org.jetbrains.compose.resources.stringResource

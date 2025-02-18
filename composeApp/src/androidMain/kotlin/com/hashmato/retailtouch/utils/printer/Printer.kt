@@ -272,7 +272,7 @@ class Printer(val receiptWidth: Int = 1600) {
         return null
     }
 
-    fun printReceiptNormalWithOpenCashBox(textToPrint: String): EscPosPrinter? {
+    fun printReceiptWithOpenCashBox(textToPrint: String): EscPosPrinter? {
         Log.e("Print Size", printer.printerWidthMM.toString())
         try {
             return printer.printFormattedTextAndOpenCashBox(textToPrint, 100)
@@ -467,6 +467,7 @@ class Printer(val receiptWidth: Int = 1600) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 when (printerType) {
+
                     PrinterType.Ethernet -> {
                         val ethernetIPAddress = printers.networkAddress?:""
                         var ipaddress = ""

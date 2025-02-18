@@ -26,10 +26,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
-import com.hashmato.retailtouch.presentation.ui.common.AppOutlinedTextFieldWithOuterIcon
-import com.hashmato.retailtouch.presentation.ui.common.AppPrimaryButton
-import com.hashmato.retailtouch.presentation.ui.common.BasicScreen
-import com.hashmato.retailtouch.presentation.ui.common.ScreenHeaderText
+import com.hashmato.retailtouch.presentation.common.AppOutlinedTextFieldWithOuterIcon
+import com.hashmato.retailtouch.presentation.common.AppPrimaryButton
+import com.hashmato.retailtouch.presentation.common.BasicScreen
+import com.hashmato.retailtouch.presentation.common.ScreenHeaderText
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons
 import com.outsidesource.oskitcompose.router.KMPBackHandler

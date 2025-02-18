@@ -98,6 +98,8 @@ data class AppThemeContext(
     fun navigateToMemberScreen(navigator: Navigator) {
         navigator.push(Route.Member.toVoyagerScreen())
     }
+
+
 }
 
 

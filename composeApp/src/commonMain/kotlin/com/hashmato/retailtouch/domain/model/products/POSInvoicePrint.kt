@@ -12,6 +12,7 @@ data class POSInvoicePrint(
     val invoiceSubTotal: Double = 0.0,
     val invoiceItemDiscount: Double = 0.0,
     val invoiceNetDiscount: Double = 0.0,
+    val invoiceNetDiscountPer: String = "0.0%",
     val invoiceTax: Double = 0.0,
     val invoiceNetTotal: Double = 0.0,
     val posInvoiceDetails: List<PosInvoiceDetail> = emptyList(),

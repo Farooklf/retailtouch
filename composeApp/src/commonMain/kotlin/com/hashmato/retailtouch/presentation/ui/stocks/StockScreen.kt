@@ -44,10 +44,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import coil3.compose.AsyncImage
 import com.hashmato.retailtouch.domain.model.products.POSProduct
-import com.hashmato.retailtouch.presentation.ui.common.BasicScreen
-import com.hashmato.retailtouch.presentation.ui.common.CommonListHeader
-import com.hashmato.retailtouch.presentation.ui.common.SearchableTextWithBg
-import com.hashmato.retailtouch.presentation.ui.common.StockProductListItem
+import com.hashmato.retailtouch.presentation.common.BasicScreen
+import com.hashmato.retailtouch.presentation.common.CommonListHeader
+import com.hashmato.retailtouch.presentation.common.SearchableTextWithBg
+import com.hashmato.retailtouch.presentation.common.StockProductListItem
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons
 import org.jetbrains.compose.resources.stringResource

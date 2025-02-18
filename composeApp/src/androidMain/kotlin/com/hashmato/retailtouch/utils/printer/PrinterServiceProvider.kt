@@ -48,4 +48,7 @@ actual class PrinterServiceProvider actual constructor(){
     ): String {
         return printer.applyDynamicReceiptTemplate(posSettlement,template,printers)
     }*/
+    actual fun openCashDrawer() {
+        printer.openCashBox()
+    }
 }
