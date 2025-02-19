@@ -22,16 +22,6 @@ actual class PrinterServiceProvider actual constructor() {
     }
 
 
-
-    /*actual fun getFormattedTemplateForSettlement(
-        posSettlement: PosSettlement,
-        template: String,
-        printers: Printers
-    ): String {
-        return ""
-    }*/
-
-
     actual suspend fun getPrintTextForReceiptTemplate(
         ticket: Any?,
         currencyCode: String,
@@ -41,7 +31,11 @@ actual class PrinterServiceProvider actual constructor() {
       return ""
     }
 
-    actual fun openCashDrawer() {
+    actual fun openCashDrawer(
+        printers: Printers,
+        printerType: PrinterType,
+        textToPrint: String
+    ) {
     }
 
 }

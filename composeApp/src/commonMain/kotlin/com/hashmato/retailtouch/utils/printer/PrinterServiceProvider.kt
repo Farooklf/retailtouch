@@ -23,6 +23,13 @@ expect class PrinterServiceProvider(){
         printers: Printers
     ): String
 
-     fun openCashDrawer()
+
+    fun openCashDrawer(
+        printers: Printers,
+        printerType: PrinterType,
+        textToPrint: String
+    )
+
+
 
 }

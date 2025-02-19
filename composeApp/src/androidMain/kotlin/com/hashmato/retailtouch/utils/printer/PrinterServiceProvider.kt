@@ -8,12 +8,17 @@ import comhashmatoretailtouchsqldelight.Printers
 
 actual class PrinterServiceProvider actual constructor(){
     private val printer = Printer()
-    private val app= AndroidApp
-    actual fun getAllUSBBDevices(): List<String> {
+    private val app = AndroidApp
 
-        val allUsbConnection = printer.getUSBConnections(app.getApplicationContext()) ?: emptyArray()
-        println("callusConnection $allUsbConnection")
-        return allUsbConnection.map { it.device.deviceName }
+    actual fun getAllUSBBDevices(): List<String> {
+        val launchActivity = app.INSTANCE.currentActiveActivity
+        if (launchActivity != null) {
+            println("USBBDevices $launchActivity")
+            val allUsbConnection = printer.getUSBConnections(app.getApplicationContext()) ?: emptyArray()
+            println("callusConnection $allUsbConnection")
+            return allUsbConnection.map { it.device.deviceName }
+        }
+        return emptyList()
     }
 
     actual fun getAllBluetoothDevices(): List<Pair<String, String>> {
@@ -41,14 +46,12 @@ actual class PrinterServiceProvider actual constructor(){
         return printer.applyDynamicReceiptTemplate(ticket,currencyCode,template,printers)
     }
 
-    /*actual suspend fun getFormattedTemplateForSettlement(
-        posSettlement: PosSettlement,
-        template: String,
-        printers: Printers
-    ): String {
-        return printer.applyDynamicReceiptTemplate(posSettlement,template,printers)
-    }*/
-    actual fun openCashDrawer() {
-        printer.openCashBox()
+
+    actual fun openCashDrawer(
+        printers: Printers,
+        printerType: PrinterType,
+        textToPrint: String
+    ) {
+        printer.connectPrinter(printers, printerType, textToPrint)
     }
 }

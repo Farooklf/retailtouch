@@ -48,6 +48,7 @@ import com.hashmato.retailtouch.utils.HomeItemId
 import com.hashmato.retailtouch.utils.exitApp
 import com.hashmato.retailtouch.utils.getAppVersion
 import com.outsidesource.oskitcompose.router.KMPBackHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
@@ -97,6 +98,13 @@ fun Home(
         syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
     }
 
+    LaunchedEffect(homeUIState.isError) {
+        if (homeUIState.isError) {
+            snackbarHostState.value.showSnackbar(homeUIState.errorMsg)
+            delay(1000)
+            homeViewModel.resetError()
+        }
+    }
 
     LaunchedEffect(isFromSplash) {
         if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
@@ -200,7 +208,7 @@ fun Home(
                                         NavigatorActions.navigateToPrinterScreen(navigator)
                                     }
                                     HomeItemId.DRAWER_ID->{
-
+                                        homeViewModel.openDrawerModule()
                                     }
                                     HomeItemId.SETTING_ID->{
                                         NavigatorActions.navigateToSettingScreen(navigator)

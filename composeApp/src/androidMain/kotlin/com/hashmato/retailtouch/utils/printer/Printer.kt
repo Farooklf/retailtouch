@@ -257,7 +257,7 @@ class Printer(val receiptWidth: Int = 1600) {
     * @return return paired device  list
     *
     * */
-    fun getBluetoothDeviceList(): Array<out BluetoothConnection>? {
+    private fun getBluetoothDeviceList(): Array<out BluetoothConnection>? {
         return BluetoothConnections().list
     }
 
@@ -464,7 +464,7 @@ class Printer(val receiptWidth: Int = 1600) {
          textToPrint: String
      ) {
          println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
-        GlobalScope.launch(Dispatchers.IO) {
+         GlobalScope.launch(Dispatchers.IO) {
             try {
                 when (printerType) {
 
@@ -483,7 +483,10 @@ class Printer(val receiptWidth: Int = 1600) {
                                 printerWidthMM = printers.paperSize?.toFloat() ?: 0f
                             )
                         ) {
-                            printReceiptNormal("$textToPrint")
+                            if(textToPrint.isNotEmpty())
+                              printReceiptNormal(textToPrint)
+                            else
+                              openCashBox()
 //                            printerOrdersAndReceipts(
 //                                printerItem,
 //                                ticketRequest,
@@ -532,7 +535,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                                     false
                                                 )
                                             ) {
-                                                if (usbManager != null && usbDevice != null) {
+                                                if (usbDevice != null) {
                                                     // YOUR PRINT CODE HERE
                                                     if (usbConnection != null) {
 
@@ -549,7 +552,10 @@ class Printer(val receiptWidth: Int = 1600) {
                                                                 )
                                                             )
                                                             usbConnection.send()
-                                                            printReceiptNormal("$textToPrint")
+                                                            if(textToPrint.isNotEmpty())
+                                                               printReceiptNormal("$textToPrint")
+                                                            else
+                                                                openCashBox()
 
                                                             context?.unregisterReceiver(this)
                                                         } else {
@@ -597,7 +603,10 @@ class Printer(val receiptWidth: Int = 1600) {
                                     printerWidthMM = printers.paperSize?.toFloat() ?: 0f
                                 )
                             ) {
-                                printReceiptNormal("$textToPrint")
+                                if(textToPrint.isNotEmpty())
+                                    printReceiptNormal("$textToPrint")
+                                else
+                                    openCashBox()
                             } else {
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(

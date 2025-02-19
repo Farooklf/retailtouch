@@ -2117,7 +2117,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         },
                         textToPrint = finalTextToPrint
                     )
-                }else{
+                }
+                else{
                    //Show Message that your device is not connected
                     _posUIState.update { it.copy(isError = true,errorMsg = "add printer setting") }
                 }

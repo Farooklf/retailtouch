@@ -5,6 +5,8 @@ import com.hashmato.retailtouch.domain.model.login.AuthenticateDao
 
 
 data class HomeUIState(
+    var isError : Boolean = false,
+    var errorMsg : String = "",
     val showExitConfirmationDialog: Boolean = false,
     val isLoading: Boolean = false,
     val isFromSplash: Boolean = false,

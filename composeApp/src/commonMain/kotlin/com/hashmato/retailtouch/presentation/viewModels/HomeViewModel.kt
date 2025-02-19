@@ -18,6 +18,9 @@ import com.hashmato.retailtouch.utils.AppStrings.settlement
 import com.hashmato.retailtouch.utils.AppStrings.stock
 import com.hashmato.retailtouch.utils.AppStrings.sync
 import com.hashmato.retailtouch.utils.HomeItemId
+import com.hashmato.retailtouch.utils.PrinterType
+import com.hashmato.retailtouch.utils.defaultTemplate2
+import com.hashmato.retailtouch.utils.printer.PrinterServiceProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -123,7 +126,40 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
 
     fun openDrawerModule(){
         viewModelScope.launch{
+            dataBaseRepository.getPrinter().collect { printer ->
+                if(printer!=null){
+                    PrinterServiceProvider().openCashDrawer(
+                        printers = printer,
+                        printerType = when (printer.printerType) {
+                            1L -> {
+                                PrinterType.Ethernet
+                            }
 
+                            2L -> {
+                                PrinterType.USB
+                            }
+
+                            3L -> {
+                                PrinterType.Bluetooth
+                            }
+                            else -> {
+                                PrinterType.Bluetooth
+                            }
+                        },
+                        textToPrint = ""
+                    )
+                }
+                else{
+                    //Show Message that your device is not connected
+                    _homeUIState.update { it.copy(isError = true,errorMsg = "add printer setting") }
+                }
+            }
+        }
+    }
+
+    fun resetError(){
+        viewModelScope.launch {
+            _homeUIState.update { it.copy(isError = false, errorMsg = "") }
         }
     }
 
