@@ -129,7 +129,7 @@ val defaultTemplate2 = """
 <!-- posInvoiceDetails Table -->
 <ListItem>
 [L]{{inventoryName}}
-[[{6,6}:{{qty}} X {{price}} {{netDiscount}} |[R]{{netTotal}}]]
+[[{6,6}:{{qty}} X PCS {{price}} {{itemDiscount}} |[R]{{netCost}}]]
 </ListItem>
 """
 /*

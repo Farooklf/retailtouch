@@ -1,7 +1,5 @@
 package com.hashmato.retailtouch.utils.printer
 
-import com.hashmato.retailtouch.domain.model.products.POSInvoicePrint
-import com.hashmato.retailtouch.domain.model.settlement.PosSettlement
 import com.hashmato.retailtouch.utils.PrinterType
 import comhashmatoretailtouchsqldelight.Printers
 

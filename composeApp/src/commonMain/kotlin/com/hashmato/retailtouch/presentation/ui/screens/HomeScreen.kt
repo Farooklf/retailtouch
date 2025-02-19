@@ -59,7 +59,7 @@ import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.sync_progress
 
 
-data class HomeScreen(val isSplash: Boolean): Screen{
+data class HomeScreen(val isSplash: Boolean): Screen {
     @Composable
     override fun Content() {
        val homeViewModel: HomeViewModel = koinInject()

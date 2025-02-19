@@ -13,13 +13,13 @@ data class PosInvoiceDetail(
     @SerialName("inventoryName")
     val inventoryName: String = "",
     @SerialName("itemDiscount")
-    val itemDiscount: Double = 0.0,
+    val itemDiscount: Double ,
     @SerialName("itemDiscountPerc")
-    val itemDiscountPerc: Double = 0.0,
+    val itemDiscountPerc: Double,
     @SerialName("netCost")
-    val netCost: Double = 0.0,
+    val netCost: Double,
     @SerialName("netDiscount")
-    val netDiscount: Double = 0.0,
+    val netDiscount: Double,
     @SerialName("netTotal")
     val netTotal: Double = 0.0,
     @SerialName("posInvoiceId")

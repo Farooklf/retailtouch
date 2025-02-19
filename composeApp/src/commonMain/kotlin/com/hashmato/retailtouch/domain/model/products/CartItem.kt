@@ -68,7 +68,6 @@ data class CartItem(
         }
 
     fun calculateDiscount(): Double {
-        if (discount < 0) return 0.0
         if (promotionActive) {
             val y = getFinalPrice()
             val discountAmount = (price * qty) - y
@@ -160,7 +159,7 @@ data class CartItem(
                 }
             }
         }
-        return amt.coerceAtLeast(0.0)
+        return amt.roundTo(2)
     }
 
     fun getFinalPriceWithoutDiscounts():Double{

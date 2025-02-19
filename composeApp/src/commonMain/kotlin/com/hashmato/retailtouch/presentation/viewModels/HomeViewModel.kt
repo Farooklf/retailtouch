@@ -119,7 +119,13 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
        }
     }
 
-    //open cash D
+    //open cash drawer module
+
+    fun openDrawerModule(){
+        viewModelScope.launch{
+
+        }
+    }
 
     // Called when employee logs in
     fun onEmployeeLoggedIn() {

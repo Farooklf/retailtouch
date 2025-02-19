@@ -14,6 +14,7 @@ import com.hashmato.retailtouch.domain.model.posInvoices.PendingSaleDao
 import com.hashmato.retailtouch.domain.model.products.CreatePOSInvoiceRequest
 import com.hashmato.retailtouch.domain.model.products.POSInvoicePrint
 import com.hashmato.retailtouch.domain.model.products.PosInvoice
+import com.hashmato.retailtouch.domain.model.products.PosInvoicePrintDetails
 import com.hashmato.retailtouch.domain.model.products.PosPayment
 import com.hashmato.retailtouch.utils.NumberFormatter
 import com.hashmato.retailtouch.utils.PrinterType
@@ -219,6 +220,7 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
         //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
         //println("printingReceipt $finalTextToPrint")
         viewModelScope.launch {
+            val currency=screenState.value.currencySymbol
             val posInvoicePrint= POSInvoicePrint(
                 invoiceNo = posInvoice.invoiceNo?:"",
                 invoiceDate = posInvoice.invoiceDate?:"",
@@ -231,12 +233,26 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
                 invoiceNetDiscount = posInvoice.invoiceNetDiscount,
                 invoiceTax = posInvoice.invoiceTax,
                 invoiceNetTotal = posInvoice.invoiceNetTotal,
-                posInvoiceDetails = posInvoice.posInvoiceDetails,
+                posInvoiceDetails = posInvoice.posInvoiceDetails.map {posDetails->
+                    PosInvoicePrintDetails(
+                        posInvoiceId = posDetails.posInvoiceId,
+                        inventoryName = posDetails.inventoryName,
+                        inventoryCode = posDetails.inventoryCode,
+                        productId = posDetails.productId,
+                        qty = posDetails.qty.toInt(),
+                        price = posDetails.price,
+                        itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc. -$currency${posDetails.itemDiscount})" else "",
+                        itemDiscountPerc = posDetails.itemDiscountPerc,
+                        netDiscount = posDetails.netDiscount,
+                        netCost=posDetails.netCost,
+                        netTotal = posDetails.netTotal,
+                        subTotal = posDetails.subTotal)
+                },
                 posPayments = posInvoice.posPayments,
             )
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,screenState.value.currencySymbol, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, defaultTemplate2,printer)
                    // println("finalTextToPrint :$finalTextToPrint")
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,

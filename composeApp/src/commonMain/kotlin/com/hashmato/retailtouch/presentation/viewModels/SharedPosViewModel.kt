@@ -20,6 +20,7 @@ import com.hashmato.retailtouch.domain.model.products.PosInvoiceDetail
 import com.hashmato.retailtouch.domain.model.products.PosPayment
 import com.hashmato.retailtouch.domain.model.products.PosUIState
 import com.hashmato.retailtouch.domain.model.products.POSProduct
+import com.hashmato.retailtouch.domain.model.products.PosInvoicePrintDetails
 import com.hashmato.retailtouch.domain.model.products.Stock
 import com.hashmato.retailtouch.domain.model.promotions.CRPromotionByPriceBreak
 import com.hashmato.retailtouch.domain.model.promotions.CRPromotionByQuantity
@@ -1842,7 +1843,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceTotal = cartSubTotal, //before Tax
                 invoiceItemDiscount = cartItemTotalDiscounts,
                 invoiceTotalValue= netCost,
-                invoiceNetDiscountPerc=discountPercentage /*if(globalDiscountIsInPercent) globalDiscount else 0.0*/,
+                invoiceNetDiscountPerc= if(globalDiscountIsInPercent) globalDiscount else 0.0,
                 invoiceNetDiscount= invoiceNetDiscount.roundTo(2),//4
                 invoicePromotionDiscount= invoicePromotionDiscount.roundTo(2),//4
                 invoiceTotalAmount=netCost,
@@ -1856,15 +1857,14 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 isCancelled= false,
                 memberId = selectedMemberId,
                 posInvoiceDetails = cartList.map {cart->
-                    var disc = 0.0
                     val itemPrice = cart.getFinalPrice().roundTo(2)//4
                     println("itemPrice :- $itemPrice")
                     // Determine discount percentage based on global or item-level logic
-                    disc = ((itemPrice * itemDiscountPercentage) / 100.0).roundTo(2)
+                    val disc = ((itemPrice * itemDiscountPercentage) / 100.0).roundTo(2)
                     println("discount :- $disc")
                     val total = cart.qty * cart.price
-                    val subTotal = total - disc - cart.calculateDiscount()
-                    val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotal, cart.tax)
+                    val subTotalAmt = total - disc - cart.calculateDiscount()
+                    val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotalAmt, cart.tax)
                     //println("cart.qty ${cart.qty}")
                     PosInvoiceDetail(
                         productId = cart.stock.productId,
@@ -1876,13 +1876,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         total = total,
                         totalAmount = itemPrice,
                         totalValue = itemPrice,
-                        netTotal = (itemPrice - disc).roundTo(2),//4
+                        averageCost = itemPrice,
                         netCost = itemPrice,
-                        subTotal = (subTotal - itemTax).roundTo(2),//4
-                        itemDiscountPerc = if (cart.discountIsInPercent) cart.discount else disc,
+                        netTotal = subTotalAmt.roundTo(2),//4
+                        subTotal = (subTotalAmt - itemTax).roundTo(2),//4
                         netDiscount = disc,
                         itemDiscount = cart.calculateDiscount(),
-                        averageCost = itemPrice,
+                        itemDiscountPerc = if (cart.discountIsInPercent) cart.discount else 0.0,
                         roundingAmount = 0.0,
                         tax = itemTax.roundTo(2),//4
                         taxPercentage = cart.tax
@@ -1939,7 +1939,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             println(errorMsg)
         }
     }
-    fun ticketCompleted(){
+
+    private fun ticketCompleted(){
         updatePaymentSuccessDialog(true)
         /*if (state.showPaymentConfirmationPopUp) {
             updatePaymentSuccessDialogVisibility(true)
@@ -2005,7 +2006,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         val data = mapOf(
             "invoice.invoiceNo" to ticket.invoiceNo,
             "invoice.invoiceDate" to ticket.invoiceDate,
-            "invoice.terms" to  ticket.posPayments?.get(0)?.name,
+            "invoice.terms" to  ticket.posPayments.get(0)?.name,
             "invoice.customerName" to if(state.selectedMember=="Select Member") "" else state.selectedMember,
             "customer.address1" to state.location?.address1,
             "customer.address2" to state.location?.address2,
@@ -2057,6 +2058,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
         println("posInvoice $posInvoice")
         viewModelScope.launch {
+            val currency=posUIState.value.currencySymbol
             val posInvoicePrint=POSInvoicePrint(
                 invoiceNo = posInvoice.invoiceNo?:"",
                 invoiceDate = posInvoice.invoiceDate?:"",
@@ -2067,16 +2069,32 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 invoiceSubTotal = posInvoice.invoiceSubTotal,
                 invoiceItemDiscount = posInvoice.invoiceItemDiscount,
                 invoiceNetDiscount = posInvoice.invoiceNetDiscount,
-                invoiceNetDiscountPer = "(${posInvoice.invoiceNetDiscountPerc}%)",
+                invoiceNetDiscountPer = if(posInvoice.invoiceNetDiscountPerc>0.0)"(${posInvoice.invoiceNetDiscountPerc}%)" else "",
                 invoiceTax = posInvoice.invoiceTax,
                 invoiceNetTotal = posInvoice.invoiceNetTotal,
-                posInvoiceDetails = posInvoice.posInvoiceDetails,
+                posInvoiceDetails = posInvoice.posInvoiceDetails.map {posDetails->
+                    PosInvoicePrintDetails(
+                        posInvoiceId = posDetails.posInvoiceId,
+                        inventoryName = posDetails.inventoryName,
+                        inventoryCode = posDetails.inventoryCode,
+                        productId = posDetails.productId,
+                        qty = posDetails.qty.toInt(),
+                        price = posDetails.price,
+                        itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc.-$currency${posDetails.itemDiscount})" else "",
+                        itemDiscountPerc = posDetails.itemDiscountPerc,
+                        netDiscount = posDetails.netDiscount,
+                        netCost=posDetails.netCost,
+                        netTotal = posDetails.netTotal,
+                        subTotal = posDetails.subTotal,
+
+                    )
+                },
                 posPayments = posInvoice.posPayments,
             )
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     //println("printer_paperSize ${printer.paperSize}")
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,posUIState.value.currencySymbol, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, defaultTemplate2,printer)
                     //println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(
