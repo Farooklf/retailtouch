@@ -10,6 +10,7 @@ expect class PrinterServiceProvider(){
         printers: Printers,
         printerType: PrinterType,
         textToPrint: String,
+        openDrawer : Boolean = false
     )
 
     //suspend fun getPrintTextForReceiptTemplate(ticket: Any?,currencyCode:String, template:String, printers: Printers):String

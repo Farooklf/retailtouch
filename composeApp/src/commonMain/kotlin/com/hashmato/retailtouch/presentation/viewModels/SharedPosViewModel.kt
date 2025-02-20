@@ -1782,7 +1782,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun tender() {
         viewModelScope.launch(Dispatchers.IO) {
-            val posState=_posUIState.value
+            val posState=posUIState.value
             if(posState.createdPayments.isNotEmpty()){
                 posState.createdPayments.forEach {element->
                     if(element.acceptChange==true || element.name?.lowercase() == "cash"){
@@ -1828,7 +1828,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
 
             val invoiceOutstandingAmt= netCost-(invoiceNetDiscount+invoicePromotionDiscount)
-            println("itemDiscountPercentage : $itemDiscountPercentage")
+            //println("itemDiscountPercentage : $itemDiscountPercentage")
             //val itemDiscountPercentage= ((invoiceNetDiscount / netTotal) * 100).roundTo(2)//4
             val posInvoice=PosInvoice(
                 tenantId = loginUser.tenantId?:0,
@@ -1858,10 +1858,10 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 memberId = selectedMemberId,
                 posInvoiceDetails = cartList.map {cart->
                     val itemPrice = cart.getFinalPrice().roundTo(2)//4
-                    println("itemPrice :- $itemPrice")
+                    //println("itemPrice :- $itemPrice")
                     // Determine discount percentage based on global or item-level logic
                     val disc = ((itemPrice * itemDiscountPercentage) / 100.0).roundTo(2)
-                    println("discount :- $disc")
+                    //println("discount :- $disc")
                     val total = cart.qty * cart.price
                     val subTotalAmt = total - disc - cart.calculateDiscount()
                     val itemTax = calculateGlobalTax(cart.salesTaxInclusive, subTotalAmt, cart.tax)
@@ -1958,6 +1958,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                     isSynced = isSync
                 ))
                 constructReceiptAndPrintTemplate(posInvoice)
+                //Sync Pending Data if getting online
             }catch (ex:Exception){
                 val errorMsg="Error Saving Data \n${ex.message}"
                 updatePOSError(errorMsg)
@@ -2056,9 +2057,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
         //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
-        println("posInvoice $posInvoice")
+        //println("posInvoice $posInvoice")
         viewModelScope.launch {
-            val currency=posUIState.value.currencySymbol
+            val state=posUIState.value
             val posInvoicePrint=POSInvoicePrint(
                 invoiceNo = posInvoice.invoiceNo?:"",
                 invoiceDate = posInvoice.invoiceDate?:"",
@@ -2080,7 +2081,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                         productId = posDetails.productId,
                         qty = posDetails.qty.toInt(),
                         price = posDetails.price,
-                        itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc.-$currency${posDetails.itemDiscount})" else "",
+                        itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc.-${state.currencySymbol}${posDetails.itemDiscount})" else "",
                         itemDiscountPerc = posDetails.itemDiscountPerc,
                         netDiscount = posDetails.netDiscount,
                         netCost=posDetails.netCost,
@@ -2094,7 +2095,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     //println("printer_paperSize ${printer.paperSize}")
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,state.currencySymbol, defaultTemplate2,printer)
                     //println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(
@@ -2115,7 +2116,8 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                                 PrinterType.Bluetooth
                             }
                         },
-                        textToPrint = finalTextToPrint
+                        textToPrint = finalTextToPrint,
+                        openDrawer = state.isCash
                     )
                 }
                 else{

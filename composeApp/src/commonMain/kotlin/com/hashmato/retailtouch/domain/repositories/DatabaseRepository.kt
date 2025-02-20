@@ -527,7 +527,7 @@ class DataBaseRepository: KoinComponent {
         withContext(Dispatchers.IO) {
              val posInvoice=data.posInvoice
              val id =  if(data.isDbUpdate) data.posSaleId else getCurrentDateAndTimeInEpochMilliSeconds()
-             println("posInvoicesId : $id")
+             //println("posInvoicesId : $id")
              val pendingSaleRecord=PendingSale(
                  id=id,
                  locationId = posInvoice.locationId?:0,
@@ -536,13 +536,13 @@ class DataBaseRepository: KoinComponent {
                  locationCode = posInvoice.locationCode?:"",
                  isRetailWebRequest = posInvoice.isRetailWebRequest?:false,
                  invoiceTotal = posInvoice.invoiceTotal?:0.0,
-                 invoiceItemDiscount = posInvoice.invoiceItemDiscount?:0.0,
+                 invoiceItemDiscount = posInvoice.invoiceItemDiscount,
                  invoiceTotalValue = posInvoice.invoiceTotalValue,
-                 invoiceNetDiscountPerc = posInvoice.invoiceNetDiscountPerc?:0.0,
+                 invoiceNetDiscountPerc = posInvoice.invoiceNetDiscountPerc,
                  invoiceNetDiscount = posInvoice.invoiceNetDiscount,
                  invoiceTotalAmount = posInvoice.invoiceTotalAmount,
                  invoiceSubTotal = posInvoice.invoiceSubTotal,
-                 invoiceNetTotal = posInvoice.invoiceNetTotal?:0.0,
+                 invoiceNetTotal = posInvoice.invoiceNetTotal,
                  invoiceNetCost = posInvoice.invoiceNetCost,
                  paid = posInvoice.paid,
                  employeeId = posInvoice.employeeId?:0,
@@ -561,12 +561,12 @@ class DataBaseRepository: KoinComponent {
                  memberName = posInvoice.customerName,
                  address1 = posInvoice.address1,
                  address2 = posInvoice.address2,
-                 posPaymentConfigRecord = posInvoice.posPayments?: emptyList(),
-                 posInvoiceDetailRecord = posInvoice.posInvoiceDetails?: emptyList(),
+                 posPaymentConfigRecord = posInvoice.posPayments,
+                 posInvoiceDetailRecord = posInvoice.posInvoiceDetails,
                  isSynced = data.isSynced
             )
             if(!data.isDbUpdate){
-                dataBaseRepository.insertPosPendingSaleRecord(pendingSaleRecord)
+                dataBaseRepository.insertPosInvoiceSales(pendingSaleRecord)
             }else{
                 dataBaseRepository.updatePosSales(pendingSaleRecord)
             }

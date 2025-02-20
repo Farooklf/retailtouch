@@ -680,12 +680,12 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun syncPrintTemplate(templateType: TemplateType){
         try {
-            if(_syncInProgress.value)
+            if(syncInProgress.value)
                 return
 
             println("Syncing Print Template: ${templateType.toInt()}")
             updateSyncStatus("Syncing Print Template")
-            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId()?:0, type = templateType.toInt())).collect { apiResponse->
+            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId(), type = templateType.toInt())).collect { apiResponse->
                 observePrintTemplate(apiResponse)
             }
         }catch (e: Exception){
@@ -705,8 +705,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 updateSyncProgress(true)
                         },
             onSuccess = { apiData ->
-                println("print template insertion : ${count++}")
                 if(apiData.success){
+                     println("print template insertion : ${count++}")
                     _printerTemplates.update { apiData.result }
                 }else{
                     handleError(true,SYNC_TEMPLATE_ERROR_TITLE,apiData.error?.message?:"template not found")

@@ -1098,29 +1098,29 @@ class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
         retailTouch.paymentTypeQueries.delete()
     }
 
-     override suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PendingSale) {
-        retailTouch.posInvoicePendingSaleRecordQueries.insert(
-            id = posPaymentRecordDao.id,
-            isSync = posPaymentRecordDao.isSynced,
-            posInvoice = posPaymentRecordDao.toJson()
+     override suspend fun insertPosInvoiceSales(mPendingSale: PendingSale) {
+        retailTouch.posInvoiceSalesQueries.insert(
+            id = mPendingSale.id,
+            isSync = mPendingSale.isSynced,
+            posInvoice = mPendingSale.toJson()
         )
      }
 
-     override suspend fun updatePosSales(posPaymentRecordDao: PendingSale) {
-         println("posPaymentRecordDao :$posPaymentRecordDao")
-         retailTouch.posInvoicePendingSaleRecordQueries.updatePosSale(
-             ticketId = posPaymentRecordDao.id,
-             isSynced = posPaymentRecordDao.isSynced,
-             ticket = posPaymentRecordDao.toJson()
+     override suspend fun updatePosSales(mPendingSale: PendingSale) {
+         println("mPendingSale :$mPendingSale")
+         retailTouch.posInvoiceSalesQueries.updatePosSale(
+             ticketId = mPendingSale.id,
+             isSynced = mPendingSale.isSynced,
+             ticket = mPendingSale.toJson()
          )
      }
 
      override suspend fun updateSynced(id: Long) {
-         retailTouch.posInvoicePendingSaleRecordQueries.updateSynced(isSynced = true, ticketId =id)
+         retailTouch.posInvoiceSalesQueries.updateSynced(isSynced = true, ticketId =id)
      }
 
      override fun getAllPosSale(): Flow<List<PendingSale>> = flow{
-         retailTouch.posInvoicePendingSaleRecordQueries.getAll().executeAsList().let { list ->
+         retailTouch.posInvoiceSalesQueries.getAll().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
                      list.map { body ->
@@ -1141,7 +1141,7 @@ class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
      }
 
      override fun getPendingSaleRecords(): Flow<List<PendingSale>> = flow{
-         retailTouch.posInvoicePendingSaleRecordQueries.getPendingSale().executeAsList().let { list ->
+         retailTouch.posInvoiceSalesQueries.getPendingSale().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
                      list.map { body ->
@@ -1156,82 +1156,19 @@ class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
      }
 
      override suspend fun deletePosPendingSaleRecord() {
-         retailTouch.posInvoicePendingSaleRecordQueries.delete()
+         retailTouch.posInvoiceSalesQueries.delete()
      }
 
      override suspend fun deleteSaleById(id: Long) {
-         retailTouch.posInvoicePendingSaleRecordQueries.deleteById(id)
+         retailTouch.posInvoiceSalesQueries.deleteById(id)
      }
 
      override fun getAllPendingSalesCount(): Flow<Long> = flow{
-         retailTouch.posInvoicePendingSaleRecordQueries.getPendingSaleCount().executeAsOne().let {count->
+         retailTouch.posInvoiceSalesQueries.getPendingSaleCount().executeAsOne().let {count->
              emit(count)
          }
      }
 
-     override suspend fun insertPosDetailsRecord(posInvoice: PosSaleDetails) {
-         retailTouch.posInvoiceDetailRecordQueries.insert(
-             id = null,
-             posInvoiceDetails = posInvoice.toJson()
-         )
-     }
-
-     override fun getPosDetailsRecord(): Flow<List<PosSaleDetails>> = flow{
-         retailTouch.posInvoiceDetailRecordQueries.getAll().executeAsList().let { list ->
-             if(list.isNotEmpty()) {
-                 emit(
-                     list.map { body ->
-                         val data= body.posInvoiceDetails.toPosInvoiceDetailRecord()
-                         PosSaleDetails(
-                             id = data.id,
-                             productId = data.productId,
-                             posPaymentRecordId = data.posPaymentRecordId
-                         )
-                     }
-
-                 )
-             }else{
-                 emit(emptyList())
-             }
-         }
-     }
-
-     override suspend fun deletePosDetailsRecord() {
-         retailTouch.posInvoiceDetailRecordQueries.delete()
-     }
-
-     override suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosSalePayment) {
-         retailTouch.posInvoiceConfiguredPaymentQueries.insert(
-             id = null,
-             posInvoiceConfiguredPayment = posInvoice.toJson()
-         )
-     }
-
-     override fun getPosConfiguredPaymentRecord(): Flow<List<PosSalePayment>> =flow{
-         retailTouch.posInvoiceConfiguredPaymentQueries.getAll().executeAsList().let { list ->
-             if(list.isNotEmpty()) {
-                 emit(
-                     list.map { body ->
-                        val data= body.posInvoiceConfiguredPayment.toPosPaymentConfigRecord()
-                         PosSalePayment(
-                             id = data.id,
-                             paymentTypeId = data.paymentTypeId,
-                             posInvoiceId = data.posInvoiceId,
-                             amount = data.amount,
-                             posPaymentRecordId = data.posPaymentRecordId,
-                         )
-                     }
-
-                 )
-             }else{
-                 emit(emptyList())
-             }
-         }
-     }
-
-     override suspend fun deletePosConfiguredPaymentRecord() {
-        retailTouch.posInvoiceConfiguredPaymentQueries.delete()
-     }
 
      override suspend fun insertPrinter(printerDao: PrinterDao) {
          retailTouch.printersQueries.insertIntoPrinter(

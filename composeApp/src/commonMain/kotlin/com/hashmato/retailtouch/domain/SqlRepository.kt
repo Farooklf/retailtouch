@@ -172,22 +172,14 @@ interface SqlRepository {
     suspend fun deletePaymentType()
 
     //posInvoiceDetails
-    suspend fun insertPosPendingSaleRecord(posPaymentRecordDao: PendingSale)
-    suspend fun updatePosSales(posPaymentRecordDao: PendingSale)
+    suspend fun insertPosInvoiceSales(mPendingSale: PendingSale)
+    suspend fun updatePosSales(mPendingSale: PendingSale)
     suspend fun updateSynced(id:Long)
     fun getAllPosSale(): Flow<List<PendingSale>>
     fun getPendingSaleRecords(): Flow<List<PendingSale>>
     suspend fun deletePosPendingSaleRecord()
     suspend fun deleteSaleById(id:Long)
     fun getAllPendingSalesCount():Flow<Long>
-
-    suspend fun insertPosDetailsRecord(posInvoice: PosSaleDetails)
-    fun getPosDetailsRecord(): Flow<List<PosSaleDetails>>
-    suspend fun deletePosDetailsRecord()
-
-    suspend fun insertPosConfiguredPaymentRecord(posInvoice: PosSalePayment)
-    fun getPosConfiguredPaymentRecord(): Flow<List<PosSalePayment>>
-    suspend fun deletePosConfiguredPaymentRecord()
 
     //Printer
     suspend fun insertPrinter(printerDao: PrinterDao)

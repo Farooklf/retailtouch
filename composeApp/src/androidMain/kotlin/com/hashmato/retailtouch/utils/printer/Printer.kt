@@ -328,6 +328,7 @@ class Printer(val receiptWidth: Int = 1600) {
 //    }
 
     fun openCashBox() {
+        println("Open cashBox")
         printer.openCashBox()
     }
 
@@ -461,9 +462,10 @@ class Printer(val receiptWidth: Int = 1600) {
      fun connectPrinter(
          printers: Printers,
          printerType: PrinterType,
-         textToPrint: String
+         textToPrint: String,
+         openDrawer: Boolean=false
      ) {
-         println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
+         //println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
          GlobalScope.launch(Dispatchers.IO) {
             try {
                 when (printerType) {
@@ -483,10 +485,17 @@ class Printer(val receiptWidth: Int = 1600) {
                                 printerWidthMM = printers.paperSize?.toFloat() ?: 0f
                             )
                         ) {
-                            if(textToPrint.isNotEmpty())
-                              printReceiptNormal(textToPrint)
-                            else
-                              openCashBox()
+                            if(textToPrint.trim().isNotEmpty()){
+                                if(openDrawer){
+                                   printReceiptWithOpenCashBox(textToPrint = textToPrint)
+                                }else{
+                                    printReceiptNormal(textToPrint=textToPrint)
+                                }
+                            }
+                            else{
+                                openCashBox()
+                            }
+
 //                            printerOrdersAndReceipts(
 //                                printerItem,
 //                                ticketRequest,
@@ -527,7 +536,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                         synchronized(this) {
                                             val usbManager =
                                                 AndroidApp.getApplicationContext()
-                                                    .getSystemService(Context.USB_SERVICE) as UsbManager
+                                                    .getSystemService(USB_SERVICE) as UsbManager
                                             val usbDevice: UsbDevice? =
                                                 intent.getParcelableExtra<Parcelable>(UsbManager.EXTRA_DEVICE) as UsbDevice?
                                             if (intent.getBooleanExtra(
@@ -552,10 +561,17 @@ class Printer(val receiptWidth: Int = 1600) {
                                                                 )
                                                             )
                                                             usbConnection.send()
-                                                            if(textToPrint.isNotEmpty())
-                                                               printReceiptNormal("$textToPrint")
-                                                            else
+                                                            if(textToPrint.trim().isNotEmpty()){
+                                                                println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
+                                                                if(openDrawer){
+                                                                    printReceiptWithOpenCashBox(textToPrint = textToPrint)
+                                                                }else{
+                                                                    printReceiptNormal(textToPrint=textToPrint)
+                                                                }
+                                                            }
+                                                            else{
                                                                 openCashBox()
+                                                            }
 
                                                             context?.unregisterReceiver(this)
                                                         } else {
@@ -593,7 +609,7 @@ class Printer(val receiptWidth: Int = 1600) {
 
                     PrinterType.Bluetooth -> {
                         val bluetoothConnection =
-                            getBluetoothDeviceList()?.first() { bluetoothConnection ->
+                            getBluetoothDeviceList()?.first { bluetoothConnection ->
                                 bluetoothConnection.device?.address.toString()
                                     .contentEquals(printers.bluetoothAddress)
                             }
@@ -603,10 +619,17 @@ class Printer(val receiptWidth: Int = 1600) {
                                     printerWidthMM = printers.paperSize?.toFloat() ?: 0f
                                 )
                             ) {
-                                if(textToPrint.isNotEmpty())
-                                    printReceiptNormal("$textToPrint")
-                                else
+                                if(textToPrint.trim().isNotEmpty()){
+                                    println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
+                                    if(openDrawer){
+                                        printReceiptWithOpenCashBox(textToPrint = textToPrint)
+                                    }else{
+                                        printReceiptNormal(textToPrint=textToPrint)
+                                    }
+                                }
+                                else{
                                     openCashBox()
+                                }
                             } else {
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(
@@ -615,6 +638,15 @@ class Printer(val receiptWidth: Int = 1600) {
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
+                            }
+                        }
+                        else{
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    AndroidApp.getApplicationContext(),
+                                    "Unable to connect to device , please try again",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
                     }

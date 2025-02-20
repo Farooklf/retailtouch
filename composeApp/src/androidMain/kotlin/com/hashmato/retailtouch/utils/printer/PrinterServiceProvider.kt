@@ -33,19 +33,10 @@ actual class PrinterServiceProvider actual constructor(){
         printers: Printers,
         printerType: PrinterType,
         textToPrint: String,
+        openDrawer: Boolean
     ){
-        printer.connectPrinter(printers, printerType, textToPrint)
+        printer.connectPrinter(printers = printers, printerType = printerType, textToPrint = textToPrint,openDrawer=openDrawer)
     }
-
-    actual suspend fun getPrintTextForReceiptTemplate(
-        ticket: Any?,
-        currencyCode:String,
-        template: String,
-        printers: Printers
-    ): String {
-        return printer.applyDynamicReceiptTemplate(ticket,currencyCode,template,printers)
-    }
-
 
     actual fun openCashDrawer(
         printers: Printers,
@@ -53,5 +44,14 @@ actual class PrinterServiceProvider actual constructor(){
         textToPrint: String
     ) {
         printer.connectPrinter(printers, printerType, textToPrint)
+    }
+
+    actual suspend fun getPrintTextForReceiptTemplate(
+        ticket: Any?,
+        currencyCode: String,
+        template: String,
+        printers: Printers
+    ): String {
+        return printer.applyDynamicReceiptTemplate(ticket,currencyCode,template,printers)
     }
 }

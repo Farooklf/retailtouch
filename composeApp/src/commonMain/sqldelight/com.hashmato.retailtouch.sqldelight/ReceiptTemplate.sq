@@ -1,0 +1,27 @@
+CREATE TABLE ReceiptTemplate (
+   id INTEGER NOT NULL PRIMARY KEY ,
+   type INTEGER NOT NULL,
+   name Text NOT NULL,
+   receiptTypeName Text NOT NULL,
+   template Text NOT NULL
+);
+
+insert:
+INSERT INTO ReceiptTemplate(id,
+    type, name, receiptTypeName, template
+) VALUES (?,?, ?, ?, ?);
+
+update:
+UPDATE ReceiptTemplate
+SET type = :type ,name = :name ,receiptTypeName =:receiptTypeName , template =:template
+WHERE id = :id;
+
+getItemsByType:
+SELECT * FROM ReceiptTemplate
+WHERE type =:type;
+
+getAllItems:
+SELECT * FROM ReceiptTemplate;
+
+deleteAllItems:
+DELETE FROM ReceiptTemplate;
