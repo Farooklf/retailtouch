@@ -70,4 +70,7 @@ data class ComposeDesignDimensions internal constructor(
     val icon60: Dp = 60.dp,
     val _200sdp: Dp = 200.dp,
 
+    val space8: Dp = 8.dp,
+    val _50sdp: Dp = 50.dp,
+
 )

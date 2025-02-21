@@ -21,6 +21,7 @@ import com.lfsolutions.paymentslibrary.getPaymentFactory
 import com.hashmato.retailtouch.di.androidModule
 import com.hashmato.retailtouch.di.appModule
 import com.hashmato.retailtouch.presentation.viewModels.SharedPosViewModel
+import com.hashmato.retailtouch.utils.ConnectivityObserver
 import com.hashmato.retailtouch.utils.secondDisplay.WelcomePresentationDisplay
 import com.hashmato.retailtouch.utils.sqldb.dbModule
 import org.koin.android.ext.android.inject
@@ -88,13 +89,12 @@ class EntrypointActivity : ComponentActivity() {
         } else {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
+        //Start observing network changes
+         ConnectivityObserver.startObserving()
 
-        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
-
-            if (!android.provider.Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Please provide the permission", Toast.LENGTH_SHORT).show();
-                startActivity(Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
-            }
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "Please provide the permission", Toast.LENGTH_SHORT).show();
+            startActivity(Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
         }
         setupSecondaryDisplay()
         setContent {

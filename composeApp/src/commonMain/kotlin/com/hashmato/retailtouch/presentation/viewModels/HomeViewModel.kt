@@ -40,6 +40,14 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    init {
+        viewModelScope.launch {
+            _homeUIState.update { state->
+                state.copy(isSyncEveryThing = isCallCompleteSync())
+            }
+        }
+    }
+
      fun prepareHomeData() {
         viewModelScope.launch {
             // Wait for the authentication DAO to initialize
@@ -214,4 +222,11 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
+    fun updateSyncEverythingState(value:Boolean){
+        viewModelScope.launch {
+            _homeUIState.update { uiState ->
+                uiState.copy(isSyncEveryThing = value)
+            }
+        }
+    }
 }

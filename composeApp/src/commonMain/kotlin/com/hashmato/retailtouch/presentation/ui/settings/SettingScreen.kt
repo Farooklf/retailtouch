@@ -628,7 +628,7 @@ object SettingScreen : Screen {
                     .wrapContentHeight(),
                 onClick = {
                     coroutineScope.launch {
-                        syncViewModel.reSync(true)
+                        syncViewModel.startCompleteSync()
                     }
                 }
             )

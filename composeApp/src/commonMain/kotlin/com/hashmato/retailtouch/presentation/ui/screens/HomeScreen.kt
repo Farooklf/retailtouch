@@ -19,6 +19,7 @@ import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import com.hashmato.retailtouch.domain.model.login.AuthenticateDao
 import com.hashmato.retailtouch.navigation.NavigatorActions
 import com.hashmato.retailtouch.navigation.NavigatorActions.navigateToSettlementScreen
 import com.hashmato.retailtouch.presentation.common.AppScreenPadding
+import com.hashmato.retailtouch.presentation.common.CustomToast
 import com.hashmato.retailtouch.presentation.common.GradientBackgroundScreen
 import com.hashmato.retailtouch.presentation.common.ListGridItems
 import com.hashmato.retailtouch.presentation.common.dialogs.ActionDialog
@@ -43,6 +45,7 @@ import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.AppIcons
 import com.hashmato.retailtouch.presentation.viewModels.HomeViewModel
 import com.hashmato.retailtouch.sync.SyncViewModel
+import com.hashmato.retailtouch.utils.ConnectivityObserver
 import com.hashmato.retailtouch.utils.DateTimeUtils
 import com.hashmato.retailtouch.utils.HomeItemId
 import com.hashmato.retailtouch.utils.exitApp
@@ -81,8 +84,9 @@ fun Home(
 {
     val appThemeContext = AppTheme.context
     val navigator=appThemeContext.getAppNavigator()
-    val homeUIState by homeViewModel.homeUIState.collectAsStateWithLifecycle()
+    val state by homeViewModel.homeUIState.collectAsStateWithLifecycle()
     val syncDataState by syncViewModel.syncDataState.collectAsStateWithLifecycle()
+    //val isConnected by ConnectivityObserver.isConnected.collectAsState()
 
     val coroutineScope= rememberCoroutineScope()
     val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
@@ -93,21 +97,25 @@ fun Home(
         homeViewModel.updateExitFormDialogState(true)
     })
 
-    LaunchedEffect(Unit){
+
+    LaunchedEffect(state.isSyncEveryThing){
         println("${homeViewModel.isCallCompleteSync()}")
-        syncViewModel.reSync(completeSync = homeViewModel.isCallCompleteSync())
+        if(state.isSyncEveryThing)
+        {
+            syncViewModel.startCompleteSync()
+        }
     }
 
-    LaunchedEffect(homeUIState.isError) {
-        if (homeUIState.isError) {
-            snackbarHostState.value.showSnackbar(homeUIState.errorMsg)
+    LaunchedEffect(state.isError) {
+        if (state.isError) {
+            snackbarHostState.value.showSnackbar(state.errorMsg)
             delay(1000)
             homeViewModel.resetError()
         }
     }
 
     LaunchedEffect(isFromSplash) {
-        if (isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
+        if (isFromSplash && !state.hasEmployeeLoggedIn) {
             homeViewModel.prepareHomeData()
             homeViewModel.initialiseEmpScreen(isFromSplash)
         }
@@ -116,7 +124,8 @@ fun Home(
 
     LaunchedEffect(syncDataState.syncInProgress){
         if(!syncDataState.syncInProgress){
-           homeViewModel.stopSyncRotation(syncDataState.syncInProgress)
+            homeViewModel.updateSyncEverythingState(false)
+            homeViewModel.stopSyncRotation(syncDataState.syncInProgress)
         }
     }
 
@@ -124,7 +133,7 @@ fun Home(
     Box(modifier = Modifier.fillMaxSize()){
         GradientBackgroundScreen(
             modifier = Modifier.fillMaxSize(),
-            isBlur = homeUIState.isBlur
+            isBlur = state.isBlur
         ){
             val (syncTitle,syncDescription)= if(syncDataState.syncInProgress) stringResource(Res.string.sync_progress) to "(${syncDataState.syncCount} /${syncDataState.syncTotalCount} ${syncDataState.syncProgressStatus})" else stringResource(Res.string.home_header) to ""
 
@@ -143,7 +152,7 @@ fun Home(
                         // Top section with time and status
                         TopSection(
                             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                            homeUIState.authUser)
+                            state.authUser)
 
 
                         LazyVerticalGrid(
@@ -177,7 +186,7 @@ fun Home(
                             }
 
 
-                            ListGridItems(homeUIState.homeItemList,syncDataState.syncInProgress){id->
+                            ListGridItems(state.homeItemList,syncDataState.syncInProgress){id->
                                 when(id){
                                     HomeItemId.CASHIER_ID->{ //Cashier
                                         NavigatorActions.navigateToPOSScreen(navigator)
@@ -201,7 +210,7 @@ fun Home(
                                     HomeItemId.SYNC_ID->{ //Sync
                                         homeViewModel.updateSyncRotation(id)
                                         coroutineScope.launch {
-                                            syncViewModel.reSync(true)
+                                            homeViewModel.updateSyncEverythingState(true)
                                         }
                                     }
                                     HomeItemId.PRINTER_ID->{
@@ -227,7 +236,7 @@ fun Home(
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = homeUIState.authUser.serverURL,
+                            text = state.authUser.serverURL,
                             style = AppTheme.typography.titleMedium(),
                             color = AppTheme.colors.appWhite,
                             textAlign = TextAlign.Center
@@ -239,11 +248,13 @@ fun Home(
                         modifier = Modifier
                             .align(Alignment.TopCenter))
                   }
+
+                  CustomToast() // Always included to show messages
                 }
             )
         }
 
-        if (homeUIState.isFromSplash && !homeUIState.hasEmployeeLoggedIn) {
+        if (state.isFromSplash && !state.hasEmployeeLoggedIn) {
             EmployeeScreen(
                 onNavigateLogout = {
                     onLogout.invoke()
@@ -255,7 +266,7 @@ fun Home(
     }
 
     ActionDialog(
-        isVisible = homeUIState.showExitConfirmationDialog,
+        isVisible = state.showExitConfirmationDialog,
         dialogTitle = stringResource(Res.string.retail_pos),
         dialogMessage = stringResource(Res.string.exit_app_message),
         onDismissRequest = {

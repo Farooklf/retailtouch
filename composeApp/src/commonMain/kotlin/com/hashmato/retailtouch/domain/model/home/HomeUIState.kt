@@ -11,6 +11,7 @@ data class HomeUIState(
     val isLoading: Boolean = false,
     val isFromSplash: Boolean = false,
     val isBlur: Boolean = true,
+    val isSyncEveryThing: Boolean = false,
     val hasEmployeeLoggedIn: Boolean = false,
     val loadingMessage: String = "Loading...",
     val isSyncClicked: Boolean = false,

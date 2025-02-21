@@ -40,9 +40,11 @@ import com.hashmato.retailtouch.utils.AppConstants.PROMOTION
 import com.hashmato.retailtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.hashmato.retailtouch.utils.ConnectivityObserver
 import com.hashmato.retailtouch.utils.DateFormatter
 import com.hashmato.retailtouch.utils.DateTimeUtils.getLastSyncDateTime
 import com.hashmato.retailtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
+import com.hashmato.retailtouch.utils.ToastManager
 import com.hashmato.retailtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,7 +75,6 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     private val categoryList = MutableStateFlow<List<CategoryItem>>(emptyList())
 
     private var timerJob: Job? = null  // To manage the periodic sync job
-
     private val syncFlags = mutableStateMapOf(
         MEMBER to false,
         MEMBER_GROUP to false,
@@ -84,13 +85,12 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         PAYMENT_TYPE to false
     )
 
-    /*init {
+    init {
         // Read reSync time from storage and start the sync timer
         viewModelScope.launch {
-            println("start periodicSync")
-            startPeriodicSync()
+            reSync()
         }
-    }*/
+    }
 
    /* suspend fun reSyncAfterLogin(locationChange : Boolean = false)  {
         val pCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
@@ -104,69 +104,85 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }*/
 
+    fun startCompleteSync() {
+        if (_syncDataState.value.syncInProgress) return
+         println("start sync everything")
+         syncEveryThing()
+    }
+
      fun reSync(completeSync: Boolean = false) {
-        if (syncDataState.value.syncInProgress) return
-        if (completeSync) {
-            println("start syncEveryThing")
+        if (_syncDataState.value.syncInProgress) return
+
+         startPeriodicSync()
+       /* if (completeSync) {
+            println("start sync everything")
             syncEveryThing()
         } else {
             println("start reSyncItems")
-            reSyncItems()
-        }
+            startPeriodicSync()
+        }*/
     }
+
+
 
     private fun syncEveryThing() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                updateSyncProgress(true)
-                updateSyncCompleteStatus(false)
-                updateError(syncError = false, errorMsg = "", errorTitle = "")
+            val isConnected = ConnectivityObserver.isConnected.first()
+            if(isConnected){
+                try {
+                    updateSyncProgress(true)
+                    updateSyncCompleteStatus(false)
+                    updateError(syncError = false, errorMsg = "", errorTitle = "")
 
-                if (loginRequired()) {
-                    refreshToken()
+                    if (loginRequired()) {
+                        refreshToken()
+                    }
+                    val syncJob= listOf(
+                        async {
+                            val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
+                            if (pendingCount <= 0) {
+                                _loadNextSalesInvoiceNumber()
+                            } else {
+                                updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
+                            }
+                        },
+                        async { _syncMember() },
+                        async { _syncMemberGroup() },
+                        async { _syncSalesHistory() },
+                        async { _syncCategory() },
+                        async { _syncInventory() },
+                        async { _syncPromotion()},
+                        async { _syncPaymentTypes()}
+                    )
+                    syncJob.awaitAll()
+
+                    println("All Sync Operations Completed Successfully")
+                    updateSyncStatus("All Sync Operations have been Completed Successfully")
+                    setLastSyncTs()
+                    updateSyncCountZero()
+                    updateSyncCompleteStatus(true)
+                    updateSyncProgress(false)
+                } catch (e: Exception) {
+                    val error = "failed during sync: ${e.message}"
+                    println("SYNC_ERROR $error")
+                    updateError(true, "SYNC_ERROR", error)
+                    updateSyncProgress(false)
+                    updateSyncCompleteStatus(false)
                 }
-                val syncJob= listOf(
-                    async {
-                        val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
-                        if (pendingCount <= 0) {
-                            _loadNextSalesInvoiceNumber()
-                        } else {
-                            updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
-                        }
-                    },
-                    async { _syncMember() },
-                    async { _syncMemberGroup() },
-                    async { _syncSalesHistory() },
-                    async { _syncCategory() },
-                    async { _syncInventory() },
-                    async { _syncPromotion()},
-                    async { _syncPaymentTypes()}
-                )
-                syncJob.awaitAll()
-
-                println("All Sync Operations Completed Successfully")
-                updateSyncStatus("All Sync Operations have been Completed Successfully")
-                setLastSyncTs()
-                updateSyncCountZero()
-                updateSyncCompleteStatus(true)
-                updateSyncProgress(false)
-            } catch (e: Exception) {
-                val error = "failed during sync: ${e.message}"
-                println("SYNC_ERROR $error")
-                updateError(true, "SYNC_ERROR", error)
-                updateSyncProgress(false)
-                updateSyncCompleteStatus(false)
+            }else{
+                ToastManager.showToast("No Internet Connection Found")
             }
+
         }
     }
 
      private suspend fun loginRequired() : Boolean {
-         println("LoginRequired")
+        // println("LoginRequired")
         val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
         val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
-         println("hoursPassed ${hoursPassed}")
-        return hoursPassed > TOKEN_EXPIRY_THRESHOLD
+         println("hoursPassed $hoursPassed")
+        return hoursPassed >= TOKEN_EXPIRY_THRESHOLD
     }
 
     private suspend fun refreshToken(): String {
@@ -214,7 +230,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     }
 
     // Start the periodic reSync timer with the given time
-    fun startPeriodicSync() {
+    private fun startPeriodicSync() {
+        println("Start Periodic Sync")
         // Cancel any existing timer before setting a new one
         timerJob?.cancel()
         // Create a new coroutine for periodic re sync
@@ -225,7 +242,6 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     if (interval <= 0) {
                         throw IllegalStateException("Invalid sync interval from getReSyncTimer()")
                     }
-                    syncPendingSales()
                     reSyncItems(silent = true)
                     delay(interval * 60 * 1000L) // Convert time in minutes to milliseconds
                 } catch (e: Exception) {
@@ -246,7 +262,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     println("LoginRequired")
                     refreshToken()
                 }
-                refreshToken()
+                syncPendingSales()
+                //refreshToken()
                 networkRepository.syncAllApis(getBasicRequest()).collect { apiResponse ->
                     observeResponseNew(apiResponse,
                         onLoading = {
@@ -346,7 +363,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    private fun syncPendingSales() {
+    private suspend fun syncPendingSales() {
         viewModelScope.launch {
             try {
                 // Launch all calls concurrently
