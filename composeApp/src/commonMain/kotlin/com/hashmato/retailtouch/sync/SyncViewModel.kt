@@ -14,6 +14,7 @@ import com.hashmato.retailtouch.domain.model.location.Location
 import com.hashmato.retailtouch.domain.model.login.LoginRequest
 import com.hashmato.retailtouch.domain.model.menu.CategoryItem
 import com.hashmato.retailtouch.domain.model.menu.MenuItem
+import com.hashmato.retailtouch.domain.model.printer.GetPrintTemplateRequest
 import com.hashmato.retailtouch.domain.model.products.Stock
 import com.hashmato.retailtouch.domain.model.promotions.GetPromotionsByPriceResult
 import com.hashmato.retailtouch.domain.model.promotions.GetPromotionsByQtyResult
@@ -38,12 +39,15 @@ import com.hashmato.retailtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.PRODUCT
 import com.hashmato.retailtouch.utils.AppConstants.PROMOTION
 import com.hashmato.retailtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
+import com.hashmato.retailtouch.utils.AppConstants.RECEIPTTEMPLATE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
+import com.hashmato.retailtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
 import com.hashmato.retailtouch.utils.ConnectivityObserver
 import com.hashmato.retailtouch.utils.DateFormatter
 import com.hashmato.retailtouch.utils.DateTimeUtils.getLastSyncDateTime
 import com.hashmato.retailtouch.utils.PrefKeys.TOKEN_EXPIRY_THRESHOLD
+import com.hashmato.retailtouch.utils.TemplateType
 import com.hashmato.retailtouch.utils.ToastManager
 import com.hashmato.retailtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
 import kotlinx.coroutines.CoroutineScope
@@ -82,6 +86,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         CATEGORY to false,
         MENU to false,
         PROMOTION to false,
+        RECEIPTTEMPLATE to false,
         PAYMENT_TYPE to false
     )
 
@@ -152,6 +157,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                         async { _syncCategory() },
                         async { _syncInventory() },
                         async { _syncPromotion()},
+                        async { _syncInvoiceReceiptTemplate(templateType = TemplateType.POSInvoice)},
+                        async { _syncInvoiceReceiptTemplate(templateType = TemplateType.PosSettlement)},
                         async { _syncPaymentTypes()}
                     )
                     syncJob.awaitAll()
@@ -284,6 +291,10 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                                 PRODUCT -> if(value) { _syncInventory(lastSyncTime = getLastSyncDateTime()) }
                                                 CATEGORY -> if(value)  _syncCategory()
                                                 PROMOTION -> if(value)  _syncPromotion()
+                                                RECEIPTTEMPLATE -> if(value)  {
+                                                    _syncInvoiceReceiptTemplate(TemplateType.POSInvoice)
+                                                    _syncInvoiceReceiptTemplate(TemplateType.PosSettlement)
+                                                }
                                                 PAYMENT_TYPE -> if(value)  _syncPaymentTypes()
                                             }
                                         }
@@ -627,7 +638,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         try {
             if(!syncProduct) return
             updateLoginSyncStatus("Syncing Inventory...")
-            println("Syncing Inventory : ${count++}")
+            println("Syncing Inventory : ${syncingCount++}")
             viewModelScope.launch {
                 val stockQtyMap: MutableMap<Int, Double?> = mutableMapOf()
                 val request = BasicApiRequest(
@@ -703,7 +714,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 val categoryList: MutableList<CategoryItem> = mutableListOf()
                 async {
                     updateLoginSyncStatus("Syncing Product Category...")
-                    println("Syncing Product Category : ${count++}")
+                    println("Syncing Product Category : ${syncingCount++}")
                     networkRepository.getMenuCategories(getBasicRequest()).collect {apiResponse->
                         observeResponseNew(apiResponse,
                             onLoading = {  },
@@ -969,6 +980,33 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                 updateError(true,PROMOTIONS_ERROR_TITLE,errorMsg)
             }
         )
+    }
+
+    private suspend fun _syncInvoiceReceiptTemplate(templateType: TemplateType){
+        try {
+            updateLoginSyncStatus("Syncing Invoice Template...")
+            println("Syncing Invoice Template : ${syncingCount++}")
+            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId(), type = templateType.toValue())).collect { apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {  },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertOrUpdateTemplate(apiData)
+                                println("Insertion Invoice Template : ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(SYNC_TEMPLATE_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }
+        catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(SYNC_TEMPLATE_ERROR_TITLE,error)
+        }
     }
 
     private suspend fun _syncPaymentTypes(){

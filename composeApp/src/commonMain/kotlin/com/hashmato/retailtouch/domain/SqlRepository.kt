@@ -30,6 +30,7 @@ import com.hashmato.retailtouch.domain.model.promotions.PromotionDetailsDao
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.domain.model.menu.StockCategory
+import com.hashmato.retailtouch.domain.model.printer.PrintReceiptTemplate
 import com.hashmato.retailtouch.domain.model.products.Stock
 import com.hashmato.retailtouch.domain.model.sync.SyncAllDao
 import comhashmatoretailtouchsqldelight.Printers
@@ -89,15 +90,6 @@ interface SqlRepository {
     fun getStocks(): Flow<List<Stock>>
     suspend fun deleteStocks()
     fun getMenuItemsCount():Flow<Int>
-
-
-    //Next POS Sale
-
-    /*suspend fun insertNextPosSale(nextPOSSaleDao: NextPOSSaleDao)
-    fun getNextPosSaleById(id: Long): Flow<NextPOSSaleDao?>
-    fun getAllNextPosSale(): Flow<List<NextPOSSaleDao>>
-    suspend fun deleteNextPosSale()
-    fun getNextPosSaleCount():Flow<Int>*/
 
 
     //Latest POS Invoice Sales
@@ -186,6 +178,14 @@ interface SqlRepository {
     suspend fun updatePrinter(printerDao: PrinterDao)
     fun getPrinter():Flow<Printers?>
     suspend fun deleteAllPrinters()
+
+    //Receipt template
+    suspend fun insertTemplate(printReceiptTemplate: PrintReceiptTemplate)
+    fun getPrintTemplateByType(type:Long):Flow<PrintReceiptTemplate?>
+    /*fun getNextPosSaleById(id: Long): Flow<NextPOSSaleDao?>
+    fun getAllNextPosSale(): Flow<List<NextPOSSaleDao>>
+    suspend fun deleteNextPosSale()
+    fun getNextPosSaleCount():Flow<Int>*/
 
     //Sync
     suspend fun insertSyncAll(syncAllDao: SyncAllDao)

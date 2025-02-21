@@ -17,8 +17,9 @@ import com.hashmato.retailtouch.domain.model.products.PosInvoice
 import com.hashmato.retailtouch.domain.model.products.PosInvoicePrintDetails
 import com.hashmato.retailtouch.domain.model.products.PosPayment
 import com.hashmato.retailtouch.utils.NumberFormatter
+import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import com.hashmato.retailtouch.utils.PrinterType
-import com.hashmato.retailtouch.utils.defaultTemplate2
+import com.hashmato.retailtouch.utils.TemplateType
 import com.hashmato.retailtouch.utils.getDeliveryType
 import com.hashmato.retailtouch.utils.getStatusType
 import com.hashmato.retailtouch.utils.printer.PrinterServiceProvider
@@ -250,9 +251,16 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
                 },
                 posPayments = posInvoice.posPayments,
             )
+            var template=POSInvoiceDefaultTemplate
+            sqlRepository.getPrintTemplateByType(type = TemplateType.POSInvoice.toValue()).collect{ mPrintReceiptTemplate->
+                mPrintReceiptTemplate?.let{
+                    template = it.template
+                    println("template $template")
+                }
+            }
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, template,printer)
                    // println("finalTextToPrint :$finalTextToPrint")
                     PrinterServiceProvider().connectPrinterAndPrint(
                         printers = printer,

@@ -19,7 +19,6 @@ import com.hashmato.retailtouch.utils.AppStrings.stock
 import com.hashmato.retailtouch.utils.AppStrings.sync
 import com.hashmato.retailtouch.utils.HomeItemId
 import com.hashmato.retailtouch.utils.PrinterType
-import com.hashmato.retailtouch.utils.defaultTemplate2
 import com.hashmato.retailtouch.utils.printer.PrinterServiceProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

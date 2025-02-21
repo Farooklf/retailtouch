@@ -92,7 +92,7 @@ enum class TemplateType {
     SettlementTemplateInvoice,
     LabelTemplate;
 
-    fun toInt(): Int {
+    fun toValue(): Long {
         return when(this) {
             POSInvoice -> 1
             SalesInvoice -> 2

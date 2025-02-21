@@ -35,10 +35,10 @@ import com.hashmato.retailtouch.utils.DiscountApplied
 import com.hashmato.retailtouch.utils.DiscountType
 import com.hashmato.retailtouch.utils.DoubleExtension.roundTo
 import com.hashmato.retailtouch.utils.NumberFormatter
+import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import com.hashmato.retailtouch.utils.PrinterType
 import com.hashmato.retailtouch.utils.TemplateType
 import com.hashmato.retailtouch.utils.defaultTemplate
-import com.hashmato.retailtouch.utils.defaultTemplate2
 import com.hashmato.retailtouch.utils.formatAmountForPrint
 import com.hashmato.retailtouch.utils.getAppName
 import com.hashmato.retailtouch.utils.printer.ItemData
@@ -1974,7 +1974,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         val state = posUIState.value
         viewModelScope.launch {
             var textToPrint:String=defaultTemplate
-            syncPrintTemplate(TemplateType.POSInvoice)
+            //syncPrintTemplate(TemplateType.POSInvoice)
             printerTemplates.collectLatest {templateList->
                 templateList?.map { template->
                     textToPrint=template.template?: defaultTemplate
@@ -2092,10 +2092,18 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 },
                 posPayments = posInvoice.posPayments,
             )
+
+            var template=POSInvoiceDefaultTemplate
+            sqlRepository.getPrintTemplateByType(type = TemplateType.POSInvoice.toValue()).collect{mPrintReceiptTemplate->
+                mPrintReceiptTemplate?.let{
+                    template = it.template
+                    println("template $template")
+                }
+            }
             dataBaseRepository.getPrinter().collect { printer ->
                 if(printer!=null){
                     //println("printer_paperSize ${printer.paperSize}")
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,state.currencySymbol, defaultTemplate2,printer)
+                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,state.currencySymbol, template,printer)
                     //println("finalTextToPrint :$finalTextToPrint")
 
                     PrinterServiceProvider().connectPrinterAndPrint(

@@ -49,6 +49,7 @@ import com.hashmato.retailtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.LARGE_PHONE_MAX_WIDTH
+import com.hashmato.retailtouch.utils.AppConstants.LOCATION_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.MEMBER_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
@@ -109,7 +110,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     val _logoutFromServer = MutableStateFlow(false)
     val logoutFromServer: StateFlow<Boolean> = _logoutFromServer
 
-    var count =0
+    var syncingCount =1
+    var insertionCount =1
 
     private val _isPrinterEnabled = MutableStateFlow(false)
     val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
@@ -117,15 +119,11 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     //For Rights
     val employeeDoa = MutableStateFlow<POSEmployee?>(null)
 
-    private val _lastSyncDateTime = MutableStateFlow<String?>(null)
-    val lastSyncDateTime : StateFlow<String?>  get() = _lastSyncDateTime
-
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
 
     //val employeeDoa = MutableStateFlow<POSEmployee?>(null)
     private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
     private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
-    private val paymentTypeResponse = MutableStateFlow<PaymentTypeResponse?>(null)
     private val productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
 
     private val _printerTemplates = MutableStateFlow<List<PrinterTemplates>?>(emptyList())
@@ -133,22 +131,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     private val _syncInProgress = MutableStateFlow(false)
     val syncInProgress: StateFlow<Boolean> = _syncInProgress.asStateFlow()
-
-    private val _syncProgressStatus = MutableStateFlow("")
-    val syncProgressStatus: StateFlow<String> = _syncProgressStatus.asStateFlow()
-
-    private val _syncError = MutableStateFlow(false)
-    val syncError: StateFlow<Boolean> = _syncError.asStateFlow()
-
-    private val _syncErrorInfo = MutableStateFlow("")
-    val syncErrorInfo: StateFlow<String> = _syncErrorInfo.asStateFlow()
-
-    private val _lastSyncTs = MutableStateFlow(0L)
-    val lastSyncTs: StateFlow<Long> = _lastSyncTs.asStateFlow()
-
-    private val _resyncTimer = MutableStateFlow(0L)
-    val resyncTimer: StateFlow<Long> = _resyncTimer.asStateFlow()
-
 
     private val _uiUpdateStatus = MutableStateFlow(false)
     val uiUpdateStatus: StateFlow<Boolean> = _uiUpdateStatus.asStateFlow()
@@ -244,19 +226,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         _syncInProgress.update { syncStatus }
     }
 
-    private fun updateSyncStatus(syncStatus: String) {
-        _syncProgressStatus.update { syncStatus }
-    }
-
-     private fun updateLastSyncTs(syncStatus: Long) {
-        _lastSyncTs.update { syncStatus }
-    }
-    // Handle any sync errors
-    private fun handleError(error:Boolean,errorTitle: String, errorMsg: String) {
-        _syncError.update { error }
-        _syncErrorInfo.update {  "$errorTitle \n $errorMsg" }
-    }
-
     private fun updateUIStatus(syncStatus: Boolean) {
         _uiUpdateStatus.update { syncStatus }
     }
@@ -317,9 +286,577 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return loginRequest
 
     }
+
+    /* ----------Sync On Login Apis-----------*/
+
+    fun reSyncOnLogin(location: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            async { syncLocation(location) }.await()
+            async { syncEmployees() }.await()
+            async { syncEmployeeRole() }.await()
+            async { syncMembers() }.await()
+            async { syncMemberGroup() }.await()
+            val categoriesList = async { syncCategories() }.await()
+            async { syncMenus(categoriesList) }.await()
+            val stockQtyMap=async { syncInventoryQuantity() }.await()
+            async { syncInventory(stockQtyMap) }.await()
+            async { syncInventoryBarcode() }.await()
+            async { syncPromotion() }.await()
+            async {syncInvoiceReceiptTemplate(TemplateType.POSInvoice)}.await()
+            async {syncInvoiceReceiptTemplate(TemplateType.PosSettlement)}.await()
+            async {syncPaymentTypes()}.await()
+
+            withContext(Dispatchers.Main){
+                if(!_loginScreenState.value.isLoginError){
+                    println("All Sync Operations Completed Successfully")
+                    updateLoginSyncStatus("All Sync Operations have been Completed Successfully")
+                    setLastSyncTs()
+                    moveToNextScreen()
+                }
+            }
+        }
+    }
+
+    private suspend fun syncLocation(location: String) {
+        try {
+            println("Syncing Location ${syncingCount++}")
+            updateLoginSyncStatus("Syncing Location...")
+            networkRepository.getLocationForUser(getBasicRequest()).collect{apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Location...")
+                    },
+                    onSuccess = { apiData ->
+                        var userLocation = Location(name = "Empty Location", locationId = 0)
+                        if(apiData.success && apiData.result.items.isNotEmpty()){
+                            val locationsData = apiData.result.items
+                            val locationItem = locationsData.first()
+                            userLocation= Location(locationId = locationItem.id?:0, name = locationItem.name?:"", code = locationItem.code?:"", address1 = locationItem.address1?:"", address2 = locationItem.address2?:"")
+                            if(location.isNotEmpty()){
+                                val rtLocation = locationsData.find{ it.code?.lowercase()== location.lowercase() || it.name?.lowercase() == location.lowercase()}
+                                if(rtLocation!=null){
+                                    userLocation = Location(locationId = rtLocation.id?:0, name = rtLocation.name?:"", code = rtLocation.code?:"", address1 = rtLocation.address1?:"", address2 = rtLocation.address2?:"")
+                                }
+                            }
+                        }
+                        viewModelScope.launch {
+                            setDefaultLocation(userLocation)
+                            setDefaultLocationId(userLocation.locationId.toInt())
+                            dataBaseRepository.insertLocation(apiData)
+                            println("Insertion Location ${insertionCount++}")
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(LOCATION_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e:Exception){
+            updateLoginError(LOCATION_ERROR_TITLE,e.message.toString())
+        }
+    }
+
+    private suspend fun syncEmployees(){
+        try {
+            println("Syncing Employees : ${syncingCount++}")
+            updateLoginSyncStatus("Syncing Employees...")
+            networkRepository.getEmployees(getBasicRequest()).collect{apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Employees...")
+                    },
+                    onSuccess = { apiData ->
+                        viewModelScope.launch {
+                            dataBaseRepository.insertEmployees(apiData)
+                            println("Insertion Employees ${insertionCount++}")
+                        }
+                    },
+                    onError = {errorMsg->
+                        updateLoginError(EMPLOYEE_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error=e.message.toString()
+            updateLoginError(EMPLOYEE_ERROR_TITLE,error)
+        }
+    }
+
+    private suspend fun syncEmployeeRole(){
+        try {
+            updateLoginSyncStatus("Syncing Employees Role...")
+            println("Syncing Employees Role : ${syncingCount++}")
+            networkRepository.getEmployeeRole(getBasicRequest()).collect{apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {  updateLoginSyncStatus("Syncing Employees Role...")},
+                    onSuccess = { apiData ->
+                        viewModelScope.launch {
+                            dataBaseRepository.insertEmpRole(apiData)
+                            println("Insertion Employee Role ${insertionCount++}")
+                        } },
+                    onError = {errorMsg->
+                        updateLoginError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(EMPLOYEE_ROLE_ERROR_TITLE,error)
+        }
+    }
+
+    private suspend fun syncMembers(){
+        try {
+            updateLoginSyncStatus("Syncing Members...")
+            println("Syncing Members : ${syncingCount++}")
+            networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = { updateLoginSyncStatus("Syncing Members...") },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertMembers(apiData)
+                                println("Insertion Members ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(MEMBER_ERROR_TITLE,error)
+        }
+    }
+
+    private suspend fun syncMemberGroup(){
+        try {
+            updateLoginSyncStatus("Syncing Member Group")
+            println("MemberGroup API CALL : ${syncingCount++}")
+            networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Member Group")
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertMemberGroup(apiData)
+                                println("Insertion MemberGroup : ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(MEMBER_ERROR_TITLE,error)
+        }
+    }
+
+    private suspend fun syncCategories():List<CategoryItem> = withContext(Dispatchers.IO) {
+
+        var categoryItems: List<CategoryItem> = listOf()
+        try {
+            updateLoginSyncStatus("Syncing Product Category...")
+            println("Syncing Product Category : ${syncingCount++}")
+            networkRepository.getMenuCategories(getBasicRequest()).collect {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {  },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertCategories(apiData)
+                                println("Insertion Product Category : ${insertionCount++}")
+                            }
+                            categoryItems = apiData.result.items
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorM)
+        }
+        // Return the collected list once the flow completes
+        println("categoryList :$categoryItems")
+        return@withContext categoryItems
+    }
+
+    private suspend fun syncMenus(categoryList:List<CategoryItem>){
+        try {
+            val newStock : MutableList<MenuItem> = mutableListOf()
+            categoryList.forEach { cat->
+                updateLoginSyncStatus("Syncing Product Menu for ..${cat.id}")
+                println("Syncing Product Menu : ${syncingCount++}")
+                networkRepository.getMenuProducts(getBasicRequest(cat.id?:0)).collect {response->
+                    observeResponseNew(response,
+                        onLoading = {
+                            updateLoginSyncStatus("Syncing Product Menu for ..${cat.id}")
+                        },
+                        onSuccess = { menuData ->
+                            if(menuData.success){
+                                menuData.result.items.forEach { menu->
+                                    val updatedMenu=menu.copy(menuCategoryId=cat.id?:0, id = if(menu.id==0L) menu.productId else menu.id)
+                                    newStock.add(updatedMenu)
+                                }
+                                viewModelScope.launch {
+                                    val updatedStocks=newStock.map{menu->
+                                        Stock(
+                                            id = menu.id?:-1,
+                                            name = menu.name?:"",
+                                            imagePath = menu.imagePath ?: "",
+                                            categoryId = menu.menuCategoryId?:-1,
+                                            productId = menu.productId?:0,
+                                            sortOrder = menu.sortOrder?:0,
+                                            inventoryCode = menu.inventoryCode?:"",
+                                            fgColor = menu.foreColor ?: "",
+                                            bgColor = menu.backColor ?: "",
+                                            barcode = menu.barCode?:""
+                                        )
+                                    }
+                                    dataBaseRepository.insertNewStock(updatedStocks)
+                                    println("Insertion Product Menu : ${insertionCount++}")
+                                }
+                            }
+                        },
+                        onError = {
+                                errorMsg ->
+                            updateLoginError(MENU_PRODUCTS_ERROR_TITLE,errorMsg)
+                        }
+                    )
+                }
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(MENU_PRODUCTS_ERROR_TITLE,errorM)
+        }
+    }
+
+    private suspend fun syncInventoryQuantity(lastSyncTime: String?=null):MutableMap<Int, Double> = withContext(Dispatchers.IO) {
+        val stockQtyMap: MutableMap<Int, Double> = mutableMapOf()
+        try {
+            updateLoginSyncStatus("Syncing Inventory Quantity..")
+            println("Syncing Inventory Quantity : ${syncingCount++}")
+            networkRepository.getProductLocation(getBasicRequest()).collect {stockAvailResponse->
+                observeResponseNew(stockAvailResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Inventory Quantity..")
+                    },
+                    onSuccess = { apiData ->
+                        if (apiData.success) {
+                            apiData.result?.items?.forEach { stock ->
+                                stockQtyMap[stock.productId]=stock.qtyOnHand?:0.0
+                            }
+                            viewModelScope.launch {
+                                dataBaseRepository.insertUpdateProductQuantity(apiData,lastSyncTime)
+                                println("Insertion Inventory Quantity : ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(INVENTORY_ERROR_TITLE, errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(INVENTORY_ERROR_TITLE,errorM)
+        }
+        // Return the collected list once the flow completes
+        println("stockQtyMap :$stockQtyMap")
+        return@withContext stockQtyMap
+    }
+
+    private suspend fun syncInventory(stockQtyMap:MutableMap<Int, Double>,lastSyncTime: String?=null){
+        try {
+            updateLoginSyncStatus("Syncing Stock Products..")
+            println("Syncing Stock Products : ${syncingCount++}")
+            networkRepository.getProductsWithTax(getBasicRequest()).collect{inventoryResponse->
+                observeResponseNew(inventoryResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Stock Products..")
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertUpdateInventory(apiData,lastSyncTime, stockQtyMap)
+                                println("Insertion Stock Products: ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        updateLoginError(INVENTORY_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(INVENTORY_ERROR_TITLE,errorM)
+        }
+    }
+
+    private suspend fun syncInventoryBarcode(lastSyncTime: String?=null){
+        try {
+            updateLoginSyncStatus("Syncing Product Barcode...")
+            println("Syncing Product Barcode : ${syncingCount++}")
+            networkRepository.getProductBarCode(getBasicRequest()).collect{inventoryResponse->
+                observeResponseNew(inventoryResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Product Barcode...")
+                    },
+                    onSuccess = { apiData ->
+                        viewModelScope.launch {
+                            dataBaseRepository.insertUpdateBarcode(apiResponse = apiData,lastSyncDateTime=lastSyncTime)
+                            println("Insertion Product Barcode: ${insertionCount++}")
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        updateLoginError(INVENTORY_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(INVENTORY_ERROR_TITLE,errorM)
+        }
+    }
+
+    private suspend fun syncPromotion(){
+        try {
+            val promotionList: MutableList<PromotionItem> = mutableListOf()
+            updateLoginSyncStatus("Syncing Promotions...")
+            println("Syncing Promotions : ${syncingCount++}")
+            networkRepository.getPromotions(PromotionRequest(tenantId = getTenantId())).collect { apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {  },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                apiData.result?.forEach {promotion->
+                                    promotionList.add(promotion)
+                                    when(promotion.promotionTypeName){
+
+                                        "PromotionByQty"->{
+                                            updateLoginSyncStatus("Syncing Promotion By QTY....")
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = promotion.id.toInt())).collect { promotionsData->
+                                                observeResponseNew(promotionsData,
+                                                    onLoading = { },
+                                                    onSuccess = { apiData ->
+                                                        if(apiData.success){
+                                                            viewModelScope.launch {
+                                                                apiData.result?.forEach { item ->
+                                                                    dataBaseRepository.insertPromotionDetails(
+                                                                        PromotionDetails(
+                                                                            id=item.productId?.toLong()?:0,
+                                                                            promotionId = item.promotionId?:0,
+                                                                            productId = item.productId?:0,
+                                                                            inventoryCode = item.inventoryCode?:"",
+                                                                            promotionTypeName = promotion.promotionTypeName?:"",
+                                                                            price = item.price?:0.0,
+                                                                            promotionPrice = item.price?:0.0,
+                                                                            promotionPerc = promotion.discountPercentage?.takeIf { it > 0.00 },
+                                                                            qty = promotion.qty?:0.0,
+                                                                            amount = promotion.amount?:0.0)
+
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = { errorMsg ->
+                                                        updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        "PromotionByPrice" ->{
+                                            updateLoginSyncStatus("Syncing Promotion By Price....")
+                                            networkRepository.getPromotionsByPrice(PromotionRequest(id = promotion.id.toInt())).collectLatest { promotionsData->
+                                                observeResponseNew(promotionsData,
+                                                    onLoading = { },
+                                                    onSuccess = { apiData ->
+                                                        if(apiData.success){
+                                                            viewModelScope.launch {
+                                                                apiData.result?.forEach { element ->
+                                                                    dataBaseRepository.insertPromotionDetails(
+                                                                        PromotionDetails(
+                                                                            id=element.productId.toLong(),
+                                                                            promotionId = element.promotionId,
+                                                                            productId = element.productId,
+                                                                            inventoryCode = element.inventoryCode,
+                                                                            promotionTypeName = promotion.promotionTypeName?:"",
+                                                                            price = element.price,
+                                                                            promotionPrice = element.promotionPrice,
+                                                                            promotionPerc = element.promotionPerc,
+                                                                            qty = promotion.qty?:0.0)
+
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = { errorMsg ->
+                                                        updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        "PromotionByPriceBreak"->{
+                                            updateLoginSyncStatus("Syncing Promotion By Price Break....")
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = promotion.id.toInt())).collectLatest { promotionsData->
+                                                observeResponseNew(promotionsData,
+                                                    onLoading = { },
+                                                    onSuccess = { apiData ->
+                                                        if(apiData.success){
+                                                            viewModelScope.launch {
+                                                                apiData.result?.forEach { element ->
+                                                                    dataBaseRepository.insertPromotionDetails(
+                                                                        PromotionDetails(
+                                                                            id=element.productId?.toLong()?:0,
+                                                                            promotionId = element.promotionId?:0,
+                                                                            productId = element.productId?:0,
+                                                                            inventoryCode = element.inventoryCode?:"",
+                                                                            promotionTypeName = promotion.promotionTypeName?:"",
+                                                                            price = element.price?:0.0,
+                                                                            promotionPrice = element.price?:0.0,
+                                                                            qty = promotion.qty?:0.0,
+                                                                            amount = promotion.amount?:0.0,
+                                                                            priceBreakPromotionAttribute= parsePriceBreakPromotionAttributes(promotion.priceBreakPromotionAttribute)
+                                                                        )
+
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = { errorMsg ->
+                                                        updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        else->{
+                                            updateLoginSyncStatus("Syncing Promotion Default....")
+                                            networkRepository.getPromotionsByQty(PromotionRequest(id = promotion.id.toInt())).collectLatest { promotionsData->
+                                                observeResponseNew(promotionsData,
+                                                    onLoading = { },
+                                                    onSuccess = { apiData ->
+                                                        if(apiData.success){
+                                                            viewModelScope.launch {
+                                                                apiData.result?.forEach { item ->
+                                                                    dataBaseRepository.insertPromotionDetails(
+                                                                        PromotionDetails(
+                                                                            id = item.productId?.toLong()?:0 ,
+                                                                            promotionId = item.promotionId?:0,
+                                                                            productId = item.productId?:0,
+                                                                            inventoryCode = item.inventoryCode?:"",
+                                                                            promotionTypeName = promotion.promotionTypeName?:"",
+                                                                            price = item.price?:0.0
+                                                                        )
+
+                                                                    )
+                                                                }
+                                                                println("Insertion Promotion Details : ${insertionCount++}")
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = { errorMsg ->
+                                                        updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                dataBaseRepository.insertPromotions(apiData)
+                                println("Insertion Promotions : ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = {
+                            errorMsg ->
+                        updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(PROMOTIONS_ERROR_TITLE,error)
+        }
+    }
+
+    suspend fun syncInvoiceReceiptTemplate(templateType: TemplateType){
+        try {
+            updateLoginSyncStatus("Syncing Invoice Template...")
+            println("Syncing Invoice Template : ${syncingCount++}")
+            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId(), type = templateType.toValue())).collect {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {  },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertOrUpdateTemplate(apiData)
+                                println("Insertion Invoice Template : ${insertionCount++}")
+                            }
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(SYNC_TEMPLATE_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }
+        catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(SYNC_TEMPLATE_ERROR_TITLE,error)
+        }
+    }
+
+    private suspend fun syncPaymentTypes(){
+        try {
+            updateLoginSyncStatus("Syncing Payment Type...")
+            println("Syncing Payment Type : ${syncingCount++}")
+            networkRepository.getPaymentTypes(getBasicTenantRequest()).collect {apiResponse->
+                observeResponseNew(apiResponse,
+                    onLoading = {
+                        updateLoginSyncStatus("Syncing Payment Type...")
+                    },
+                    onSuccess = { apiData ->
+                        if(apiData.success){
+                            viewModelScope.launch {
+                                dataBaseRepository.insertPaymentType(apiData)
+                                println("Insertion Payment Type : ${syncingCount++}")
+                            }
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(PAYMENT_TYPE_ERROR_TITLE,errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val error="${e.message}"
+            updateLoginError(PAYMENT_TYPE_ERROR_TITLE,error)
+        }
+    }
+
     //Api Calls
-
-
 
     suspend fun createUpdatePosInvoice(posInvoice: PosInvoice, pendingSaleCount : Int, posSaleId: Long){
         networkRepository.createUpdatePosInvoice(CreatePOSInvoiceRequest(posInvoice = posInvoice)).collect { apiResponse->
@@ -398,193 +935,50 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return posInvoice
     }
 
-
-    fun syncEveryThing2(){
-       try {
-         viewModelScope.launch(Dispatchers.IO) {
-             updateSyncProgress(true)
-
-             val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
-             if (pendingCount <= 0) {
-                 loadNextSalesInvoiceNumber()
-             } else {
-                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
-             }
-
-             syncMembers()
-             syncMemberGroup()
-             syncSales()
-             syncStockQuantity()
-             syncInventory()
-             syncCategories()
-             syncPromotion()
-             syncPaymentTypes()
-             println("All Sync Operations Completed Successfully")
-             updateSyncStatus("All Sync Operations have been Completed Successfully")
-             updateSyncProgress(false)
-             preferences.setLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
-         }
-       }catch (e: Exception){
-           val error = "failed during sync: ${e.message}"
-           println("SYNC_ERROR $error")
-           handleError(true,"SYNC_ERROR", error)
-           updateSyncProgress(false)
-       }
-    }
-
-    suspend fun loadNextSalesInvoiceNumber(){
+    fun updateSales(){
         try {
-            println("API CALL : ${count++}")
-            updateSyncStatus("loading sale invoice count")
-            networkRepository.getNextPOSSaleInvoice(getBasicRequest()).collectLatest {apiResponse->
-                observeNextSaleInvoices(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleError(true,NEXT_SALE_ERROR_TITLE,error)
-        }
-    }
-
-     private suspend fun syncStockQuantity(lastSyncTime:String?=null){
-        try {
-            println("API CALL : ${count++}")
-            updateLoginSyncStatus("Syncing Inventory Count")
-            networkRepository.getProductLocation(getBasicRequest()).collectLatest {stockAvailResponse->
-                observeStock(stockAvailResponse,lastSyncTime)
-                //println("QtyMap: $stockQtyMap")
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(INVENTORY_ERROR_TITLE,error)
-        }
-    }
-
-    private suspend fun syncInventory(lastSyncTime:String?=null){
-        try {
-            updateLoginSyncStatus("Syncing Inventory")
-            println("Inventory API CALL : ${count++}")
-            val inventoryResponse=networkRepository.getProductsWithTax(getBasicRequest())
-            val barcodesResponse=networkRepository.getProductBarCode(getBasicRequest())
-            if(lastSyncTime!=null){
-                networkRepository.getProductBarCode(getBarcodeRequest(true))
-                dataBaseRepository.clearBarcode()
-            }
-            observeInventory(inventoryResponse,stockQtyMap.value,lastSyncTime)
-            observeBarcode(barcodesResponse,lastSyncTime)
-
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(INVENTORY_ERROR_TITLE,error)
-        }
-    }
-
-    private suspend fun syncMembers(){
-        try {
-            println("Members API CALL : ${count++}")
-            updateLoginSyncStatus("Syncing Member")
-            networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
-                observeMembers(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(MEMBER_ERROR_TITLE,error)
-        }
-    }
-
-    private suspend fun syncPaymentTypes(){
-        try {
-            updateLoginSyncStatus("Syncing Payment Type")
-            networkRepository.getPaymentTypes(getBasicTenantRequest()).collectLatest {apiResponse->
-                observePaymentType(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(PAYMENT_TYPE_ERROR_TITLE,error)
-        }
-    }
-
-    private suspend fun syncMemberGroup(){
-        try {
-            updateLoginSyncStatus("Syncing Member Group")
-            println("MemberGroup API CALL : ${count++}")
-            networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
-                observeMemberGroup(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(MEMBER_ERROR_TITLE,error)
-        }
-    }
-
-    private suspend fun syncSales(){
-        try {
-            updateLoginSyncStatus("Syncing Sales History")
-            println("API CALL : ${count++}")
-            getLatestSale(skipCount = 0, maxResultCount = 1).collect{sale->
-                when(sale){
-                    is RequestState.Error -> {
-                        updateLoginError(SYNC_SALES_ERROR_TITLE,sale.message)
-                    }
-                    is RequestState.Idle -> {
-
-                    }
-                    is RequestState.Loading -> {
-
-                    }
-                    is RequestState.Success -> {
-                        val totalCount = sale.data.result?.totalCount
-                        if(totalCount!=null && totalCount>=1000){
-                            getLatestSale(skipCount = totalCount-600, maxResultCount = 1000).collect { response->
-                                SaveSyncSales(response)
+            //updateSyncStatus("Syncing Sales History")
+            viewModelScope.launch {
+                val job = async { getSalesTotalCount() }
+                val saleRecord = job.await()
+                saleRecord.collectLatest { sale->
+                    when(sale){
+                        is RequestState.Error -> {}
+                        is RequestState.Idle -> {}
+                        is RequestState.Loading -> {}
+                        is RequestState.Success -> {
+                            val saleCount=sale.data.result?.totalCount?:1000
+                            getLatestSale(skipCount = saleCount-5, maxResultCount = 10).collect {
+                                observeLatestSales(it)
                             }
-                        }else{
-                            SaveSyncSales(sale)
                         }
                     }
                 }
             }
         }catch (e: Exception){
             val error="${e.message}"
-            updateLoginError(SYNC_SALES_ERROR_TITLE,error)
+            //handleError(true,SYNC_SALES_ERROR_TITLE,error)
+            updateSyncProgress(false)
         }
-    }
-
-    private fun SaveSyncSales(apiResponse: RequestState<GetPosInvoiceResult>) {
-        observeResponseNew(apiResponse,
-            onLoading = {
-                updateSyncProgress(true)
-            },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        dataBaseRepository.insertNewLatestSales(apiData)
-                        //updateSyncGrid(INVOICE)
-                        //set
-                        updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
-                    }
-                }
-            },
-            onError = {
-                    errorMsg ->
-                handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
-            }
-        )
 
     }
 
-    private suspend fun syncCategories(){
-        try {
-            updateLoginSyncStatus("Syncing Categories")
-            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
-                observeCategory(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(MENU_CATEGORY_ERROR_TITLE,error)
-        }
+    private suspend fun getSalesTotalCount(): Flow<RequestState<GetPosInvoiceResult>> {
+        return networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id"))
     }
 
-   private suspend fun syncMenu(){
+    private suspend fun getLatestSale(skipCount: Long?, maxResultCount:Int?): Flow<RequestState<GetPosInvoiceResult>> {
+       return networkRepository.getLatestSales(
+           POSInvoiceRequest(
+               locationId = getLocationId(),
+               maxResultCount=maxResultCount?:1000,
+               skipCount = skipCount?.toInt()?:0,
+               sorting = "Id")
+       )
+    }
+
+
+    private suspend fun syncMenu(){
         val newStock : MutableList<MenuItem> = mutableListOf()
         categoryResponse.value.forEach { cat->
             println("Menu products api : ${cat.id}")
@@ -624,126 +1018,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    private suspend fun syncPromotion(){
-        try {
-            updateLoginSyncStatus("Syncing Promotions")
-            networkRepository.getPromotions(PromotionRequest(tenantId = getTenantId())).collectLatest { apiResponse->
-                observePromotions(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            updateLoginError(PROMOTIONS_ERROR_TITLE,error)
-        }
-    }
-
-    fun updateSales(){
-       try {
-           updateSyncStatus("Syncing Sales History")
-           viewModelScope.launch {
-               val job = async { getSalesTotalCount() }
-               val saleRecord = job.await()
-               saleRecord.collectLatest { sale->
-                   when(sale){
-                       is RequestState.Error -> {}
-                       is RequestState.Idle -> {}
-                       is RequestState.Loading -> {}
-                       is RequestState.Success -> {
-                           val saleCount=sale.data.result?.totalCount?:1000
-                           getLatestSale(skipCount = saleCount-5, maxResultCount = 10).collect {
-                               observeLatestSales(it)
-                           }
-                       }
-                   }
-               }
-           }
-       }catch (e: Exception){
-           val error="${e.message}"
-           handleError(true,SYNC_SALES_ERROR_TITLE,error)
-           updateSyncProgress(false)
-       }
-
-   }
-
-    private suspend fun getSalesTotalCount(): Flow<RequestState<GetPosInvoiceResult>> {
-        return networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id"))
-    }
-
-    private suspend fun getLatestSale(skipCount: Long?, maxResultCount:Int?): Flow<RequestState<GetPosInvoiceResult>> {
-       return networkRepository.getLatestSales(
-           POSInvoiceRequest(
-               locationId = getLocationId(),
-               maxResultCount=maxResultCount?:1000,
-               skipCount = skipCount?.toInt()?:0,
-               sorting = "Id")
-       )
-    }
-
-    suspend fun syncPrintTemplate(templateType: TemplateType){
-        try {
-            if(syncInProgress.value)
-                return
-
-            println("Syncing Print Template: ${templateType.toInt()}")
-            updateSyncStatus("Syncing Print Template")
-            networkRepository.getPrintTemplate(GetPrintTemplateRequest(locationId = getLocationId(), type = templateType.toInt())).collect { apiResponse->
-                observePrintTemplate(apiResponse)
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            handleError(true,SYNC_TEMPLATE_ERROR_TITLE,error)
-            updateSyncProgress(false)
-            println("Syncing Print Template: $error")
-        }
-    }
-
-
     /*------Api Call End--------*/
 
-    private fun observePrintTemplate(apiResponse: RequestState<GetPrintTemplateResult>) {
-        observeResponseNew(apiResponse,
-            onLoading = {
-                updateSyncProgress(true)
-                        },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                     println("print template insertion : ${count++}")
-                    _printerTemplates.update { apiData.result }
-                }else{
-                    handleError(true,SYNC_TEMPLATE_ERROR_TITLE,apiData.error?.message?:"template not found")
-                }
-                updateSyncProgress(false)
-            },
-            onError = { errorMsg ->
-                handleError(true,SYNC_TEMPLATE_ERROR_TITLE,errorMsg)
-                updateSyncProgress(false)
-            }
-        )
-    }
-
-    private fun observeNextSaleInvoices(apiResponse: RequestState<NextPOSSaleInvoiceNoResponse>) {
-        observeResponseNew(apiResponse,
-            onLoading = {
-                updateSyncProgress(true)
-            },
-            onSuccess = { apiData ->
-                viewModelScope.launch {
-                    if(apiData.success){
-                        apiData.result?.let { result->
-                            preferences.setNextSalesInvoiceNumber(result.invoiceNo?:"")
-                            preferences.setSalesInvoicePrefix(result.invoicePrefix?:"")
-                            preferences.setSalesInvoiceNoLength(result.posLength?:0)
-                        }
-                    }
-                }
-
-            },
-            onError = {
-                    errorMsg ->
-                handleError(true,NEXT_SALE_ERROR_TITLE,errorMsg)
-            }
-        )
-
-    }
 
     private fun observeLatestSales(apiResponse: RequestState<GetPosInvoiceResult>) {
         observeResponseNew(apiResponse,
@@ -756,17 +1032,17 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                         dataBaseRepository.insertNewLatestSales(apiData)
                         //updateSyncGrid(INVOICE)
                         //set
-                        updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
+                        //updateLastSyncTs(getCurrentDateAndTimeInEpochMilliSeconds())
                         updateSyncProgress(false)
-                        updateSyncStatus("")
-                        handleError(false,"","")
+                        //updateSyncStatus("")
+                        //handleError(false,"","")
                         updateUIStatus(true)
                     }
                 }
             },
             onError = {
                     errorMsg ->
-                handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
+                //handleError(true,SYNC_SALES_ERROR_TITLE,errorMsg)
                 updateSyncProgress(false)
                 updateUIStatus(true)
             }
@@ -791,100 +1067,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             onError = {
                     errorMsg ->
                 updateLoginError(MENU_CATEGORY_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private suspend fun _syncCategories(){
-        try {
-            networkRepository.getMenuCategories(getBasicRequest()).collectLatest {apiResponse->
-                observeResponseNew(apiResponse,
-                    onLoading = {
-                        updateSyncStatus("Syncing Categories")
-                    },
-                    onSuccess = { apiData ->
-                        if(apiData.success){
-                            viewModelScope.launch {
-                                dataBaseRepository.insertCategories(apiData)
-                                //val syncItem = updateSyncGrid(CATEGORY)
-
-                            }
-                        }
-                    },
-                    onError = {
-                            errorMsg ->
-                        //updateError(true,MENU_CATEGORY_ERROR_TITLE,errorMsg)
-                    }
-                )
-            }
-        }catch (e: Exception){
-            val error="${e.message}"
-            //updateError(true,MENU_CATEGORY_ERROR_TITLE,error)
-        }
-    }
-
-    suspend fun observeEmployees(apiResponse: Flow<RequestState<EmployeesResponse>>) {
-        println("employees insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = {  updateLoginSyncStatus("Syncing Employees")},
-            onSuccess = { apiData ->
-                viewModelScope.launch {
-                    dataBaseRepository.insertEmployees(apiData)
-                } },
-            onError = {errorMsg->
-                updateLoginError(EMPLOYEE_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private suspend fun observeEmpRole(apiResponse: Flow<RequestState<EmployeesResponse>>) {
-        println("employees role insertion : ${count++}")
-        observeResponse(apiResponse,
-            onLoading = {  updateLoginSyncStatus("Syncing Employees Role")},
-            onSuccess = { apiData ->
-                viewModelScope.launch {
-                    dataBaseRepository.insertEmpRole(apiData)
-                } },
-            onError = {errorMsg->
-                updateLoginError(EMPLOYEE_ROLE_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeMembers(apiResponse: RequestState<MemberResponse>) {
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        dataBaseRepository.insertMembers(apiData)
-                        println("API CALL : ${count++}")
-                    }
-                }
-            },
-            onError = {
-                    errorMsg ->
-                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-    private fun observeMemberGroup(apiResponse: RequestState<MemberGroupResponse>) {
-        observeResponseNew(apiResponse,
-            onLoading = {
-
-            },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        dataBaseRepository.insertMemberGroup(apiData)
-                        println("MemberGroup Insertion : ${count++}")
-                    }
-                }
-            },
-            onError = {
-                    errorMsg ->
-                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
             }
         )
     }
@@ -923,7 +1105,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 if (apiData.success) {
                     viewModelScope.launch {
                         dataBaseRepository.insertUpdateProductQuantity(apiData,lastSyncTime)
-                        println("Product Quantity insertion: ${count++}")
+                        println("Product Quantity insertion: ${syncingCount++}")
                     }
                     apiData.result?.items?.forEach { stock ->
                         updatedStockQtyMap[stock.productId]=stock.qtyOnHand
@@ -1150,27 +1332,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
     }
 
-    private fun observePaymentType(apiResponse: RequestState<PaymentTypeResponse>) {
-        println("payment type insertion : ${count++}")
-
-        observeResponseNew(apiResponse,
-            onLoading = {  },
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        paymentTypeResponse.update { apiData }
-                        dataBaseRepository.insertPaymentType(apiData)
-                    }
-                }
-            },
-            onError = {
-                    errorMsg ->
-                updateLoginError(MEMBER_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-
     fun updateLoginState(loading: Boolean, successfulLogin:Boolean, loginError: Boolean, title :String,error:String) {
         viewModelScope.launch {
             _loginScreenState.update {
@@ -1191,6 +1352,18 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 loadingMessage = loadingMsg
             )
         }
+    }
+
+    private fun moveToNextScreen(){
+        setUserLoggedIn(true)
+        updateLoginState(
+            loading = false,
+            loginError = false,
+            successfulLogin = true,
+            error = "",
+            title = ""
+        )
+
     }
 
      fun updateLoginError(errorTitle:String, errorMsg: String) {
@@ -1227,7 +1400,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     suspend fun getBasicRequest() = BasicApiRequest(
         tenantId = preferences.getTenantId().first(),
         locationId = preferences.getLocationId().first(),
-        lastSyncDateTime = _lastSyncDateTime.value
+       // lastSyncDateTime = _lastSyncDateTime.value
         )
 
     fun getBasicRequest(id:Int) = BasicApiRequest(
@@ -1238,12 +1411,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         tenantId = preferences.getTenantId().first()
     )
 
-    suspend fun getBarcodeRequest(isDeleted:Boolean) = BasicApiRequest(
-        tenantId = preferences.getTenantId().first(),
-        locationId = preferences.getLocationId().first(),
-        lastSyncDateTime = _lastSyncDateTime.value,
-        isDeleted = isDeleted
-    )
 
     //suspend fun getLocationId() = dataBaseRepository.getSelectedLocation().first()?.locationId?.toInt()
     suspend fun getTenantId() = preferences.getTenantId().first()

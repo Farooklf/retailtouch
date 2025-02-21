@@ -21,7 +21,9 @@ import com.hashmato.retailtouch.utils.DateTimeUtils.formatLocalDateWithoutTimeFo
 import com.hashmato.retailtouch.utils.DateTimeUtils.getCurrentLocalDateTime
 import com.hashmato.retailtouch.utils.DateTimeUtils.getEndLocalDateTime
 import com.hashmato.retailtouch.utils.DateTimeUtils.getStartLocalDateTime
+import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import com.hashmato.retailtouch.utils.PrinterType
+import com.hashmato.retailtouch.utils.TemplateType
 import com.hashmato.retailtouch.utils.posSettlementDefaultTemplate
 import com.hashmato.retailtouch.utils.printer.PrinterServiceProvider
 import com.hashmato.retailtouch.utils.roundTwoDecimalPlaces
@@ -452,13 +454,20 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
   }
 
   private suspend fun connectAndPrintTemplate(posSettlement: PosSettlement) {
+      var template= posSettlementDefaultTemplate
+      sqlRepository.getPrintTemplateByType(type = TemplateType.PosSettlement.toValue()).collect{ mPrintReceiptTemplate->
+          mPrintReceiptTemplate?.let{
+              template = it.template
+              println("template $template")
+          }
+      }
       dataBaseRepository.getPrinter().collect { printer ->
           if(printer!=null){
               //println("printer_paperSize ${printer.paperSize}")
               val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(
                   ticket=posSettlement,
-                  currencyCode = settlementState.value.currencyCode,
-                  template = posSettlementDefaultTemplate,
+                  currencyCode = _settlementState.value.currencyCode,
+                  template = template,
                   printers = printer
               )
               //println("finalTextToPrint :\n $finalTextToPrint")

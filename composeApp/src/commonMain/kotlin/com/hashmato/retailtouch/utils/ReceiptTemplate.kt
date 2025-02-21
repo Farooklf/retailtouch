@@ -77,7 +77,7 @@ Pay By  Actual  Entered  Difference
 </ListItem>   
 """
 
-val defaultTemplate2 = """
+val POSInvoiceDefaultTemplate = """
 @@@http://tajmahal.rtlconnect.net/common/upload/Taj2.bmp
 
 [L]<b>TAJ MAHAL FOOD PTE LTD</b>

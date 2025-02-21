@@ -4,7 +4,7 @@ import android.util.Base64
 import android.util.Log
 import com.dantsu.escposprinter.EscPosPrinterCommands
 import com.dantsu.escposprinter.EscPosPrinterSize
-import com.hashmato.retailtouch.utils.defaultTemplate2
+import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,7 +24,7 @@ class ObjectToReceiptTemplateV1 {
          * Process HTML template by replacing placeholders with values from any data class
          */
         suspend fun processTemplate(
-            template: String = defaultTemplate2,
+            template: String = POSInvoiceDefaultTemplate,
             data: Any?,
             currencyCode:String="",
             printerWidth: Float = 80f,

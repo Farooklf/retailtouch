@@ -280,6 +280,7 @@ object AppConstants{
     const val MENU = "MENU"
     const val INVOICE = "INVOICE"
     const val PROMOTION = "PROMOTION"
+    const val RECEIPTTEMPLATE = "RECEIPTTEMPLATE"
     const val PAYMENT_TYPE = "PAYMENTTYPE"
 
 

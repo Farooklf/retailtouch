@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GetPrintTemplateRequest(
     @SerialName("Type")
-    val type: Int,
+    val type: Long,
     @SerialName("locationId")
     val locationId: Int
 )

@@ -30,6 +30,7 @@ import com.hashmato.retailtouch.domain.model.promotions.PromotionDetailsDao
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.domain.model.menu.StockCategory
+import com.hashmato.retailtouch.domain.model.printer.PrintReceiptTemplate
 import com.hashmato.retailtouch.domain.model.products.Stock
 import com.hashmato.retailtouch.domain.model.sync.SyncAllDao
 import com.hashmato.retailtouch.sqldelight.retailtouch
@@ -57,7 +58,7 @@ import kotlinx.coroutines.flow.flow
 
 
 
-class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
+ class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
 
 
     override suspend fun insertAuthentication(authenticateDao: AuthenticateDao) {
@@ -1211,6 +1212,34 @@ class SqlRepositoryImpl(private val retailTouch: retailtouch) : SqlRepository {
 
      override suspend fun deleteAllPrinters() {
          retailTouch.printersQueries.deleteAll()
+     }
+
+     override suspend fun insertTemplate(printReceiptTemplate: PrintReceiptTemplate) {
+         retailTouch.receiptTemplateQueries.insert(
+             id = printReceiptTemplate.id,
+             type = printReceiptTemplate.type,
+             name = printReceiptTemplate.name,
+             receiptTypeName =  printReceiptTemplate.receiptTypeName,
+             template = printReceiptTemplate.template
+         )
+     }
+
+     override fun getPrintTemplateByType(type:Long): Flow<PrintReceiptTemplate?> = flow{
+         retailTouch.receiptTemplateQueries.getItemsByType(type).executeAsOneOrNull().let {body->
+             if(body!=null){
+                 emit(
+                     PrintReceiptTemplate(
+                         id = body.id,
+                         type = body.type,
+                         name = body.name,
+                         receiptTypeName = body.receiptTypeName,
+                         template = body.template,
+                     )
+                 )
+             }else{
+                 emit(body)
+             }
+         }
      }
 
      override suspend fun insertSyncAll(syncAllDao: SyncAllDao) {

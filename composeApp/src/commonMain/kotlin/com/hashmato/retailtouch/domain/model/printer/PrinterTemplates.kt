@@ -15,7 +15,7 @@ data class PrinterTemplates(
     @SerialName("template")
     val template: String?="",
     @SerialName("type")
-    val type: Int?=0,
+    val type: Long?=0,
     @SerialName("group")
     val group: Boolean?=false,
 

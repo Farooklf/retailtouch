@@ -47,6 +47,8 @@ import com.hashmato.retailtouch.domain.model.promotions.PromotionDetailsDao
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.SaleRecord
 import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.domain.model.menu.StockCategory
+import com.hashmato.retailtouch.domain.model.printer.GetPrintTemplateResult
+import com.hashmato.retailtouch.domain.model.printer.PrintReceiptTemplate
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.hashmato.retailtouch.utils.DateTimeUtils.getCurrentDateAndTimeInEpochMilliSeconds
 import com.hashmato.retailtouch.utils.DateTimeUtils.getDateFromApi
@@ -54,6 +56,7 @@ import com.hashmato.retailtouch.utils.DateTimeUtils.parseDateFromApi
 import com.hashmato.retailtouch.utils.DateTimeUtils.parseDateFromApiUTC
 import com.hashmato.retailtouch.utils.DateTimeUtils.parseDateTimeFromApiStringUTC
 import com.hashmato.retailtouch.utils.DoubleExtension.calculatePercentage
+import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import com.hashmato.retailtouch.utils.PaperSize
 import com.hashmato.retailtouch.utils.PrinterType
 import com.hashmato.retailtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
@@ -438,7 +441,6 @@ class DataBaseRepository: KoinComponent {
                     dataBaseRepository.insertPaymentType(dao)
                 }
             }
-
         } catch (ex: Exception) {
             println("EXCEPTION PAYMENT: ${ex.message}")
         }
@@ -490,7 +492,7 @@ class DataBaseRepository: KoinComponent {
             val subtotal = item.price.times(item.qtyOnHand) ?: 0.0
             val taxValue = subtotal.calculatePercentage(item.tax)
             val dao = ScannedProductDao(
-                productId = item.id?.toLong()?:0,
+                productId = item.id,
                 name = item.name ?: "",
                 inventoryCode = item.productCode ?: "",
                 barCode = item.barcode ?: "",
@@ -639,6 +641,23 @@ class DataBaseRepository: KoinComponent {
                 dataBaseRepository.insertPrinter(requestDao)
             }else{
                 dataBaseRepository.updatePrinter(requestDao)
+            }
+        }
+    }
+
+
+    suspend  fun insertOrUpdateTemplate(response: GetPrintTemplateResult) {
+        withContext(Dispatchers.IO){
+            //clearExistingLocations()
+            response.result?.forEach { printer ->
+                val requestDao= PrintReceiptTemplate(
+                    id =printer.id?:0,
+                    type =printer.type?:0,
+                    name = printer.name?:"",
+                    receiptTypeName = printer.receiptTypeName?:"",
+                    template = printer.template?: POSInvoiceDefaultTemplate
+                )
+                dataBaseRepository.insertTemplate(requestDao)
             }
         }
     }
