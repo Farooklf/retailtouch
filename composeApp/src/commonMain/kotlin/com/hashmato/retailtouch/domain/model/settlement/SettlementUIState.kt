@@ -16,6 +16,9 @@ data class SettlementUIState(
     val localSettlement : List<PosPaymentTypeSummary> = mutableListOf(),
     val remoteSettlement:PosDaySummary? = PosDaySummary(),
 
+    var showSuccessDialog : Boolean = false,
+    var successMessage : String = "",
+
     //Pending
     var showPendingSales : Boolean = false,
     var showPendingSalesMessage : Boolean = false,

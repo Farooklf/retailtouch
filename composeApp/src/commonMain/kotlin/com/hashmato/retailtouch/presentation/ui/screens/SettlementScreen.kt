@@ -47,12 +47,15 @@ import com.hashmato.retailtouch.presentation.common.AppPrimaryButton
 import com.hashmato.retailtouch.presentation.common.AppScreenCircleProgressIndicator
 import com.hashmato.retailtouch.presentation.common.BasicScreen
 import com.hashmato.retailtouch.presentation.common.ListText
+import com.hashmato.retailtouch.presentation.common.dialogs.APISuccessDialog
 import com.hashmato.retailtouch.presentation.common.dialogs.ActionDialog
+import com.hashmato.retailtouch.presentation.common.dialogs.PaymentSuccessDialog
 import com.hashmato.retailtouch.presentation.common.dialogs.PendingSaleDialog
 import com.hashmato.retailtouch.presentation.viewModels.SettlementViewModel
 import com.hashmato.retailtouch.theme.AppTheme
 import com.hashmato.retailtouch.utils.LocalAppState
 import com.hashmato.retailtouch.utils.formatPrice
+import com.outsidesource.oskitcompose.lib.rememberValRef
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -63,9 +66,11 @@ import retailtouch.composeapp.generated.resources.pending
 import retailtouch.composeapp.generated.resources.print
 import retailtouch.composeapp.generated.resources.retail_pos
 import retailtouch.composeapp.generated.resources.settlement
+import retailtouch.composeapp.generated.resources.settlement_success_message
 import retailtouch.composeapp.generated.resources.submit
 import retailtouch.composeapp.generated.resources.sync
 import retailtouch.composeapp.generated.resources.sync_desc
+import kotlin.math.abs
 
 object SettlementScreen : Screen {
 
@@ -226,6 +231,15 @@ object SettlementScreen : Screen {
                 viewModel.updateSyncProgress(true)
                 viewModel.updatePendingSalesDialog(false)
                  viewModel.syncPendingSales()
+            }
+        )
+
+
+        APISuccessDialog(
+            isVisible = screenState.showSuccessDialog,
+            dialogMessage = stringResource(Res.string.settlement_success_message),
+            onDismiss = {
+                viewModel.updateSettlementSuccessStatus(false)
             }
         )
     }

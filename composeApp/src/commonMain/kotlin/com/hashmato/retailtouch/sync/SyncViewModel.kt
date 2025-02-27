@@ -39,7 +39,7 @@ import com.hashmato.retailtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.PRODUCT
 import com.hashmato.retailtouch.utils.AppConstants.PROMOTION
 import com.hashmato.retailtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.RECEIPTTEMPLATE
+import com.hashmato.retailtouch.utils.AppConstants.RECEIPT_TEMPLATE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_CHANGES_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_SALES_ERROR_TITLE
 import com.hashmato.retailtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
@@ -72,9 +72,9 @@ import org.koin.core.component.KoinComponent
 
 class SyncViewModel : BaseViewModel() , KoinComponent {
 
-    private val _syncDataState = MutableStateFlow(SyncDataState())
+   /* private val _syncDataState = MutableStateFlow(SyncDataState())
     val syncDataState: StateFlow<SyncDataState> = _syncDataState.asStateFlow()
-
+*/
     private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
     private val categoryList = MutableStateFlow<List<CategoryItem>>(emptyList())
 
@@ -86,14 +86,15 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         CATEGORY to false,
         MENU to false,
         PROMOTION to false,
-        RECEIPTTEMPLATE to false,
+        RECEIPT_TEMPLATE to false,
         PAYMENT_TYPE to false
     )
 
     init {
         // Read reSync time from storage and start the sync timer
         viewModelScope.launch {
-            reSync()
+            println("${isCallCompleteSync()}")
+            reSync(isCallCompleteSync())
         }
     }
 
@@ -110,22 +111,18 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
     }*/
 
     fun startCompleteSync() {
-        if (_syncDataState.value.syncInProgress) return
          println("start sync everything")
          syncEveryThing()
     }
 
-     fun reSync(completeSync: Boolean = false) {
-        if (_syncDataState.value.syncInProgress) return
-
-         startPeriodicSync()
-       /* if (completeSync) {
+     private fun reSync(completeSync: Boolean = false) {
+        if (completeSync) {
             println("start sync everything")
             syncEveryThing()
         } else {
             println("start reSyncItems")
             startPeriodicSync()
-        }*/
+        }
     }
 
 
@@ -139,9 +136,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     updateSyncCompleteStatus(false)
                     updateError(syncError = false, errorMsg = "", errorTitle = "")
 
-                    if (loginRequired()) {
-                        refreshToken()
-                    }
+                    async {if(loginRequired())refreshToken()}.await()
                     val syncJob= listOf(
                         async {
                             val pendingCount = dataBaseRepository.getAllPendingSaleRecordsCount().first()
@@ -151,12 +146,12 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
                             }
                         },
-                        async { _syncMember() },
-                        async { _syncMemberGroup() },
-                        async { _syncSalesHistory() },
+                        async { syncMembers() },
+                        async { syncMemberGroup() },
+                        async { syncLatestSales(maxResultCount = 1, skipCount = 0) },
                         async { _syncCategory() },
                         async { _syncInventory() },
-                        async { _syncPromotion()},
+                        async { _syncPromotion() },
                         async { _syncInvoiceReceiptTemplate(templateType = TemplateType.POSInvoice)},
                         async { _syncInvoiceReceiptTemplate(templateType = TemplateType.PosSettlement)},
                         async { _syncPaymentTypes()}
@@ -188,7 +183,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         val tokenTime : Long = preferences.getTokenTime().first()
         val currentTime = DateFormatter().getCurrentDateAndTimeInEpochMilliSeconds() /*getCurrentDateAndTimeInEpochMilliSeconds()*/
         val hoursPassed = DateFormatter().getHoursDifferenceFromEpochMilliseconds(tokenTime, currentTime)
-         println("hoursPassed $hoursPassed")
+       //  println("hoursPassed $hoursPassed")
         return hoursPassed >= TOKEN_EXPIRY_THRESHOLD
     }
 
@@ -199,9 +194,9 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                  networkRepository.hitLoginAPI(getLoginDetails()).collect { response ->
                     when (response) {
                         is RequestState.Success -> {
-                            val token = response.data.result
-                            ApiUtils.preferences.setToken(token ?: "")
-                            result = token ?: ""
+                            val token = response.data.result?:""
+                            setToken(token)
+                            result = token
                         }
                         else -> {
 
@@ -291,7 +286,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                                 PRODUCT -> if(value) { _syncInventory(lastSyncTime = getLastSyncDateTime()) }
                                                 CATEGORY -> if(value)  _syncCategory()
                                                 PROMOTION -> if(value)  _syncPromotion()
-                                                RECEIPTTEMPLATE -> if(value)  {
+                                                RECEIPT_TEMPLATE -> if(value)  {
                                                     _syncInvoiceReceiptTemplate(TemplateType.POSInvoice)
                                                     _syncInvoiceReceiptTemplate(TemplateType.PosSettlement)
                                                 }
@@ -344,28 +339,33 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                     syncFlags["MEMBERGROUP"] = getMemberGroupSyncGrid() != element.syncerGuid
                 }
 
-                "PRODUCT" -> {
+                PRODUCT -> {
                     updateSyncStatus("Syncing Inventory")
                     println("PRODUCT ${getProductsSyncGrid()}")
                     syncFlags["PRODUCT"] = getProductsSyncGrid() != element.syncerGuid
                 }
 
-                "CATEGORY" -> {
+                CATEGORY -> {
                     updateSyncStatus("Syncing Categories")
                     syncFlags["CATEGORY"] = getCategorySyncGrid() != element.syncerGuid
                 }
 
-                "MENU" -> {
+                MENU -> {
                     updateSyncStatus("Syncing Menu")
                     syncFlags["MENU"] = getStockSyncGrid() != element.syncerGuid
                 }
 
-                "PROMOTION" -> {
+                PROMOTION -> {
                     updateSyncStatus("Syncing Promotions")
                     syncFlags["PROMOTION"] = getPromotionsSyncGrid() != element.syncerGuid
                 }
 
-                "PAYMENTTYPE" -> {
+                RECEIPT_TEMPLATE -> {
+                    updateSyncStatus("Syncing Template")
+                    syncFlags["RECEIPTTEMPLATE"] = getTemplateSyncGrid() != element.syncerGuid
+                }
+
+                PAYMENT_TYPE -> {
                     updateSyncStatus("Syncing Payment Type")
                     println("PAYMENTTYPE ${getPaymentTypeSyncGrid()}")
                     syncFlags["PAYMENTTYPE"] = getPaymentTypeSyncGrid() != element.syncerGuid
@@ -374,7 +374,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
 
-    private suspend fun syncPendingSales() {
+    private  fun syncPendingSales() {
         viewModelScope.launch {
             try {
                 // Launch all calls concurrently
@@ -425,7 +425,9 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             updateSyncStatus("Syncing Member Data...")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest { apiResponse ->
                 observeResponseNew(apiResponse,
-                    onLoading = {},
+                    onLoading = {
+
+                    },
                     onSuccess = { apiData ->
                         if (apiData.success) {
                             viewModelScope.launch {
@@ -475,6 +477,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
             updateError(true,MEMBER_ERROR_TITLE, errorMsg)
         }
     }
+
 
     private suspend fun _syncSalesHistory() {
         try {
@@ -993,7 +996,10 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                         if(apiData.success){
                             viewModelScope.launch {
                                 dataBaseRepository.insertOrUpdateTemplate(apiData)
-                                println("Insertion Invoice Template : ${insertionCount++}")
+                                val syncItem = updateSyncGrid(RECEIPT_TEMPLATE)
+                                preferences.setTemplateSyncGrid(syncItem.syncerGuid)
+                                updateSyncCount()
+                                println("SyncTemplateInsertionComplete ${syncDataState.value.syncCount}")
                             }
                         }
                     },
@@ -1070,49 +1076,7 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
         }
     }
     
-    private fun updateSyncGrid(name: String): SyncItem {
-        val state=syncDataState.value
-        return state.syncerGuid.items.firstOrNull{ it.name.uppercase() == name }
-            ?: SyncItem(name = name, syncerGuid = "", id = 0)
-    }
-    
 
-    private fun updateSyncerGuid(mUnSyncList: UnSyncList) {
-        _syncDataState.update { it.copy(syncerGuid = mUnSyncList) }
-    }
-
-    private fun updateInvoiceSyncing(syncStatus: Boolean) {
-        _syncDataState.update { it.copy(syncingPosInvoices = syncStatus) }
-    }
-
-    private fun updateSyncProgress(syncStatus: Boolean) {
-        _syncDataState.update { it.copy(syncInProgress = syncStatus) }
-    }
-
-    private fun updateSyncStatus(syncStatus: String) {
-        _syncDataState.update { it.copy(syncProgressStatus = syncStatus) }
-    }
-
-    // Increment the sync count
-    private fun updateSyncCount() {
-        _syncDataState.update { it.copy(syncCount = it.syncCount + 1) }
-    }
-    private fun updateSyncCountZero() {
-        _syncDataState.update { it.copy(syncCount = 0) }
-    }
-
-    fun updateSyncCompleteStatus(value:Boolean) {
-        _syncDataState.update { it.copy(syncComplete = value) }
-    }
-    
-    // Handle any sync errors
-    private fun handleError(errorTitle: String, errorMsg: String) {
-        _syncDataState.update { it.copy(syncError = true, syncErrorInfo = "$errorTitle \n $errorMsg") }
-    }
-
-    private fun updateError(syncError:Boolean=true,errorTitle: String, errorMsg: String) {
-        _syncDataState.update { it.copy(syncError = syncError,syncErrorInfo = "$errorTitle \n $errorMsg") }
-    }
 
     // Cancel sync job when ViewModel is cleared
     fun stopPeriodicSync() {

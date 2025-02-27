@@ -96,6 +96,7 @@ import com.hashmato.retailtouch.presentation.common.StocksListItem
 import com.hashmato.retailtouch.presentation.common.VectorIcons
 import com.hashmato.retailtouch.presentation.viewModels.SharedPosViewModel
 import com.hashmato.retailtouch.theme.AppTheme
+import com.hashmato.retailtouch.theme.AppThemeContext
 import com.hashmato.retailtouch.utils.AppIcons
 import com.hashmato.retailtouch.utils.DateTimeUtils.getDateTimeFromEpochMillSeconds
 import com.hashmato.retailtouch.utils.DateTimeUtils.getEpochTimestamp
@@ -142,6 +143,7 @@ import retailtouch.composeapp.generated.resources.qty
 import retailtouch.composeapp.generated.resources.receipt_no
 import retailtouch.composeapp.generated.resources.round_off_description
 import retailtouch.composeapp.generated.resources.search_items
+import retailtouch.composeapp.generated.resources.success
 import retailtouch.composeapp.generated.resources.sync_all
 import retailtouch.composeapp.generated.resources.terminal_code
 import retailtouch.composeapp.generated.resources.yes
@@ -1348,6 +1350,90 @@ fun PaymentSuccessDialog(
                     primaryText = AppTheme.colors.appWhite,
                     textStyle = AppTheme.typography.bodyBold(),
                     backgroundColor = AppTheme.colors.appGreen
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun APISuccessDialog(
+    isVisible: Boolean = false,
+    dialogMessage:String,
+    onDismiss: () -> Unit = {}
+    ) {
+
+    val appThemeContext = AppTheme.context
+    AppDialog(
+        isVisible = isVisible,
+        modifier = Modifier.systemBarsPadding(),
+        onDismissRequest = {
+            onDismiss.invoke()
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        ),
+        contentMaxWidth = appThemeContext.dimensions.contentMaxSmallWidth,
+        isFullScreen = false
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppTheme.colors.appWhite)
+                .padding(
+                    vertical = appThemeContext.dimensions.padding20,
+                    horizontal = appThemeContext.dimensions.padding20
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.ic_success),
+                contentDescription = dialogMessage,
+                modifier = Modifier.size(AppTheme.dimensions.largeIcon)
+            )
+
+            Text(
+                text = stringResource(Res.string.success),
+                style = AppTheme.typography.bodyBlack(),
+                color = AppTheme.colors.primaryText,
+                textAlign = TextAlign.Center
+            )
+
+
+            Text(
+                text = dialogMessage,
+                style = AppTheme.typography.h1Black(),
+                color = AppTheme.colors.textBlack,
+                textAlign = TextAlign.Center
+            )
+
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+
+                /*DialogButton(
+                    onClick = {onPrinting.invoke()},
+                    modifier = Modifier.weight(1f).height(IntrinsicSize.Max),
+                    label = stringResource(Res.string.print_receipts),
+                    icon = Res.drawable.ic_printer
+                )*/
+
+                DialogButton(
+                    onClick = {
+                        onDismiss()
+                    },
+                    modifier = Modifier.wrapContentWidth().height(IntrinsicSize.Max),
+                    label = stringResource(Res.string.alert_ok),
+                    primaryText = AppTheme.colors.appWhite,
+                    textStyle = AppTheme.typography.bodyBold(),
+                    backgroundColor = AppTheme.colors.appRed
                 )
             }
         }

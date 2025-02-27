@@ -43,6 +43,7 @@ object PrefKeys {
     const val STOCK_SYNC= "stockSync"
     const val PROMOTION_SYNC= "promotionsSync"
     const val PAYMENT_SYNC= "paymentTypeSync"
+    const val TEMPLATE_SYNC= "templateSync"
 
 
 }

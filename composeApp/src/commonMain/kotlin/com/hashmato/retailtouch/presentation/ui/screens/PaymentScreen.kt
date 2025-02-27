@@ -212,7 +212,6 @@ fun Payment(
         balance = abs(state.remainingBalance),
         onPrinting = {
             viewModel.updatePaymentSuccessDialog(false)
-
         }
     )
 }

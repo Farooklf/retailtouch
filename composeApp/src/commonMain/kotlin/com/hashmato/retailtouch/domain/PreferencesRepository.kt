@@ -81,6 +81,10 @@ interface PreferencesRepository {
     suspend fun setPromotionsSyncGrid(result: String)
     fun getPromotionsSyncGrid(): Flow<String>
 
+
+    suspend fun setTemplateSyncGrid(result: String)
+    fun getTemplateSyncGrid(): Flow<String>
+
     suspend fun setPaymentTypeSyncGrid(result: String)
     fun getPaymentTypeSyncGrid(): Flow<String>
 

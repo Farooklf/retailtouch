@@ -31,6 +31,7 @@ import com.hashmato.retailtouch.utils.PrefKeys.ROUND_OFF_OPTION
 import com.hashmato.retailtouch.utils.PrefKeys.SALE_INVOICE_LENGTH
 import com.hashmato.retailtouch.utils.PrefKeys.SALE_INVOICE_PREFIX
 import com.hashmato.retailtouch.utils.PrefKeys.STOCK_SYNC
+import com.hashmato.retailtouch.utils.PrefKeys.TEMPLATE_SYNC
 import com.hashmato.retailtouch.utils.PrefKeys.TENANT_ID
 import com.hashmato.retailtouch.utils.PrefKeys.TERMINAL_CODE
 import com.hashmato.retailtouch.utils.PrefKeys.TOKEN
@@ -413,6 +414,20 @@ class PreferencesImpl(
     override fun getPromotionsSyncGrid(): Flow<String> {
         return flowSettings.getStringFlow(
             key = PROMOTION_SYNC,
+            defaultValue = ""
+        )
+    }
+
+    override suspend fun setTemplateSyncGrid(result: String) {
+        flowSettings.putString(
+            key = TEMPLATE_SYNC,
+            value = result
+        )
+    }
+
+    override fun getTemplateSyncGrid(): Flow<String> {
+        return flowSettings.getStringFlow(
+            key = TEMPLATE_SYNC,
             defaultValue = ""
         )
     }

@@ -7,7 +7,7 @@ CREATE TABLE ReceiptTemplate (
 );
 
 insert:
-INSERT INTO ReceiptTemplate(
+INSERT OR REPLACE INTO ReceiptTemplate(
 id,type, name, receiptTypeName, template
 ) VALUES (?,?, ?, ?, ?);
 

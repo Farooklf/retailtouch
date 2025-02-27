@@ -51,7 +51,7 @@ fun PaymentCollectorDialog(
 ){
 
     val state by interactor.paymentCollectorState.collectAsStateWithLifecycle()
-    //if (isVisible) interactor.initialState()
+
     LaunchedEffect(Unit){
         if(isVisible)
          interactor.initialState()

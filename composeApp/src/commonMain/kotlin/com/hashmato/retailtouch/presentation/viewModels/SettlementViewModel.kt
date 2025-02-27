@@ -197,6 +197,10 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
         _settlementState.update { it.copy(showPendingSales = value) }
     }
 
+    fun updateSettlementSuccessStatus(isShowDialog: Boolean) {
+        _settlementState.update { it.copy(showSuccessDialog = isShowDialog) }
+    }
+
     fun updateAmount(enteredAmount: String, payment: PosPaymentTypeSummary) {
         runCatching {
             val state = settlementState.value
@@ -309,8 +313,11 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                     onSuccess = { apiData ->
                         if (apiData.success) {
                             deleteSyncData()
+                            updateSettlementSuccessStatus(true)
                             updateLoader(false)
                         } else {
+                            val errorMsg="Settlement data not submitted."
+                            updateError(errorMsg, true)
                             updateLoader(false)
                         }
                     },

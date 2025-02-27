@@ -39,13 +39,13 @@ class HomeViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    init {
+    /*init {
         viewModelScope.launch {
             _homeUIState.update { state->
                 state.copy(isSyncEveryThing = isCallCompleteSync())
             }
         }
-    }
+    }*/
 
      fun prepareHomeData() {
         viewModelScope.launch {

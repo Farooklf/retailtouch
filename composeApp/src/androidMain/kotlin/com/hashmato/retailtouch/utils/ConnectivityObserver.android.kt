@@ -25,12 +25,12 @@ actual object ConnectivityObserver : KoinComponent {
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     _isConnected.update { true }
-                    ToastManager.showToast("Internet Connected ✅")
+                    ToastManager.showToast("you are online ✅")
                 }
 
                 override fun onLost(network: Network) {
                     _isConnected.update { false }
-                    ToastManager.showToast("No Internet Connection ❌")
+                    ToastManager.showToast("Found No Internet Connection ❌")
                 }
             }
 
