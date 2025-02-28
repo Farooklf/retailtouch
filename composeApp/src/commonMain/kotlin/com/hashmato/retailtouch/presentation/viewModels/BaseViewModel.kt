@@ -410,7 +410,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
      suspend fun syncMembers(){
         try {
-            updateSyncStatus("Syncing Members...")
+            updateLoginSyncStatus("Syncing Members...")
             println("Syncing Members : ${syncingCount++}")
             networkRepository.getMembers(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeResponseNew(apiResponse,
@@ -441,7 +441,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
      suspend fun syncMemberGroup(){
         try {
-            updateSyncStatus("Syncing Member Group")
+            updateLoginSyncStatus("Syncing Member Group")
             println("MemberGroup API CALL : ${syncingCount++}")
             networkRepository.getMemberGroup(getBasicTenantRequest()).collectLatest {apiResponse->
                 observeResponseNew(apiResponse,
@@ -869,8 +869,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     suspend fun syncLatestSales(skipCount: Long?, maxResultCount: Int?) {
         try {
-            updateSyncStatus("Syncing Sales...")
-            println("Syncing Sales : ${syncingCount++}")
+            updateSyncStatus("Syncing POS Sales...")
+            println("SyncInvoiceSales : ${syncDataState.value.syncCount}")
             networkRepository.getLatestSales(POSInvoiceRequest(
                 locationId = getLocationId(),
                 maxResultCount = maxResultCount ?: 1000,
@@ -1332,7 +1332,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return preferences.getEmployeeCode().first()
     }
 
-    fun setUserLoggedIn(result:Boolean){
+    private fun setUserLoggedIn(result:Boolean){
         viewModelScope.launch {
             preferences.setUserLoggedIn(result)
         }

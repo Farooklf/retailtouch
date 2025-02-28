@@ -141,7 +141,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                         onSuccess = { apiData ->
                             if (apiData.success) {
                                 val stats =
-                                    apiData.result?.firstOrNull { it.locationId == location?.locationId }
+                                    apiData.result?.firstOrNull { it.locationId == location.locationId }
                                 stats?.itemDates?.firstOrNull()?.let { itemDate ->
                                     val floatMoney = itemDate.floatMoney ?: 0.0
 
@@ -221,7 +221,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updateSyncProgress(value: Boolean) {
+    fun updateSyncStatus(value: Boolean) {
         _settlementState.update { it.copy(isSync = value) }
     }
 

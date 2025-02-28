@@ -146,8 +146,8 @@ class SyncViewModel : BaseViewModel() , KoinComponent {
                                 updateSyncStatus("Invoice Number Error', 'Sync Pending Invoice First ")
                             }
                         },
-                        async { syncMembers() },
-                        async { syncMemberGroup() },
+                        async { _syncMember() },
+                        async { _syncMemberGroup() },
                         async { syncLatestSales(maxResultCount = 1, skipCount = 0) },
                         async { _syncCategory() },
                         async { _syncInventory() },

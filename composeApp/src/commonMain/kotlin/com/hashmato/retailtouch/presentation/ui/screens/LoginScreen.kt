@@ -28,6 +28,7 @@ import com.hashmato.retailtouch.presentation.common.dialogs.ErrorDialog
 import com.hashmato.retailtouch.presentation.common.ResponsiveBox
 import com.hashmato.retailtouch.presentation.common.ScreenHeaderText
 import com.hashmato.retailtouch.presentation.viewModels.LoginViewModel
+import com.hashmato.retailtouch.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
@@ -42,7 +43,8 @@ import retailtouch.composeapp.generated.resources.user_name
 object LoginScreen:Screen{
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
+        val appThemeContext=AppTheme.context
+        val navigator = appThemeContext.getAppNavigator()
         Login(onNavigateDashBoard = {
             NavigatorActions.navigateToHomeScreen(navigator,true)
         })
@@ -56,6 +58,7 @@ fun Login(
     loginViewModel: LoginViewModel = koinInject()
 ){
     val loginScreenState by loginViewModel.loginScreenState.collectAsState()
+    //val syncState by loginViewModel.syncDataState.collectAsState()
 
 
     ResponsiveBox(
