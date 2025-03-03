@@ -111,8 +111,9 @@ fun StockScreenContent(
                         viewModel.scanBarcode()
                     }
                 ),
-                onValueChange = {
-                    viewModel.updateSearchQuery(it)
+                onValueChange = {newValue->
+                    val query = newValue.trimEnd()
+                    viewModel.updateSearchQuery(query)
                 })
 
             //List Content

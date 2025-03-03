@@ -20,7 +20,9 @@ data class POSProduct(
         val searchText = text.lowercase()
         return (name.lowercase().contains(searchText)  ||
                 productCode.lowercase().contains(searchText) ||
-                id.toString() == searchText)
+                barcode.lowercase().contains(searchText) ||
+                id.toString() == searchText
+                )
     }
 }
 

@@ -325,15 +325,15 @@ fun StockDialog(
         Column(
             modifier = Modifier.fillMaxWidth().fillMaxHeight().background(AppTheme.colors.screenBackground)
         ){
+            //val searched="6955132705122\n"
             SearchableTextWithBg(
-                value = state.searchQuery,
+                value = state.searchQuery.trimEnd(),
                 leadingIcon=AppIcons.searchIcon,
                 placeholder = stringResource(Res.string.search_items),
                 label = stringResource(Res.string.search_items),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
                 onValueChange = {newValue ->
-                    val searchText = newValue.trimEnd() // Trim unwanted `\n` dynamically
-                    viewModel.updateSearchQuery(searchText)
+                    viewModel.updateSearchQuery(newValue)
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
@@ -347,8 +347,13 @@ fun StockDialog(
             // Display filtered products in a LazyColumn
             LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight().background(AppTheme.colors.secondaryBg)){
                 // Filter the product tax list based on the search query
-                val filteredProducts = state.stockList.filter {
+                /*val filteredProducts = state.stockList.filter {
                     it.matches(state.searchQuery)
+                }.toMutableList()*/
+                val filteredProducts = state.stockList.filter {
+                    val matches = it.matches(state.searchQuery)
+                    print("SearchDebug, Query: ${state.searchQuery}, Product: ${it.barcode}, Matches: $matches")
+                    matches
                 }.toMutableList()
                 itemsIndexed(filteredProducts){ index, product ->
                     StocksListItem(position=index,product=product,currencySymbol=state.currencySymbol, onClick = { selectedItem->

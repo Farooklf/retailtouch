@@ -42,7 +42,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
                     currentState.copy(products = originalProductList, searchQuery = query)
                 } else if (!isCode(query)) {
                     val filteredList = stockUiState.value.products.filter {
-                        it.name.contains(query)
+                        it.barcode.contains(query) || it.productCode.contains(query)
                     }
                     currentState.copy(products = filteredList,searchQuery = query)
                 }else{

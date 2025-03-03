@@ -350,16 +350,16 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     private fun processFoundProduct(product: POSProduct, qty: Double) {
         // Your logic to process the found product
         val stock= Stock(
-            id = product.id ?: 0,
-            name = product.name ?: "",
+            id = product.id,
+            name = product.name,
             categoryId = 0,
-            productId = product.id?:0,
+            productId = product.id,
             sortOrder = 0,
-            imagePath = product.image ?: "",
-            price = product.price ?: 0.0,
-            tax = product.tax ?: 0.0,
-            barcode = product.barcode ?: "",
-            inventoryCode = product.productCode ?: ""
+            imagePath = product.image,
+            price = product.price,
+            tax = product.tax,
+            barcode = product.barcode,
+            inventoryCode = product.productCode
         )
 
         addSaleItem(stock=stock, qty = qty)
@@ -1109,10 +1109,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun updateSearchQuery(query:String){
         viewModelScope.launch {
             _posUIState.update {
-               /* if (isCode(query)) {
-                    filterListByCode(query) // Filter by barcode or inventory code
-                }*/
-                it.copy(searchQuery = query)
+                println("onValueChanged_query:$query")
+                val searchQuery = query.trimEnd()  // Trim unwanted `\n` dynamically
+                if (isCode(searchQuery)) {
+                    //filterListByCode(query) // Filter by barcode or inventory code
+                    scanStock(searchQuery)
+                }
+                it.copy(searchQuery = searchQuery) // Ensure trimmed barcode is set
             }
         }
     }
@@ -2162,7 +2165,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     // Detects if a query is likely a code (numeric and shorter than a typical name)
     private fun isCode(query: String): Boolean {
-        return query.all { it.isDigit() } /*&& query.length <= 10 // Adjust length if needed*/
+        return query.all { it.isDigit() } && query.length >= 13 // Adjust length if needed
     }
 
     private fun filterListByCode(query: String) {
