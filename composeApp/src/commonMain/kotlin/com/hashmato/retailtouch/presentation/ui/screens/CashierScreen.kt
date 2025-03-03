@@ -62,6 +62,7 @@ import com.hashmato.retailtouch.presentation.common.CustomSwitch
 import com.hashmato.retailtouch.presentation.common.ProductItemAnimation
 import com.hashmato.retailtouch.presentation.common.ProductListItem
 import com.hashmato.retailtouch.presentation.common.SearchableTextWithBg
+import com.hashmato.retailtouch.presentation.common.dialogs.StockDialog
 import com.hashmato.retailtouch.presentation.common.fillScreenHeight
 import com.hashmato.retailtouch.presentation.viewModels.SharedPosViewModel
 import com.hashmato.retailtouch.theme.AppTheme
@@ -140,7 +141,8 @@ fun CashierUI(
         )
     }
 
-    /*StockDialog(
+
+    StockDialog(
         isVisible = state.showDialog,
         interactorRef = rememberValRef(viewModel),
         onDismiss = {
@@ -152,89 +154,6 @@ fun CashierUI(
             viewModel.addSearchProduct(selectedItem)
         }
     )
-
-    ActionDialog(
-        isVisible = state.isRemoveDialog,
-        dialogTitle = stringResource(Res.string.retail_pos),
-        dialogMessage = stringResource(Res.string.clear_scanned_message),
-        onDismissRequest = {
-            viewModel.updateClearCartDialogVisibility(false)
-        },
-        onCancel = {
-            viewModel.updateClearCartDialogVisibility(false)
-        },
-        onConfirm = {
-            viewModel.removedScannedItem()
-        }
-    )
-
-    MemberListDialog(
-        isVisible = state.isMemberDialog,
-        interactorRef = rememberValRef(viewModel),
-        onDismissRequest = {
-            viewModel.updateMemberDialogState(false)
-        })
-
-    //Discount Content
-    DiscountDialog(
-        isVisible = state.showPromotionDiscountDialog,
-        promotions=state.promotions,
-        isPortrait=appState.isPortrait,
-        onDismiss = {
-            viewModel.updateDiscountDialog(false)
-        },
-        onItemClick = {promotion->
-            viewModel.updateDiscountDialog(false)
-            viewModel.updateDiscount(promotion)
-        }
-    )
-
-    //Cart Item Discount Content
-    ItemDiscountDialog(
-        isVisible = state.showItemDiscountDialog,
-        inputValue = state.inputDiscount,
-        inputError = state.inputDiscountError,
-        trailingIcon= viewModel.getDiscountTypeIcon(),
-        isPortrait=appState.isPortrait,
-        selectedDiscountType = state.selectedDiscountType,
-        onDismissRequest = {
-            viewModel.dismissDiscountDialog()
-        },
-        onTabClick = {discountType->
-            viewModel.updateDiscountType(discountType)
-        },
-        onDiscountChange = { discount->
-            viewModel.updateDiscountValue(discount)
-        },
-        onApply = {
-            viewModel.onApplyDiscountClick()
-        },
-        onCancel = {
-            viewModel.dismissDiscountDialog()
-        },
-        onNumberPadClick = {symbol->
-            viewModel.onNumberPadClick(symbol)
-        }
-    )
-
-
-    HoldSaleDialog(
-        posState=state,
-        isVisible = state.showHoldSalePopup,
-        modifier = Modifier.wrapContentWidth().wrapContentHeight(),
-        onDismiss = {
-            viewModel.updateHoldSalePopupState(false)
-        },
-        onRemove = { id->
-            viewModel.removeHoldSale(id)
-        },
-        onItemClick = {collection->
-            viewModel.reCallHoldSale(collection)
-            if(state.salesOnHold.isEmpty()){
-                viewModel.updateHoldSalePopupState(false)
-            }
-        }
-    )*/
 }
 
 @Composable

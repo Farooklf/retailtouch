@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
@@ -60,7 +61,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -108,6 +111,7 @@ import com.outsidesource.oskitcompose.layout.spaceBetweenPadded
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.popup.Modal
 import com.outsidesource.oskitcompose.popup.ModalStyles
+import comhashmatoretailtouchsqldelight.Product
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -295,6 +299,7 @@ fun StockDialog(
 ){
     val state by interactorRef.value.posUIState.collectAsStateWithLifecycle()
     val viewModel =interactorRef.value
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val appState = LocalAppState.current
     val horizontalPadding=if(appState.isPortrait)
@@ -326,9 +331,15 @@ fun StockDialog(
                 placeholder = stringResource(Res.string.search_items),
                 label = stringResource(Res.string.search_items),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = AppTheme.dimensions.padding10),
-                onValueChange = {
-                    viewModel.updateSearchQuery(it)
-                }
+                onValueChange = {newValue ->
+                    val searchText = newValue.trimEnd() // Trim unwanted `\n` dynamically
+                    viewModel.updateSearchQuery(searchText)
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    keyboardController?.hide()
+                    viewModel.scanBarcode()
+                }),
             )
 
             //List Content
@@ -336,7 +347,9 @@ fun StockDialog(
             // Display filtered products in a LazyColumn
             LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight().background(AppTheme.colors.secondaryBg)){
                 // Filter the product tax list based on the search query
-                val filteredProducts = state.stockList.filter { it.matches(state.searchQuery) }.toMutableList()
+                val filteredProducts = state.stockList.filter {
+                    it.matches(state.searchQuery)
+                }.toMutableList()
                 itemsIndexed(filteredProducts){ index, product ->
                     StocksListItem(position=index,product=product,currencySymbol=state.currencySymbol, onClick = { selectedItem->
                         onItemClick.invoke(selectedItem)
@@ -1914,4 +1927,9 @@ fun mapIntToText(value: Int): String {
         3 -> "Round Down"
         else -> stringResource(Res.string.round_off_description)
     }
+}
+
+fun Product.matches(query: String): Boolean {
+    if (query.isBlank()) return true // Show all products if query is empty
+    return this.barcode == query || this.name.contains(query, ignoreCase = true)
 }

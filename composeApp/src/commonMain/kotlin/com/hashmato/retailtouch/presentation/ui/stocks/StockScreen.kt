@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -39,6 +41,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -70,7 +73,7 @@ fun StockScreenContent(
 ){
     val state by viewModel.stockUiState.collectAsStateWithLifecycle()
     val currencySymbol by viewModel.currencySymbol.collectAsState()
-    var lastKnownCount by remember { mutableStateOf(10) }
+    //var lastKnownCount by remember { mutableStateOf(10) }
     val appThemeContext = AppTheme.context
     val navigator=appThemeContext.getAppNavigator()
 
@@ -101,6 +104,13 @@ fun StockScreenContent(
                 placeholder = stringResource(Res.string.search_items),
                 label = stringResource(Res.string.search_items),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        // When done is pressed, open the dialog
+                        viewModel.scanBarcode()
+                    }
+                ),
                 onValueChange = {
                     viewModel.updateSearchQuery(it)
                 })

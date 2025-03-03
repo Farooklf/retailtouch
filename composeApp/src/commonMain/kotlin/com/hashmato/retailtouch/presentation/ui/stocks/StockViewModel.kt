@@ -40,9 +40,9 @@ class StockViewModel :BaseViewModel() , KoinComponent {
                 if (query.isEmpty()) {
                     // Restore full list when query is cleared
                     currentState.copy(products = originalProductList, searchQuery = query)
-                } else if (isCode(query)) {
+                } else if (!isCode(query)) {
                     val filteredList = stockUiState.value.products.filter {
-                        it.barcode.contains(query) || it.productCode.contains(query)
+                        it.name.contains(query)
                     }
                     currentState.copy(products = filteredList,searchQuery = query)
                 }else{
@@ -83,6 +83,16 @@ class StockViewModel :BaseViewModel() , KoinComponent {
 
     fun clearSelection() {
         _stockUiState.update { it.copy(selectedProducts = emptySet()) }
+    }
+
+    fun scanBarcode(){
+        viewModelScope.launch {
+            val query=_stockUiState.value.searchQuery
+            val filteredList = _stockUiState.value.products.filter {
+                it.barcode.contains(query) || it.productCode.contains(query)
+            }
+            _stockUiState.update { it.copy(products = filteredList) }
+        }
     }
 
 }

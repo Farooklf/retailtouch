@@ -246,9 +246,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun scanBarcode(){
-        viewModelScope.launch {
-            scanStock(posUIState.value.searchQuery)
-        }
+        scanStock(_posUIState.value.searchQuery)
     }
 
     private fun scanStock(barcode: String) {
@@ -323,6 +321,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     // Handle product lookup by barcode or product code
     private suspend fun handleProductLookup(code: String, qty: Double) {
         val barcode = dataBaseRepository.getBarcode(code).firstOrNull()
+        println("scannedBarcode : $barcode")
         // If a barcode is found, try to get the product by barcode
         if (barcode != null) {
             val productB = barcode.productId.let { dataBaseRepository.getProductById(it).firstOrNull() }
@@ -332,13 +331,19 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
         }
         // If no product found by barcode or if barcode is null, try to get product by product code
-        val productPC = dataBaseRepository.getProductByCode(code).firstOrNull()
-        if (productPC != null) {
-            processFoundProduct(productPC,qty)
-        } else {
-            // Open dialog if no product found
-            updateDialogState(true)
-            return
+        val productBC = sqlRepository.getProductByBarCode(code).firstOrNull()
+        println("productBC : $productBC")
+        if(productBC!=null){
+            processFoundProduct(productBC,qty)
+        }else{
+            val productPC = dataBaseRepository.getProductByCode(code).firstOrNull()
+            if (productPC != null) {
+                processFoundProduct(productPC,qty)
+            } else {
+                // Open dialog if no product found
+                updateDialogState(true)
+                return
+            }
         }
     }
 
@@ -1104,9 +1109,9 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     fun updateSearchQuery(query:String){
         viewModelScope.launch {
             _posUIState.update {
-                if (isCode(query)) {
+               /* if (isCode(query)) {
                     filterListByCode(query) // Filter by barcode or inventory code
-                }
+                }*/
                 it.copy(searchQuery = query)
             }
         }

@@ -416,18 +416,7 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
         )
     }
 
-    StockDialog(
-        isVisible = state.showDialog,
-        interactorRef = rememberValRef(viewModel),
-        onDismiss = {
-            viewModel.updateDialogState(false)
-        },
-        onItemClick = {selectedItem->
-            viewModel.updateDialogState(false)
-            viewModel.clearSearch()
-            viewModel.addSearchProduct(selectedItem)
-        }
-    )
+
 
     MemberListDialog(
         isVisible = state.isMemberDialog,

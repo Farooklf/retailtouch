@@ -639,6 +639,29 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
+     override fun getProductByBarCode(code: String): Flow<POSProduct?> = flow{
+         retailTouch.productsQueries.getProductByBarCode(code).executeAsOneOrNull().let { product->
+             println("product_db_data : $product")
+             if(product!=null){
+                 emit(
+                     POSProduct(
+                         id = product.productId,
+                         productCode = product.inventoryCode,
+                         name = product.name,
+                         barcode = product.barcode,
+                         image = product.image,
+                         tax = product.tax,
+                         price = product.price,
+                         qtyOnHand = product.quantity,
+                         itemDiscount = product.itemDiscount
+                     )
+                 )
+             }else{
+                 emit(product)
+             }
+         }
+     }
+
      override fun getProductQty(code: String): Flow<Double> = flow{
          retailTouch.productsQueries.getProductQty(code).executeAsOneOrNull()
      }

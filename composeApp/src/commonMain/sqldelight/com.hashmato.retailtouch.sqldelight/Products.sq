@@ -36,6 +36,10 @@ getProductByInventory:
 SELECT * FROM Product
 WHERE inventoryCode = ?;
 
+getProductByBarCode:
+SELECT * FROM Product
+WHERE barcode = ?;
+
 getProductQty:
 SELECT quantity FROM Product
 WHERE inventoryCode = ?;
