@@ -32,6 +32,7 @@ import com.dantsu.escposprinter.connection.usb.UsbConnections
 import com.dantsu.escposprinter.exceptions.EscPosConnectionException
 import com.hashmato.retailtouch.AndroidApp
 import com.hashmato.retailtouch.utils.PrinterType
+import com.imin.library.IminSDKManager
 import comhashmatoretailtouchsqldelight.Printers
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -330,6 +331,7 @@ class Printer(val receiptWidth: Int = 1600) {
     fun openCashBox() {
         println("Open cashBox")
         printer.openCashBox()
+        IminSDKManager.opencashBox()
     }
 
     /*
@@ -495,15 +497,6 @@ class Printer(val receiptWidth: Int = 1600) {
                             else{
                                 openCashBox()
                             }
-
-//                            printerOrdersAndReceipts(
-//                                printerItem,
-//                                ticketRequest,
-//                                receipt,
-//                                currentCartItems,
-//                                departmentName,
-//                                false
-//                            )
                         } else {
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(
