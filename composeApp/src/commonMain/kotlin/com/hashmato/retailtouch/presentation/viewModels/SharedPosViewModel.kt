@@ -1114,6 +1114,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                 if (isCode(searchQuery)) {
                     //filterListByCode(query) // Filter by barcode or inventory code
                     scanStock(searchQuery)
+                    updatePOSError("Scan Barcode : $searchQuery")
                 }
                 it.copy(searchQuery = searchQuery) // Ensure trimmed barcode is set
             }

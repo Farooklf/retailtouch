@@ -23,6 +23,7 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
         viewModelScope.launch {
             dataBaseRepository.getPrinter().collect{printer->
                 if(printer!=null){
+                    println("savedPrinterDetails : $printer")
                     _screenState.update { state->
                        state.copy(
                            isEditMode=true,
@@ -180,11 +181,20 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
         }
     }
 
-    fun updateNetworkPrinter(value: String) {
+
+    fun updateNetworkIPAddress(value: String){
+      viewModelScope.launch {
+          _screenState.update { state ->
+              state.copy(networkIpAddress = value)
+          }
+      }
+    }
+
+    fun updateNetworkPrinter() {
         viewModelScope.launch {
             _screenState.update { state ->
                 state.copy(
-                    networkIpAddress = value,
+                    printerName = state.networkIpAddress,
                     showNetworkDialog = false,
                     showUsbDeviceSelectionDialog = false,
                     showBluetoothSelectionDialog = false,
@@ -231,7 +241,7 @@ class PrinterViewModel :BaseViewModel(), KoinComponent {
     fun createPrinter() {
         viewModelScope.launch {
             updateDialog(true)
-            delay(2000)
+            delay(1000)
             dataBaseRepository.insertOrUpdatePrinter(screenState.value)
             updateDialog(false)
             _screenState.update { state->state.copy(showMessage=true) }

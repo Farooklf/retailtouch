@@ -93,13 +93,6 @@ fun CartView(interactorRef: ValRef<SharedPosViewModel>) {
         viewModel.updateSecondDisplay()
     }
 
-    LaunchedEffect(state.isError) {
-        if (state.isError) {
-            snackbarHostState.value.showSnackbar(state.errorMsg)
-            delay(1000)
-            viewModel.resetError()
-        }
-    }
 
     val (holdSaleText,icon) = if(state.cartList.isEmpty() && state.salesOnHold.isEmpty()){
         stringResource(Res.string.hold_sale) to AppIcons.pauseIcon

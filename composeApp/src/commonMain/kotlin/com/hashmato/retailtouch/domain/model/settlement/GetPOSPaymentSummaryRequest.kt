@@ -10,5 +10,7 @@ data class GetPOSPaymentSummaryRequest(
     @SerialName("startDate")
     val startDate: String? = "",
     @SerialName("endDate")
-    val endDate: String? = ""
+    val endDate: String? = "",
+    @SerialName("shift")
+    val shift: Int? = null,
 )

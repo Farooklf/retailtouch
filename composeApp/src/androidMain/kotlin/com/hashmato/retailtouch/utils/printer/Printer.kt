@@ -633,7 +633,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                 }
                             }
                         }
-                        else{
+                        /*else{
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(
                                     AndroidApp.getApplicationContext(),
@@ -641,7 +641,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
-                        }
+                        }*/
                     }
                 }
             } catch (ex: Exception) {

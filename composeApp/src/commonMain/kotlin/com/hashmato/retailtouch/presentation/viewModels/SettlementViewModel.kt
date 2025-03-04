@@ -24,6 +24,7 @@ import com.hashmato.retailtouch.utils.DateTimeUtils.getStartLocalDateTime
 import com.hashmato.retailtouch.utils.POSInvoiceDefaultTemplate
 import com.hashmato.retailtouch.utils.PrinterType
 import com.hashmato.retailtouch.utils.TemplateType
+import com.hashmato.retailtouch.utils.getAppName
 import com.hashmato.retailtouch.utils.posSettlementDefaultTemplate
 import com.hashmato.retailtouch.utils.printer.PrinterServiceProvider
 import com.hashmato.retailtouch.utils.roundTwoDecimalPlaces
@@ -130,6 +131,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                                 code = location.code
                             )
                         ),
+                        shift = 0,
                         startDate = DateFormatter().formatDateWithTimeForApi(getStartLocalDateTime()),
                         endDate = DateFormatter().formatDateWithTimeForApi(getEndLocalDateTime())
                     )
@@ -140,8 +142,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                         },
                         onSuccess = { apiData ->
                             if (apiData.success) {
-                                val stats =
-                                    apiData.result?.firstOrNull { it.locationId == location.locationId }
+                                val stats = apiData.result?.firstOrNull { it.locationId == location.locationId }
                                 stats?.itemDates?.firstOrNull()?.let { itemDate ->
                                     val floatMoney = itemDate.floatMoney ?: 0.0
 
@@ -157,7 +158,7 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
                                         }
                                     }
                                     println("itemDate : $itemDate")
-                                    _settlementState.update { it.copy(remoteSettlement = stats.itemDates.first()) }
+                                    _settlementState.update { it.copy(remoteSettlement = stats.itemDates.lastOrNull()) }
                                 }
                                 updateLoader(false)
                             } else {
@@ -367,8 +368,9 @@ class SettlementViewModel : BaseViewModel(), KoinComponent {
             settlementDate = getCurrentLocalDateTime(),
             locationId = state.location.locationId,
             locationName = state.location.name,
-            terminalName = "RetailWeb",
+            terminalName = getAppName(),
             shift = 1,
+            updateDefaultShift = true,
             cashOut = 0.0,
             cashIn = 0.0,
             computerTotal = state.remoteSettlement?.itemTotal,

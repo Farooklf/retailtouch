@@ -1631,10 +1631,13 @@ fun TerminalCodeDialog(
 @Composable
 fun NetworkAddressDialog(
     isVisible: Boolean,
+    networkIpAddress:String,
     onCloseDialog: () -> Unit = {},
     onDialogResult: (String) -> Unit = {},
+    onDialogValueChanged: (String) -> Unit = {},
 ) {
-    var displayedValue by remember { mutableStateOf("") }
+    var displayedValue by remember { mutableStateOf(networkIpAddress) }
+    println("networkIpAddress :$displayedValue")
 
     AppDialog(
         isVisible = isVisible,
@@ -1646,8 +1649,11 @@ fun NetworkAddressDialog(
             titleTextStyle = AppTheme.typography.bodyNormal(),
             body = {
                 AppDialogTextField(
-                    value = displayedValue,
-                    onValueChange = { displayedValue = it },
+                    value = networkIpAddress,
+                    onValueChange = {newValue->
+                        displayedValue=newValue
+                        onDialogValueChanged.invoke(newValue)
+                    },
                     modifier = Modifier.padding(horizontal = 16.dp),
                     placeholder = stringResource(Res.string.network_dialog_hint)
                 )
@@ -1662,7 +1668,7 @@ fun NetworkAddressDialog(
                     title = stringResource(Res.string.alert_ok),
                     onClick = {
                         onDialogResult(displayedValue)
-                        displayedValue = ""
+                        displayedValue=""
                     }
                 )
             }

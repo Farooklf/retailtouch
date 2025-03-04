@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
+import org.koin.ext.clearQuotes
 
 class StockViewModel :BaseViewModel() , KoinComponent {
 
@@ -37,6 +38,7 @@ class StockViewModel :BaseViewModel() , KoinComponent {
     fun updateSearchQuery(query:String){
         viewModelScope.launch {
             _stockUiState.update { currentState->
+                query.clearQuotes()
                 if (query.isEmpty()) {
                     // Restore full list when query is cleared
                     currentState.copy(products = originalProductList, searchQuery = query)

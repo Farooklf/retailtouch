@@ -104,6 +104,7 @@ fun StockScreenContent(
                 placeholder = stringResource(Res.string.search_items),
                 label = stringResource(Res.string.search_items),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = AppTheme.dimensions.padding10, vertical = AppTheme.dimensions.padding10),
+                trailingIcon = AppIcons.cancelIcon,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = {
@@ -114,7 +115,11 @@ fun StockScreenContent(
                 onValueChange = {newValue->
                     val query = newValue.trimEnd()
                     viewModel.updateSearchQuery(query)
-                })
+                },
+                onClearedClick = {
+                    viewModel.updateSearchQuery("")
+                }
+                )
 
             //List Content
             CommonListHeader(

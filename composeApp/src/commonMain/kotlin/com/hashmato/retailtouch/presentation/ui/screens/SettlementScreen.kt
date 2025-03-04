@@ -86,7 +86,8 @@ object SettlementScreen : Screen {
 
         val screenState by viewModel.settlementState.collectAsStateWithLifecycle()
         val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
-        val navigator = LocalNavigator.currentOrThrow
+        val appThemeContext=AppTheme.context
+        val navigator = appThemeContext.getAppNavigator()
         val appState = LocalAppState.current
         val currencySymbol by viewModel.currencySymbol.collectAsState()
 
@@ -240,6 +241,8 @@ object SettlementScreen : Screen {
             dialogMessage = stringResource(Res.string.settlement_success_message),
             onDismiss = {
                 viewModel.updateSettlementSuccessStatus(false)
+                appThemeContext.navigateBack(navigator)
+
             }
         )
     }

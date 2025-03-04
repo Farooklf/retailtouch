@@ -22,6 +22,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -447,9 +448,10 @@ fun SearchableTextWithBg(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = false,
+    trailingIcon: DrawableResource? = null,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
-    onSubmittedClick: (Boolean) -> Unit={},
+    onClearedClick: () -> Unit={},
 ) {
     Column(modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -493,6 +495,18 @@ fun SearchableTextWithBg(
                         tint = AppTheme.colors.textDarkGrey,
                         modifier = Modifier.size(AppTheme.dimensions.smallXIcon)
                     )
+                }
+            } else null,
+            trailingIcon = if (trailingIcon != null  && value.isNotEmpty()){
+                {
+                    IconButton(onClick = {
+                        onClearedClick.invoke()
+                    }){
+                       Icon(painter = painterResource(trailingIcon),
+                           contentDescription = null,
+                           tint = AppTheme.colors.appRed,
+                           modifier = Modifier.size(AppTheme.dimensions.smallIcon))
+                    }
                 }
             } else null,
             keyboardOptions = keyboardOptions,
@@ -700,7 +714,7 @@ fun AppDialogTextField(
             Text(
                 text = placeholder,
                 style = textStyle,
-                color = AppTheme.colors.secondaryText
+                color = AppTheme.colors.secondaryText.copy(alpha = .8f)
             )
         },
         keyboardOptions = keyboardOptions,

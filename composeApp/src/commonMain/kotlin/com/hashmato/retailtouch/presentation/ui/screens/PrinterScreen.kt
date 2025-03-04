@@ -276,8 +276,10 @@ fun PrinterContent(
 
     NetworkAddressDialog(
         isVisible = state.showNetworkDialog,
+        networkIpAddress = state.networkIpAddress,
         onCloseDialog = { viewModel.updateNetworkDialogVisibility(false) },
-        onDialogResult = { viewModel.updateNetworkPrinter(it) }
+        onDialogResult = { viewModel.updateNetworkPrinter() },
+        onDialogValueChanged = { viewModel.updateNetworkIPAddress(it)}
     )
 
     //USB

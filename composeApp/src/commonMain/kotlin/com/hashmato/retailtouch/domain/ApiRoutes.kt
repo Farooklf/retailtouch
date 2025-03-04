@@ -27,7 +27,7 @@ object ApiRoutes {
     const val POS_INVOICE_EDIT_API = "$BASE_API_POINT/posinvoice/GetPosInvoiceForEdit"
     const val CREATE_UPDATE_POS_INVOICE = "$BASE_API_POINT/posinvoice/CreateOrUpdatePosInvoice"
     const val GET_RECEIPT_TEMPLATE_LOCATION = "$BASE_API_POINT/receipttemplate/GetReceiptTemplateByLocation"
-    const val GET_POS_PAYMENT_SUMMARY = "$BASE_API_POINT/posInvoicereport/GetPOSPaymentSummary"
+    const val GET_POS_PAYMENT_SUMMARY = "$BASE_API_POINT/posInvoicereport/GetForApiPOSPaymentSummary" //GetPOSPaymentSummary
     const val CREATE_UPDATE_POS_SETTLEMENT = "$BASE_API_POINT/PosSettlement/CreateOrUpdatePosSettlement"
     const val CREATE_UPDATE_PAYOUTIN = "$BASE_API_POINT/PayOutIn/CreateOrUpdatePayOutIn"
 

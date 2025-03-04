@@ -199,8 +199,9 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
     fun rePrintAndCloseReceipt(){
         viewModelScope.launch {
             try {
-                val location=screenState.value.location
-                val member=screenState.value.saleRecord.memberName?:""
+                //_screenState.update { it.copy(isLoading = true) }
+                val location=_screenState.value.location
+                val member=_screenState.value.saleRecord.memberName?:""
                 screenState.value.posInvoice?.let { state->
                     val newPosInvoice=  state.copy(
                         qty = state.qty,
@@ -212,80 +213,74 @@ class TransactionDetailsViewModel : BaseViewModel(), KoinComponent {
                 }
 
             }catch (ex:Exception){
-               updateError(isError = true, error = "add printer setting first")
+                updateError(isError = true, error = "add printer setting first")
             }
         }
     }
 
-    private fun connectAndPrintTemplate(posInvoice: PosInvoice) {
-        //val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoice, defaultTemplate2)
-        //println("printingReceipt $finalTextToPrint")
-        viewModelScope.launch {
-            val currency=screenState.value.currencySymbol
-            val posInvoicePrint= POSInvoicePrint(
-                invoiceNo = posInvoice.invoiceNo?:"",
-                invoiceDate = posInvoice.invoiceDate?:"",
-                customerName = posInvoice.customerName,
-                address1 = posInvoice.address1,
-                address2 = posInvoice.address2,
-                qty = posInvoice.qty,
-                invoiceSubTotal = posInvoice.invoiceSubTotal,
-                invoiceItemDiscount = posInvoice.invoiceItemDiscount,
-                invoiceNetDiscount = posInvoice.invoiceNetDiscount,
-                invoiceTax = posInvoice.invoiceTax,
-                invoiceNetTotal = posInvoice.invoiceNetTotal,
-                posInvoiceDetails = posInvoice.posInvoiceDetails.map {posDetails->
-                    PosInvoicePrintDetails(
-                        posInvoiceId = posDetails.posInvoiceId,
-                        inventoryName = posDetails.inventoryName,
-                        inventoryCode = posDetails.inventoryCode,
-                        productId = posDetails.productId,
-                        qty = posDetails.qty.toInt(),
-                        price = posDetails.price,
-                        itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc. -$currency${posDetails.itemDiscount})" else "",
-                        itemDiscountPerc = posDetails.itemDiscountPerc,
-                        netDiscount = posDetails.netDiscount,
-                        netCost=posDetails.netCost,
-                        netTotal = posDetails.netTotal,
-                        subTotal = posDetails.subTotal)
-                },
-                posPayments = posInvoice.posPayments,
-            )
-            var template=POSInvoiceDefaultTemplate
-            sqlRepository.getPrintTemplateByType(type = TemplateType.POSInvoice.toValue()).collect{ mPrintReceiptTemplate->
-                mPrintReceiptTemplate?.let{
-                    template = it.template
-                    println("template $template")
-                }
+    private suspend fun connectAndPrintTemplate(posInvoice: PosInvoice) {
+        val currency=screenState.value.currencySymbol
+        val posInvoicePrint= POSInvoicePrint(
+            invoiceNo = posInvoice.invoiceNo?:"",
+            invoiceDate = posInvoice.invoiceDate?:"",
+            customerName = posInvoice.customerName,
+            address1 = posInvoice.address1,
+            address2 = posInvoice.address2,
+            qty = posInvoice.qty,
+            invoiceSubTotal = posInvoice.invoiceSubTotal,
+            invoiceItemDiscount = posInvoice.invoiceItemDiscount,
+            invoiceNetDiscount = posInvoice.invoiceNetDiscount,
+            invoiceTax = posInvoice.invoiceTax,
+            invoiceNetTotal = posInvoice.invoiceNetTotal,
+            posInvoiceDetails = posInvoice.posInvoiceDetails.map {posDetails->
+                PosInvoicePrintDetails(
+                    posInvoiceId = posDetails.posInvoiceId,
+                    inventoryName = posDetails.inventoryName,
+                    inventoryCode = posDetails.inventoryCode,
+                    productId = posDetails.productId,
+                    qty = posDetails.qty.toInt(),
+                    price = posDetails.price,
+                    itemDiscount = if(posDetails.itemDiscount>0.0) "(Disc. -$currency${posDetails.itemDiscount})" else "",
+                    itemDiscountPerc = posDetails.itemDiscountPerc,
+                    netDiscount = posDetails.netDiscount,
+                    netCost=posDetails.netCost,
+                    netTotal = posDetails.netTotal,
+                    subTotal = posDetails.subTotal)
+            },
+            posPayments = posInvoice.posPayments,
+        )
+        var template=POSInvoiceDefaultTemplate
+        sqlRepository.getPrintTemplateByType(type = TemplateType.POSInvoice.toValue()).collect{ mPrintReceiptTemplate->
+            mPrintReceiptTemplate?.let{
+                template = it.template
+                println("template $template")
             }
-            dataBaseRepository.getPrinter().collect { printer ->
-                if(printer!=null){
-                    val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, template,printer)
-                   // println("finalTextToPrint :$finalTextToPrint")
-                    PrinterServiceProvider().connectPrinterAndPrint(
-                        printers = printer,
-                        printerType = when (printer.printerType) {
-                            1L -> {
-                                PrinterType.Ethernet
-                            }
-
-                            2L -> {
-                                PrinterType.USB
-                            }
-
-                            3L -> {
-                                PrinterType.Bluetooth
-                            }
-                            else -> {
-                                PrinterType.Bluetooth
-                            }
-                        },
-                        textToPrint = finalTextToPrint
-                    )
-                }else{
-                    //Show Message that your device is not connected
-                    updateError(isError = true, error = "add printer setting first")
-                }
+        }
+        dataBaseRepository.getPrinter().collect { printer ->
+            if(printer!=null){
+                val finalTextToPrint = PrinterServiceProvider().getPrintTextForReceiptTemplate(posInvoicePrint,currency, template,printer)
+                // println("finalTextToPrint :$finalTextToPrint")
+                PrinterServiceProvider().connectPrinterAndPrint(
+                    printers = printer,
+                    printerType = when (printer.printerType) {
+                        1L -> {
+                            PrinterType.Ethernet
+                        }
+                        2L -> {
+                            PrinterType.USB
+                        }
+                        3L -> {
+                            PrinterType.Bluetooth
+                        }
+                        else -> {
+                            PrinterType.Bluetooth
+                        }
+                    },
+                    textToPrint = finalTextToPrint
+                )
+            }else{
+                //Show Message that your device is not connected
+                updateError(isError = true, error = "add printer setting first")
             }
         }
     }

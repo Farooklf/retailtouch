@@ -18,6 +18,8 @@ data class CreateEditPOSSettlement(
     val terminalName: String? = null,
     @SerialName("shift")
     val shift: Int? = null,
+    @SerialName("updateDefaultShift")
+    val updateDefaultShift:Boolean=false,
     @SerialName("salesTotal")
     val salesTotal: Double? = null,
     @SerialName("computerTotal")

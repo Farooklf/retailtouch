@@ -71,6 +71,7 @@ import com.hashmato.retailtouch.utils.LocalAppState
 import com.outsidesource.oskitcompose.lib.ValRef
 import com.outsidesource.oskitcompose.lib.rememberValRef
 import com.outsidesource.oskitcompose.router.KMPBackHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -105,6 +106,14 @@ fun CashierUI(
     LaunchedEffect(Unit){
         viewModel.loadCategoryAndMenuItems()
         viewModel.loadDbData()
+    }
+
+    LaunchedEffect(state.isError) {
+        if (state.isError) {
+            snackbarHostState.value.showSnackbar(state.errorMsg)
+            delay(1000)
+            viewModel.resetError()
+        }
     }
 
 
