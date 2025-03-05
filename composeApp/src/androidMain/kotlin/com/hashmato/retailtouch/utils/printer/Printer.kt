@@ -15,6 +15,8 @@ import android.graphics.Bitmap
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.NetworkOnMainThreadException
 import android.os.Parcelable
 import android.util.Base64
@@ -612,13 +614,17 @@ class Printer(val receiptWidth: Int = 1600) {
                                     printerWidthMM = printers.paperSize?.toFloat() ?: 0f
                                 )
                             ) {
-                                if(textToPrint.trim().isNotEmpty()){
+                                if (textToPrint.trim().isNotEmpty()) {
                                     println("connectPrinter printerType ${printerType.name} ,printers $printers, textToPrint $textToPrint")
-                                    if(openDrawer){
-                                        printReceiptWithOpenCashBox(textToPrint = textToPrint)
-                                    }else{
-                                        printReceiptNormal(textToPrint=textToPrint)
-                                    }
+                                    Handler(Looper.getMainLooper()).postDelayed(Runnable {
+                                        if (openDrawer) {
+                                            printReceiptWithOpenCashBox(textToPrint = textToPrint)
+                                        } else {
+                                            printReceiptNormal(textToPrint = textToPrint)
+                                        }
+                                        printer.disconnectPrinter()
+                                    }, 1500)
+
                                 }
                                 else{
                                     openCashBox()
