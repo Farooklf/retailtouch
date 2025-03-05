@@ -499,6 +499,7 @@ class Printer(val receiptWidth: Int = 1600) {
                             else{
                                 openCashBox()
                             }
+                            disconnectPrinter()
                         } else {
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(
@@ -567,7 +568,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                                             else{
                                                                 openCashBox()
                                                             }
-
+                                                            disconnectPrinter()
                                                             context?.unregisterReceiver(this)
                                                         } else {
 
@@ -622,7 +623,7 @@ class Printer(val receiptWidth: Int = 1600) {
                                         } else {
                                             printReceiptNormal(textToPrint = textToPrint)
                                         }
-                                        printer.disconnectPrinter()
+                                        disconnectPrinter()
                                     }, 1500)
 
                                 }
@@ -639,15 +640,6 @@ class Printer(val receiptWidth: Int = 1600) {
                                 }
                             }
                         }
-                        /*else{
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    AndroidApp.getApplicationContext(),
-                                    "Unable to connect to device , please try again",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }*/
                     }
                 }
             } catch (ex: Exception) {
