@@ -183,20 +183,6 @@ object SettlementScreen : Screen {
                         })
                 }
             }
-
-            /*AppBaseCard(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        start = if (appState.isTablet) 20.dp else 0.dp,
-                        top = if (appState.isTablet) 10.dp else 0.dp,
-                        bottom = if (appState.isTablet) 10.dp else 0.dp,
-                        end = if (appState.isTablet) 20.dp else 0.dp
-                    )
-            ){
-
-            }*/
-
             AppScreenCircleProgressIndicator(isVisible = screenState.isLoading)
         }
 

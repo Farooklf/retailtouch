@@ -3,6 +3,7 @@ package com.hashmato.retailtouch.navigation
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.Navigator
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 
 
 object NavigatorActions {
@@ -17,10 +18,10 @@ object NavigatorActions {
         navigator.replace(Route.HomeScreen(isSplash).toVoyagerScreen())
     }
 
-    @Composable
-    fun navigateToLoginScreen(navigator: Navigator) {
+
+    fun navigateToLoginScreen(navigator: Navigator,mRTUser:RTLoginUser?=null) {
         navigator.popUntilRoot() // Clear the back stack
-        navigator.replace(Route.LoginScreen.toVoyagerScreen()) // Replace with Login screen
+        navigator.replace(Route.LoginScreen(mRTUser).toVoyagerScreen()) // Replace with Login screen
     }
 
     fun navigateToHomeScreen(navigator: Navigator,isSplash : Boolean) {

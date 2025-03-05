@@ -2,32 +2,12 @@ package com.hashmato.retailtouch.presentation.viewModels
 
 
 import androidx.lifecycle.viewModelScope
-import com.hashmato.retailtouch.domain.ApiUtils.observeResponseNew
 import com.hashmato.retailtouch.domain.RequestState
-import com.hashmato.retailtouch.domain.model.location.Location
 import com.hashmato.retailtouch.domain.model.login.LoginRequest
 import com.hashmato.retailtouch.domain.model.login.LoginResponse
-import com.hashmato.retailtouch.domain.model.menu.CategoryItem
-import com.hashmato.retailtouch.domain.model.menu.MenuItem
-import com.hashmato.retailtouch.domain.model.products.Stock
-import com.hashmato.retailtouch.domain.model.promotions.PromotionDetails
-import com.hashmato.retailtouch.domain.model.promotions.PromotionItem
-import com.hashmato.retailtouch.domain.model.promotions.PromotionRequest
-import com.hashmato.retailtouch.utils.AppConstants.EMPLOYEE_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.EMPLOYEE_ROLE_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.INVENTORY_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.LOCATION_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.MENU_CATEGORY_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.MENU_PRODUCTS_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.PAYMENT_TYPE_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.PROMOTIONS_ERROR_TITLE
-import com.hashmato.retailtouch.utils.AppConstants.SYNC_TEMPLATE_ERROR_TITLE
-import com.hashmato.retailtouch.utils.TemplateType
-import com.hashmato.retailtouch.utils.serializers.db.parsePriceBreakPromotionAttributes
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -35,6 +15,14 @@ import org.koin.core.component.KoinComponent
 
 class LoginViewModel : BaseViewModel(), KoinComponent {
 
+
+   fun updateLoginDetails(mRTLoginUser: RTLoginUser) {
+       viewModelScope.launch {
+           _loginScreenState.update { state->
+               state.copy(server = mRTLoginUser.serverURL, tenant = mRTLoginUser.tenantName, username = mRTLoginUser.userName, location = mRTLoginUser.location)
+           }
+       }
+   }
 
     private fun updateLoader(value: Boolean) {
         viewModelScope.launch {
@@ -158,7 +146,7 @@ class LoginViewModel : BaseViewModel(), KoinComponent {
                                 }
                                 is RequestState.Error -> {
                                     val errorMessage = state.getErrorMessage()
-                                    println("errorMessage : $errorMessage")
+                                    //println("errorMessage : $errorMessage")
                                     updateLoginState(
                                         loading = false,
                                         loginError = true,

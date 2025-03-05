@@ -308,7 +308,7 @@ class DataBaseRepository: KoinComponent {
     ) {
         try {
             withContext(Dispatchers.IO) {
-                clearProductQuantity()
+                clearStocksQty()
                 response.result?.items?.forEach { item ->
                     val dao = ProductLocationDao(
                         productLocationId = item.productId.toLong(),
@@ -331,7 +331,6 @@ class DataBaseRepository: KoinComponent {
     ) {
         try {
             withContext(Dispatchers.IO) {
-                //clearStocks()
                 newStock.map { item ->
                     //println("InventoryCode: ${item.inventoryCode}")
                     val dao = MenuDao(
@@ -702,7 +701,7 @@ class DataBaseRepository: KoinComponent {
     }
 
     fun getPosPendingSales() :Flow<List<PendingSale>>{
-        return dataBaseRepository.getPendingSaleRecords().flowOn(Dispatchers.IO)
+        return dataBaseRepository.getPendingSales().flowOn(Dispatchers.IO)
     }
 
     fun getAuthUser(): Flow<AuthenticateDao> {
@@ -711,14 +710,6 @@ class DataBaseRepository: KoinComponent {
 
     fun getRTLoginUser(): Flow<RTLoginUser> {
         return dataBaseRepository.getAuthUser().flowOn(Dispatchers.IO)
-    }
-
-    suspend fun getAuthUser(id:Long): AuthenticateDao {
-        return dataBaseRepository.selectUserByUserId(id).first()
-    }
-
-    fun getLocation(): Flow<Location?> {
-        return dataBaseRepository.getSelectedLocation()
     }
 
     fun getSelectedLocation(): Flow<Location?> {
@@ -849,6 +840,10 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteAllEmpRole()
     }
 
+    suspend fun clearEmployeeRights() {
+        dataBaseRepository.deleteEmpRights()
+    }
+
     suspend fun clearMember() {
         dataBaseRepository.deleteMembers()
     }
@@ -857,8 +852,12 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteMemberGroup()
     }
 
-    suspend fun clearInventory(){
+    suspend fun clearStocks(){
         dataBaseRepository.deleteProduct()
+    }
+
+    suspend fun clearStocksQty(){
+        dataBaseRepository.deleteStocksQty()
     }
 
     suspend fun clearBarcode(){
@@ -869,26 +868,45 @@ class DataBaseRepository: KoinComponent {
         dataBaseRepository.deleteCategories()
     }
 
-    private suspend fun clearProductQuantity(){
-        dataBaseRepository.deleteProductLocation()
+    suspend fun clearMenuItems(){
+        dataBaseRepository.deleteMenuItems()
     }
 
-    suspend fun clearStocks(){
-        dataBaseRepository.deleteStocks()
-    }
-
-    private suspend fun clearPromotion(){
+     suspend fun clearPromotion(){
         dataBaseRepository.deletePromotions()
     }
 
     suspend fun clearPromotionDetails(){
-        dataBaseRepository.deletePromotions()
+        dataBaseRepository.deletePromotionDetails()
     }
 
     suspend fun clearScannedProduct() {
         dataBaseRepository.deleteAllScannedProduct()
     }
 
+    suspend fun clearPOSHoldSales() {
+        dataBaseRepository.deleteHoldSale()
+    }
+
+    suspend fun clearPOSSales(){
+         dataBaseRepository.deletePosSales()
+    }
+
+    suspend fun clearPaymentTypes(){
+        dataBaseRepository.deletePaymentType()
+    }
+
+    suspend fun clearPOSPendingSales(){
+        dataBaseRepository.deletePosPendingSales()
+    }
+
+    suspend fun clearedPOSReceiptTemplate(){
+        dataBaseRepository.deletePOSReceiptTemplate()
+    }
+
+    suspend fun clearPrinters(){
+        dataBaseRepository.deleteAllPrinters()
+    }
 
     suspend fun removeScannedItemById(id:Long){
         withContext(Dispatchers.IO) {
@@ -908,9 +926,7 @@ class DataBaseRepository: KoinComponent {
         }
     }
 
-    private suspend fun clearedPOSSales(){
-        dataBaseRepository.deletePosSales()
-    }
+
 
     //local preference
 

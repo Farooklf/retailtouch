@@ -19,7 +19,7 @@ import com.hashmato.retailtouch.presentation.ui.stocks.StockScreen
 fun Route.toVoyagerScreen(): Screen = when (this) {
     is Route.SplashScreen -> SplashScreen
     is Route.HomeScreen -> HomeScreen(isSplash)
-    is Route.LoginScreen -> LoginScreen
+    is Route.LoginScreen -> LoginScreen(mRTUser)
     is Route.CashierScreen -> CashierScreen
     is Route.CartScreen -> CartScreen
     is Route.PaymentType -> PaymentTypeScreen

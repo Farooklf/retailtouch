@@ -128,8 +128,9 @@ object SettingScreen : Screen {
         viewModel : SettingViewModel = koinInject()
     ) {
 
-        val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
-        val navigator = LocalNavigator.currentOrThrow
+        //val snackbarHostState = remember { mutableStateOf(SnackbarHostState()) }
+        val appThemeContext=AppTheme.context
+        val navigator = appThemeContext.getAppNavigator()
         val appState = LocalAppState.current
         val state by viewModel.settingUiState.collectAsStateWithLifecycle()
         //val coroutineScope = rememberCoroutineScope()
@@ -284,11 +285,14 @@ object SettingScreen : Screen {
 
     @Composable
     fun SettingMainPage(state: SettingUIState, viewModel: SettingViewModel) {
-        val navigator = LocalNavigator.currentOrThrow
+        val appThemeContext=AppTheme.context
+        val navigator = appThemeContext.getAppNavigator()
+        val mRTUser by viewModel.RTUser.collectAsStateWithLifecycle()
+        println("RTUser :$mRTUser")
         val isLogoutFromServer by viewModel.logoutFromServer.collectAsStateWithLifecycle()
 
         if(isLogoutFromServer){
-            NavigatorActions.navigateToLoginScreen(navigator)
+            appThemeContext.navigateBackToLoginScreen(navigator,mRTUser)
         }
 
         SelectLanguageDialog(

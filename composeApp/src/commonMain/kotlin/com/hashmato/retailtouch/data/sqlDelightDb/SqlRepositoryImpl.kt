@@ -382,7 +382,7 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deleteStocks() {
+    override suspend fun deleteMenuItems() {
         retailTouch.menuProductQueries.deleteMenuProduct()
     }
 
@@ -829,7 +829,7 @@ import kotlinx.coroutines.flow.flow
         }
     }
 
-    override suspend fun deleteProductLocation() {
+    override suspend fun deleteStocksQty() {
         retailTouch.productLocationQueries.deleteProductLocation()
     }
 
@@ -1164,7 +1164,7 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
-     override fun getPendingSaleRecords(): Flow<List<PendingSale>> = flow{
+     override fun getPendingSales(): Flow<List<PendingSale>> = flow{
          retailTouch.posInvoiceSalesQueries.getPendingSale().executeAsList().let { list ->
              if(list.isNotEmpty()) {
                  emit(
@@ -1179,7 +1179,7 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
-     override suspend fun deletePosPendingSaleRecord() {
+     override suspend fun deletePosPendingSales() {
          retailTouch.posInvoiceSalesQueries.delete()
      }
 
@@ -1265,34 +1265,7 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
-     override suspend fun insertSyncAll(syncAllDao: SyncAllDao) {
-        retailTouch.syncAllQueries.insertSyncAll(
-            syncId = syncAllDao.syncId,
-            rowItem = syncAllDao.rowItem.toJson()
-        )
-    }
-
-    override fun getSyncAll(): Flow<List<SyncAllDao>> = flow{
-        retailTouch.syncAllQueries.getAllSyncAll().executeAsList().let { list ->
-            if(list.isNotEmpty()) {
-                emit(
-                    list.map { body ->
-                        SyncAllDao(
-                            syncId = body.syncId,
-                            rowItem = body.rowItem.toSyncItem()
-                        )
-                    }
-
-                )
-            }else{
-                emit(emptyList())
-            }
-        }
-    }
-
-    override suspend fun deleteSyncAll() {
-        retailTouch.syncAllQueries.deleteSyncAll()
-    }
-
-
+     override suspend fun deletePOSReceiptTemplate() {
+         retailTouch.receiptTemplateQueries.deleteAllItems()
+     }
 }

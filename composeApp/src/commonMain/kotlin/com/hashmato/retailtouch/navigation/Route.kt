@@ -1,12 +1,13 @@
 package com.hashmato.retailtouch.navigation
 
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.SaleRecord
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 
 
 sealed class Route {
 
     data object SplashScreen : Route()
-    data object LoginScreen : Route()
+    data class LoginScreen(val mRTUser: RTLoginUser?) : Route()
     data class  HomeScreen(val isSplash : Boolean) : Route()
     data object CashierScreen: Route()
     data object CartScreen: Route()

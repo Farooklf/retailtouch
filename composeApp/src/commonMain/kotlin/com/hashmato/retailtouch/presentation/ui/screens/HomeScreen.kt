@@ -33,6 +33,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.hashmato.retailtouch.domain.model.login.AuthenticateDao
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.navigation.NavigatorActions
 import com.hashmato.retailtouch.navigation.NavigatorActions.navigateToSettlementScreen
 import com.hashmato.retailtouch.presentation.common.AppScreenPadding
@@ -67,9 +68,10 @@ data class HomeScreen(val isSplash: Boolean): Screen {
     @Composable
     override fun Content() {
        val homeViewModel: HomeViewModel = koinInject()
-        val navigator = LocalNavigator.currentOrThrow
-       Home(homeViewModel=homeViewModel,isFromSplash = isSplash,onLogout={
-           NavigatorActions.navigateToLoginScreen(navigator)
+        val appThemeContext=AppTheme.context
+        val navigator = appThemeContext.getAppNavigator()
+       Home(homeViewModel=homeViewModel,isFromSplash = isSplash,onLogout={mRTUser->
+           appThemeContext.navigateBackToLoginScreen(navigator,mRTUser)
        })
     }
 }
@@ -79,7 +81,7 @@ fun Home(
     homeViewModel: HomeViewModel,
     syncViewModel: SyncViewModel= koinInject(),
     isFromSplash:Boolean,
-    onLogout: @Composable () -> Unit
+    onLogout: @Composable (RTLoginUser?) -> Unit
     )
 {
     val appThemeContext = AppTheme.context
@@ -256,8 +258,8 @@ fun Home(
 
         if (state.isFromSplash && !state.hasEmployeeLoggedIn) {
             EmployeeScreen(
-                onNavigateLogout = {
-                    onLogout.invoke()
+                onNavigateLogout = {mRTUser->
+                    onLogout.invoke(mRTUser)
                 },
                 onDismiss = {
                     homeViewModel.onEmployeeLoggedIn() }

@@ -27,6 +27,7 @@ data class RTLoginUser(
     val serverURL: String = "",
     val password: String = "",
     val currency: String = "",
+    val location: String = "",
 )
 
 
