@@ -24,6 +24,7 @@ import com.hashmato.retailtouch.domain.model.printer.PrinterTemplates
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.POSInvoiceRequest
 import com.hashmato.retailtouch.domain.model.invoiceSaleTransactions.GetPosInvoiceResult
 import com.hashmato.retailtouch.domain.model.location.Location
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.domain.model.posInvoices.PendingSale
 import com.hashmato.retailtouch.domain.model.posInvoices.PendingSaleDao
 import com.hashmato.retailtouch.domain.model.productBarCode.ProductBarCodeResponse
@@ -115,18 +116,8 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     var syncingCount =1
     var insertionCount =1
 
-    private val _isPrinterEnabled = MutableStateFlow(false)
-    val isPrinterEnabled : StateFlow<Boolean>  get() = _isPrinterEnabled
-
     //For Rights
     val employeeDoa = MutableStateFlow<POSEmployee?>(null)
-
-    private val stockQtyMap = MutableStateFlow<Map<Int,Double?>>(emptyMap())
-
-    //val employeeDoa = MutableStateFlow<POSEmployee?>(null)
-    private val categoryResponse = MutableStateFlow<List<CategoryItem>>(emptyList())
-    private val promotionResult = MutableStateFlow<GetPromotionResult?>(null)
-    private val productBarCodeResponse = MutableStateFlow<ProductBarCodeResponse?>(null)
 
     private val _printerTemplates = MutableStateFlow<List<PrinterTemplates>?>(emptyList())
     val printerTemplates : StateFlow<List<PrinterTemplates>?> = _printerTemplates.asStateFlow()
@@ -153,6 +144,13 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
 
     val authUser: StateFlow<AuthenticateDao?> = dataBaseRepository.getAuthUser()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(1000),
+            initialValue = null
+        )
+
+    val RTUser: StateFlow<RTLoginUser?> = dataBaseRepository.getRTLoginUser()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(1000),
@@ -217,12 +215,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-     fun updatePrinterValue(isPrinter: Boolean) {
-        viewModelScope.launch {
-            _isPrinterEnabled.update { isPrinter }
-            preferences.setIsPrinterEnabled(isPrinter)
-        }
-    }
 
    /* private fun updateSyncProgress(syncStatus: Boolean) {
         _syncInProgress.update { syncStatus }
@@ -231,16 +223,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
     private fun updateUIStatus(syncStatus: Boolean) {
         _uiUpdateStatus.update { syncStatus }
     }
-    //check if user logged in or not
-    suspend fun isLoggedIn() : Boolean {
-        val tokenTime : Long = getLastTokenTime()
-        val currentTime = getCurrentDateAndTimeInEpochMilliSeconds()
-        val hoursPassed = getHoursDifferenceFromEpochMillSeconds(tokenTime, currentTime)
-        if(hoursPassed >= TOKEN_EXPIRY_THRESHOLD){
-            refreshToken()
-        }
-        return true
-    }
+
 
     suspend fun isCallCompleteSync() : Boolean{
         val lastSyncTs : Long = getLastSyncTs()
@@ -250,44 +233,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         return hoursPassed > SYNC_EXPIRY_THRESHOLD
     }
 
-    private fun refreshToken(){
-        viewModelScope.launch {
-            try {
-                val response = async {
-                    networkRepository.hitLoginAPI(getLoginDetails())
-                }.await()
-                observeResponse(response,
-                    onLoading = {
-
-                    },
-                    onSuccess = {loginRes->
-                       viewModelScope.launch {
-                           if(loginRes.success==true){
-                               preferences.setToken(loginRes.result?:"")
-                           }
-                       }
-                    },
-                    onError = {
-
-                    }
-                )
-
-            }catch (ex:Exception){
-              //Go to Login Page
-
-            }
-        }
-    }
-
-    private suspend fun getLoginDetails(): LoginRequest {
-        val loginRequest = LoginRequest(
-            usernameOrEmailAddress = preferences.getUserName().first(),
-            tenancyName = preferences.getTenancyName().first(),
-            password =   preferences.getUserPass().first(),
-        )
-        return loginRequest
-
-    }
 
     /* ----------Sync On Login Apis-----------*/
 
@@ -304,6 +249,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
             async { syncInventory(stockQtyMap) }.await()
             async { syncInventoryBarcode() }.await()
             async { syncPromotion() }.await()
+            async {syncLatestSales(skipCount= 0 ,maxResultCount=1)}.await()
             async {syncInvoiceReceiptTemplate(TemplateType.POSInvoice)}.await()
             async {syncInvoiceReceiptTemplate(TemplateType.PosSettlement)}.await()
             async {syncPaymentTypes()}.await()
@@ -867,10 +813,36 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
+    private suspend fun syncPOSSalesCount():Long = withContext(Dispatchers.IO) {
+        var salesCount:Long= 1000
+        try {
+            updateLoginSyncStatus("Syncing POS Sales..")
+            println("Syncing POS Sales : ${syncingCount++}")
+            networkRepository.getLatestSales(POSInvoiceRequest(locationId = getLocationId(), maxResultCount=1, skipCount = 0, sorting = "Id")).collect {apiResponse->
+                observeResponseNew(apiResponse,
+                    onSuccess = { apiData ->
+                        if (apiData.success) {
+                            salesCount=apiData.result?.totalCount?:1000
+                        }
+                    },
+                    onError = { errorMsg ->
+                        updateLoginError(SYNC_SALES_ERROR_TITLE, errorMsg)
+                    }
+                )
+            }
+        }catch (e: Exception){
+            val errorM="${e.message}"
+            updateLoginError(SYNC_SALES_ERROR_TITLE,errorM)
+        }
+        // Return the collected list once the flow completes
+        println("SalesCount :$salesCount")
+        return@withContext salesCount
+    }
+
     suspend fun syncLatestSales(skipCount: Long?, maxResultCount: Int?) {
         try {
             updateSyncStatus("Syncing POS Sales...")
-            println("SyncInvoiceSales : ${syncDataState.value.syncCount}")
+            println("SyncingPOSSales. : ${syncDataState.value.syncCount}")
             networkRepository.getLatestSales(POSInvoiceRequest(
                 locationId = getLocationId(),
                 maxResultCount = maxResultCount ?: 1000,
@@ -987,7 +959,7 @@ open class BaseViewModel: ViewModel(), KoinComponent {
 
     fun updateSales(){
         try {
-            //updateSyncStatus("Syncing Sales History")
+            updateSyncStatus("Syncing Sales History")
             viewModelScope.launch {
                 val job = async { getSalesTotalCount() }
                 val saleRecord = job.await()
@@ -1006,8 +978,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 }
             }
         }catch (e: Exception){
-            val error="${e.message}"
-            //handleError(true,SYNC_SALES_ERROR_TITLE,error)
             updateSyncProgress(false)
         }
 
@@ -1026,7 +996,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                sorting = "Id")
        )
     }
-
 
 
     /*------Api Call End--------*/
@@ -1060,175 +1029,6 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         )
 
     }
-
-
-
-
-    private suspend fun mapPromotions(){
-        promotionResult.collectLatest {
-            it?.result?.forEach { item->
-                when(item.promotionTypeName){
-                    "PromotionByQty"->{
-                        networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                           observePromotionsQty(promotionsData,item)
-                        }
-                    }
-
-                    "PromotionByPrice" ->{
-                        networkRepository.getPromotionsByPrice(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                            observePromotionPrice(promotionsData,item)
-                        }
-                    }
-
-                    "PromotionByPriceBreak"->{
-                        networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                            observePromotionByPriceBreak(promotionsData,item)
-                        }
-                    }
-                    else->{
-                        networkRepository.getPromotionsByQty(PromotionRequest(id = item.id.toInt())).collectLatest { promotionsData->
-                            observeDefaultPromotions(promotionsData,item)
-                        }
-                    }
-                }
-        }
-        }
-    }
-
-     private fun observePromotionsQty(
-        apiResponse: RequestState<GetPromotionsByQtyResult>,
-        promotion: PromotionItem
-    ){
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoginSyncStatus("Syncing Promotion QTY....")},
-            onSuccess = { apiData ->
-               if(apiData.success){
-                   viewModelScope.launch {
-                       apiData.result?.forEach { item ->
-                              dataBaseRepository.insertPromotionDetails(
-                                  PromotionDetails(
-                                      id=item.productId?.toLong()?:0,
-                                      promotionId = item.promotionId?:0,
-                                      productId = item.productId?:0,
-                                      inventoryCode = item.inventoryCode?:"",
-                                      promotionTypeName = promotion.promotionTypeName?:"",
-                                      price = item.price?:0.0,
-                                      promotionPrice = item.price?:0.0,
-                                      promotionPerc = promotion.discountPercentage?.takeIf { it > 0.00 },
-                                      qty = promotion.qty?:0.0,
-                                      amount = promotion.amount?:0.0)
-
-                              )
-                       }
-                   }
-               }
-            },
-            onError = { errorMsg ->
-                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-     private fun observePromotionPrice(
-        apiResponse: RequestState<GetPromotionsByPriceResult>,
-        promotion: PromotionItem
-    ){
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoginSyncStatus("Syncing Promotion By Price....")},
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        apiData.result?.forEach { element ->
-                            dataBaseRepository.insertPromotionDetails(
-                                PromotionDetails(
-                                    id=element.productId.toLong(),
-                                    promotionId = element.promotionId,
-                                    productId = element.productId,
-                                    inventoryCode = element.inventoryCode,
-                                    promotionTypeName = promotion.promotionTypeName?:"",
-                                    price = element.price,
-                                    promotionPrice = element.promotionPrice,
-                                    promotionPerc = element.promotionPerc,
-                                    qty = promotion.qty?:0.0)
-
-                            )
-                        }
-                    }
-                }
-            },
-            onError = { errorMsg ->
-                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-
-     private fun observePromotionByPriceBreak(
-        apiResponse: RequestState<GetPromotionsByQtyResult>,
-        promotion: PromotionItem
-    ){
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoginSyncStatus("Syncing Promotion By Price Break....")},
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        apiData.result?.forEach { element ->
-                            dataBaseRepository.insertPromotionDetails(
-                                PromotionDetails(
-                                    id=element.productId?.toLong()?:0,
-                                    promotionId = element.promotionId?:0,
-                                    productId = element.productId?:0,
-                                    inventoryCode = element.inventoryCode?:"",
-                                    promotionTypeName = promotion.promotionTypeName?:"",
-                                    price = element.price?:0.0,
-                                    promotionPrice = element.price?:0.0,
-                                    qty = promotion.qty?:0.0,
-                                    amount = promotion.amount?:0.0,
-                                    priceBreakPromotionAttribute= parsePriceBreakPromotionAttributes(promotion.priceBreakPromotionAttribute)
-                                )
-
-                            )
-                        }
-                    }
-                }
-            },
-            onError = { errorMsg ->
-                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
-     private fun observeDefaultPromotions(
-        apiResponse: RequestState<GetPromotionsByQtyResult>,
-        promotion: PromotionItem
-    ){
-        observeResponseNew(apiResponse,
-            onLoading = { updateLoginSyncStatus("Syncing Promotion Default....")},
-            onSuccess = { apiData ->
-                if(apiData.success){
-                    viewModelScope.launch {
-                        apiData.result?.forEach { item ->
-                            dataBaseRepository.insertPromotionDetails(
-                                PromotionDetails(
-                                    id = item.productId?.toLong()?:0 ,
-                                    promotionId = item.promotionId?:0,
-                                    productId = item.productId?:0,
-                                    inventoryCode = item.inventoryCode?:"",
-                                    promotionTypeName = promotion.promotionTypeName?:"",
-                                    price = item.price?:0.0
-                                )
-
-                            )
-                        }
-                    }
-                }
-            },
-            onError = { errorMsg ->
-                updateLoginError(PROMOTIONS_ERROR_TITLE,errorMsg)
-            }
-        )
-    }
-
     fun updateLoginState(loading: Boolean, successfulLogin:Boolean, loginError: Boolean, title :String,error:String) {
         viewModelScope.launch {
             _loginScreenState.update {
@@ -1600,16 +1400,16 @@ open class BaseViewModel: ViewModel(), KoinComponent {
         }
     }
 
-    fun resetStates() {
+    private fun resetStates() {
         viewModelScope.launch {
             val jobs = listOf(
-                async { categoryResponse.update { emptyList()} },
+                async { employeeDoa.update { null } }
             )
             jobs.awaitAll()
         }
     }
 
-    fun emptyLocalPref(){
+    private fun emptyLocalPref(){
         viewModelScope.launch {
             val jobs = listOf(
                 async { preferences.setBaseURL("") },
@@ -1623,6 +1423,26 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 async { preferences.setLocation("") },
                 async { preferences.setUserLoggedIn(false) },
                 async { preferences.setLastSyncTs(-1) },
+                async { preferences.setCategorySyncGrid("") },
+                async { preferences.setMemberSyncGrid("") },
+                async { preferences.setMemberGroupSyncGrid("") },
+                async { preferences.setProductsSyncGrid("") },
+                async { preferences.setPromotionsSyncGrid("") },
+                async { preferences.setTemplateSyncGrid("") },
+                async { preferences.setPaymentTypeSyncGrid("") },
+                async { preferences.setCurrencySymbol("") },
+                async { preferences.setEmployeeCode("") },
+                async { preferences.setNetworkConfig("") },
+                async { preferences.setLanguage("") },
+                async { preferences.setNextSalesInvoiceNumber("") },
+                async { preferences.setSalesInvoicePrefix("") },
+                async { preferences.setSalesInvoiceNoLength(0)},
+                async { preferences.setIsPrinterEnabled(false) },
+                async { preferences.setMergeCartItems(true) },
+                async { preferences.setFastPaymentMode(false) },
+                async { preferences.setOverlayState(false) },
+                async { preferences.setGridViewOptions(3) },
+                async { preferences.setTerminalCode("") },
             )
             jobs.awaitAll()
         }
@@ -1635,13 +1455,23 @@ open class BaseViewModel: ViewModel(), KoinComponent {
                 async { dataBaseRepository.clearExistingLocations() },
                 async { dataBaseRepository.clearEmployees() },
                 async { dataBaseRepository.clearEmployeeRole() },
+                async { dataBaseRepository.clearEmployeeRights() },
                 async { dataBaseRepository.clearMember()},
                 async { dataBaseRepository.clearMemberGroup() },
-                async { dataBaseRepository.clearInventory() },
+                async { dataBaseRepository.clearStocksQty() },
+                async { dataBaseRepository.clearStocks() },
                 async { dataBaseRepository.clearBarcode() },
                 async { dataBaseRepository.clearCategory() },
-                async { dataBaseRepository.clearStocks() },
-                async { dataBaseRepository.clearScannedProduct() }
+                async { dataBaseRepository.clearMenuItems() },
+                async { dataBaseRepository.clearScannedProduct() },
+                async { dataBaseRepository.clearPOSHoldSales() },
+                async { dataBaseRepository.clearPromotion() },
+                async { dataBaseRepository.clearPromotionDetails() },
+                async { dataBaseRepository.clearPOSSales() },
+                async { dataBaseRepository.clearPaymentTypes() },
+                async { dataBaseRepository.clearPOSPendingSales() },
+                async { dataBaseRepository.clearedPOSReceiptTemplate() },
+                async { dataBaseRepository.clearPrinters() },
             )
             jobs.awaitAll()
         }

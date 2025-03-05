@@ -141,10 +141,10 @@ class EntrypointActivity : ComponentActivity() {
                   secondaryDisplay.show()
                   ShareDisplayObject.secondaryDisplayInstance = secondaryDisplay
               }else{
-                  Toast.makeText(this,"No Secondary Display",Toast.LENGTH_LONG).show()
+                  //Toast.makeText(this,"No Secondary Display",Toast.LENGTH_LONG).show()
               }
           }else {
-              Toast.makeText(this,"No Display",Toast.LENGTH_LONG).show()
+              //Toast.makeText(this,"No Display",Toast.LENGTH_LONG).show()
           }
     }
 

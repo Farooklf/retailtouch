@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.presentation.common.AppOutlinedTextFieldWithOuterIcon
 import com.hashmato.retailtouch.presentation.common.ResponsiveBox
 import com.hashmato.retailtouch.theme.AppTheme
@@ -48,12 +49,14 @@ import retailtouch.composeapp.generated.resources.pin
 
 @Composable
 fun EmployeeScreen(
-    onNavigateLogout: @Composable () -> Unit,
+    onNavigateLogout: @Composable (RTLoginUser?) -> Unit,
     onDismiss: () -> Unit,
     employeeViewModel: EmployeeViewModel = koinInject()
 ){
     val employeeScreenState by employeeViewModel.employeeScreenState.collectAsStateWithLifecycle()
     val isLogoutFromServer by employeeViewModel.logoutFromServer.collectAsStateWithLifecycle()
+    val mRTUser by employeeViewModel.RTUser.collectAsStateWithLifecycle()
+    println("RTUser :$mRTUser")
     val appState = LocalAppState.current
     val paddingValues = if (appState.isTablet) {
         AppTheme.dimensions.padding20 to AppTheme.dimensions.padding10
@@ -162,26 +165,15 @@ fun EmployeeScreen(
                     )
 
                 }
-
-                //Spacer(modifier = Modifier.height(10.dp))
-
-                /*AppBorderButton(
-                    onClick = { employeeViewModel.onClick()},
-                    modifier = Modifier.wrapContentSize().align(Alignment.CenterHorizontally),
-                    label = stringResource(Res.string.submit)
-                )*/
             }
 
             if(employeeScreenState.isEmployeeLoginSuccess){
-                //employeeViewModel.getEmployeeRights()
                 onDismiss()
             }
 
             if(isLogoutFromServer){
-                onNavigateLogout()
-                //navController.navigate(NavigationItem.Login.route) { popUpToTop(navController) }
+                onNavigateLogout(mRTUser)
             }
-
         }
     }
 

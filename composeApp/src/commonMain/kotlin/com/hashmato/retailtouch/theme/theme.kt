@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Shape
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.hashmato.retailtouch.domain.model.login.RTLoginUser
 import com.hashmato.retailtouch.navigation.Route
 import com.hashmato.retailtouch.navigation.toVoyagerScreen
 import com.hashmato.retailtouch.utils.getScreenWidthHeight
@@ -80,6 +81,11 @@ data class AppThemeContext(
 
     fun navigateBack(navigator: Navigator) {
         navigator.pop()
+    }
+
+    fun navigateBackToLoginScreen(navigator: Navigator,mRTUser: RTLoginUser?=null) {
+        navigator.popUntilRoot() // Clear the back stack
+        navigator.replace(Route.LoginScreen(mRTUser).toVoyagerScreen()) // Replace with Login screen
     }
 
     fun navigateBackToHomeScreen(navigator: Navigator,isSplash: Boolean) {

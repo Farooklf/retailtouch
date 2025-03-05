@@ -88,7 +88,7 @@ interface SqlRepository {
     suspend fun insertStocks(menuProductsDao: MenuDao)
     fun selectProductsById(id: Long): Flow<MenuDao?>
     fun getStocks(): Flow<List<Stock>>
-    suspend fun deleteStocks()
+    suspend fun deleteMenuItems()
     fun getMenuItemsCount():Flow<Int>
 
 
@@ -127,11 +127,11 @@ interface SqlRepository {
     suspend fun deleteHoldSaleById(id: Long)
     suspend fun deleteHoldSale()
 
-    //ProductLocation
+    //ProductQuantity
     suspend fun insertProductLocation(productLocationDao: ProductLocationDao)
     suspend fun updateProductLocation(productLocationDao: ProductLocationDao)
     fun getAllProductLocation(): Flow<List<ProductLocationDao>>
-    suspend fun deleteProductLocation()
+    suspend fun deleteStocksQty()
 
     //BarCode
     suspend fun insertProductBarcode(barcodeDao: BarcodeDao)
@@ -169,8 +169,8 @@ interface SqlRepository {
     suspend fun updatePosSales(mPendingSale: PendingSale)
     suspend fun updateSynced(id:Long)
     fun getAllPosSale(): Flow<List<PendingSale>>
-    fun getPendingSaleRecords(): Flow<List<PendingSale>>
-    suspend fun deletePosPendingSaleRecord()
+    fun getPendingSales(): Flow<List<PendingSale>>
+    suspend fun deletePosPendingSales()
     suspend fun deleteSaleById(id:Long)
     fun getAllPendingSalesCount():Flow<Long>
 
@@ -183,13 +183,7 @@ interface SqlRepository {
     //Receipt template
     suspend fun insertTemplate(printReceiptTemplate: PrintReceiptTemplate)
     fun getPrintTemplateByType(type:Long):Flow<PrintReceiptTemplate?>
-    /*fun getNextPosSaleById(id: Long): Flow<NextPOSSaleDao?>
-    fun getAllNextPosSale(): Flow<List<NextPOSSaleDao>>
-    suspend fun deleteNextPosSale()
-    fun getNextPosSaleCount():Flow<Int>*/
+    suspend fun deletePOSReceiptTemplate()
 
-    //Sync
-    suspend fun insertSyncAll(syncAllDao: SyncAllDao)
-    fun getSyncAll(): Flow<List<SyncAllDao>>
-    suspend fun deleteSyncAll()
+
 }

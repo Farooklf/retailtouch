@@ -22,6 +22,7 @@ import com.hashmato.retailtouch.navigation.NavigatorActions
 import com.hashmato.retailtouch.presentation.common.AppCircleProgressIndicator
 import com.hashmato.retailtouch.presentation.common.SmallTextComponent
 import com.hashmato.retailtouch.presentation.viewModels.BaseViewModel
+import com.hashmato.retailtouch.theme.AppTheme
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import retailtouch.composeapp.generated.resources.Res
@@ -33,7 +34,7 @@ object SplashScreen:Screen{
         val baseViewModel: BaseViewModel = koinInject()
         var isLoading by remember { mutableStateOf(true) }
         val isUserLoggedIn by baseViewModel.isUserLoggedIn.collectAsStateWithLifecycle()
-        val navigator = LocalNavigator.currentOrThrow
+        val navigator = AppTheme.context.getAppNavigator()
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(Res.drawable.app_logo),
@@ -62,7 +63,7 @@ object SplashScreen:Screen{
             false -> {
                 // If user is not logged in, navigate to Login screen
                 isLoading = false
-                NavigatorActions.navigateToLoginScreen(navigator)
+                NavigatorActions.navigateToLoginScreen(navigator,null)
             }
 
             null -> {
