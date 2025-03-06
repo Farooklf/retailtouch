@@ -209,11 +209,12 @@ fun LandscapeCashierScreen(interactorRef: ValRef<SharedPosViewModel>) {
                     keyboardActions = KeyboardActions(
                         onDone = {
                             // When done is pressed, open the dialog
-                            viewModel.scanBarcode()
+                            viewModel.onSearchClicked(true)
                         }
                     ),
                     onValueChange = {
                         viewModel.updateSearchQuery(it)
+                        viewModel.onSearchClicked()
                     })
 
                 RtlView(
@@ -304,7 +305,7 @@ private fun PortraitCashierScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.currentOrThrow
 
-    println("categories -${state.categories} | menuItems - ${state.menuProducts}")
+    //println("categories -${state.categories} | menuItems - ${state.menuProducts}")
 
     LaunchedEffect(Unit) {
         viewModel.loadTotal()
@@ -348,11 +349,12 @@ private fun PortraitCashierScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 // When done is pressed, open the dialog
-                                viewModel.scanBarcode()
+                                viewModel.onSearchClicked(true)
                             }
                         ),
                         onValueChange = {
                             viewModel.updateSearchQuery(it)
+                            viewModel.onSearchClicked()
                         })
                 }
 

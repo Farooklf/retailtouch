@@ -245,19 +245,22 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun scanBarcode(){
-        scanStock(_posUIState.value.searchQuery)
+
+
+    fun onSearchClicked(isSearchClicked: Boolean=false) {
+        scanStock(isSearchClicked)
     }
 
-    private fun scanStock(barcode: String) {
+    private fun scanStock(isSearchClicked: Boolean) {
         viewModelScope.launch {
-            if (isBarcodeValid(barcode)) {
-                handleDiscountBarcode(barcode)
-            } else if (barcode.contains('*')) {
-                val (qty, code) = parseQuantityAndCode(barcode)
-                handleProductLookup(code, qty)
+            val searchQuery=_posUIState.value.searchQuery
+            if (isBarcodeValid(searchQuery)) {
+                handleDiscountBarcode(searchQuery)
+            } else if (searchQuery.contains('*')) {
+                val (qty, code) = parseQuantityAndCode(searchQuery)
+                handleSearchedProduct(code, qty,isSearchClicked)
             } else {
-                handleProductLookup(barcode, 1.0)
+                handleSearchedProduct(searchQuery, 1.0,isSearchClicked)
             }
         }
     }
@@ -319,8 +322,20 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     // Handle product lookup by barcode or product code
-    private suspend fun handleProductLookup(code: String, qty: Double) {
-        val barcode = dataBaseRepository.getBarcode(code).firstOrNull()
+
+    private suspend fun handleSearchedProduct(searchQuery: String, qty: Double,isSearchClicked:Boolean=false){
+        sqlRepository.getSearchedProducts(searchQuery).collect{selectedProduct->
+            println("selectedProduct : $selectedProduct")
+            if(selectedProduct!=null){
+                processFoundProduct(selectedProduct,qty)
+            }else{
+                if(isSearchClicked)updateDialogState(true)
+            }
+        }
+    }
+
+    private suspend fun handleProductLookup(searchQuery: String, qty: Double) {
+        val barcode = dataBaseRepository.getBarcode(searchQuery).firstOrNull()
         println("scannedBarcode : $barcode")
         // If a barcode is found, try to get the product by barcode
         if (barcode != null) {
@@ -331,12 +346,12 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
         }
         // If no product found by barcode or if barcode is null, try to get product by product code
-        val productBC = sqlRepository.getProductByBarCode(code).firstOrNull()
+        val productBC = sqlRepository.getProductByBarCode(searchQuery).firstOrNull()
         println("productBC : $productBC")
         if(productBC!=null){
             processFoundProduct(productBC,qty)
         }else{
-            val productPC = dataBaseRepository.getProductByCode(code).firstOrNull()
+            val productPC = dataBaseRepository.getProductByCode(searchQuery).firstOrNull()
             if (productPC != null) {
                 processFoundProduct(productPC,qty)
             } else {
@@ -1111,11 +1126,11 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             _posUIState.update {
                 println("onValueChanged_query:$query")
                 val searchQuery = query.trimEnd()  // Trim unwanted `\n` dynamically
-                if (isCode(searchQuery)) {
+                /*if (isCode(searchQuery)) {
                     //filterListByCode(query) // Filter by barcode or inventory code
                     scanStock(searchQuery)
-                    updatePOSError("Scan Barcode : $searchQuery")
-                }
+                    //updatePOSError("Scan Barcode : $searchQuery")
+                }*/
                 it.copy(searchQuery = searchQuery) // Ensure trimmed barcode is set
             }
         }

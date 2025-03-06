@@ -40,6 +40,13 @@ getProductByBarCode:
 SELECT * FROM Product
 WHERE barcode = ?;
 
+getSearchedProducts:
+SELECT * FROM Product WHERE name = :query
+UNION
+SELECT * FROM Product WHERE barcode = :query
+UNION
+SELECT * FROM Product WHERE inventoryCode = :query;
+
 getProductQty:
 SELECT quantity FROM Product
 WHERE inventoryCode = ?;

@@ -108,6 +108,7 @@ interface SqlRepository {
     fun getProductById(id: Long): Flow<POSProduct?>
     fun getProductByCode(code: String): Flow<POSProduct?>
     fun getProductByBarCode(code: String): Flow<POSProduct?>
+    fun getSearchedProducts(query: String): Flow<POSProduct?>
     fun getProductQty(code: String) : Flow<Double>
     fun getProductCount():Flow<Int>
     suspend fun deleteProduct()

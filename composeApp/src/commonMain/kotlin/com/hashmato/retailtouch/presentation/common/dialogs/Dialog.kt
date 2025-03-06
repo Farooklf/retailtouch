@@ -338,7 +338,7 @@ fun StockDialog(
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
                     keyboardController?.hide()
-                    viewModel.scanBarcode()
+                    viewModel.onSearchClicked()
                 }),
             )
 

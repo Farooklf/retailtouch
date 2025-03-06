@@ -515,7 +515,7 @@ import kotlinx.coroutines.flow.flow
     }
 
     override suspend fun insertProduct(productDao: ProductDao) {
-        retailTouch.productsQueries.insertProduct(
+        retailTouch.stockProductsQueries.insertProduct(
             productId = productDao.productId,
             name = productDao.product.name?:"",
             inventoryCode = productDao.product.productCode?:"",
@@ -532,7 +532,7 @@ import kotlinx.coroutines.flow.flow
 
 
     override suspend fun updateProduct(productDao: ProductDao) {
-       retailTouch.productsQueries.updateProduct(
+       retailTouch.stockProductsQueries.updateProduct(
            productId = productDao.productId,
            name = productDao.product.name?:"",
            inventoryCode = productDao.product.productCode?:"",
@@ -548,14 +548,14 @@ import kotlinx.coroutines.flow.flow
     }
 
      override suspend fun updateProductQuantity(productCode: String,quantity:Double) {
-         retailTouch.productsQueries.updateProductQuantity(
+         retailTouch.stockProductsQueries.updateProductQuantity(
              inventoryCode =productCode,
              quantity = quantity
          )
      }
 
      override fun getAllProduct(): Flow<List<POSProduct>> = flow{
-        retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
+        retailTouch.stockProductsQueries.getAllProduct().executeAsList().let { list ->
             emit(
                 list.map { product ->
                     POSProduct(
@@ -576,7 +576,7 @@ import kotlinx.coroutines.flow.flow
     }
 
      override fun getProducts(): Flow<POSProduct> = flow {
-         retailTouch.productsQueries.getAllProduct().executeAsList().let { list ->
+         retailTouch.stockProductsQueries.getAllProduct().executeAsList().let { list ->
              list.map { product ->
                  emit(POSProduct(
                      id = product.productId,
@@ -593,7 +593,7 @@ import kotlinx.coroutines.flow.flow
      }
 
      override fun getProductById(id: Long) : Flow<POSProduct?> = flow{
-        retailTouch.productsQueries.getProductById(id).executeAsOneOrNull().let { product->
+        retailTouch.stockProductsQueries.getProductById(id).executeAsOneOrNull().let { product->
             //println("product_db_data : $product")
             if(product!=null){
                 //val product=body.rowItem.toProduct()
@@ -617,7 +617,7 @@ import kotlinx.coroutines.flow.flow
     }
 
     override fun getProductByCode(code: String): Flow<POSProduct?> = flow{
-        retailTouch.productsQueries.getProductByInventory(code).executeAsOneOrNull().let { product->
+        retailTouch.stockProductsQueries.getProductByInventory(code).executeAsOneOrNull().let { product->
             //println("product_db_data : $product")
             if(product!=null){
                 emit(
@@ -640,7 +640,7 @@ import kotlinx.coroutines.flow.flow
     }
 
      override fun getProductByBarCode(code: String): Flow<POSProduct?> = flow{
-         retailTouch.productsQueries.getProductByBarCode(code).executeAsOneOrNull().let { product->
+         retailTouch.stockProductsQueries.getProductByBarCode(code).executeAsOneOrNull().let { product->
              println("product_db_data : $product")
              if(product!=null){
                  emit(
@@ -662,18 +662,41 @@ import kotlinx.coroutines.flow.flow
          }
      }
 
+     override fun getSearchedProducts(query: String): Flow<POSProduct?> = flow {
+         retailTouch.stockProductsQueries.getSearchedProducts(query).executeAsOneOrNull().let { product->
+             println("search_product_db_data : $product")
+             if(product!=null){
+                 emit(
+                     POSProduct(
+                         id = product.productId,
+                         productCode = product.inventoryCode,
+                         name = product.name,
+                         barcode = product.barcode,
+                         image = product.image,
+                         tax = product.tax,
+                         price = product.price,
+                         qtyOnHand = product.quantity,
+                         itemDiscount = product.itemDiscount
+                     )
+                 )
+             }else{
+                 emit(product)
+             }
+         }
+     }
+
      override fun getProductQty(code: String): Flow<Double> = flow{
-         retailTouch.productsQueries.getProductQty(code).executeAsOneOrNull()
+         retailTouch.stockProductsQueries.getProductQty(code).executeAsOneOrNull()
      }
 
      override fun getProductCount(): Flow<Int> = flow{
-         retailTouch.productsQueries.getCount().executeAsOne().let {count->
+         retailTouch.stockProductsQueries.getCount().executeAsOne().let {count->
              emit(count.toInt())
          }
      }
 
      override suspend fun deleteProduct() {
-        retailTouch.productsQueries.deleteProduct()
+        retailTouch.stockProductsQueries.deleteProduct()
     }
 
     override suspend fun insertScannedProduct(productTaxDao: ScannedProductDao) {
@@ -797,14 +820,14 @@ import kotlinx.coroutines.flow.flow
      }
 
      override suspend fun insertProductLocation(productLocationDao: ProductLocationDao) {
-        retailTouch.productLocationQueries.insertProductLocation(
+        retailTouch.productQuantityQueries.insertProductLocation(
             productLocationId = productLocationDao.productLocationId,
             rowItem = productLocationDao.rowItem.toJson()
         )
     }
 
      override suspend fun updateProductLocation(productLocationDao: ProductLocationDao) {
-         retailTouch.productLocationQueries.updateProductLocation(
+         retailTouch.productQuantityQueries.updateProductLocation(
              productTaxId = productLocationDao.productLocationId,
              rowItem = productLocationDao.rowItem.toJson()
          )
@@ -812,7 +835,7 @@ import kotlinx.coroutines.flow.flow
      }
 
      override fun getAllProductLocation(): Flow<List<ProductLocationDao>> = flow{
-        retailTouch.productLocationQueries.getAllProductLocation().executeAsList().let { list ->
+        retailTouch.productQuantityQueries.getAllProductLocation().executeAsList().let { list ->
             if(list.isNotEmpty()) {
                 emit(
                     list.map { body ->
@@ -830,7 +853,7 @@ import kotlinx.coroutines.flow.flow
     }
 
     override suspend fun deleteStocksQty() {
-        retailTouch.productLocationQueries.deleteProductLocation()
+        retailTouch.productQuantityQueries.deleteProductLocation()
     }
 
     override suspend fun insertProductBarcode(barcodeDao: BarcodeDao) {

@@ -233,7 +233,7 @@ fun Pos(
                         keyboardActions = KeyboardActions(
                             onGo = {
                                 // When done is pressed, open the dialog
-                                posViewModel.scanBarcode()
+                                posViewModel.onSearchClicked(true)
                             }
                         ),
                         onValueChange = {
