@@ -214,7 +214,7 @@ fun LandscapeCashierScreen(interactorRef: ValRef<SharedPosViewModel>) {
                     ),
                     onValueChange = {
                         viewModel.updateSearchQuery(it)
-                        viewModel.onSearchClicked()
+                        //viewModel.onSearchClicked()
                     })
 
                 RtlView(
@@ -307,7 +307,7 @@ private fun PortraitCashierScreen(
 
     //println("categories -${state.categories} | menuItems - ${state.menuProducts}")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(state.cartList) {
         viewModel.loadTotal()
     }
 
@@ -354,7 +354,7 @@ private fun PortraitCashierScreen(
                         ),
                         onValueChange = {
                             viewModel.updateSearchQuery(it)
-                            viewModel.onSearchClicked()
+                            //viewModel.onSearchClicked()
                         })
                 }
 

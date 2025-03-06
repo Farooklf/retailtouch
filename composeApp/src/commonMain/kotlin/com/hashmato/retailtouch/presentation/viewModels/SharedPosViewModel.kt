@@ -167,17 +167,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun getPrinterEnable(){
-        viewModelScope.launch {
-            isPrinterEnable.collectLatest { isPrinter->
-               if(isPrinter!=null){
-                   _posUIState.update {
-                       it.copy(isPrinterEnable= isPrinter)
-                   }
-               }
-            }
-        }
-    }
 
     fun getAuthDetails(){
         viewModelScope.launch {
@@ -244,7 +233,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             }
         }
     }
-
 
 
     fun onSearchClicked(isSearchClicked: Boolean=false) {
@@ -327,7 +315,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
         sqlRepository.getSearchedProducts(searchQuery).collect{selectedProduct->
             println("selectedProduct : $selectedProduct")
             if(selectedProduct!=null){
-                processFoundProduct(selectedProduct,qty)
+                addSearchProduct(selectedProduct)
             }else{
                 if(isSearchClicked)updateDialogState(true)
             }
@@ -427,7 +415,6 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
      fun addSearchProduct(product: POSProduct){
          viewModelScope.launch {
-             val qty = 1.0
              val stock= Stock(
                  id = product.id,
                  name = product.name,
@@ -440,14 +427,13 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                  barcode = product.barcode,
                  inventoryCode = product.productCode
              )
-             //addSaleItem(stock=stock, qty = qty)
              addToCartItem(stock)
          }
 
     }
 
     private suspend fun addToCartItem(stock: Stock) {
-        val state=posUIState.value
+        val state=_posUIState.value
         val adjustedQty=1.0
 
         val filteredCartItem = state.cartList.find { (it.stock.inventoryCode==stock.inventoryCode) || (it.stock.barcode==stock.barcode) || (it.stock.productId==stock.productId)}
@@ -471,32 +457,17 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
             )
             mutableListOf(newCartItem).apply { addAll(state.cartList) }
         }
-        println("updatedCartList : $updatedCartList")
+        //println("updatedCartList : $updatedCartList")
         updateSaleItem(updatedCartList)
-        loadTotal()
+        //loadTotal()
         applyDiscountsIfEligible(updatedCartList)
         updateGlobalExchangeActivator(false)
-    }
-
-    private suspend fun cartItemExists(product: Stock): Boolean {
-        val cartItems = posUIState.value.cartList
-        val filteredCartItem = cartItems.firstOrNull { it.stock.productId == product.productId /*&& it.menuPortionId == product.menuPortionId*/ }
-        return if (filteredCartItem != null && getIsMergeCartItem()) {
-            updateItemQty(filteredCartItem,filteredCartItem.qty+1)
-            true
-        } else {
-            false
-        }
-    }
-
-    private fun updateItemQty(item: CartItem, qty: Double) {
-        val oldQty = item.qty
     }
 
     private fun addSaleItem(stock: Stock, qty: Double = 1.0)
     {
         viewModelScope.launch {
-            with(posUIState.value){
+            with(_posUIState.value){
                 var adjustedQty = qty
                 if (globalExchangeActivator) {
                     adjustedQty *= (-1)
@@ -528,7 +499,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
 
     private fun findCartItem(stock: Stock, shoppingCart: List<CartItem>): CartItem? {
         return shoppingCart.firstOrNull { itm ->
-            val sameBarcode = stock.barcode.length > 3 && (itm.stock.barcode == stock.barcode || itm.stock.inventoryCode == stock.barcode)
+            val sameBarcode = stock.barcode.length > 3 && (itm.stock.barcode == stock.barcode || itm.stock.inventoryCode == stock.inventoryCode)
             itm.stock.id == stock.id || sameBarcode
         }
     }
@@ -542,14 +513,14 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
      private fun loadCartTotals(){
-         println("loadCartTotals calling")
+         //println("loadCartTotals calling")
          val state=posUIState.value
          val itemTotalQty=state.cartList.sumOf { if (it.qty < 0) (it.qty * -1) else it.qty }
          val itemTotalTax = state.cartList.sumOf {  it.calculateTax() }
          val cartWithoutDiscount = state.cartList.sumOf {  it.getFinalPriceWithoutTax() }
          val cartItemDiscount = state.cartList.sumOf { it.calculateDiscount() }
          val cartItemPromotionDiscount = state.cartList.sumOf { it.getPromotionDiscount() }
-
+         val viewCartTotal= state.cartList.sumOf{ it.price*it.qty }
          var cartSubTotal= if (state.isSalesTaxInclusive){
              state.cartList.sumOf {  it.getFinalPrice() }
          }else{
@@ -571,6 +542,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
                  cartItemTotalDiscounts = cartItemDiscount,
                  cartPromotionDiscount = cartItemPromotionDiscount,
                  grandTotalWithoutDiscount = if (state.isSalesTaxInclusive) cartSubTotal else (cartSubTotal + itemTotalTax),
+                 cartValue = viewCartTotal
              ) }
 
           // Apply global discount logic
@@ -680,7 +652,7 @@ class SharedPosViewModel : BaseViewModel(), KoinComponent {
     }
 
     fun updateSecondDisplay(){
-        val state = posUIState.value
+        val state = _posUIState.value
         SecondaryDisplayServiceProvider().updateCartItems(cartItems = state.cartList, cartTotalQty = state.quantityTotal, cartTotal = state.grandTotal, cartSubTotal = state.cartSubTotal, cartTotalTax = state.globalTax, cartItemTotalDiscount = state.cartItemTotalDiscounts, cartNetDiscounts = state.cartNetDiscounts, currencySymbol = state.currencySymbol)
     }
 
